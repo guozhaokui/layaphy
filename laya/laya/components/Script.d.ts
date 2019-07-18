@@ -1,0 +1,36 @@
+import { Component } from "./Component";
+import { Event } from "../events/Event";
+export declare class Script extends Component {
+    readonly isSingleton: boolean;
+    protected _onAwake(): void;
+    protected _onEnable(): void;
+    protected _onDisable(): void;
+    protected _onDestroy(): void;
+    onAwake(): void;
+    onEnable(): void;
+    onStart(): void;
+    onTriggerEnter(other: any, self: any, contact: any): void;
+    onTriggerStay(other: any, self: any, contact: any): void;
+    onTriggerExit(other: any, self: any, contact: any): void;
+    onMouseDown(e: Event): void;
+    onMouseUp(e: Event): void;
+    onClick(e: Event): void;
+    onStageMouseDown(e: Event): void;
+    onStageMouseUp(e: Event): void;
+    onStageClick(e: Event): void;
+    onStageMouseMove(e: Event): void;
+    onDoubleClick(e: Event): void;
+    onRightClick(e: Event): void;
+    onMouseMove(e: Event): void;
+    onMouseOver(e: Event): void;
+    onMouseOut(e: Event): void;
+    onKeyDown(e: Event): void;
+    onKeyPress(e: Event): void;
+    onKeyUp(e: Event): void;
+    onUpdate(): void;
+    onLateUpdate(): void;
+    onPreRender(): void;
+    onPostRender(): void;
+    onDisable(): void;
+    onDestroy(): void;
+}

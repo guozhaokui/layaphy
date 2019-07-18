@@ -1,0 +1,34 @@
+import { KeyFramesContent } from "./KeyFramesContent";
+import { Resource } from "../resource/Resource";
+export declare class AnimationTemplet extends Resource {
+    static interpolation: any[];
+    private static _LinearInterpolation_0;
+    private static _QuaternionInterpolation_1;
+    private static _AngleInterpolation_2;
+    private static _RadiansInterpolation_3;
+    private static _Matrix4x4Interpolation_4;
+    private static _NoInterpolation_5;
+    private static _BezierInterpolation_6;
+    private static _BezierInterpolation_7;
+    protected unfixedCurrentFrameIndexes: Uint32Array;
+    protected unfixedCurrentTimes: Float32Array;
+    protected unfixedKeyframes: KeyFramesContent[];
+    protected unfixedLastAniIndex: number;
+    private _boneCurKeyFrm;
+    constructor();
+    parse(data: ArrayBuffer): void;
+    getAnimationCount(): number;
+    getAnimation(aniIndex: number): any;
+    getAniDuration(aniIndex: number): number;
+    getNodes(aniIndex: number): any;
+    getNodeIndexWithName(aniIndex: number, name: string): number;
+    getNodeCount(aniIndex: number): number;
+    getTotalkeyframesLength(aniIndex: number): number;
+    getPublicExtData(): ArrayBuffer;
+    getAnimationDataWithCache(key: any, cacheDatas: any, aniIndex: number, frameIndex: number): Float32Array;
+    setAnimationDataWithCache(key: any, cacheDatas: any[], aniIndex: number, frameIndex: number, data: any): void;
+    getNodeKeyFrame(nodeframes: KeyFramesContent[], nodeid: number, tm: number): number;
+    getOriginalData(aniIndex: number, originalData: Float32Array, nodesFrameIndices: any[], frameIndex: number, playCurTime: number): void;
+    getNodesCurrentFrameIndex(aniIndex: number, playCurTime: number): Uint32Array;
+    getOriginalDataUnfixedRate(aniIndex: number, originalData: Float32Array, playCurTime: number): void;
+}

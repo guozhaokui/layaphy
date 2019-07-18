@@ -1,0 +1,35 @@
+import { EventDispatcher } from "../events/EventDispatcher";
+import { ICreateResource } from "./ICreateResource";
+import { IDestroy } from "./IDestroy";
+export declare class Resource extends EventDispatcher implements ICreateResource, IDestroy {
+    private static _uniqueIDCounter;
+    private static _idResourcesMap;
+    private static _urlResourcesMap;
+    private static _cpuMemory;
+    private static _gpuMemory;
+    static readonly cpuMemory: number;
+    static readonly gpuMemory: number;
+    static getResourceByID(id: number): Resource;
+    static getResourceByURL(url: string, index?: number): Resource;
+    static destroyUnusedResources(): void;
+    protected _id: number;
+    private _url;
+    private _cpuMemory;
+    private _gpuMemory;
+    private _destroyed;
+    protected _referenceCount: number;
+    lock: boolean;
+    name: string;
+    readonly id: number;
+    readonly url: string;
+    readonly cpuMemory: number;
+    readonly gpuMemory: number;
+    readonly destroyed: boolean;
+    readonly referenceCount: number;
+    constructor();
+    _setCreateURL(url: string): void;
+    protected _recoverResource(): void;
+    protected _disposeResource(): void;
+    protected _activeResource(): void;
+    destroy(): void;
+}
