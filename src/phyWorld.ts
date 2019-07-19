@@ -2,6 +2,7 @@ import { Vector3 } from "../laya/laya/d3/math/Vector3";
 import { PhyBody, BODYTYPE } from "./PhyBody";
 import { Broadphase } from "./collision/Broadphase";
 import { NaiveBroadPhase } from "./collision/NaiveBroadPhase";
+import { GSSolver } from "./solver/GSSolver";
 
 type Vec3 = Vector3;
 let Vec3 = Vector3;
@@ -11,8 +12,11 @@ export class PhyWorld{
     contacts:any[]; //所有的当前帧的碰撞信息
     gravity = new Vec3(0,-9.8,0);
     time = 0;    // 累计执行时间
+    stepnumber=0;
+    allowSleep=true;
 
     boradphase:Broadphase=null;     // 宽检测对象
+    solver = new GSSolver();
 
     pair1:any[]=[]; // 碰撞检测到的碰撞组
     pair2:any[]=[];
@@ -39,9 +43,10 @@ export class PhyWorld{
     internalStep(dt:number){
         let bodies = this.bodies;
         let g = this.gravity;
+        let N = bodies.length;
 
         // 遍历所有的动态对象，添加重力影响
-        for(let i=0, len=bodies.length; i<len; i++ ){
+        for(let i=0; i<N; i++ ){
             let cbody = bodies[i];
             if(cbody.type==BODYTYPE.DYNAMIC){
                 var m = cbody.mass;
@@ -67,6 +72,16 @@ export class PhyWorld{
         // 清理摩擦等式，到pool中
 
         //
+
+        this.stepnumber++;
+        this.time+=dt;
+
+        // 更新sleep
+        if(this.allowSleep){
+            for(let i=0; i<N; i++){
+                this.bodies[i].sleepTick(this.time);
+            }
+        }
 
     }
 

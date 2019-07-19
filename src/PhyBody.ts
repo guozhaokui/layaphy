@@ -20,6 +20,7 @@ export const enum BODYSTATE{
 export class PhyBody{
     type = BODYTYPE.STATIC;             // 可以是多种
     sleepState = BODYSTATE.ACTIVE;
+    allowSleep=false;
 
     collisionFilterGroup=0xffffffff;    // 碰撞组。被检测。别人都可以碰我
     collisionFilterMask=0xffffffff;     // 检测用。全部检测
@@ -38,5 +39,19 @@ export class PhyBody{
 
     wakeup(){
 
+    }
+    
+    sleep(){
+
+    }
+
+    /**
+     * 更新sleep状态
+     * @param tm 
+     */
+    sleepTick(tm:number){
+        if(this.allowSleep){
+            //TODO 根据状态和速度来转换sleep状态，并且发送sleep事件
+        }
     }
 }
