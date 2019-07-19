@@ -52,11 +52,22 @@ export class PhyWorld{
         }
 
         // 碰撞检测
+        // 宽阶段
         this.pair1.length=0;
         this.pair2.length=0;
         this.boradphase.collisionPairs(this, this.pair1, this.pair2);
 
+        // 下面要窄阶段了，先做一些准备工作
         // 
+        //TODO 交换保存的碰撞信息。
+
+        // 生成碰撞信息
+        // TODO 保存当前碰撞信息
+
+        // 清理摩擦等式，到pool中
+
+        //
+
     }
 
     postStep(){

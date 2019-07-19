@@ -1,6 +1,7 @@
 import { Vector3 } from "../laya/laya/d3/math/Vector3";
 import { Quaternion } from "../laya/laya/d3/math/Quaternion";
 import { BoundBox } from "../laya/laya/d3/math/BoundBox";
+import { PhyShape } from "./shapes/Shape";
 type Vec3 = Vector3;
 let Vec3 = Vector3;
 
@@ -24,6 +25,8 @@ export class PhyBody{
     collisionFilterMask=0xffffffff;     // 检测用。全部检测
 
     AABB:BoundBox;          // 包围盒
+
+    shapes:PhyShape[];
     
     gravity:Vec3;
     position:Vec3;          // 位置
