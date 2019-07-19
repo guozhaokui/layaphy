@@ -27,6 +27,8 @@ export class PhyBody{
     AABB:BoundBox;          // 包围盒
 
     shapes:PhyShape[];
+    shapeOffsets:Vector3[];             //每个shape的位置
+    shapeOrientations:Quaternion[];     // 每个shape的朝向
     
     gravity:Vec3;
     position:Vec3;          // 位置

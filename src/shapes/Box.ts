@@ -19,7 +19,7 @@ export class PhyBox extends PhyShape{
     }
 
     updateBoundingSphereRadius(){
-        //用么
+        //TODO ??
     }
     static calculateInertia(halfExtents:Vector3,mass:number,target:Vector3){
         var e = halfExtents;
