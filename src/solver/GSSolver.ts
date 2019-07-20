@@ -12,6 +12,20 @@ export class GSSolver extends Solver{
     }
 
     solve(dt:number,world:PhyWorld){
+        let iter = 0,
+            maxIter = this.iterations,
+            tolSquared = this.tolerance*this.tolerance,
+            equations = this.equations,
+            Neq = equations.length,
+            bodies = world.bodies,
+            Nbodies = bodies.length,
+            h = dt,
+            q, B, invC, deltalambda, deltalambdaTot, GWlambda, lambdaj;
 
+            for(iter=0; iter!=maxIter; iter++){
+                
+            }
+
+            return iter;
     }
 }

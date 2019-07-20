@@ -40,13 +40,19 @@ export class PhyWorld{
         }
     }
 
+    /**
+     * 
+     * @param dt 单位是秒
+     */
     internalStep(dt:number){
         let bodies = this.bodies;
         let g = this.gravity;
         let N = bodies.length;
+        let i=0;
+        let pow=Math.pow;
 
         // 遍历所有的动态对象，添加重力影响
-        for(let i=0; i<N; i++ ){
+        for(i=0; i<N; i++ ){
             let cbody = bodies[i];
             if(cbody.type==BODYTYPE.DYNAMIC){
                 var m = cbody.mass;
@@ -72,6 +78,30 @@ export class PhyWorld{
         // 清理摩擦等式，到pool中
 
         //
+        // 应用阻尼
+        for(i=0; i<N; i++){
+            var bi=bodies[i];
+            if(bi.type&BODYTYPE.DYNAMIC){
+                if(bi.linearDamping){
+                    let v = bi.velocity;
+                    let ld = pow(1.0-bi.linearDamping,dt);
+                    v.x*=ld; v.y*=ld; v.z*=ld;
+                }
+                let av = bi.angularVelocity;
+                if(bi.angularDamping && av){
+                    let ad = pow(1.0-bi.angularDamping,dt);
+                    av.x*=ad; av.y*=ad; av.z*=ad;
+                }
+            }
+        }
+
+        // 发布 prestep 事件
+
+        // leap frog
+        for(i=0; i<N; i++){
+            let bi=bodies[i];
+        }
+
 
         this.stepnumber++;
         this.time+=dt;
