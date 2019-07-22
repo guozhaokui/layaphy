@@ -10,7 +10,8 @@ let Vec3 = Vector3;
 export const enum BODYTYPE{
     STATIC=1,
     DYNAMIC=2,
-    KINEMATIC=4
+    KINEMATIC=4,
+    DYNAMIC_OR_KINEMATIC = 6
 }
 
 export const enum BODYSTATE{
@@ -43,7 +44,7 @@ export class PhyBody{
     invMass=0;
     inertia = new Vec3();     // 转动惯量
     invInertia = new Vec3();
-    invInertiaWorld = new Matrix3x3();
+    invInertiaWorld = new Matrix3x3();  // 世界空间转动惯量。计算角加速度的时候用这个
 
     // solve的时候使用的相关变量。因为受到状态的影响，所以分开表示
     invMassSolve=0;
@@ -58,7 +59,9 @@ export class PhyBody{
 
     fixedRotation=false;    // 是否不允许旋转。修改后需要调用 updateMassProperties
 
-    f:Vec3; //经过重心的力
+    //f:Vec3; //经过重心的力
+    force = new Vec3();     // 受力。世界空间中的。
+    torque = new Vec3();    // 世界空间中的力矩。绕着质心。
 
     linearDamping=0;        // 线速度阻尼
     angularDamping=0;       // 角速度阻尼
@@ -195,4 +198,13 @@ export class PhyBody{
         this.updateInertiaWorld(true);
     }
 
+    /**
+     * 
+     * @param dt 时间间隔，单位是秒
+     * @param quatNormalize     是否normalize 旋转
+     * @param quatNormalizeFast 如果要normalize旋转的话，使用fast方法
+     */
+    integrate(dt, quatNormalize, quatNormalizeFast){
+
+    }
 }

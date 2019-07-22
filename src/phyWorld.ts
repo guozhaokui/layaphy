@@ -1,8 +1,11 @@
 import { Vector3 } from "../laya/laya/d3/math/Vector3";
-import { PhyBody, BODYTYPE } from "./PhyBody";
+import { PhyBody, BODYTYPE, BODYSTATE } from "./PhyBody";
 import { Broadphase } from "./collision/Broadphase";
 import { NaiveBroadPhase } from "./collision/NaiveBroadPhase";
 import { GSSolver } from "./solver/GSSolver";
+import { Matrix3x3 } from "../laya/laya/d3/math/Matrix3x3";
+import { Vec3Trans } from "./math/PhyUtils";
+import { Quaternion } from "../laya/laya/d3/math/Quaternion";
 
 type Vec3 = Vector3;
 let Vec3 = Vector3;
@@ -40,6 +43,9 @@ export class PhyWorld{
         }
     }
 
+    private invI_tau_dt = new Vec3();    // 计算角速度的临时变量
+    private step_w = new Quaternion();   //
+    private step_wq = new Quaternion();
     /**
      * 
      * @param dt 单位是秒
@@ -50,15 +56,17 @@ export class PhyWorld{
         let N = bodies.length;
         let i=0;
         let pow=Math.pow;
+        let solver = this.solver;
 
         // 遍历所有的动态对象，添加重力影响
         for(i=0; i<N; i++ ){
             let cbody = bodies[i];
             if(cbody.type==BODYTYPE.DYNAMIC){
-                var m = cbody.mass;
-                cbody.f.x += g.x*m;
-                cbody.f.y += g.y*m;
-                cbody.f.z += g.z*m;
+                let m = cbody.mass;
+                let f = cbody.force;
+                f.x += g.x*m;
+                f.y += g.y*m;
+                f.z += g.z*m;
             }
         }
 
@@ -76,6 +84,13 @@ export class PhyWorld{
         // TODO 保存当前碰撞信息
 
         // 清理摩擦等式，到pool中
+
+        // contacts 
+        // constraints
+
+        let sovIt = solver.solve(dt,this);
+        // 去掉所有的式子
+        solver.clear();
 
         //
         // 应用阻尼
@@ -95,16 +110,69 @@ export class PhyWorld{
             }
         }
 
-        // 发布 prestep 事件
+        // 发布 pre-step 事件
 
         // leap frog
+        // 更新速度和位置 
         for(i=0; i<N; i++){
-            let bi=bodies[i];
+            let bi=bodies[i],
+                force = bi.force,
+                torque = bi.torque;
+            if(bi.type&BODYTYPE.DYNAMIC_OR_KINEMATIC && bi.sleepState!=BODYSTATE.SLEEPING){
+                // 只处理运动的物体
+                // 线速度
+                let dt_div_mass = dt/bi.mass;
+                let vel = bi.velocity;
+                let pos = bi.position;
+                vel.x+=force.x*dt_div_mass;
+                vel.y+=force.y*dt_div_mass;
+                vel.z+=force.z*dt_div_mass;
+                // 使用最新的vel计算位置。（这种可以增加稳定性）
+                pos.x+=vel.x*dt;    
+                pos.y+=vel.y*dt;
+                pos.z+=vel.z*dt;
+
+                // 角速度
+                let angVel = bi.angularVelocity;
+                if(angVel){
+                    let invI_tau_dt = this.invI_tau_dt;
+                    let invInertia = bi.invInertiaWorld;
+                    let quat = bi.quaternion;
+
+                    Vec3Trans(torque,invInertia,invI_tau_dt);                   //torque*Mat
+                    invI_tau_dt.x*=dt; invI_tau_dt.y*=dt; invI_tau_dt.z*=dt;    //*dt
+                    // 增加角速度
+                    angVel.x+=invI_tau_dt.x;
+                    angVel.y+=invI_tau_dt.y;
+                    angVel.z+=invI_tau_dt.z;
+
+                    // 计算旋转
+                    let step_w = this.step_w;
+                    let wq = this.step_wq;
+                    // angvel * quat
+                    // quat.norm()
+
+                }
+
+                // 更新包围盒
+
+                // 更新世界空间转动惯量
+
+            }
+
         }
 
+        // 所有对象上的力清零
+        for(i=0; i<N; i++){
+            let bi=bodies[i];
+            bi.force.setValue(0,0,0);
+            bi.torque.setValue(0,0,0);
+        }
 
         this.stepnumber++;
         this.time+=dt;
+
+        // post-step 事件
 
         // 更新sleep
         if(this.allowSleep){
