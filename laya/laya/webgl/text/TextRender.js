@@ -38,7 +38,6 @@ export class TextRender {
         }
         if (ILaya.Browser.onMiniGame && !bugIOS)
             TextRender.isWan1Wan = true;
-        TextRender.isWan1Wan = true;
         this.charRender = ILaya.Render.isConchApp ? (new CharRender_Native()) : (new CharRender_Canvas(TextRender.atlasWidth, TextRender.atlasWidth, TextRender.scaleFontWithCtx, !TextRender.isWan1Wan, false));
         TextRender.textRenderInst = this;
         ILaya.Laya['textRender'] = this;
@@ -328,6 +327,7 @@ export class TextRender {
             this.charRender.canvasWidth = Math.min(2048, w1 + margin * 2);
         }
         if (isoTexture) {
+            this.charRender.fontsz = font._size;
             imgdt = this.charRender.getCharBmp(str, this.fontStr, lineWidth, color, strokeColor, ri, margin, margin, margin, margin, null);
             var tex = TextTexture.getTextTexture(imgdt.width, imgdt.height);
             tex.addChar(imgdt, 0, 0, ri.uv);
@@ -354,6 +354,7 @@ export class TextRender {
                 TextRender.imgdtRect[2] = -1;
                 TextRender.imgdtRect[3] = fh;
             }
+            this.charRender.fontsz = font._size;
             imgdt = this.charRender.getCharBmp(str, this.fontStr, lineWidth, color, strokeColor, ri, margin, margin, margin, margin, TextRender.imgdtRect);
             atlas = this.addBmpData(imgdt, ri);
             if (TextRender.isWan1Wan) {
@@ -565,6 +566,7 @@ export class TextRender {
         var marginb = 16;
         this.charRender.scale(1, 1);
         TextRender.tmpRI.height = TextRender.standardFontSize;
+        this.charRender.fontsz = TextRender.standardFontSize;
         var bmpdt = this.charRender.getCharBmp('g', fontstr, 0, 'red', null, TextRender.tmpRI, orix, oriy, marginr, marginb);
         if (ILaya.Render.isConchApp) {
             bmpdt.data = new Uint8ClampedArray(bmpdt.data);

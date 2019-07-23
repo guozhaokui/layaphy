@@ -1,6 +1,6 @@
 import { TileAniSprite } from "./TileAniSprite";
-import { Sprite } from "../display/Sprite";
-import { Point } from "../maths/Point";
+import { Sprite } from "laya/display/Sprite";
+import { Point } from "laya/maths/Point";
 import { GridSprite } from "./GridSprite";
 import { IMap } from "./IMap";
 export class MapLayer extends Sprite {
@@ -224,7 +224,7 @@ export class MapLayer extends Sprite {
         var tSprite;
         for (var i = 0; i < this._gridSpriteArray.length; i++) {
             tSprite = this._gridSpriteArray[i];
-            if ((tSprite._visible || tSprite.isAloneObject) && tSprite.drawImageNum > 0) {
+            if ((tSprite.visible || tSprite.isAloneObject) && tSprite.drawImageNum > 0) {
                 tSprite.updatePos();
             }
         }

@@ -1,4 +1,7 @@
 export class ICharRender {
+    constructor() {
+        this.fontsz = 16;
+    }
     getWidth(font, str) { return 0; }
     scale(sx, sy) {
     }

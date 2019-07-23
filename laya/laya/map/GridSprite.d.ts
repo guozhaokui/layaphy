@@ -1,6 +1,6 @@
 import { TiledMap } from "./TiledMap";
 import { TileAniSprite } from "./TileAniSprite";
-import { Sprite } from "../display/Sprite";
+import { Sprite } from "laya/display/Sprite";
 export declare class GridSprite extends Sprite {
     relativeX: number;
     relativeY: number;

@@ -223,7 +223,7 @@ export class ShaderData {
         this._data = new ArrayBuffer(length * 4);
         this._int32Data = new Int32Array(this._data);
         this._float32Data = new Float32Array(this._data);
-        LayaGL.createArrayBufferRef(this._data, LayaGL.ARRAY_BUFFER_TYPE_DATA, true);
+        LayaGL.instance.createArrayBufferRef(this._data, LayaGL.ARRAY_BUFFER_TYPE_DATA, true);
     }
     needRenewArrayBufferForNative(index) {
         if (index >= this._int32Data.length) {
@@ -339,9 +339,9 @@ export class ShaderData {
     setAttributeForNative(index, value) {
         this._nativeArray[index] = value;
         if (!value["_ptrID"]) {
-            LayaGL.createArrayBufferRef(value, LayaGL.ARRAY_BUFFER_TYPE_DATA, true);
+            LayaGL.instance.createArrayBufferRef(value, LayaGL.ARRAY_BUFFER_TYPE_DATA, true);
         }
-        LayaGL.syncBufferToRenderThread(value);
+        LayaGL.instance.syncBufferToRenderThread(value);
         this._int32Data[index] = value["_ptrID"];
     }
     getTextureForNative(index) {
@@ -364,24 +364,24 @@ export class ShaderData {
         var nRefID = 0;
         var nPtrID = 0;
         if (ShaderData._SET_RUNTIME_VALUE_MODE_REFERENCE_) {
-            LayaGL.createArrayBufferRefs(value, LayaGL.ARRAY_BUFFER_TYPE_DATA, true, LayaGL.ARRAY_BUFFER_REF_REFERENCE);
+            LayaGL.instance.createArrayBufferRefs(value, LayaGL.ARRAY_BUFFER_TYPE_DATA, true, LayaGL.ARRAY_BUFFER_REF_REFERENCE);
             nRefID = 0;
             nPtrID = value.getPtrID(nRefID);
         }
         else {
-            LayaGL.createArrayBufferRefs(value, LayaGL.ARRAY_BUFFER_TYPE_DATA, true, LayaGL.ARRAY_BUFFER_REF_COPY);
+            LayaGL.instance.createArrayBufferRefs(value, LayaGL.ARRAY_BUFFER_TYPE_DATA, true, LayaGL.ARRAY_BUFFER_REF_COPY);
             nRefID = value.getRefNum() - 1;
             nPtrID = value.getPtrID(nRefID);
             this._runtimeCopyValues.push({ "obj": value, "refID": nRefID, "ptrID": nPtrID });
         }
-        LayaGL.syncBufferToRenderThread(value, nRefID);
+        LayaGL.instance.syncBufferToRenderThread(value, nRefID);
         return nPtrID;
     }
     static setRuntimeValueMode(bReference) {
         ShaderData._SET_RUNTIME_VALUE_MODE_REFERENCE_ = bReference;
     }
     clearRuntimeCopyArray() {
-        var currentFrame = LayaGL.getFrameCount();
+        var currentFrame = LayaGL.instance.getFrameCount();
         if (this._frameCount != currentFrame) {
             this._frameCount = currentFrame;
             for (var i = 0, n = this._runtimeCopyValues.length; i < n; i++) {

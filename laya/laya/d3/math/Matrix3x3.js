@@ -12,6 +12,31 @@ export class Matrix3x3 {
         e[7] = 0;
         e[8] = 1;
     }
+    static createRotationQuaternion(rotation, out) {
+        var rotX = rotation.x;
+        var rotY = rotation.y;
+        var rotZ = rotation.z;
+        var rotW = rotation.w;
+        var xx = rotX * rotX;
+        var yy = rotY * rotY;
+        var zz = rotZ * rotZ;
+        var xy = rotX * rotY;
+        var zw = rotZ * rotW;
+        var zx = rotZ * rotX;
+        var yw = rotY * rotW;
+        var yz = rotY * rotZ;
+        var xw = rotX * rotW;
+        var resultE = out.elements;
+        resultE[0] = 1.0 - (2.0 * (yy + zz));
+        resultE[1] = 2.0 * (xy + zw);
+        resultE[2] = 2.0 * (zx - yw);
+        resultE[3] = 2.0 * (xy - zw);
+        resultE[4] = 1.0 - (2.0 * (zz + xx));
+        resultE[5] = 2.0 * (yz + xw);
+        resultE[6] = 2.0 * (zx + yw);
+        resultE[7] = 2.0 * (yz - xw);
+        resultE[8] = 1.0 - (2.0 * (yy + xx));
+    }
     static createFromTranslation(trans, out) {
         var e = out.elements;
         out[0] = 1;
@@ -47,38 +72,40 @@ export class Matrix3x3 {
         e[5] = 0;
         e[6] = 0;
         e[7] = 0;
-        e[8] = 1;
+        e[8] = scale.z;
     }
     static createFromMatrix4x4(sou, out) {
-        out[0] = sou[0];
-        out[1] = sou[1];
-        out[2] = sou[2];
-        out[3] = sou[4];
-        out[4] = sou[5];
-        out[5] = sou[6];
-        out[6] = sou[8];
-        out[7] = sou[9];
-        out[8] = sou[10];
+        var souE = sou.elements;
+        var outE = out.elements;
+        outE[0] = souE[0];
+        outE[1] = souE[1];
+        outE[2] = souE[2];
+        outE[3] = souE[4];
+        outE[4] = souE[5];
+        outE[5] = souE[6];
+        outE[6] = souE[8];
+        outE[7] = souE[9];
+        outE[8] = souE[10];
     }
     static multiply(left, right, out) {
+        var l = left.elements;
+        var r = right.elements;
         var e = out.elements;
-        var f = left.elements;
-        var g = right.elements;
-        var a00 = f[0], a01 = f[1], a02 = f[2];
-        var a10 = f[3], a11 = f[4], a12 = f[5];
-        var a20 = f[6], a21 = f[7], a22 = f[8];
-        var b00 = g[0], b01 = g[1], b02 = g[2];
-        var b10 = g[3], b11 = g[4], b12 = g[5];
-        var b20 = g[6], b21 = g[7], b22 = g[8];
-        e[0] = b00 * a00 + b01 * a10 + b02 * a20;
-        e[1] = b00 * a01 + b01 * a11 + b02 * a21;
-        e[2] = b00 * a02 + b01 * a12 + b02 * a22;
-        e[3] = b10 * a00 + b11 * a10 + b12 * a20;
-        e[4] = b10 * a01 + b11 * a11 + b12 * a21;
-        e[5] = b10 * a02 + b11 * a12 + b12 * a22;
-        e[6] = b20 * a00 + b21 * a10 + b22 * a20;
-        e[7] = b20 * a01 + b21 * a11 + b22 * a21;
-        e[8] = b20 * a02 + b21 * a12 + b22 * a22;
+        var l11 = l[0], l12 = l[1], l13 = l[2];
+        var l21 = l[3], l22 = l[4], l23 = l[5];
+        var l31 = l[6], l32 = l[7], l33 = l[8];
+        var r11 = r[0], r12 = r[1], r13 = r[2];
+        var r21 = r[3], r22 = r[4], r23 = r[5];
+        var r31 = r[6], r32 = r[7], r33 = r[8];
+        e[0] = r11 * l11 + r12 * l21 + r13 * l31;
+        e[1] = r11 * l12 + r12 * l22 + r13 * r32;
+        e[2] = r11 * l13 + r12 * l23 + r13 * l33;
+        e[3] = r21 * l11 + r22 * l21 + r23 * l31;
+        e[4] = r21 * l12 + r22 * l22 + r23 * l32;
+        e[5] = r21 * l13 + r22 * l23 + r23 * l33;
+        e[6] = r31 * l11 + r32 * l21 + r33 * l31;
+        e[7] = r31 * l12 + r32 * l22 + r33 * l32;
+        e[8] = r31 * l13 + r32 * l23 + r33 * l33;
     }
     determinant() {
         var f = this.elements;

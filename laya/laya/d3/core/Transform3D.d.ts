@@ -26,7 +26,6 @@ export declare class Transform3D extends EventDispatcher {
     localMatrix: Matrix4x4;
     position: Vector3;
     rotation: Quaternion;
-    scale: Vector3;
     rotationEuler: Vector3;
     worldMatrix: Matrix4x4;
     constructor(owner: Sprite3D);
@@ -36,4 +35,7 @@ export declare class Transform3D extends EventDispatcher {
     getUp(up: Vector3): void;
     getRight(right: Vector3): void;
     lookAt(target: Vector3, up: Vector3, isLocal?: boolean): void;
+    getLossyWorldScale(): Vector3;
+    setLossyWorldScale(value: Vector3): void;
+    scale: Vector3;
 }

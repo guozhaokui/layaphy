@@ -26,6 +26,7 @@ export declare class BoundFrustum {
     private static _get3PlaneInterPoint;
     getCorners(corners: Vector3[]): void;
     containsPoint(point: Vector3): number;
+    intersects(box: BoundBox): boolean;
     containsBoundBox(box: BoundBox): number;
     containsBoundSphere(sphere: BoundSphere): number;
 }

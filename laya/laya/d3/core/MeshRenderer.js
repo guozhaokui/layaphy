@@ -1,7 +1,6 @@
 import { FrustumCulling } from "../graphics/FrustumCulling";
 import { MeshRenderStaticBatchManager } from "../graphics/MeshRenderStaticBatchManager";
 import { SubMeshInstanceBatch } from "../graphics/SubMeshInstanceBatch";
-import { ContainmentType } from "../math/ContainmentType";
 import { Matrix4x4 } from "../math/Matrix4x4";
 import { ShaderData } from "../shader/ShaderData";
 import { Utils3D } from "../utils/Utils3D";
@@ -62,7 +61,7 @@ export class MeshRenderer extends BaseRender {
     }
     _needRender(boundFrustum) {
         if (boundFrustum)
-            return boundFrustum.containsBoundBox(this.bounds._getBoundBox()) !== ContainmentType.Disjoint;
+            return boundFrustum.intersects(this.bounds._getBoundBox());
         else
             return true;
     }

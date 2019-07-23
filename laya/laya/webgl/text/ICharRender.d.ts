@@ -1,5 +1,6 @@
 import { CharRenderInfo } from "./CharRenderInfo";
 export declare class ICharRender {
+    fontsz: number;
     getWidth(font: string, str: string): number;
     scale(sx: number, sy: number): void;
     canvasWidth: number;

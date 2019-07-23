@@ -1,8 +1,8 @@
 import { MapLayer } from "./MapLayer";
-import { Rectangle } from "../maths/Rectangle";
-import { Sprite } from "../display/Sprite";
-import { Handler } from "../utils/Handler";
-import { Point } from "../maths/Point";
+import { Rectangle } from "laya/maths/Rectangle";
+import { Sprite } from "laya/display/Sprite";
+import { Handler } from "laya/utils/Handler";
+import { Point } from "laya/maths/Point";
 import { TileTexSet } from "./TileTexSet";
 import { GridSprite } from "./GridSprite";
 export declare class TiledMap {

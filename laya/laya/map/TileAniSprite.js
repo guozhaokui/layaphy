@@ -1,4 +1,4 @@
-import { Sprite } from "../display/Sprite";
+import { Sprite } from "laya/display/Sprite";
 export class TileAniSprite extends Sprite {
     constructor() {
         super(...arguments);

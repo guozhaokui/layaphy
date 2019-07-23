@@ -18,6 +18,7 @@ export declare class Laya {
     private static _isinit;
     static isWXOpenDataContext: boolean;
     static isWXPosMsg: boolean;
+    static __init(_classs: any): void;
     static init(width: number, height: number, ...plugins: any[]): any;
     static _getUrlPath(): string;
     static _arrayBufferSlice(start: number, end: number): ArrayBuffer;
@@ -28,6 +29,7 @@ export declare class Laya {
     private static isNativeRender_enable;
     private static enableNative;
 }
+export declare var __init: typeof Laya.__init;
 export declare var init: typeof Laya.init;
 export declare var stage: any;
 export declare var systemTimer: any;

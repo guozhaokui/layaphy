@@ -25,7 +25,6 @@ import { Pool } from "../utils/Pool";
 import { Utils } from "../utils/Utils";
 import { DrawTrianglesCmd } from "./cmd/DrawTrianglesCmd";
 import { Draw9GridTexture } from "./cmd/Draw9GridTexture";
-import { ClassUtils } from "../utils/ClassUtils";
 export class GraphicsBounds {
     constructor() {
         this._cacheBoundsType = false;
@@ -337,5 +336,3 @@ GraphicsBounds._initMatrix = new Matrix();
 GraphicsBounds._tempPoints = [];
 GraphicsBounds._tempMatrixArrays = [];
 GraphicsBounds._tempCmds = [];
-ClassUtils.regClass("laya.display.GraphicsBounds", GraphicsBounds);
-ClassUtils.regClass("Laya.GraphicsBounds", GraphicsBounds);

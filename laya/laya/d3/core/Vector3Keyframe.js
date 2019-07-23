@@ -15,3 +15,6 @@ export class Vector3Keyframe extends Keyframe {
         this.value.cloneTo(destKeyFarme.value);
     }
 }
+if (window.conch && window.conchFloatArrayKeyframe) {
+    Vector3Keyframe = window.conchFloatArrayKeyframe;
+}

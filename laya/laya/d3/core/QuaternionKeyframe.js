@@ -16,3 +16,6 @@ export class QuaternionKeyframe extends Keyframe {
         this.value.cloneTo(destKeyFarme.value);
     }
 }
+if (window.conch && window.conchFloatArrayKeyframe) {
+    QuaternionKeyframe = window.conchFloatArrayKeyframe;
+}

@@ -6,7 +6,6 @@ export declare class Accelerator extends EventDispatcher {
     private static acceleration;
     private static accelerationIncludingGravity;
     private static rotationRate;
-    private static onChrome;
     constructor(singleton: number);
     on(type: string, caller: any, listener: Function, args?: any[]): EventDispatcher;
     off(type: string, caller: any, listener: Function, onceOnly?: boolean): EventDispatcher;

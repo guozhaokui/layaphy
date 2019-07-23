@@ -1,4 +1,4 @@
-import { Texture } from "../resource/Texture";
+import { Texture } from "laya/resource/Texture";
 import { TileAniSprite } from "./TileAniSprite";
 export declare class TileTexSet {
     gid: number;

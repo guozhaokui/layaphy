@@ -34,7 +34,6 @@ import { Texture } from "../resource/Texture";
 import { Utils } from "../utils/Utils";
 import { VectorGraphManager } from "../utils/VectorGraphManager";
 import { ILaya } from "../../ILaya";
-import { ClassUtils } from "../utils/ClassUtils";
 export class Graphics {
     constructor() {
         this._sp = null;
@@ -397,5 +396,3 @@ export class Graphics {
         this._saveToCmd(null, Draw9GridTexture.create(texture, x, y, width, height, sizeGrid));
     }
 }
-ClassUtils.regClass("laya.display.Graphics", Graphics);
-ClassUtils.regClass("Laya.Graphics", Graphics);

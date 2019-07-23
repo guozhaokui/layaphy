@@ -8,6 +8,8 @@ import { AABBOverlaps } from "../math/PhyUtils";
  */
 export class Broadphase{
 
+    dirty=true; // 有对象移动了
+
     /**
      * 获得物理世界的碰撞列表
      * @param world 

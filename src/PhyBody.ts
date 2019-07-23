@@ -4,6 +4,7 @@ import { BoundBox } from "../laya/laya/d3/math/BoundBox";
 import { PhyShape } from "./shapes/Shape";
 import { Matrix3x3 } from "../laya/laya/d3/math/Matrix3x3";
 import { PhyBox } from "./shapes/PhyBox";
+import { mat3Scale } from "./math/PhyUtils";
 type Vec3 = Vector3;
 let Vec3 = Vector3;
 
@@ -150,7 +151,7 @@ export class PhyBody{
     /**
      * Update .inertiaWorld and .invInertiaWorld
      */
-    updateInertiaWorld(force){
+    updateInertiaWorld(force=false){
         var I = this.invInertia;
         if (I.x === I.y && I.y === I.z && !force) {
             // If inertia M = s*I, where I is identity and s a scalar, then
@@ -162,10 +163,11 @@ export class PhyBody{
             var m1 = PhyBody.uiw_m1,
                 m2 = PhyBody.uiw_m2,
                 m3 = PhyBody.uiw_m3;
-            m1.setRotationFromQuaternion(this.quaternion);
-            m1.transpose(m2);
-            m1.scale(I,m1);
-            m1.mmult(m2,this.invInertiaWorld);
+            // 把 I和invI转换到世界空间
+            Matrix3x3.createRotationQuaternion(this.quaternion, m1);
+            m1.transpose(m2);   // invM1
+            mat3Scale(m1,I,m1);
+            Matrix3x3.multiply(m1,m2,this.invInertiaWorld);
         }
     };    
 

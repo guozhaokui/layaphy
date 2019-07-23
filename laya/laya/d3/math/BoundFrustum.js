@@ -188,6 +188,35 @@ export class BoundFrustum {
                 return ContainmentType.Contains;
         }
     }
+    intersects(box) {
+        var min = box.min;
+        var max = box.max;
+        var minX = min.x;
+        var minY = min.y;
+        var minZ = min.z;
+        var maxX = max.x;
+        var maxY = max.y;
+        var maxZ = max.z;
+        var nearNormal = this._near.normal;
+        if (this._near.distance + (nearNormal.x * (nearNormal.x < 0 ? minX : maxX)) + (nearNormal.y * (nearNormal.y < 0 ? minY : maxY)) + (nearNormal.z * (nearNormal.z < 0 ? minZ : maxZ)) < 0)
+            return false;
+        var leftNormal = this._left.normal;
+        if (this._left.distance + (leftNormal.x * (leftNormal.x < 0 ? minX : maxX)) + (leftNormal.y * (leftNormal.y < 0 ? minY : maxY)) + (leftNormal.z * (leftNormal.z < 0 ? minZ : maxZ)) < 0)
+            return false;
+        var rightNormal = this._right.normal;
+        if (this._right.distance + (rightNormal.x * (rightNormal.x < 0 ? minX : maxX)) + (rightNormal.y * (rightNormal.y < 0 ? minY : maxY)) + (rightNormal.z * (rightNormal.z < 0 ? minZ : maxZ)) < 0)
+            return false;
+        var bottomNormal = this._bottom.normal;
+        if (this._bottom.distance + (bottomNormal.x * (bottomNormal.x < 0 ? minX : maxX)) + (bottomNormal.y * (bottomNormal.y < 0 ? minY : maxY)) + (bottomNormal.z * (bottomNormal.z < 0 ? minZ : maxZ)) < 0)
+            return false;
+        var topNormal = this._top.normal;
+        if (this._top.distance + (topNormal.x * (topNormal.x < 0 ? minX : maxX)) + (topNormal.y * (topNormal.y < 0 ? minY : maxY)) + (topNormal.z * (topNormal.z < 0 ? minZ : maxZ)) < 0)
+            return false;
+        var farNormal = this._far.normal;
+        if (this._far.distance + (farNormal.x * (farNormal.x < 0 ? minX : maxX)) + (farNormal.y * (farNormal.y < 0 ? minY : maxY)) + (farNormal.z * (farNormal.z < 0 ? minZ : maxZ)) < 0)
+            return false;
+        return true;
+    }
     containsBoundBox(box) {
         var p = BoundFrustum._tempV30, n = BoundFrustum._tempV31;
         var boxMin = box.min;

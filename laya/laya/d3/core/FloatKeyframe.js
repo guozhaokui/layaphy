@@ -11,3 +11,6 @@ export class FloatKeyframe extends Keyframe {
         destKeyFrame.value = this.value;
     }
 }
+if (window.conch && window.conchFloatKeyframe) {
+    FloatKeyframe = window.conchFloatKeyframe;
+}

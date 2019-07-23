@@ -77,7 +77,7 @@ export class TextTexture extends Resource {
         !this._source && this.recreateResource();
         var gl = ILaya.Render.isConchApp ? LayaGL.instance.getDefaultCommandEncoder() : WebGLContext.mainContext;
         WebGLContext.bindTexture(gl, gl.TEXTURE_2D, this._source);
-        !ILaya.Render.isConchApp && gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+        !ILaya.Render.isConchApp && gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
         gl.texSubImage2D(gl.TEXTURE_2D, 0, x, y, gl.RGBA, gl.UNSIGNED_BYTE, canv);
         !ILaya.Render.isConchApp && gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
         var u0;

@@ -15,3 +15,6 @@ export class KeyframeNodeList {
         this._nodes[index] = node;
     }
 }
+if (window.conch && window.conchKeyframeNodeList) {
+    KeyframeNodeList = window.conchKeyframeNodeList;
+}

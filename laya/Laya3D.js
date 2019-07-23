@@ -173,6 +173,7 @@ export class Laya3D {
         SkyBoxMaterial.__initDefine__();
         ShaderInit3D.__init__();
         Command.__init__();
+        ClassUtils.regClass("Laya.UnlitMaterial", UnlitMaterial);
         ClassUtils.regClass("Laya.BlinnPhongMaterial", BlinnPhongMaterial);
         ClassUtils.regClass("Laya.SkyProceduralMaterial", SkyProceduralMaterial);
         ClassUtils.regClass("Laya.PBRStandardMaterial", PBRStandardMaterial);
@@ -291,11 +292,6 @@ export class Laya3D {
             }
             if (Render.supportWebGLPlusAnimation) {
                 avatar.prototype._cloneDatasToAnimator = avatar.prototype._cloneDatasToAnimatorNative;
-                window.FloatKeyframe = window.conchFloatKeyframe;
-                window.Vector3Keyframe = window.conchFloatArrayKeyframe;
-                window.QuaternionKeyframe = window.conchFloatArrayKeyframe;
-                window.KeyframeNode = window.conchKeyframeNode;
-                window.KeyframeNodeList = window.conchKeyframeNodeList;
                 var animationClip = AnimationClip;
                 animationClip.prototype._evaluateClipDatasRealTime = animationClip.prototype._evaluateClipDatasRealTimeForNative;
                 skinnedMeshRender.prototype.supportWebGLPlusAnimation = skinnedMeshRender.prototype.supportWebGLPlusAnimationForNative;

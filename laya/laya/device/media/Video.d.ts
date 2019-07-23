@@ -1,4 +1,4 @@
-import { Sprite } from "../../display/Sprite";
+import { Sprite } from "laya/display/Sprite";
 export declare class Video extends Sprite {
     static MP4: number;
     static OGG: number;

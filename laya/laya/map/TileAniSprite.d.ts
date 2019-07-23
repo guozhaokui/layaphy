@@ -1,5 +1,5 @@
 import { TileTexSet } from "./TileTexSet";
-import { Sprite } from "../display/Sprite";
+import { Sprite } from "laya/display/Sprite";
 export declare class TileAniSprite extends Sprite {
     private _tileTextureSet;
     private _aniName;

@@ -1,7 +1,6 @@
 import { Render } from "../../../renders/Render";
 import { FrustumCulling } from "../../graphics/FrustumCulling";
 import { BoundBox } from "../../math/BoundBox";
-import { ContainmentType } from "../../math/ContainmentType";
 import { Matrix4x4 } from "../../math/Matrix4x4";
 import { Vector3 } from "../../math/Vector3";
 import { Physics3DUtils } from "../../utils/Physics3DUtils";
@@ -106,7 +105,7 @@ export class ShurikenParticleRenderer extends BaseRender {
     }
     _needRender(boundFrustum) {
         if (boundFrustum) {
-            if (boundFrustum.containsBoundBox(this.bounds._getBoundBox()) !== ContainmentType.Disjoint) {
+            if (boundFrustum.intersects(this.bounds._getBoundBox())) {
                 if (this._owner.particleSystem.isAlive)
                     return true;
                 else

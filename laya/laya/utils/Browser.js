@@ -7,7 +7,16 @@ export class Browser {
         var win = Browser._window = window;
         var doc = Browser._document = win.document;
         var u = Browser.userAgent = win.navigator.userAgent;
-        if (u.indexOf("MiniGame") > -1 && "wx" in Browser.window) {
+        if (u.indexOf('AlipayMiniGame') > -1 && "my" in Browser.window) {
+            window.aliPayMiniGame(Laya, Laya);
+            if (!Laya["ALIMiniAdapter"]) {
+                console.error("请先添加阿里小游戏适配库");
+            }
+            else {
+                Laya["ALIMiniAdapter"].enable();
+            }
+        }
+        if (u.indexOf("MiniGame") > -1 && "wx" in Browser.window && !("my" in Browser.window)) {
             window.wxMiniGame(Laya, Laya);
             if (!Laya["MiniAdpter"]) {
                 console.error("请先添加小游戏适配库,详细教程：https://ldc2.layabox.com/doc/?nav=zh-ts-5-0-0");
@@ -95,6 +104,10 @@ export class Browser {
         }
         Browser.onVVMiniGame = u.indexOf('VVGame') > -1;
         Browser.onKGMiniGame = u.indexOf('QuickGame') > -1;
+        if (u.indexOf('AlipayMiniGame') > -1) {
+            Browser.onAlipayMiniGame = true;
+            Browser.onMiniGame = false;
+        }
         return win;
     }
     static createElement(type) {

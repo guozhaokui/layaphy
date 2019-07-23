@@ -19,6 +19,7 @@ export declare class Browser {
     static onKGMiniGame: boolean;
     static onQGMiniGame: boolean;
     static onVVMiniGame: boolean;
+    static onAlipayMiniGame: boolean;
     static onFirefox: boolean;
     static onEdge: boolean;
     static onLayaRuntime: boolean;

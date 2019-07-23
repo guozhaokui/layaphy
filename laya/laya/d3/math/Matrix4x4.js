@@ -153,30 +153,33 @@ export class Matrix4x4 {
         oe[15] = 1;
     }
     static multiply(left, right, out) {
-        var i, e, a, b, ai0, ai1, ai2, ai3;
-        e = out.elements;
-        a = left.elements;
-        b = right.elements;
-        if (e === b) {
-            b = new Float32Array(16);
-            for (i = 0; i < 16; ++i) {
-                b[i] = e[i];
-            }
-        }
-        var b0 = b[0], b1 = b[1], b2 = b[2], b3 = b[3];
-        var b4 = b[4], b5 = b[5], b6 = b[6], b7 = b[7];
-        var b8 = b[8], b9 = b[9], b10 = b[10], b11 = b[11];
-        var b12 = b[12], b13 = b[13], b14 = b[14], b15 = b[15];
-        for (i = 0; i < 4; i++) {
-            ai0 = a[i];
-            ai1 = a[i + 4];
-            ai2 = a[i + 8];
-            ai3 = a[i + 12];
-            e[i] = ai0 * b0 + ai1 * b1 + ai2 * b2 + ai3 * b3;
-            e[i + 4] = ai0 * b4 + ai1 * b5 + ai2 * b6 + ai3 * b7;
-            e[i + 8] = ai0 * b8 + ai1 * b9 + ai2 * b10 + ai3 * b11;
-            e[i + 12] = ai0 * b12 + ai1 * b13 + ai2 * b14 + ai3 * b15;
-        }
+        var l = right.elements;
+        var r = left.elements;
+        var e = out.elements;
+        var l11 = l[0], l12 = l[1], l13 = l[2], l14 = l[3];
+        var l21 = l[4], l22 = l[5], l23 = l[6], l24 = l[7];
+        var l31 = l[8], l32 = l[9], l33 = l[10], l34 = l[11];
+        var l41 = l[12], l42 = l[13], l43 = l[14], l44 = l[15];
+        var r11 = r[0], r12 = r[1], r13 = r[2], r14 = r[3];
+        var r21 = r[4], r22 = r[5], r23 = r[6], r24 = r[7];
+        var r31 = r[8], r32 = r[9], r33 = r[10], r34 = r[11];
+        var r41 = r[12], r42 = r[13], r43 = r[14], r44 = r[15];
+        e[0] = (l11 * r11) + (l12 * r21) + (l13 * r31) + (l14 * r41);
+        e[1] = (l11 * r12) + (l12 * r22) + (l13 * r32) + (l14 * r42);
+        e[2] = (l11 * r13) + (l12 * r23) + (l13 * r33) + (l14 * r43);
+        e[3] = (l11 * r14) + (l12 * r24) + (l13 * r34) + (l14 * r44);
+        e[4] = (l21 * r11) + (l22 * r21) + (l23 * r31) + (l24 * r41);
+        e[5] = (l21 * r12) + (l22 * r22) + (l23 * r32) + (l24 * r42);
+        e[6] = (l21 * r13) + (l22 * r23) + (l23 * r33) + (l24 * r43);
+        e[7] = (l21 * r14) + (l22 * r24) + (l23 * r34) + (l24 * r44);
+        e[8] = (l31 * r11) + (l32 * r21) + (l33 * r31) + (l34 * r41);
+        e[9] = (l31 * r12) + (l32 * r22) + (l33 * r32) + (l34 * r42);
+        e[10] = (l31 * r13) + (l32 * r23) + (l33 * r33) + (l34 * r43);
+        e[11] = (l31 * r14) + (l32 * r24) + (l33 * r34) + (l34 * r44);
+        e[12] = (l41 * r11) + (l42 * r21) + (l43 * r31) + (l44 * r41);
+        e[13] = (l41 * r12) + (l42 * r22) + (l43 * r32) + (l44 * r42);
+        e[14] = (l41 * r13) + (l42 * r23) + (l43 * r33) + (l44 * r43);
+        e[15] = (l41 * r14) + (l42 * r24) + (l43 * r34) + (l44 * r44);
     }
     static multiplyForNative(left, right, out) {
         LayaGL.instance.matrix4x4Multiply(left.elements, right.elements, out.elements);

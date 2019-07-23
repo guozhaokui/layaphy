@@ -1,13 +1,13 @@
 import { MapLayer } from "./MapLayer";
-import { Rectangle } from "../maths/Rectangle";
-import { Sprite } from "../display/Sprite";
-import { Loader } from "../net/Loader";
-import { ILaya } from "../../ILaya";
-import { Texture } from "../resource/Texture";
+import { Rectangle } from "laya/maths/Rectangle";
+import { Sprite } from "laya/display/Sprite";
+import { Loader } from "laya/net/Loader";
+import { ILaya } from "ILaya";
+import { Texture } from "laya/resource/Texture";
 import { TileTexSet } from "./TileTexSet";
 import { GridSprite } from "./GridSprite";
 import { TileAniSprite } from "./TileAniSprite";
-import { HTMLCanvas } from "../resource/HTMLCanvas";
+import { HTMLCanvas } from "laya/resource/HTMLCanvas";
 import { IMap } from "./IMap";
 export class TiledMap {
     constructor() {
@@ -630,7 +630,7 @@ export class TiledMap {
                 var tLayerSprite = this._layerArray[i];
                 if (tLayerSprite && tTempArray[i]) {
                     tGridSprite = tTempArray[i];
-                    if (tGridSprite._visible == false && tGridSprite.drawImageNum > 0) {
+                    if (tGridSprite.visible == false && tGridSprite.drawImageNum > 0) {
                         tGridSprite.show();
                     }
                 }

@@ -1,4 +1,4 @@
-import { Sprite } from "../display/Sprite";
+import { Sprite } from "laya/display/Sprite";
 export class GridSprite extends Sprite {
     constructor() {
         super(...arguments);
@@ -20,7 +20,7 @@ export class GridSprite extends Sprite {
         this.aniSpriteArray.push(sprite);
     }
     show() {
-        if (!this._visible) {
+        if (!this.visible) {
             this.visible = true;
             if (this.aniSpriteArray == null) {
                 return;
@@ -33,7 +33,7 @@ export class GridSprite extends Sprite {
         }
     }
     hide() {
-        if (this._visible) {
+        if (this.visible) {
             this.visible = false;
             if (this.aniSpriteArray == null) {
                 return;
@@ -51,7 +51,7 @@ export class GridSprite extends Sprite {
                 this.x = this.relativeX - this._map._viewPortX;
                 this.y = this.relativeY - this._map._viewPortY;
             }
-            if (this._x < 0 || this._x > this._map.viewPortWidth || this._y < 0 || this._y > this._map.viewPortHeight) {
+            if (this.x < 0 || this.x > this._map.viewPortWidth || this.y < 0 || this.y > this._map.viewPortHeight) {
                 this.hide();
             }
             else {

@@ -66,6 +66,7 @@ export class CharRender_Canvas extends ICharRender {
         if (!this.supportImageData)
             return this.getCharCanvas(char, font, lineWidth, colStr, strokeColStr, cri, margin_left, margin_top, margin_right, margin_bottom);
         var ctx = this.ctx;
+        var sz = this.fontsz;
         if (ctx.font != font) {
             ctx.font = font;
             ctx._lastFont = font;
@@ -87,17 +88,17 @@ export class CharRender_Canvas extends ICharRender {
         }
         ctx.clearRect(0, 0, clearW, clearH);
         ctx.save();
-        ctx.textBaseline = "top";
+        ctx.textBaseline = "middle";
         if (lineWidth > 0) {
             ctx.strokeStyle = strokeColStr;
             ctx.lineWidth = lineWidth;
-            ctx.strokeText(char, margin_left, margin_top);
+            ctx.strokeText(char, margin_left, margin_top + sz / 2);
         }
         ctx.fillStyle = colStr;
-        ctx.fillText(char, margin_left, margin_top);
+        ctx.fillText(char, margin_left, margin_top + sz / 2);
         if (this.showDbgInfo) {
             ctx.strokeStyle = '#ff0000';
-            ctx.strokeRect(0, 0, w, h);
+            ctx.strokeRect(1, 1, w - 2, h - 2);
             ctx.strokeStyle = '#00ff00';
             ctx.strokeRect(margin_left, margin_top, cri.width, cri.height);
         }
@@ -135,22 +136,23 @@ export class CharRender_Canvas extends ICharRender {
         }
         ctx.translate(margin_left, margin_top);
         ctx.textAlign = "left";
-        ctx.textBaseline = "top";
+        var sz = this.fontsz;
+        ctx.textBaseline = "middle";
         if (lineWidth > 0) {
             ctx.strokeStyle = strokeColStr;
             ctx.fillStyle = colStr;
             ctx.lineWidth = lineWidth;
             if (ctx.fillAndStrokeText) {
-                ctx.fillAndStrokeText(char, 0, 0);
+                ctx.fillAndStrokeText(char, 0, sz / 2);
             }
             else {
-                ctx.strokeText(char, 0, 0);
-                ctx.fillText(char, 0, 0);
+                ctx.strokeText(char, 0, sz / 2);
+                ctx.fillText(char, 0, sz / 2);
             }
         }
         else {
             ctx.fillStyle = colStr;
-            ctx.fillText(char, 0, 0);
+            ctx.fillText(char, 0, sz / 2);
         }
         if (this.showDbgInfo) {
             ctx.strokeStyle = '#ff0000';

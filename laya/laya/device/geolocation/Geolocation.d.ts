@@ -1,4 +1,4 @@
-import { Handler } from "../../utils/Handler";
+import { Handler } from "laya/utils/Handler";
 export declare class Geolocation {
     private static navigator;
     private static position;

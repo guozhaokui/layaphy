@@ -4,6 +4,7 @@ import { MathUtils3D } from "../math/MathUtils3D";
 import { Matrix4x4 } from "../math/Matrix4x4";
 import { Quaternion } from "../math/Quaternion";
 import { Vector3 } from "../math/Vector3";
+import { Matrix3x3 } from "../math/Matrix3x3";
 export class Transform3D extends EventDispatcher {
     constructor(owner) {
         super();
@@ -185,7 +186,7 @@ export class Transform3D extends EventDispatcher {
     }
     get localMatrix() {
         if (this._getTransformFlag(Transform3D.TRANSFORM_LOCALMATRIX)) {
-            this._updateLocalMatrix();
+            Matrix4x4.createAffineTransformation(this._localPosition, this.localRotation, this._localScale, this._localMatrix);
             this._setTransformFlag(Transform3D.TRANSFORM_LOCALMATRIX, false);
         }
         return this._localMatrix;
@@ -194,16 +195,17 @@ export class Transform3D extends EventDispatcher {
         if (this._localMatrix !== value)
             value.cloneTo(this._localMatrix);
         this._localMatrix.decomposeTransRotScale(this._localPosition, this._localRotation, this._localScale);
+        this._setTransformFlag(Transform3D.TRANSFORM_LOCALEULER, true);
         this._setTransformFlag(Transform3D.TRANSFORM_LOCALMATRIX, false);
         this._onWorldTransform();
     }
     get position() {
         if (this._getTransformFlag(Transform3D.TRANSFORM_WORLDPOSITION)) {
             if (this._parent != null) {
-                var parentPosition = this._parent.position;
-                Vector3.multiply(this._localPosition, this._parent.scale, Transform3D._tempVector30);
-                Vector3.transformQuat(Transform3D._tempVector30, this._parent.rotation, Transform3D._tempVector30);
-                Vector3.add(parentPosition, Transform3D._tempVector30, this._position);
+                var worldMatE = this.worldMatrix.elements;
+                this._position.x = worldMatE[12];
+                this._position.y = worldMatE[13];
+                this._position.z = worldMatE[14];
             }
             else {
                 this._localPosition.cloneTo(this._position);
@@ -214,19 +216,9 @@ export class Transform3D extends EventDispatcher {
     }
     set position(value) {
         if (this._parent != null) {
-            Vector3.subtract(value, this._parent.position, this._localPosition);
-            var parentScale = this._parent.scale;
-            var psX = parentScale.x, psY = parentScale.y, psZ = parentScale.z;
-            if (psX !== 1.0 || psY !== 1.0 || psZ !== 1.0) {
-                var invertScale = Transform3D._tempVector30;
-                invertScale.x = 1.0 / psX;
-                invertScale.y = 1.0 / psY;
-                invertScale.z = 1.0 / psZ;
-                Vector3.multiply(this._localPosition, invertScale, this._localPosition);
-            }
-            var parentRotation = this._parent.rotation;
-            parentRotation.invert(Transform3D._tempQuaternion0);
-            Vector3.transformQuat(this._localPosition, Transform3D._tempQuaternion0, this._localPosition);
+            var parentInvMat = Transform3D._tempMatrix0;
+            this._parent.worldMatrix.invert(parentInvMat);
+            Vector3.transformCoordinate(value, parentInvMat, this._localPosition);
         }
         else {
             value.cloneTo(this._localPosition);
@@ -258,33 +250,6 @@ export class Transform3D extends EventDispatcher {
         if (value !== this._rotation)
             value.cloneTo(this._rotation);
         this._setTransformFlag(Transform3D.TRANSFORM_WORLDQUATERNION, false);
-    }
-    get scale() {
-        if (!this._getTransformFlag(Transform3D.TRANSFORM_WORLDSCALE))
-            return this._scale;
-        if (this._parent !== null)
-            Vector3.multiply(this._parent.scale, this._localScale, this._scale);
-        else
-            this._localScale.cloneTo(this._scale);
-        this._setTransformFlag(Transform3D.TRANSFORM_WORLDSCALE, false);
-        return this._scale;
-    }
-    set scale(value) {
-        if (this._parent !== null) {
-            var parScale = this._parent.scale;
-            var invParScale = Transform3D._tempVector30;
-            invParScale.x = 1.0 / parScale.x;
-            invParScale.y = 1.0 / parScale.y;
-            invParScale.z = 1.0 / parScale.z;
-            Vector3.multiply(value, Transform3D._tempVector30, this._localScale);
-        }
-        else {
-            value.cloneTo(this._localScale);
-        }
-        this.localScale = this._localScale;
-        if (this._scale !== value)
-            value.cloneTo(this._scale);
-        this._setTransformFlag(Transform3D.TRANSFORM_WORLDSCALE, false);
     }
     get rotationEuler() {
         if (this._getTransformFlag(Transform3D.TRANSFORM_WORLDEULER)) {
@@ -328,6 +293,17 @@ export class Transform3D extends EventDispatcher {
             value.cloneTo(this._worldMatrix);
         this._setTransformFlag(Transform3D.TRANSFORM_WORLDMATRIX, false);
     }
+    _getScaleMatrix() {
+        var invRotation = Transform3D._tempQuaternion0;
+        var invRotationMat = Transform3D._tempMatrix3x30;
+        var worldRotScaMat = Transform3D._tempMatrix3x31;
+        var scaMat = Transform3D._tempMatrix3x32;
+        Matrix3x3.createFromMatrix4x4(this.worldMatrix, worldRotScaMat);
+        this.rotation.invert(invRotation);
+        Matrix3x3.createRotationQuaternion(invRotation, invRotationMat);
+        Matrix3x3.multiply(invRotationMat, worldRotScaMat, scaMat);
+        return scaMat;
+    }
     _setTransformFlag(type, value) {
         if (value)
             this._transformFlag |= type;
@@ -350,9 +326,6 @@ export class Transform3D extends EventDispatcher {
             }
             this._parent = value;
         }
-    }
-    _updateLocalMatrix() {
-        Matrix4x4.createAffineTransformation(this._localPosition, this.localRotation, this._localScale, this._localMatrix);
     }
     _onWorldPositionRotationTransform() {
         if (!this._getTransformFlag(Transform3D.TRANSFORM_WORLDMATRIX) || !this._getTransformFlag(Transform3D.TRANSFORM_WORLDPOSITION) || !this._getTransformFlag(Transform3D.TRANSFORM_WORLDQUATERNION) || !this._getTransformFlag(Transform3D.TRANSFORM_WORLDEULER)) {
@@ -471,13 +444,58 @@ export class Transform3D extends EventDispatcher {
             this.rotation = this._rotation;
         }
     }
+    getLossyWorldScale() {
+        if (this._getTransformFlag(Transform3D.TRANSFORM_WORLDSCALE)) {
+            if (this._parent !== null) {
+                var scaMatE = this._getScaleMatrix().elements;
+                this._scale.x = scaMatE[0];
+                this._scale.y = scaMatE[4];
+                this._scale.z = scaMatE[8];
+            }
+            else {
+                this._localScale.cloneTo(this._scale);
+            }
+            this._setTransformFlag(Transform3D.TRANSFORM_WORLDSCALE, false);
+        }
+        return this._scale;
+    }
+    setLossyWorldScale(value) {
+        if (this._parent !== null) {
+            var scaleMat = Transform3D._tempMatrix3x33;
+            var localScaleMat = Transform3D._tempMatrix3x33;
+            var localScaleMatE = localScaleMat.elements;
+            var parInvScaleMat = this._parent._getScaleMatrix();
+            parInvScaleMat.invert(parInvScaleMat);
+            Matrix3x3.createFromScaling(value, scaleMat);
+            Matrix3x3.multiply(parInvScaleMat, scaleMat, localScaleMat);
+            this._localScale.x = localScaleMatE[0];
+            this._localScale.y = localScaleMatE[4];
+            this._localScale.z = localScaleMatE[8];
+        }
+        else {
+            value.cloneTo(this._localScale);
+        }
+        this.localScale = this._localScale;
+        if (this._scale !== value)
+            value.cloneTo(this._scale);
+        this._setTransformFlag(Transform3D.TRANSFORM_WORLDSCALE, false);
+    }
+    get scale() {
+        console.warn("Transfrm3D: discard function,please use getLossyWorldScale instead.");
+        return this.getLossyWorldScale();
+    }
+    set scale(value) {
+        console.warn("Transfrm3D: discard function,please use setLossyWorldScale instead.");
+        this.setLossyWorldScale(value);
+    }
 }
 Transform3D._tempVector30 = new Vector3();
-Transform3D._tempVector31 = new Vector3();
-Transform3D._tempVector32 = new Vector3();
-Transform3D._tempVector33 = new Vector3();
 Transform3D._tempQuaternion0 = new Quaternion();
 Transform3D._tempMatrix0 = new Matrix4x4();
+Transform3D._tempMatrix3x30 = new Matrix3x3();
+Transform3D._tempMatrix3x31 = new Matrix3x3();
+Transform3D._tempMatrix3x32 = new Matrix3x3();
+Transform3D._tempMatrix3x33 = new Matrix3x3();
 Transform3D.TRANSFORM_LOCALQUATERNION = 0x01;
 Transform3D.TRANSFORM_LOCALEULER = 0x02;
 Transform3D.TRANSFORM_LOCALMATRIX = 0x04;

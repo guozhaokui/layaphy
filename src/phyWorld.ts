@@ -4,7 +4,7 @@ import { Broadphase } from "./collision/Broadphase";
 import { NaiveBroadPhase } from "./collision/NaiveBroadPhase";
 import { GSSolver } from "./solver/GSSolver";
 import { Matrix3x3 } from "../laya/laya/d3/math/Matrix3x3";
-import { Vec3Trans } from "./math/PhyUtils";
+import { Vec3Trans, QuatIntegrate } from "./math/PhyUtils";
 import { Quaternion } from "../laya/laya/d3/math/Quaternion";
 
 type Vec3 = Vector3;
@@ -139,7 +139,7 @@ export class PhyWorld{
                     let invInertia = bi.invInertiaWorld;
                     let quat = bi.quaternion;
 
-                    Vec3Trans(torque,invInertia,invI_tau_dt);                   //torque*Mat
+                    Vec3Trans(torque,invInertia,invI_tau_dt);                   //torque*Mat 角加速度
                     invI_tau_dt.x*=dt; invI_tau_dt.y*=dt; invI_tau_dt.z*=dt;    //*dt
                     // 增加角速度
                     angVel.x+=invI_tau_dt.x;
@@ -147,19 +147,22 @@ export class PhyWorld{
                     angVel.z+=invI_tau_dt.z;
 
                     // 计算旋转
-                    let step_w = this.step_w;
-                    let wq = this.step_wq;
-                    // angvel * quat
-                    // quat.norm()
-
+                    QuatIntegrate(quat, angVel, dt, quat);
+                    if( true ){  // quat其实不必每次都normalize
+                        quat.normalize(quat);
+                    }
                 }
 
                 // 更新包围盒
+                if(bi.aabb){
+                    bi.aabbNeedsUpdate=true;
+                }
 
                 // 更新世界空间转动惯量
-
+                if(bi.updateInertiaWorld){
+                    bi.updateInertiaWorld();
+                }
             }
-
         }
 
         // 所有对象上的力清零
@@ -168,6 +171,8 @@ export class PhyWorld{
             bi.force.setValue(0,0,0);
             bi.torque.setValue(0,0,0);
         }
+
+        this.boradphase.dirty=true;
 
         this.stepnumber++;
         this.time+=dt;

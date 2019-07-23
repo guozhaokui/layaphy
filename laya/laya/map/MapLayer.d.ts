@@ -1,5 +1,5 @@
-import { Sprite } from "../display/Sprite";
-import { Point } from "../maths/Point";
+import { Sprite } from "laya/display/Sprite";
+import { Point } from "laya/maths/Point";
 import { GridSprite } from "./GridSprite";
 import { TiledMap } from "./TiledMap";
 export declare class MapLayer extends Sprite {

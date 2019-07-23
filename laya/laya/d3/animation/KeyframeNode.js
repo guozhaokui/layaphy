@@ -47,3 +47,6 @@ export class KeyframeNode {
         return this._keyFrames[index];
     }
 }
+if (window.conch && window.conchKeyframeNode) {
+    KeyframeNode = window.conchKeyframeNode;
+}

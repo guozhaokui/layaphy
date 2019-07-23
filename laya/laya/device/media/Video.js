@@ -1,7 +1,7 @@
 import { WebGLVideo } from "./WebGLVideo";
-import { Sprite } from "../../display/Sprite";
-import { Texture } from "../../resource/Texture";
-import { ILaya } from "../../../ILaya";
+import { Sprite } from "laya/display/Sprite";
+import { Texture } from "laya/resource/Texture";
+import { ILaya } from "ILaya";
 export class Video extends Sprite {
     constructor(width = 320, height = 240) {
         super();

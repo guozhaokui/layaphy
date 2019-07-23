@@ -54,7 +54,17 @@ import { MeshVG } from "./laya/webgl/utils/MeshVG";
 import { MeshParticle2D } from "./laya/webgl/utils/MeshParticle2D";
 import { MeshQuadTexture } from "./laya/webgl/utils/MeshQuadTexture";
 import { MeshTexture } from "./laya/webgl/utils/MeshTexture";
+import { SoundChannel } from "./laya/media/SoundChannel";
+import { EventDispatcher } from "./laya/events/EventDispatcher";
+import { Handler } from "./laya/utils/Handler";
+import { RunDriver } from "./laya/utils/RunDriver";
+import { Matrix } from "./laya/maths/Matrix";
+import { Accelerator } from "./laya/device/motion/Accelerator";
+import { HTMLImage } from "./laya/resource/HTMLImage";
 export class Laya {
+    static __init(_classs) {
+        _classs.forEach(function (o) { o.__init$ && o.__init$(); });
+    }
     static init(width, height, ...plugins) {
         if (Laya._isinit)
             return;
@@ -66,7 +76,7 @@ export class Laya {
         style.position = 'absolute';
         style.top = style.left = "0px";
         style.background = "#000000";
-        if (!Browser.onKGMiniGame) {
+        if (!Browser.onKGMiniGame && !Browser.onAlipayMiniGame) {
             Browser.container.appendChild(mainCanv.source);
         }
         Browser.canvas = new HTMLCanvas(true);
@@ -230,8 +240,6 @@ export class Laya {
         };
         if (Render.supportWebGLPlusRendering) {
             LayaGLRunner.uploadShaderUniforms = LayaGLRunner.uploadShaderUniformsForNative;
-            window.CommandEncoder = window.GLCommandEncoder;
-            window.LayaGL = window.LayaGLContext;
         }
     }
 }
@@ -300,6 +308,21 @@ regClassToEngine(Sprite);
 regClassToEngine(Node);
 regClassToEngine(Context);
 regClassToEngine(WebGL);
+regClassToEngine(SoundChannel);
+regClassToEngine(EventDispatcher);
+regClassToEngine(Handler);
+regClassToEngine(RunDriver);
+regClassToEngine(Utils);
+regClassToEngine(Input);
+regClassToEngine(Loader);
+regClassToEngine(LocalStorage);
+regClassToEngine(SoundManager);
+regClassToEngine(URL);
+regClassToEngine(Event);
+regClassToEngine(Matrix);
+regClassToEngine(Accelerator);
+regClassToEngine(HTMLImage);
+export var __init = Laya.__init;
 export var init = Laya.init;
 export var stage;
 export var systemTimer;

@@ -1,7 +1,7 @@
 import { Accelerator } from "./motion/Accelerator";
-import { EventDispatcher } from "../events/EventDispatcher";
-import { Event } from "../events/Event";
-import { ILaya } from "../../ILaya";
+import { EventDispatcher } from "laya/events/EventDispatcher";
+import { Event } from "laya/events/Event";
+import { ILaya } from "ILaya";
 export class Shake extends EventDispatcher {
     constructor() {
         super();

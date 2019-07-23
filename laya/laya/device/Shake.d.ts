@@ -1,4 +1,4 @@
-import { EventDispatcher } from "../events/EventDispatcher";
+import { EventDispatcher } from "laya/events/EventDispatcher";
 export declare class Shake extends EventDispatcher {
     private throushold;
     private shakeInterval;

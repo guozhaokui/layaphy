@@ -1,4 +1,4 @@
-import { ILaya } from "../../ILaya";
+import { ILaya } from "ILaya";
 export class TileTexSet {
     constructor() {
         this.gid = -1;

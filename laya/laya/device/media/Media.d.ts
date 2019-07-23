@@ -1,4 +1,4 @@
-import { Handler } from "../../utils/Handler";
+import { Handler } from "laya/utils/Handler";
 export declare class Media {
     constructor();
     static supported(): boolean;

@@ -34,7 +34,7 @@ export class Accelerator extends EventDispatcher {
         Accelerator.rotationRate.beta = e.rotationRate.alpha * -1;
         Accelerator.rotationRate.gamma = e.rotationRate.beta;
         if (ILaya.Browser.onAndroid) {
-            if (Accelerator.onChrome) {
+            if (ILaya.Browser.userAgent.indexOf("Chrome") > -1) {
                 Accelerator.rotationRate.alpha *= 180 / Math.PI;
                 Accelerator.rotationRate.beta *= 180 / Math.PI;
                 Accelerator.rotationRate.gamma *= 180 / Math.PI;
@@ -87,4 +87,3 @@ export class Accelerator extends EventDispatcher {
 Accelerator.acceleration = new AccelerationInfo();
 Accelerator.accelerationIncludingGravity = new AccelerationInfo();
 Accelerator.rotationRate = new RotationInfo();
-Accelerator.onChrome = (ILaya.Browser.userAgent.indexOf("Chrome") > -1);

@@ -27,6 +27,6 @@ export class LayaGLRunner {
             nType = LayaGL.UPLOAD_SHADER_UNIFORM_TYPE_DATA;
         }
         var data = shaderData._data;
-        return layaGL.uploadShaderUniforms(commandEncoder, data, nType);
+        return LayaGL.instance.uploadShaderUniforms(commandEncoder, data, nType);
     }
 }
