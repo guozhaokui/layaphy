@@ -29,6 +29,7 @@ export class Narrowphase{
                 bj = p2[k];
             
             //TODO 根据bi和bj查表获得物理材质 world.getContactMtl(bi.mtl,bj.mtl)
+
             let justtest = (
                 ( (bi.type&BODYTYPE.KINEMATIC)&&(bj.type&BODYTYPE.STATIC)) ||
                 ( (bi.type&BODYTYPE.STATIC)&&(bj.type&BODYTYPE.KINEMATIC))||
@@ -37,7 +38,11 @@ export class Narrowphase{
 
             
             for(let i=0;i<bi.shapes.length; i++){
-                let cshape = bi.shapes[i];
+                let si = bi.shapes[i];
+
+                for( let j=0; j<bj.shapes.length; j++){
+                    let sj = bj.shapes[j];
+                }
             }
         }
     }
@@ -45,6 +50,10 @@ export class Narrowphase{
     createContactEquation(bi:PhyBody, bj:PhyBody, si:PhyShape, sj:PhyShape, overrideShapeA:PhyShape, overrideShapeB:PhyShape){
 
     }
+
+    planeBox(si:PhySphere,sj:PhySphere,xi:Vector3,xj:Vector3,qi:Quaternion,qj:Quaternion,bi:PhyBody,bj:PhyBody,rsi:PhyShape,rsj:PhyShape,justTest:boolean){
+        
+    }    
 
     /**
      * 两个球体的碰撞
@@ -89,6 +98,14 @@ export class Narrowphase{
         this.result.push(r);
 
         this.createFrictionEquationsFromContact(r, this.frictionResult);
+    }
+
+    planeConvex(planeShape:PhyShape, convexShape:PhyShape, xi:Vector3, xj:Vector3, planeQuat:Quaternion, convexQuat:Quaternion, bi:PhyBody, bj:PhyBody){
+        let worldVertex = new Vector3(),
+            worldNormal = new Vector3();
+        worldNormal.setValue(0,0,1);
+        // 用四元数旋转planenormal
+
     }
 
 }
