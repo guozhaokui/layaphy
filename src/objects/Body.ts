@@ -348,6 +348,10 @@ export default class Body extends EventTarget {
         this._wakeUpAfterNarrowphase = false;
     }
 
+    isSleep(){
+        return this.sleepState===Body.SLEEPING;
+    }
+
     /**
      * Called every timestep to update internal sleep timer and change sleep state if needed.
      * @param time The world time in seconds

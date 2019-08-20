@@ -477,27 +477,20 @@ export default class World extends EventTarget {
      *
      * There are two modes. The simple mode is fixed timestepping without interpolation. In this case you only use the first argument. The second case uses interpolation. In that you also provide the time since the function was last used, as well as the maximum fixed timesteps to take.
      *
-     * @method step
-     * @param dt                       The fixed time step size to use.
+     * @param dt                       The fixed time step size to use. 单位是秒
      * @param [timeSinceLastCalled]    The time elapsed since the function was last called.
      * @param [maxSubSteps=10]         Maximum number of fixed steps to take per function call.
      *
      * @example
      *     // fixed timestepping without interpolation
      *     world.step(1/60);
-     *
-     * @see http://bulletphysics.org/mediawiki-1.5.8/index.php/Stepping_The_World
      */
     step(dt: number, timeSinceLastCalled: number = 0, maxSubSteps: number = 10) {
         if (timeSinceLastCalled === 0) { // Fixed, simple stepping
-
             this.internalStep(dt);
-
             // Increment time
             this.time += dt;
-
         } else {
-
             this.accumulator += timeSinceLastCalled;
             var substeps = 0;
             while (this.accumulator >= dt && substeps < maxSubSteps) {
