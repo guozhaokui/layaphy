@@ -222,7 +222,7 @@ export default class RaycastVehicle {
         }
     }
 
-    updateSuspension(deltaTime) {
+    updateSuspension(deltaTime:f32) {
         const chassisBody = this.chassisBody;
         const chassisMass = chassisBody.mass;
         const wheelInfos = this.wheelInfos;

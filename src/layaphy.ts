@@ -87,9 +87,9 @@ function  addBox(sx:number, sy:number, sz:number, x:number, y:number,z:number){
     pos.setValue(x,y,z);
     transform.position = pos;
     //设置欧拉角
-    //var rotationEuler = transform.rotationEuler;
-    //rotationEuler.setValue(Math.random() * 360, Math.random() * 360, Math.random() * 360);
-    //transform.rotationEuler = rotationEuler;
+    var rotationEuler = transform.rotationEuler;
+    rotationEuler.setValue(Math.random() * 360, Math.random() * 360, Math.random() * 360);
+    transform.rotationEuler = rotationEuler;
 
     var rigidBody = box.addComponent(LCPhyComponent) as LCPhyComponent;
     var boxShape = new Box(new Vec3(sx,sy,sz));

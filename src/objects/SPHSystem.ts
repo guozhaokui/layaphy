@@ -103,7 +103,7 @@ export default class SPHSystem {
                 const len = dist.length();
 
                 const weight = this.w(len);
-                sum += neighbors[j].mass * weight;
+                sum += neighbors[j]._mass * weight;
             }
 
             // Save
@@ -147,7 +147,7 @@ export default class SPHSystem {
                 const r = r_vec.length();
 
                 // Pressure contribution
-                Pij = -neighbor.mass * (this.pressures[i] / (this.densities[i] * this.densities[i] + eps) + this.pressures[j] / (this.densities[j] * this.densities[j] + eps));
+                Pij = -neighbor._mass * (this.pressures[i] / (this.densities[i] * this.densities[i] + eps) + this.pressures[j] / (this.densities[j] * this.densities[j] + eps));
                 this.gradw(r_vec, gradW);
                 // Add to pressure acceleration
                 gradW.scale(Pij, gradW);
@@ -155,7 +155,7 @@ export default class SPHSystem {
 
                 // Viscosity contribution
                 neighbor.velocity.vsub(particle.velocity, u);
-                u.scale(1.0 / (0.0001 + this.densities[i] * this.densities[j]) * this.viscosity * neighbor.mass, u);
+                u.scale(1.0 / (0.0001 + this.densities[i] * this.densities[j]) * this.viscosity * neighbor._mass, u);
                 nabla = this.nablaw(r);
                 u.scale(nabla, u);
                 // Add to viscosity acceleration
@@ -163,8 +163,8 @@ export default class SPHSystem {
             }
 
             // Calculate force
-            a_visc.scale(particle.mass, a_visc);
-            a_pressure.scale(particle.mass, a_pressure);
+            a_visc.scale(particle._mass, a_visc);
+            a_pressure.scale(particle._mass, a_pressure);
 
             // Add force to particles
             particle.force.vadd(a_visc, particle.force);

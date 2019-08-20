@@ -152,12 +152,12 @@ export default class Body extends EventTarget {
      */
     force = new Vec3();
 
-    mass = 0;
-    invMass = 0;
+    _mass:f32  = 0;
+    invMass:f32 = 0;
 
     material = null;
 
-    linearDamping = 0.01;
+    linearDamping:f32 = 0.01;
 
     /**
      * One of: Body.DYNAMIC, Body.STATIC and Body.KINEMATIC.
@@ -270,7 +270,7 @@ export default class Body extends EventTarget {
 
     constructor(mass: f32 = 1, shape: Shape = null, options?: BodyInitOptions) {
         super();
-        this.mass = mass;
+        this._mass = mass;
         this.invMass = mass > 0 ? 1.0 / mass : 0;
         this.type = (mass <= 0.0 ? Body.STATIC : Body.DYNAMIC);
 
@@ -324,6 +324,15 @@ export default class Body extends EventTarget {
         this.updateMassProperties();
     }
 
+    set mass(v:f32){
+        this._mass=v;
+        this.updateMassProperties();
+    }
+
+    get mass():f32{
+        return this._mass;
+    }
+    
     /**
      * Wake the body up.
      * @method wakeUp
@@ -638,9 +647,12 @@ export default class Body extends EventTarget {
      * Should be called whenever you change the body shape or mass.
      */
     updateMassProperties() {
+        this.type = (this._mass <= 0.0 ? Body.STATIC : Body.DYNAMIC);
+        if(this.type==Body.STATIC)
+            return;
         const halfExtents = Body_updateMassProperties_halfExtents;
 
-        this.invMass = this.mass > 0 ? 1.0 / this.mass : 0;
+        this.invMass = this._mass > 0 ? 1.0 / this._mass : 0;
         const I = this.inertia;
         const fixed = this.fixedRotation;
 
@@ -651,7 +663,7 @@ export default class Body extends EventTarget {
             (this.aabb.upperBound.y - this.aabb.lowerBound.y) / 2,
             (this.aabb.upperBound.z - this.aabb.lowerBound.z) / 2
         );
-        Box.calculateInertia(halfExtents, this.mass, I);
+        Box.calculateInertia(halfExtents, this._mass, I);
 
         this.invInertia.set(
             I.x > 0 && !fixed ? 1.0 / I.x : 0,
