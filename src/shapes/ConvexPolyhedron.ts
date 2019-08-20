@@ -1,4 +1,4 @@
-import Shape from './Shape.js';
+import Shape, { SHAPETYPE } from './Shape.js';
 import Vec3 from '../math/Vec3.js';
 import Quaternion from '../math/Quaternion.js';
 import Transform from '../math/Transform.js';
@@ -59,7 +59,7 @@ export default class ConvexPolyhedron extends Shape {
      */
     constructor(points?: Vec3[], faces?:number[][], uniqueAxes?) {
         super();
-        this.type = Shape.types.CONVEXPOLYHEDRON;
+        this.type = SHAPETYPE.CONVEXPOLYHEDRON;
         this.vertices = points || [];
         this.faces = faces || [];
         this.computeNormals();

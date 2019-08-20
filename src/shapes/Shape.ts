@@ -5,26 +5,23 @@ import Body from '../objects/Body.js';
 import Material from '../material/Material.js';
 import Quaternion from '../math/Quaternion.js';
 
+export enum SHAPETYPE{
+    SPHERE= 1,
+    PLANE= 2,
+    BOX= 4,
+    COMPOUND= 8,
+    CONVEXPOLYHEDRON= 16,
+    HEIGHTFIELD= 32,
+    PARTICLE= 64,
+    CYLINDER= 128,
+    TRIMESH= 256,
+    CAPSULE=512,
+}
 /**
  * Base class for shapes
  */
 export default class Shape {
     static idCounter = 0;
-    /**
-     * The available shape types.
-     */
-    static types = {
-        SPHERE: 1,
-        PLANE: 2,
-        BOX: 4,
-        COMPOUND: 8,
-        CONVEXPOLYHEDRON: 16,
-        HEIGHTFIELD: 32,
-        PARTICLE: 64,
-        CYLINDER: 128,
-        TRIMESH: 256
-    };
-
 
     id = Shape.idCounter++;
     type = 0;

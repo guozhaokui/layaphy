@@ -2,7 +2,7 @@ import Vec3 from '../math/Vec3.js';
 import Quaternion from '../math/Quaternion.js';
 import Transform from '../math/Transform.js';
 import RaycastResult from './RaycastResult.js';
-import Shape from '../shapes/Shape.js';
+import Shape, { SHAPETYPE } from '../shapes/Shape.js';
 import AABB from './AABB.js';
 import World from '../world/World.js';
 import Body from '../objects/Body.js';
@@ -173,12 +173,12 @@ export default class Ray {
         }
 
         switch(shape.type){
-            case Shape.types.BOX: this.intersectBox(shape as Box,quat,position,body,shape); break;
-            case Shape.types.SPHERE: this.intersectSphere(shape as Sphere, quat,position,body,shape); break;
-            case Shape.types.PLANE: this.intersectPlane(shape as Plane, quat,position,body,shape); break;
-            case Shape.types.CONVEXPOLYHEDRON: this.intersectConvex(shape as ConvexPolyhedron, quat,position,body,shape); break;
-            case Shape.types.TRIMESH: this.intersectTrimesh(shape as Trimesh, quat,position,body,shape); break;
-            case Shape.types.HEIGHTFIELD: this.intersectHeightfield(shape as Heightfield, quat,position,body,shape); break;
+            case SHAPETYPE.BOX: this.intersectBox(shape as Box,quat,position,body,shape); break;
+            case SHAPETYPE.SPHERE: this.intersectSphere(shape as Sphere, quat,position,body,shape); break;
+            case SHAPETYPE.PLANE: this.intersectPlane(shape as Plane, quat,position,body,shape); break;
+            case SHAPETYPE.CONVEXPOLYHEDRON: this.intersectConvex(shape as ConvexPolyhedron, quat,position,body,shape); break;
+            case SHAPETYPE.TRIMESH: this.intersectTrimesh(shape as Trimesh, quat,position,body,shape); break;
+            case SHAPETYPE.HEIGHTFIELD: this.intersectHeightfield(shape as Heightfield, quat,position,body,shape); break;
         }
         /*
         const intersectMethod = this[shape.type];

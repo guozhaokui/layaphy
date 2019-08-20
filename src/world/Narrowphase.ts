@@ -1,6 +1,6 @@
 import AABB from '../collision/AABB.js';
-import Body from '../objects/Body.js';
-import Shape from '../shapes/Shape.js';
+import Body, { BODYTYPE } from '../objects/Body.js';
+import Shape, { SHAPETYPE } from '../shapes/Shape.js';
 import Ray from '../collision/Ray.js';
 import Vec3 from '../math/Vec3.js';
 import Transform from '../math/Transform.js';
@@ -55,24 +55,24 @@ export default class Narrowphase {
 
     constructor(world: World) {
         this.world = world;
-        shapeChecks[Shape.types.BOX | Shape.types.BOX] = this.boxBox;
-        shapeChecks[Shape.types.BOX | Shape.types.CONVEXPOLYHEDRON] = this.boxConvex;
-        shapeChecks[Shape.types.BOX | Shape.types.PARTICLE] = this.boxParticle;
-        shapeChecks[Shape.types.SPHERE] = this.sphereSphere;
-        shapeChecks[Shape.types.PLANE | Shape.types.TRIMESH] = this.planeTrimesh;
-        shapeChecks[Shape.types.SPHERE | Shape.types.TRIMESH] = this.sphereTrimesh;
-        shapeChecks[Shape.types.SPHERE | Shape.types.PLANE] = this.spherePlane;
-        shapeChecks[Shape.types.SPHERE | Shape.types.BOX] = this.sphereBox;
-        shapeChecks[Shape.types.SPHERE | Shape.types.CONVEXPOLYHEDRON] = this.sphereConvex;
-        shapeChecks[Shape.types.PLANE | Shape.types.BOX] = this.planeBox;
-        shapeChecks[Shape.types.PLANE | Shape.types.CONVEXPOLYHEDRON] = this.planeConvex;
-        shapeChecks[Shape.types.CONVEXPOLYHEDRON] = this.convexConvex;
-        shapeChecks[Shape.types.PLANE | Shape.types.PARTICLE] = this.planeParticle;
-        shapeChecks[Shape.types.PARTICLE | Shape.types.SPHERE] = this.sphereParticle;
-        shapeChecks[Shape.types.PARTICLE | Shape.types.CONVEXPOLYHEDRON] = this.convexParticle;
-        shapeChecks[Shape.types.CONVEXPOLYHEDRON | Shape.types.HEIGHTFIELD] = this.convexHeightfield;
-        shapeChecks[Shape.types.BOX | Shape.types.HEIGHTFIELD] = this.boxHeightfield;
-        shapeChecks[Shape.types.SPHERE | Shape.types.HEIGHTFIELD] = this.sphereHeightfield;
+        shapeChecks[SHAPETYPE.BOX | SHAPETYPE.BOX] = this.boxBox;
+        shapeChecks[SHAPETYPE.BOX | SHAPETYPE.CONVEXPOLYHEDRON] = this.boxConvex;
+        shapeChecks[SHAPETYPE.BOX | SHAPETYPE.PARTICLE] = this.boxParticle;
+        shapeChecks[SHAPETYPE.SPHERE] = this.sphereSphere;
+        shapeChecks[SHAPETYPE.PLANE | SHAPETYPE.TRIMESH] = this.planeTrimesh;
+        shapeChecks[SHAPETYPE.SPHERE | SHAPETYPE.TRIMESH] = this.sphereTrimesh;
+        shapeChecks[SHAPETYPE.SPHERE | SHAPETYPE.PLANE] = this.spherePlane;
+        shapeChecks[SHAPETYPE.SPHERE | SHAPETYPE.BOX] = this.sphereBox;
+        shapeChecks[SHAPETYPE.SPHERE | SHAPETYPE.CONVEXPOLYHEDRON] = this.sphereConvex;
+        shapeChecks[SHAPETYPE.PLANE | SHAPETYPE.BOX] = this.planeBox;
+        shapeChecks[SHAPETYPE.PLANE | SHAPETYPE.CONVEXPOLYHEDRON] = this.planeConvex;
+        shapeChecks[SHAPETYPE.CONVEXPOLYHEDRON] = this.convexConvex;
+        shapeChecks[SHAPETYPE.PLANE | SHAPETYPE.PARTICLE] = this.planeParticle;
+        shapeChecks[SHAPETYPE.PARTICLE | SHAPETYPE.SPHERE] = this.sphereParticle;
+        shapeChecks[SHAPETYPE.PARTICLE | SHAPETYPE.CONVEXPOLYHEDRON] = this.convexParticle;
+        shapeChecks[SHAPETYPE.CONVEXPOLYHEDRON | SHAPETYPE.HEIGHTFIELD] = this.convexHeightfield;
+        shapeChecks[SHAPETYPE.BOX | SHAPETYPE.HEIGHTFIELD] = this.boxHeightfield;
+        shapeChecks[SHAPETYPE.SPHERE | SHAPETYPE.HEIGHTFIELD] = this.sphereHeightfield;
     }
 
     /**
@@ -244,11 +244,11 @@ export default class Narrowphase {
 
             const justTest = (
                 (
-                    (bi.type & Body.KINEMATIC) && (bj.type & Body.STATIC)   // Kinematic vs static
+                    (bi.type & BODYTYPE.KINEMATIC) && (bj.type & BODYTYPE.STATIC)   // Kinematic vs static
                 ) || (
-                    (bi.type & Body.STATIC) && (bj.type & Body.KINEMATIC)   // static vs kinematix
+                    (bi.type & BODYTYPE.STATIC) && (bj.type & BODYTYPE.KINEMATIC)   // static vs kinematix
                 ) || (
-                    (bi.type & Body.KINEMATIC) && (bj.type & Body.KINEMATIC)    // kinematic vs kinematic
+                    (bi.type & BODYTYPE.KINEMATIC) && (bj.type & BODYTYPE.KINEMATIC)    // kinematic vs kinematic
                 )
             );
 
@@ -1607,7 +1607,7 @@ const planeConvex_projected = new Vec3();
 const convexConvex_sepAxis = new Vec3();
 const convexConvex_q = new Vec3();
 
-// Narrowphase.prototype[Shape.types.CONVEXPOLYHEDRON | Shape.types.TRIMESH] =
+// Narrowphase.prototype[SHAPETYPE.CONVEXPOLYHEDRON | SHAPETYPE.TRIMESH] =
 // Narrowphase.prototype.convexTrimesh = function(si,sj,xi,xj,qi,qj,bi,bj,rsi,rsj,faceListA,faceListB){
 //     var sepAxis = convexConvex_sepAxis;
 

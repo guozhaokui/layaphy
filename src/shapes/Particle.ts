@@ -1,4 +1,4 @@
-import Shape from './Shape.js';
+import Shape, { SHAPETYPE } from './Shape.js';
 import Vec3 from '../math/Vec3.js';
 import Quaternion from '../math/Quaternion.js';
 
@@ -9,7 +9,7 @@ import Quaternion from '../math/Quaternion.js';
 export default class Particle extends Shape {
     constructor() {
         super();
-        this.type=Shape.types.PARTICLE;
+        this.type=SHAPETYPE.PARTICLE;
     }
 
     calculateLocalInertia(mass:number, target = new Vec3()) {

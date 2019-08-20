@@ -1,6 +1,6 @@
 import Broadphase from './Broadphase.js';
 import Vec3 from '../math/Vec3.js';
-import Shape from '../shapes/Shape.js';
+import Shape, { SHAPETYPE } from '../shapes/Shape.js';
 import World from '../world/World.js';
 import Body from '../objects/Body.js';
 import Sphere from '../shapes/Sphere.js';
@@ -78,12 +78,11 @@ export default class GridBroadphase extends Broadphase {
 
         const binRadius = Math.sqrt(binsizeX * binsizeX + binsizeY * binsizeY + binsizeZ * binsizeZ) * 0.5;
 
-        const types = Shape.types;
-        const SPHERE = types.SPHERE;
-        const PLANE = types.PLANE;
-        const BOX = types.BOX;
-        const COMPOUND = types.COMPOUND;
-        const CONVEXPOLYHEDRON = types.CONVEXPOLYHEDRON;
+        const SPHERE = SHAPETYPE.SPHERE;
+        const PLANE = SHAPETYPE.PLANE;
+        const BOX = SHAPETYPE.BOX;
+        const COMPOUND = SHAPETYPE.COMPOUND;
+        const CONVEXPOLYHEDRON = SHAPETYPE.CONVEXPOLYHEDRON;
         const bins = this.bins;
         const binLengths = this.binLengths;
         const Nbins = this.bins.length;

@@ -1,4 +1,4 @@
-import Shape from './Shape.js';
+import Shape, { SHAPETYPE } from './Shape.js';
 import Vec3 from '../math/Vec3.js';
 import ConvexPolyhedron from './ConvexPolyhedron.js';
 import Quaternion from '../math/Quaternion.js';
@@ -17,7 +17,7 @@ export default class Box extends Shape {
 
     constructor(halfExtents: Vec3) {
         super();
-        this.type = Shape.types.BOX;
+        this.type = SHAPETYPE.BOX;
         this.halfExtents = halfExtents;
         this.updateConvexPolyhedronRepresentation();
         this.updateBoundingSphereRadius();

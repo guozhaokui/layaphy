@@ -1,4 +1,4 @@
-import Shape from './Shape.js';
+import Shape, { SHAPETYPE } from './Shape.js';
 import Vec3 from '../math/Vec3.js';
 import Quaternion from '../math/Quaternion.js';
 
@@ -13,7 +13,7 @@ export default class Plane extends Shape {
     boundingSphereRadius = Number.MAX_VALUE;
     constructor() {
         super();
-        this.type = Shape.types.PLANE;
+        this.type = SHAPETYPE.PLANE;
     }
 
     computeWorldNormal(quat:Quaternion) {

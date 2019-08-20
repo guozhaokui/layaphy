@@ -1,4 +1,4 @@
-import Shape from './Shape.js';
+import Shape, { SHAPETYPE } from './Shape.js';
 import ConvexPolyhedron from './ConvexPolyhedron.js';
 import Vec3 from '../math/Vec3.js';
 import Quaternion from '../math/Quaternion.js';
@@ -62,7 +62,7 @@ export default class Heightfield extends Shape {
     _cachedPillars = {};
     constructor(data: number[][], maxValue:number, minValue:number, elementSize:number) {
         super();
-        this.type = Shape.types.HEIGHTFIELD;
+        this.type = SHAPETYPE.HEIGHTFIELD;
 
         this.data = data;
         this.maxValue = maxValue;

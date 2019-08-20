@@ -1,4 +1,4 @@
-import Body from '../objects/Body.js';
+import Body, { BODYTYPE } from '../objects/Body.js';
 import Vec3 from '../math/Vec3.js';
 import Quaternion from '../math/Quaternion.js';
 import World from '../world/World.js';
@@ -47,8 +47,8 @@ export default class Broadphase {
         }
 
         // Check types
-        if (((bodyA.type & Body.STATIC) !== 0 || bodyA.sleepState === Body.SLEEPING) &&
-            ((bodyB.type & Body.STATIC) !== 0 || bodyB.sleepState === Body.SLEEPING)) {
+        if (((bodyA.type & BODYTYPE.STATIC) !== 0 || bodyA.sleepState === Body.SLEEPING) &&
+            ((bodyB.type & BODYTYPE.STATIC) !== 0 || bodyB.sleepState === Body.SLEEPING)) {
             // Both bodies are static or sleeping. Skip.
             return false;
         }

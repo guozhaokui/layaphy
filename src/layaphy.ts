@@ -71,7 +71,13 @@ planephy.addShape( new Plane(), null, shapeq);  // laya的plane是向上的，ca
 planephy.setMass(0);
 //planephy.phyBody.quaternion.setFromAxisAngle( new Vec3(1,0,0),0);
 
-addBox(1,1,1,0,5,0);
+let y=5;
+for(let i=0; i<100; i++){
+    //addBox(.1,.1,.1,Math.random()*10,5,Math.random()*10);
+    addBox(.1,.1,.1,0,y,0);
+    y+=0.22;
+}
+
 /*
 var planeStaticCollider: PhysicsCollider = plane.addComponent(PhysicsCollider);
 planeStaticCollider.colliderShape = new BoxColliderShape(10, 0, 10);
@@ -89,7 +95,7 @@ function  addBox(sx:number, sy:number, sz:number, x:number, y:number,z:number){
     //设置欧拉角
     var rotationEuler = transform.rotationEuler;
     rotationEuler.setValue(Math.random() * 360, Math.random() * 360, Math.random() * 360);
-    transform.rotationEuler = rotationEuler;
+    //transform.rotationEuler = rotationEuler;
 
     var rigidBody = box.addComponent(LCPhyComponent) as LCPhyComponent;
     var boxShape = new Box(new Vec3(sx,sy,sz));

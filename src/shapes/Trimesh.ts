@@ -1,4 +1,4 @@
-import Shape from './Shape.js';
+import Shape, { SHAPETYPE } from './Shape.js';
 import Vec3 from '../math/Vec3.js';
 import Quaternion from '../math/Quaternion.js';
 import Transform from '../math/Transform.js';
@@ -57,7 +57,7 @@ export default class Trimesh extends Shape {
 
     constructor(vertices: number[], indices: number[]) {
         super();
-        this.type = Shape.types.TRIMESH;
+        this.type = SHAPETYPE.TRIMESH;
         this.vertices = new Float32Array(vertices);
         this.indices = new Int16Array(indices);
         this.normals = new Float32Array(indices.length);

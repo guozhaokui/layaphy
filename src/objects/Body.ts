@@ -27,6 +27,24 @@ export interface BodyInitOptions {
     angularFactor?: Vec3;
 }
 
+export enum BODYTYPE{
+    /**
+     * A dynamic body is fully simulated. Can be moved manually by the user, but normally they move according to forces. A dynamic body can collide with all body types. A dynamic body always has finite, non-zero mass.
+     */
+    DYNAMIC = 1,
+
+    /**
+     * A static body does not move during simulation and behaves as if it has infinite mass. Static bodies can be moved manually by setting the position of the body. The velocity of a static body is always zero. Static bodies do not collide with other static or kinematic bodies.
+     */
+    STATIC = 2,
+
+    /**
+     * A kinematic body moves under simulation according to its velocity. They do not respond to forces. They can be moved manually, but normally a kinematic body is moved by setting its velocity. A kinematic body behaves as if it has infinite mass. Kinematic bodies do not collide with other static or kinematic bodies.
+     */
+    KINEMATIC = 4,
+
+}
+
 /**
  * Base class for all body types.
  * @example
@@ -47,21 +65,6 @@ export default class Body extends EventTarget {
      * @param {ContactEquation} contact The details of the collision.
      */
     static COLLIDE_EVENT_NAME = "collide";
-
-    /**
-     * A dynamic body is fully simulated. Can be moved manually by the user, but normally they move according to forces. A dynamic body can collide with all body types. A dynamic body always has finite, non-zero mass.
-     */
-    static DYNAMIC = 1;
-
-    /**
-     * A static body does not move during simulation and behaves as if it has infinite mass. Static bodies can be moved manually by setting the position of the body. The velocity of a static body is always zero. Static bodies do not collide with other static or kinematic bodies.
-     */
-    static STATIC = 2;
-
-    /**
-     * A kinematic body moves under simulation according to its velocity. They do not respond to forces. They can be moved manually, but normally a kinematic body is moved by setting its velocity. A kinematic body behaves as if it has infinite mass. Kinematic bodies do not collide with other static or kinematic bodies.
-     */
-    static KINEMATIC = 4;
 
     static AWAKE = 0;
     static SLEEPY = 1;
@@ -162,7 +165,7 @@ export default class Body extends EventTarget {
     /**
      * One of: Body.DYNAMIC, Body.STATIC and Body.KINEMATIC.
      */
-    type = Body.STATIC;
+    type = BODYTYPE.STATIC;
 
     /**
      * If true, the body will automatically fall to sleep.
@@ -272,7 +275,7 @@ export default class Body extends EventTarget {
         super();
         this._mass = mass;
         this.invMass = mass > 0 ? 1.0 / mass : 0;
-        this.type = (mass <= 0.0 ? Body.STATIC : Body.DYNAMIC);
+        this.type = (mass <= 0.0 ? BODYTYPE.STATIC : BODYTYPE.DYNAMIC);
 
         if (options) {
             this.collisionFilterGroup = typeof (options.collisionFilterGroup) === 'number' ? options.collisionFilterGroup : 1;
@@ -294,7 +297,7 @@ export default class Body extends EventTarget {
                 this.velocity.copy(options.velocity);
             }
 
-            if (typeof (options.type) === typeof (Body.STATIC)) {
+            if (typeof (options.type) === typeof (BODYTYPE.STATIC)) {
                 this.type = options.type;
             }
             if (options.quaternion) {
@@ -332,7 +335,7 @@ export default class Body extends EventTarget {
     get mass():f32{
         return this._mass;
     }
-    
+
     /**
      * Wake the body up.
      * @method wakeUp
@@ -387,7 +390,7 @@ export default class Body extends EventTarget {
      * If the body is sleeping, it should be immovable / have infinite mass during solve. We solve it by having a separate "solve mass".
      */
     updateSolveMassProperties() {
-        if (this.sleepState === Body.SLEEPING || this.type === Body.KINEMATIC) {
+        if (this.sleepState === Body.SLEEPING || this.type === BODYTYPE.KINEMATIC) {
             this.invMassSolve = 0;
             this.invInertiaSolve.setZero();
             this.invInertiaWorldSolve.setZero();
@@ -552,7 +555,7 @@ export default class Body extends EventTarget {
      * @param   relativePoint A point relative to the center of mass to apply the force on.
      */
     applyForce(force: Vec3, relativePoint: Vec3) {
-        if (this.type !== Body.DYNAMIC) { // Needed?
+        if (this.type !== BODYTYPE.DYNAMIC) { // Needed?
             return;
         }
 
@@ -573,7 +576,7 @@ export default class Body extends EventTarget {
      * @param   localPoint A local point in the body to apply the force on.
      */
     applyLocalForce(localForce: Vec3, localPoint: Vec3) {
-        if (this.type !== Body.DYNAMIC) {
+        if (this.type !== BODYTYPE.DYNAMIC) {
             return;
         }
 
@@ -593,7 +596,7 @@ export default class Body extends EventTarget {
      * @param   relativePoint A point relative to the center of mass to apply the force on.
      */
     applyImpulse(impulse: Vec3, relativePoint: Vec3) {
-        if (this.type !== Body.DYNAMIC) {
+        if (this.type !== BODYTYPE.DYNAMIC) {
             return;
         }
 
@@ -629,7 +632,7 @@ export default class Body extends EventTarget {
      * @param  localPoint A local point in the body to apply the force on.
      */
     applyLocalImpulse(localImpulse: Vec3, localPoint: Vec3) {
-        if (this.type !== Body.DYNAMIC) {
+        if (this.type !== BODYTYPE.DYNAMIC) {
             return;
         }
 
@@ -647,8 +650,8 @@ export default class Body extends EventTarget {
      * Should be called whenever you change the body shape or mass.
      */
     updateMassProperties() {
-        this.type = (this._mass <= 0.0 ? Body.STATIC : Body.DYNAMIC);
-        if(this.type==Body.STATIC)
+        this.type = (this._mass <= 0.0 ? BODYTYPE.STATIC : BODYTYPE.DYNAMIC);
+        if(this.type==BODYTYPE.STATIC)
             return;
         const halfExtents = Body_updateMassProperties_halfExtents;
 
@@ -690,12 +693,12 @@ export default class Body extends EventTarget {
      * @param  quatNormalize Set to true to normalize the body quaternion
      * @param  quatNormalizeFast If the quaternion should be normalized using "fast" quaternion normalization
      */
-    integrate(dt: number, quatNormalize: boolean, quatNormalizeFast: boolean) {
+    integrate(dt: f32, quatNormalize: boolean, quatNormalizeFast: boolean) {
         // Save previous position
         this.previousPosition.copy(this.position);
         this.previousQuaternion.copy(this.quaternion);
 
-        if (!(this.type === Body.DYNAMIC || this.type === Body.KINEMATIC) || this.sleepState === Body.SLEEPING) { // Only for dynamic
+        if (!(this.type === BODYTYPE.DYNAMIC || this.type === BODYTYPE.KINEMATIC) || this.sleepState === Body.SLEEPING) { // Only for dynamic
             return;
         }
 

@@ -8,7 +8,7 @@ import ArrayCollisionMatrix from '../collision/ArrayCollisionMatrix.js';
 import OverlapKeeper from '../collision/OverlapKeeper.js';
 import Material from '../material/Material.js';
 import ContactMaterial from '../material/ContactMaterial.js';
-import Body from '../objects/Body.js';
+import Body, { BODYTYPE } from '../objects/Body.js';
 import TupleDictionary from '../utils/TupleDictionary.js';
 import RaycastResult from '../collision/RaycastResult.js';
 import Ray from '../collision/Ray.js';
@@ -18,6 +18,28 @@ import Solver from '../solver/Solver.js';
 import ContactEquation from '../equations/ContactEquation.js';
 import FrictionEquation from '../equations/FrictionEquation.js';
 import Constraint from '../constraints/Constraint.js';
+
+class profileData{
+    frametm:i32=0;     // 帧时间
+    broadphase:i32=0;     // 宽阶段碰撞检测的时间
+    narrowphase:i32=0;    // 窄阶段碰撞检测的时间
+    integrate:i32=0;
+    solve:i32=0;     // solve时间
+    makeContactConstraints:i32=0;
+    error:f32=0;       // 总误差
+    avgErr:f32=0;      // 平均每个对象的误差
+}    
+
+let perfNow = performance.now;
+
+class PhyEvent{
+    type:string;
+    body:Body;
+    constructor(name:string,body:Body){
+        this.type=name;
+        this.body=body;
+    }
+}
 
 /**
  * The physics world
@@ -41,7 +63,7 @@ export default class World extends EventTarget {
     /**
      * How often to normalize quaternions. Set to 0 for every step, 1 for every second etc.. A larger value increases performance. If bodies tend to explode, set to a smaller value (zero to be sure nothing can go wrong).
      */
-    quatNormalizeSkip = 0;
+    quatNormalizeSkip:i32 = 0;
 
     /**
      * Set to true to use fast quaternion normalization. It is often enough accurate to use. If bodies tend to explode, set to false.
@@ -53,17 +75,17 @@ export default class World extends EventTarget {
     /**
      * The wall-clock time since simulation start
      */
-    time = 0.0;
+    time:f32 = 0.0;
 
     /**
      * Number of timesteps taken since start
      */
-    stepnumber = 0;
+    stepnumber:i32 = 0;
 
     /// Default and last timestep sizes
-    default_dt = 1 / 60;
+    default_dt:f32 = 1 / 60;
 
-    nextId = 0;
+    nextId:i32 = 0;
     gravity = new Vec3();
 
     /**
@@ -78,8 +100,6 @@ export default class World extends EventTarget {
 
     /**
      * The solver algorithm to use. Default is GSSolver
-     * @property solver
-     * @type {Solver}
      */
     solver:Solver = new GSSolver();
 
@@ -119,38 +139,25 @@ export default class World extends EventTarget {
 
     doProfiling = false;
 
-    profile = {
-        solve: 0,
-        makeContactConstraints: 0,
-        broadphase: 0,
-        integrate: 0,
-        narrowphase: 0,
-    };
+    profile = new profileData();
 
     /**
      * Time accumulator for interpolation. See http://gafferongames.com/game-physics/fix-your-timestep/
      */
-    accumulator = 0;
+    accumulator:f32 = 0;    //秒
 
     subsystems = [];
 
     /**
      * Dispatched after a body has been added to the world.
      */
-    addBodyEvent = {
-        type: "addBody",
-        body: null
-    };
+    addBodyEvent = new PhyEvent("addBody",null);
 
     /**
      * Dispatched after a body has been removed from the world.
-     * @event removeBody
-     * @param {Body} body The body that has been removed from the world.
+     * @param  body The body that has been removed from the world.
      */
-    removeBodyEvent = {
-        type: "removeBody",
-        body: null
-    };
+    removeBodyEvent = new PhyEvent('removeBody', null); 
 
     idToBodyMap:{[id:string]:Body} = {};
 
@@ -392,9 +399,9 @@ export default class World extends EventTarget {
      * @param  {boolean} [options.skipBackfaces=false]
      * @param  {boolean} [options.checkCollisionResponse=true]
      * @param  {RaycastResult} result
-     * @return {boolean} True if any body was hit.
+     * @return  True if any body was hit.
      */
-    raycastClosest(from, to, options, result) {
+    raycastClosest(from:Vec3, to:Vec3, options:any, result:RaycastResult) {
         options.mode = Ray.CLOSEST;
         options.from = from;
         options.to = to;
@@ -514,9 +521,7 @@ export default class World extends EventTarget {
     internalStep(dt:number) {
         this.dt = dt;
 
-        var world = this,
-            that = this,
-            contacts = this.contacts,
+        var contacts = this.contacts,
             p1 = World_step_p1,
             p2 = World_step_p2,
             N = this.numObjects(),
@@ -525,18 +530,18 @@ export default class World extends EventTarget {
             gravity = this.gravity,
             doProfiling = this.doProfiling,
             profile = this.profile,
-            DYNAMIC = Body.DYNAMIC,
-            profilingStart,
+            DYNAMIC = BODYTYPE.DYNAMIC,
+            profilingStart:f32,
             constraints = this.constraints,
             frictionEquationPool = World_step_frictionEquationPool,
             gnorm = gravity.length(),
             gx = gravity.x,
             gy = gravity.y,
             gz = gravity.z,
-            i = 0;
+            i:i32 = 0;
 
         if (doProfiling) {
-            profilingStart = performance.now();
+            profilingStart = perfNow();
         }
 
         // Add gravity to all objects
@@ -556,11 +561,11 @@ export default class World extends EventTarget {
         }
 
         // Collision detection
-        if (doProfiling) { profilingStart = performance.now(); }
+        if (doProfiling) { profilingStart = perfNow(); }
         p1.length = 0; // Clean up pair arrays from last step
         p2.length = 0;
         this.broadphase.collisionPairs(this, p1, p2);
-        if (doProfiling) { profile.broadphase = performance.now() - profilingStart; }
+        if (doProfiling) { profile.broadphase = perfNow() - profilingStart; }   // 宽阶段的时间
 
         // Remove constrained pairs with collideConnected == false
         var Nconstraints = constraints.length;
@@ -580,7 +585,7 @@ export default class World extends EventTarget {
         this.collisionMatrixTick();
 
         // Generate contacts
-        if (doProfiling) { profilingStart = performance.now(); }
+        if (doProfiling) { profilingStart = perfNow(); }
         var oldcontacts = World_step_oldContacts;
         var NoldContacts = contacts.length;
 
@@ -603,12 +608,12 @@ export default class World extends EventTarget {
         );
 
         if (doProfiling) {
-            profile.narrowphase = performance.now() - profilingStart;
+            profile.narrowphase = perfNow() - profilingStart;  // 窄阶段的时间
         }
 
         // Loop over all collisions
         if (doProfiling) {
-            profilingStart = performance.now();
+            profilingStart = perfNow();
         }
 
         // Add all friction eqs
@@ -700,10 +705,10 @@ export default class World extends EventTarget {
             // }
 
             if (bi.allowSleep &&
-                bi.type === Body.DYNAMIC &&
+                bi.type === BODYTYPE.DYNAMIC &&
                 bi.sleepState === Body.SLEEPING &&
                 bj.sleepState === Body.AWAKE &&
-                bj.type !== Body.STATIC
+                bj.type !== BODYTYPE.STATIC
             ) {
                 var speedSquaredB = bj.velocity.lengthSquared() + bj.angularVelocity.lengthSquared();
                 var speedLimitSquaredB = Math.pow(bj.sleepSpeedLimit, 2);
@@ -713,10 +718,10 @@ export default class World extends EventTarget {
             }
 
             if (bj.allowSleep &&
-                bj.type === Body.DYNAMIC &&
+                bj.type === BODYTYPE.DYNAMIC &&
                 bj.sleepState === Body.SLEEPING &&
                 bi.sleepState === Body.AWAKE &&
-                bi.type !== Body.STATIC
+                bi.type !== BODYTYPE.STATIC
             ) {
                 var speedSquaredA = bi.velocity.lengthSquared() + bi.angularVelocity.lengthSquared();
                 var speedLimitSquaredA = Math.pow(bi.sleepSpeedLimit, 2);
@@ -746,8 +751,8 @@ export default class World extends EventTarget {
         this.emitContactEvents();
 
         if (doProfiling) {
-            profile.makeContactConstraints = performance.now() - profilingStart;
-            profilingStart = performance.now();
+            profile.makeContactConstraints = perfNow() - profilingStart;
+            profilingStart = perfNow();
         }
 
         // Wake up bodies
@@ -774,7 +779,7 @@ export default class World extends EventTarget {
         solver.solve(dt, this);
 
         if (doProfiling) {
-            profile.solve = performance.now() - profilingStart;
+            profile.solve = perfNow() - profilingStart;     // solve的时间
         }
 
         // Remove all contacts from solver
@@ -810,7 +815,7 @@ export default class World extends EventTarget {
         // vnew = v + h*f/m
         // xnew = x + h*vnew
         if (doProfiling) {
-            profilingStart = performance.now();
+            profilingStart = perfNow();
         }
         var stepnumber = this.stepnumber;
         var quatNormalize = stepnumber % (this.quatNormalizeSkip + 1) === 0;
@@ -824,7 +829,7 @@ export default class World extends EventTarget {
         this.broadphase.dirty = true;
 
         if (doProfiling) {
-            profile.integrate = performance.now() - profilingStart;
+            profile.integrate = perfNow() - profilingStart;
         }
 
         // Update world time

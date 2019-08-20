@@ -1,5 +1,5 @@
 import Solver from './Solver.js';
-import Body from '../objects/Body.js';
+import Body, { BODYTYPE } from '../objects/Body.js';
 import World from '../world/World.js';
 import Equation from '../equations/Equation.js';
 
@@ -10,11 +10,11 @@ import Equation from '../equations/Equation.js';
 export default class SplitSolver extends Solver {
     iterations = 10;
     tolerance = 1e-7;
-    subsolver:SplitSolver;
+    subsolver: SplitSolver;
     nodes = [];
     nodePool = [];
 
-constructor(subsolver:SplitSolver) {
+    constructor(subsolver: SplitSolver) {
         super();
         this.subsolver = subsolver;
         // Create needed nodes, reuse if possible
@@ -30,7 +30,7 @@ constructor(subsolver:SplitSolver) {
     /**
      * Solve the subsystems
      */
-    solve(dt:number, world:World) {
+    solve(dt: number, world: World) {
         const nodes = SplitSolver_solve_nodes;
         const nodePool = this.nodePool;
         const bodies = world.bodies;
@@ -105,7 +105,7 @@ var SplitSolver_solve_eqs = [];   // Temp array
 const SplitSolver_solve_bds = [];   // Temp array
 var SplitSolver_solve_dummyWorld = { bodies: [] }; // Temp object
 
-const STATIC = Body.STATIC;
+const STATIC = BODYTYPE.STATIC;
 function getUnvisitedNode(nodes) {
     const Nnodes = nodes.length;
     for (let i = 0; i !== Nnodes; i++) {
@@ -145,6 +145,6 @@ function visitFunc(node, bds, eqs) {
     }
 }
 
-function sortById(a:Equation,b:Equation) {
+function sortById(a: Equation, b: Equation) {
     return a.id - b.id;
 }

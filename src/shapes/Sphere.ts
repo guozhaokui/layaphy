@@ -1,4 +1,4 @@
-import Shape from './Shape.js';
+import Shape, { SHAPETYPE } from './Shape.js';
 import Vec3 from '../math/Vec3.js';
 import Quaternion from '../math/Quaternion.js';
 
@@ -14,7 +14,7 @@ export default class Sphere extends Shape {
     radius=1;
     constructor(radius:number) {
         super();
-        this.type= Shape.types.SPHERE;
+        this.type= SHAPETYPE.SPHERE;
         this.radius = radius !== undefined ? radius : 1.0;
 
         if (this.radius < 0) {
