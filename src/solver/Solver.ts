@@ -1,31 +1,43 @@
-import { Equation } from "../equations/Equation";
-import { PhyWorld } from "../phyWorld";
+import World from "../world/World";
+import Equation from "../equations/Equation";
 
-export class Solver{
-    equations:Equation[]=[];
+/**
+ * Constraint equation solver base class.
+ * @author schteppe / https://github.com/schteppe
+ */
+export default class Solver {
+    //All equations to be solved
+    equations:Equation[] = [];
+    constructor() {
+    }
 
     /**
-     * 返回迭代次数
-     * @param dt 
-     * @param world 
+     * Should be implemented in subclasses!
      */
-    solve(dt:number, world:PhyWorld){
+    solve(dt:number, world:World) {
+        // Should return the number of iterations done!
         return 0;
     }
-    
-    addEquation(eq:Equation){
-        if(eq.enabled)
+
+    addEquation(eq:Equation) {
+        if (eq.enabled) {
             this.equations.push(eq);
-    }
-    
-    removeEquation(eq:Equation){
-        let i = this.equations.indexOf(eq);
-        if(i!=-1){
-            this.equations.splice(i,1);
         }
     }
-    
-    clear(){
-        this.equations.length=0;
+
+    removeEquation(eq:Equation) {
+        const eqs = this.equations;
+        const i = eqs.indexOf(eq);
+        if (i !== -1) {
+            eqs.splice(i, 1);
+        }
+    }
+
+    /**
+     * remove all equations
+     */
+    removeAllEquations() {
+        this.equations.length = 0;
     }
 }
+

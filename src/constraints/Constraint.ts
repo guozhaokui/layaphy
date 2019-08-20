@@ -1,25 +1,66 @@
-import { PhyBody } from "../PhyBody";
+import Equation from '../equations/Equation.js';
+import Body from '../objects/Body.js';
 
-export class Constraint{
-    bodyA:PhyBody;
-    bodyB:PhyBody;
-    wakeupBodies=true;
+/**
+ * Constraint base class
+ * @author schteppe
+ */
+export default class Constraint {
+    static idCounter = 0;
+    /**
+     * Equations to be solved in this constraint
+     */
+    equations: Equation[] = [];
 
-    collideConnected=false;     // bodyA和bodyB是否进行碰撞检测
+    bodyA: Body = null;
+    bodyB: Body = null;
 
-    constructor(A:PhyBody, B:PhyBody, wakeup=true, collide=false ){
-        this.bodyA=A;
-        this.bodyB=B;
-        if(wakeup){
-            A.wakeup();
-            B.wakeup();
-        }
-        if(!collide){
-            // TODO 给AB做个标记，在宽检测的时候就不要检测
+    id = Constraint.idCounter++;
+
+    /**
+     * Set to true if you want the bodies to collide when they are connected.
+     */
+    collideConnected = true;
+
+
+    constructor(bodyA: Body, bodyB: Body, wakeupBodies:boolean) {
+        this.bodyA = bodyA;
+        this.bodyB = bodyB;
+
+        if (wakeupBodies) {
+            if (bodyA) {
+                bodyA.wakeUp();
+            }
+            if (bodyB) {
+                bodyB.wakeUp();
+            }
         }
     }
 
-    update(){
+    /**
+     * Update all the equations with data.
+     */
+    update() {
+        throw new Error("method update() not implmemented in this Constraint subclass!");
+    }
 
+    /**
+     * Enables all equations in the constraint.
+     */
+    enable() {
+        const eqs = this.equations;
+        for (let i = 0; i < eqs.length; i++) {
+            eqs[i].enabled = true;
+        }
+    }
+
+    /**
+     * Disables all equations in the constraint.
+     */
+    disable() {
+        const eqs = this.equations;
+        for (let i = 0; i < eqs.length; i++) {
+            eqs[i].enabled = false;
+        }
     }
 }

@@ -1,20 +1,63 @@
-import { Broadphase } from "./Broadphase";
-import { PhyWorld } from "../phyWorld";
+import Broadphase from './Broadphase.js';
+import AABB from './AABB.js';
+import World from '../world/World.js';
+import Body from '../objects/Body.js';
 
-//最笨的宽检测方式。两两检测。
-export class NaiveBroadPhase extends Broadphase{
-    collisionPairs(world:PhyWorld, p1:any[], p2:any[]){
-        let bodies = world.bodies;
-        let n = bodies.length;
-        for( let i=0; i<n; i++){
-            let A = bodies[i];
-            for( let j=0; j<i; j++){
-                let B = bodies[j];
+/**
+ * Naive broadphase implementation, used in lack of better ones.
+ * @description The naive broadphase looks at all possible pairs without restriction, therefore it has complexity N^2 (which is bad)
+ */
+export default class NaiveBroadphase extends Broadphase {
+    constructor() {
+        super();
+    }
 
-                if(!this.needBroadphaseCollision(A,B))
+    /**
+     * Get all the collision pairs in the physics world
+     */
+    collisionPairs(world:World, pairs1:Body[], pairs2:Body[]) {
+        const bodies = world.bodies;
+        const n = bodies.length;
+        let i:number;
+        let j:number;
+        let bi:Body;
+        let bj:Body;
+
+        // Naive N^2 ftw!
+        for (i = 0; i !== n; i++) {
+            for (j = 0; j !== i; j++) {
+
+                bi = bodies[i];
+                bj = bodies[j];
+
+                if (!this.needBroadphaseCollision(bi, bj)) {
                     continue;
-                this.intersectionTest(A,B,p1,p2);
+                }
+
+                this.intersectionTest(bi, bj, pairs1, pairs2);
             }
         }
+    }
+
+    /**
+     * Returns all the bodies within an AABB.
+     * @param result An array to store resulting bodies in.
+     */
+    aabbQuery( world:World, aabb:AABB, result:Body[] = []) {
+        let bodies = world.bodies;
+        for (let i = 0; i < bodies.length; i++) {
+            const b = bodies[i];
+
+            if (b.aabbNeedsUpdate) {
+                b.computeAABB();
+            }
+
+            // Ugly hack until Body gets aabb
+            if (b.aabb.overlaps(aabb)) {
+                result.push(b);
+            }
+        }
+
+        return result;
     }
 }

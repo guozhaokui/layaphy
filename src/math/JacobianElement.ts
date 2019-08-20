@@ -1,17 +1,26 @@
-import { Vector3 } from "../../laya/laya/d3/math/Vector3";
+import Vec3 from './Vec3.js';
 
 /**
- * 空间和旋转6个自由度
+ * An element containing 6 entries, 3 spatial and 3 rotational degrees of freedom.
  */
-export class JacobianElement{
-    spatial=new Vector3();
-    rotational = new Vector3();
+export default class JacobianElement {
+    spatial = new Vec3();
+    rotational = new Vec3();
 
-    multiplyElement(ele:JacobianElement){
-        return Vector3.dot(this.spatial, ele.spatial)+Vector3.dot(this.rotational,ele.rotational);
+    constructor() {
     }
 
-    multiplyVectors(spatial:Vector3, rotational:Vector3){
-        return Vector3.dot(this.spatial,spatial)+Vector3.dot(this.rotational,rotational);
+    /**
+     * Multiply with other JacobianElement
+     */
+    multiplyElement(element:JacobianElement) {
+        return element.spatial.dot(this.spatial) + element.rotational.dot(this.rotational);
+    }
+
+    /**
+     * Multiply with two vectors
+     */
+    multiplyVectors(spatial:Vec3, rotational:Vec3) {
+        return spatial.dot(this.spatial) + rotational.dot(this.rotational);
     }
 }
