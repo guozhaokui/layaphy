@@ -19,11 +19,11 @@ import Vec3Pool from '../utils/Vec3Pool.js';
 import World from './World.js';
 
 //declare type anyShape=Box|Sphere|Capsule|Voxel|ConvexPolyhedron|Heightfield|Trimesh;
-interface checkFunc{
-    (si:any, sj:any, xi:Vec3, xj:Vec3, qi:Quaternion, qj:Quaternion, bi:Body, bj:Body, rsi:Shape, rsj:Shape, justTest:boolean):boolean;
+interface checkFunc {
+    (si: any, sj: any, xi: Vec3, xj: Vec3, qi: Quaternion, qj: Quaternion, bi: Body, bj: Body, rsi: Shape, rsj: Shape, justTest: boolean): boolean;
 }
 
-var shapeChecks:checkFunc[] = [];
+var shapeChecks: checkFunc[] = [];
 
 /**
  * Helper class for the World. Generates ContactEquations.
@@ -37,12 +37,12 @@ export default class Narrowphase {
     /**
      * Internal storage of pooled contact points.
      */
-    contactPointPool:ContactEquation[] = [];
+    contactPointPool: ContactEquation[] = [];
 
-    frictionEquationPool:FrictionEquation[] = [];
+    frictionEquationPool: FrictionEquation[] = [];
 
-    result:ContactEquation[] = [];
-    frictionResult:FrictionEquation[] = [];
+    result: ContactEquation[] = [];
+    frictionResult: FrictionEquation[] = [];
 
     /**
      * Pooled vectors.
@@ -51,7 +51,7 @@ export default class Narrowphase {
     v3pool = new Vec3Pool();
 
     world: World;
-    currentContactMaterial:ContactMaterial;
+    currentContactMaterial: ContactMaterial;
 
     /**
      * @property {Boolean} enableFrictionReduction
@@ -83,8 +83,8 @@ export default class Narrowphase {
     /**
      * Make a contact object, by using the internal pool or creating a new one.
      */
-    createContactEquation(bi: Body, bj: Body, si: Shape, sj: Shape, overrideShapeA: Shape|null, overrideShapeB: Shape|null): ContactEquation {
-        let c:ContactEquation;
+    createContactEquation(bi: Body, bj: Body, si: Shape, sj: Shape, overrideShapeA: Shape | null, overrideShapeB: Shape | null): ContactEquation {
+        let c: ContactEquation;
         if (this.contactPointPool.length) {
             c = this.contactPointPool.pop() as ContactEquation;
             c.bi = bi;
@@ -117,7 +117,7 @@ export default class Narrowphase {
         return c;
     }
 
-    createFrictionEquationsFromContact(contactEquation:ContactEquation, outArray:FrictionEquation[]) {
+    createFrictionEquationsFromContact(contactEquation: ContactEquation, outArray: FrictionEquation[]) {
         const bodyA = contactEquation.bi;
         const bodyB = contactEquation.bj;
         const shapeA = contactEquation.si;
@@ -224,7 +224,7 @@ export default class Narrowphase {
      * @param  result Array to store generated contacts
      * @param  oldcontacts Optional. Array of reusable contact objects
      */
-    getContacts(p1: Body[], p2: Body[], world: World, result: ContactEquation[], oldcontacts: ContactEquation[], frictionResult:FrictionEquation[], frictionPool:FrictionEquation[]) {
+    getContacts(p1: Body[], p2: Body[], world: World, result: ContactEquation[], oldcontacts: ContactEquation[], frictionResult: FrictionEquation[], frictionPool: FrictionEquation[]) {
         // Save old contact objects
         this.contactPointPool = oldcontacts;
         this.frictionEquationPool = frictionPool;
@@ -310,7 +310,7 @@ export default class Narrowphase {
         }
     }
 
-    boxBox(si:Box, sj:Box, xi:Vec3, xj:Vec3, qi:Quaternion, qj:Quaternion, bi:Body, bj:Body, rsi:Shape, rsj:Shape, justTest:boolean):boolean {
+    boxBox(si: Box, sj: Box, xi: Vec3, xj: Vec3, qi: Quaternion, qj: Quaternion, bi: Body, bj: Body, rsi: Shape, rsj: Shape, justTest: boolean): boolean {
         si.convexPolyhedronRepresentation.material = si.material;
         sj.convexPolyhedronRepresentation.material = sj.material;
         si.convexPolyhedronRepresentation.collisionResponse = si.collisionResponse;
@@ -318,20 +318,20 @@ export default class Narrowphase {
         return this.convexConvex(si.convexPolyhedronRepresentation, sj.convexPolyhedronRepresentation, xi, xj, qi, qj, bi, bj, si, sj, justTest);
     }
 
-    boxConvex(si:Box, sj:ConvexPolyhedron, xi:Vec3, xj:Vec3, qi:Quaternion, qj:Quaternion, bi:Body, bj:Body, rsi:Shape, rsj:Shape, justTest:boolean):boolean {
+    boxConvex(si: Box, sj: ConvexPolyhedron, xi: Vec3, xj: Vec3, qi: Quaternion, qj: Quaternion, bi: Body, bj: Body, rsi: Shape, rsj: Shape, justTest: boolean): boolean {
         si.convexPolyhedronRepresentation.material = si.material;
         si.convexPolyhedronRepresentation.collisionResponse = si.collisionResponse;
         return this.convexConvex(si.convexPolyhedronRepresentation, sj, xi, xj, qi, qj, bi, bj, si, sj, justTest);
     }
 
-    boxParticle(si:Box, sj:Particle, xi:Vec3, xj:Vec3, qi:Quaternion, qj:Quaternion, bi:Body, bj:Body, rsi:Shape, rsj:Shape, justTest:boolean):boolean {
+    boxParticle(si: Box, sj: Particle, xi: Vec3, xj: Vec3, qi: Quaternion, qj: Quaternion, bi: Body, bj: Body, rsi: Shape, rsj: Shape, justTest: boolean): boolean {
         si.convexPolyhedronRepresentation.material = si.material;
         si.convexPolyhedronRepresentation.collisionResponse = si.collisionResponse;
         return this.convexParticle(si.convexPolyhedronRepresentation, sj, xi, xj, qi, qj, bi, bj, si, sj, justTest);
     }
 
 
-    sphereSphere(si:Sphere, sj:Sphere, xi:Vec3, xj:Vec3, qi:Quaternion, qj:Quaternion, bi:Body, bj:Body, rsi:Shape, rsj:Shape, justTest:boolean):boolean {
+    sphereSphere(si: Sphere, sj: Sphere, xi: Vec3, xj: Vec3, qi: Quaternion, qj: Quaternion, bi: Body, bj: Body, rsi: Shape, rsj: Shape, justTest: boolean): boolean {
         let hit = xi.distanceSquared(xj) < (si.radius + sj.radius) ** 2;
         if (!hit || justTest) {
             return hit;
@@ -362,8 +362,8 @@ export default class Narrowphase {
         return true;
     }
 
-    planeTrimesh(planeShape:Plane, trimeshShape:Trimesh,planePos:Vec3,trimeshPos:Vec3,planeQuat:Quaternion,trimeshQuat:Quaternion,planeBody:Body,
-            trimeshBody:Body,rsi:Shape,rsj:Shape,justTest:boolean):boolean {
+    planeTrimesh(planeShape: Plane, trimeshShape: Trimesh, planePos: Vec3, trimeshPos: Vec3, planeQuat: Quaternion, trimeshQuat: Quaternion, planeBody: Body,
+        trimeshBody: Body, rsi: Shape, rsj: Shape, justTest: boolean): boolean {
         // Make contacts!
         const v = new Vec3();
 
@@ -416,8 +416,8 @@ export default class Narrowphase {
         return false;
     }
 
-    sphereTrimesh(sphereShape:Sphere, trimeshShape:Trimesh,spherePos:Vec3,trimeshPos:Vec3,sphereQuat:Quaternion,trimeshQuat:Quaternion,
-        sphereBody:Body,trimeshBody:Body,rsi:Shape,rsj:Shape,justTest:boolean ):boolean {
+    sphereTrimesh(sphereShape: Sphere, trimeshShape: Trimesh, spherePos: Vec3, trimeshPos: Vec3, sphereQuat: Quaternion, trimeshQuat: Quaternion,
+        sphereBody: Body, trimeshBody: Body, rsi: Shape, rsj: Shape, justTest: boolean): boolean {
 
         const edgeVertexA = sphereTrimesh_edgeVertexA;
         const edgeVertexB = sphereTrimesh_edgeVertexB;
@@ -449,7 +449,7 @@ export default class Narrowphase {
         trimeshShape.getTrianglesInAABB(localSphereAABB, triangles);
         //for (var i = 0; i < trimeshShape.indices.length / 3; i++) triangles.push(i); // All
 
-        let hit=false;
+        let hit = false;
         // Vertices
         const v = sphereTrimesh_v;
         const radiusSquared = sphereShape.radius * sphereShape.radius;
@@ -469,7 +469,7 @@ export default class Narrowphase {
 
                     v.vsub(spherePos, relpos);
 
-                    hit=true;
+                    hit = true;
                     if (justTest) {
                         return true;
                     }
@@ -524,7 +524,7 @@ export default class Narrowphase {
                     // tmp is now the sphere center position projected to the edge, defined locally in the trimesh frame
                     var dist = tmp.distanceTo(localSpherePos);
                     if (dist < sphereShape.radius) {
-                        hit=true;
+                        hit = true;
                         if (justTest) {
                             return true;
                         }
@@ -564,7 +564,7 @@ export default class Narrowphase {
             // tmp is now the sphere position projected to the triangle plane
             dist = tmp.distanceTo(localSpherePos);
             if (Ray.pointInTriangle(tmp, va, vb, vc) && dist < sphereShape.radius) {
-                hit=true;
+                hit = true;
                 if (justTest) {
                     return true;
                 }
@@ -590,10 +590,10 @@ export default class Narrowphase {
     }
 
     private static nor1 = new Vec3();
-    spherePlane(si:Sphere, sj:Plane, xi:Vec3, xj:Vec3, qi:Quaternion, qj:Quaternion, bi:Body, bj:Body, rsi:Shape, rsj:Shape, justTest:boolean):boolean {
+    spherePlane(si: Sphere, sj: Plane, xi: Vec3, xj: Vec3, qi: Quaternion, qj: Quaternion, bi: Body, bj: Body, rsi: Shape, rsj: Shape, justTest: boolean): boolean {
         let ni = Narrowphase.nor1;  // 球的碰撞法线
         // 平面的法线转换到平面的朝向上
-        ni.set(0,0,1);        
+        ni.set(0, 0, 1);
         qj.vmult(ni, ni);
         ni.negate(ni); // 由于是球的碰撞法线，所以颠倒一下 body i is the sphere, flip normal
         ni.normalize(); // Needed?
@@ -629,7 +629,7 @@ export default class Narrowphase {
         return false;
     }
 
-    sphereBox(si:Sphere, sj:Box, xi:Vec3, xj:Vec3, qi:Quaternion, qj:Quaternion, bi:Body, bj:Body, rsi:Shape, rsj:Shape, justTest:boolean):boolean{
+    sphereBox(si: Sphere, sj: Box, xi: Vec3, xj: Vec3, qi: Quaternion, qj: Quaternion, bi: Body, bj: Body, rsi: Shape, rsj: Shape, justTest: boolean): boolean {
         const v3pool = this.v3pool;
 
         // we refer to the box as body j
@@ -646,7 +646,7 @@ export default class Narrowphase {
         const side_ns = sphereBox_side_ns;
         const side_ns1 = sphereBox_side_ns1;
         const side_ns2 = sphereBox_side_ns2;
-        let side_h:f32 = 0;
+        let side_h: f32 = 0;
         let side_penetrations = 0;
         let side_dot1 = 0;
         let side_dot2 = 0;
@@ -772,9 +772,9 @@ export default class Narrowphase {
         // Check edges
         const edgeTangent = v3pool.get() as Vec3;
         const edgeCenter = v3pool.get() as Vec3;
-        var r:Vec3 = v3pool.get() as Vec3; // r = edge center to sphere center
+        var r: Vec3 = v3pool.get() as Vec3; // r = edge center to sphere center
         const orthogonal = v3pool.get() as Vec3;
-        var dist:Vec3 = v3pool.get() as Vec3;
+        var dist: Vec3 = v3pool.get() as Vec3;
         const Nsides = sides.length;
         for (var j = 0; j !== Nsides && !found; j++) {
             for (var k = 0; k !== Nsides && !found; k++) {
@@ -838,7 +838,7 @@ export default class Narrowphase {
         return found;
     }
 
-    sphereConvex(si:Sphere, sj:ConvexPolyhedron, xi:Vec3, xj:Vec3, qi:Quaternion, qj:Quaternion, bi:Body, bj:Body, rsi:Shape, rsj:Shape, justTest:boolean):boolean {
+    sphereConvex(si: Sphere, sj: ConvexPolyhedron, xi: Vec3, xj: Vec3, qi: Quaternion, qj: Quaternion, bi: Body, bj: Body, rsi: Shape, rsj: Shape, justTest: boolean): boolean {
         const v3pool = this.v3pool;
         xi.vsub(xj, convex_to_sphere);
         const normals = sj.faceNormals;
@@ -1056,20 +1056,20 @@ export default class Narrowphase {
         return found;
     }
 
-    planeBox(si:Plane, sj:Box, xi:Vec3, xj:Vec3, qi:Quaternion, qj:Quaternion, bi:Body, bj:Body, rsi:Shape, rsj:Shape, justTest:boolean):boolean {
+    planeBox(si: Plane, sj: Box, xi: Vec3, xj: Vec3, qi: Quaternion, qj: Quaternion, bi: Body, bj: Body, rsi: Shape, rsj: Shape, justTest: boolean): boolean {
         sj.convexPolyhedronRepresentation.material = sj.material;
         sj.convexPolyhedronRepresentation.collisionResponse = sj.collisionResponse;
         sj.convexPolyhedronRepresentation.id = sj.id;
         return this.planeConvex(si, sj.convexPolyhedronRepresentation, xi, xj, qi, qj, bi, bj, si, sj, justTest);
     }
 
-    planeConvex(planeShape:Plane,convexShape:ConvexPolyhedron,
-        planePosition:Vec3,  convexPosition:Vec3,
-        planeQuat:Quaternion,convexQuat:Quaternion,
-        planeBody:Body,convexBody:Body,
-        si:Shape, sj:Shape,
-        justTest:boolean
-    ):boolean {
+    planeConvex(planeShape: Plane, convexShape: ConvexPolyhedron,
+        planePosition: Vec3, convexPosition: Vec3,
+        planeQuat: Quaternion, convexQuat: Quaternion,
+        planeBody: Body, convexBody: Body,
+        si: Shape, sj: Shape,
+        justTest: boolean
+    ): boolean {
         // Simply return the points behind the plane.
         const worldVertex = planeConvex_v;
 
@@ -1077,7 +1077,7 @@ export default class Narrowphase {
         worldNormal.set(0, 0, 1);
         planeQuat.vmult(worldNormal, worldNormal); // Turn normal according to plane orientation
 
-        let hit=false;
+        let hit = false;
         let numContacts = 0;
         const relpos = planeConvex_relpos;
         for (let i = 0; i !== convexShape.vertices.length; i++) {
@@ -1093,7 +1093,7 @@ export default class Narrowphase {
                 if (justTest) {
                     return true;
                 }
-                hit=true;
+                hit = true;
                 const r = this.createContactEquation(planeBody, convexBody, planeShape, convexShape, si, sj);
 
                 // Get vertex position projected on plane
@@ -1127,17 +1127,17 @@ export default class Narrowphase {
         return hit;
     }
 
-    convexConvex(si:ConvexPolyhedron, sj:ConvexPolyhedron, xi:Vec3, xj:Vec3, qi:Quaternion, qj:Quaternion, bi:Body, bj:Body, 
-            rsi:Shape|null, rsj:Shape|null, justTest:boolean, faceListA:number[]|null=null, faceListB:number[]|null=null):boolean {
+    convexConvex(si: ConvexPolyhedron, sj: ConvexPolyhedron, xi: Vec3, xj: Vec3, qi: Quaternion, qj: Quaternion, bi: Body, bj: Body,
+        rsi: Shape | null, rsj: Shape | null, justTest: boolean, faceListA: number[] | null = null, faceListB: number[] | null = null): boolean {
         const sepAxis = convexConvex_sepAxis;
 
         if (xi.distanceTo(xj) > si.boundingSphereRadius + sj.boundingSphereRadius) {
             return false;
         }
 
-        let hit=false;
+        let hit = false;
         if (si.findSeparatingAxis(sj, xi, qi, xj, qj, sepAxis, faceListA, faceListB)) {
-            const res:hitInfo[] = [];
+            const res: hitInfo[] = [];
             const q = convexConvex_q;
             si.clipAgainstHull(xi, qi, sj, xj, qj, sepAxis, -100, 100, res);
             let numContacts = 0;
@@ -1145,7 +1145,7 @@ export default class Narrowphase {
                 if (justTest) {
                     return true;
                 }
-                hit=true;
+                hit = true;
                 const r = this.createContactEquation(bi, bj, si, sj, rsi, rsj);
                 const ri = r.ri;
                 const rj = r.rj;
@@ -1178,7 +1178,7 @@ export default class Narrowphase {
         return hit;
     }
 
-    planeParticle(sj:Plane, si:Particle, xj:Vec3, xi:Vec3, qj:Quaternion, qi:Quaternion, bj:Body, bi:Body, rsi:Shape, rsj:Shape, justTest:boolean):boolean {
+    planeParticle(sj: Plane, si: Particle, xj: Vec3, xi: Vec3, qj: Quaternion, qi: Quaternion, bj: Body, bi: Body, rsi: Shape, rsj: Shape, justTest: boolean): boolean {
         const normal = particlePlane_normal;
         normal.set(0, 0, 1);
         bj.quaternion.vmult(normal, normal); // Turn normal according to plane orientation
@@ -1211,7 +1211,7 @@ export default class Narrowphase {
         return false;
     }
 
-    sphereParticle(sj:Sphere, si:Particle, xj:Vec3, xi:Vec3, qj:Quaternion, qi:Quaternion, bj:Body, bi:Body, rsi:Shape, rsj:Shape, justTest:boolean):boolean {
+    sphereParticle(sj: Sphere, si: Particle, xj: Vec3, xi: Vec3, qj: Quaternion, qi: Quaternion, bj: Body, bi: Body, rsi: Shape, rsj: Shape, justTest: boolean): boolean {
         // The normal is the unit vector from sphere center to particle center
         const normal = particleSphere_normal;
         normal.set(0, 0, 1);
@@ -1236,13 +1236,13 @@ export default class Narrowphase {
         return false;
     }
 
-    convexParticle(sj:ConvexPolyhedron, si:Particle, xj:Vec3, xi:Vec3, qj:Quaternion, qi:Quaternion, bj:Body, bi:Body, rsi:Shape, rsj:Shape, justTest:boolean):boolean {
-        let penetratedFaceIndex:i32 = -1;
+    convexParticle(sj: ConvexPolyhedron, si: Particle, xj: Vec3, xi: Vec3, qj: Quaternion, qi: Quaternion, bj: Body, bi: Body, rsi: Shape, rsj: Shape, justTest: boolean): boolean {
+        let penetratedFaceIndex: i32 = -1;
         const penetratedFaceNormal = convexParticle_penetratedFaceNormal;
         const worldPenetrationVec = convexParticle_worldPenetrationVec;
-        let minPenetration:f32|null = null;
+        let minPenetration: f32 | null = null;
         //let numDetectedFaces = 0;
-        let hit=false;
+        let hit = false;
 
         // Convert particle position xi to local coords in the convex
         const local = convexParticle_local;
@@ -1275,7 +1275,7 @@ export default class Narrowphase {
                     if (justTest) {
                         return true;
                     }
-                    hit=true;
+                    hit = true;
                     minPenetration = penetration;
                     penetratedFaceIndex = i;
                     penetratedFaceNormal.copy(normal);
@@ -1319,18 +1319,18 @@ export default class Narrowphase {
 
 
     convexHeightfield(
-        convexShape:ConvexPolyhedron,
-        hfShape:Heightfield,
-        convexPos:Vec3,
-        hfPos:Vec3,
-        convexQuat:Quaternion,
-        hfQuat:Quaternion,
-        convexBody:Body,
-        hfBody:Body,
-        rsi:Shape,
-        rsj:Shape,
-        justTest:boolean
-    ):boolean {
+        convexShape: ConvexPolyhedron,
+        hfShape: Heightfield,
+        convexPos: Vec3,
+        hfPos: Vec3,
+        convexQuat: Quaternion,
+        hfQuat: Quaternion,
+        convexBody: Body,
+        hfBody: Body,
+        rsi: Shape,
+        rsj: Shape,
+        justTest: boolean
+    ): boolean {
         const data = hfShape.data;
         const w = hfShape.elementSize;
         const radius = convexShape.boundingSphereRadius;
@@ -1363,7 +1363,7 @@ export default class Narrowphase {
         if (iMaxY >= data[0].length) { iMaxY = data[0].length - 1; }
         if (iMinY >= data[0].length) { iMinY = data[0].length - 1; }
 
-        const minMax:f32[] = [];
+        const minMax: f32[] = [];
         hfShape.getRectMinMax(iMinX, iMinY, iMaxX, iMaxY, minMax);
         const min = minMax[0];
         const max = minMax[1];
@@ -1373,7 +1373,7 @@ export default class Narrowphase {
             return false;
         }
 
-        let hit=false;
+        let hit = false;
         for (let i = iMinX; i < iMaxX; i++) {
             for (let j = iMinY; j < iMaxY; j++) {
 
@@ -1390,7 +1390,7 @@ export default class Narrowphase {
                     return true;
                 }
 
-                hit=hit||intersecting;
+                hit = hit || intersecting;
                 // Upper triangle
                 hfShape.getConvexTrianglePillar(i, j, true);
                 Transform.pointToWorldFrame(hfPos, hfQuat, hfShape.pillarOffset, worldPillarOffset);
@@ -1398,7 +1398,7 @@ export default class Narrowphase {
                     intersecting = this.convexConvex(convexShape, hfShape.pillarConvex, convexPos, worldPillarOffset, convexQuat, hfQuat, convexBody, hfBody, null, null, justTest, faceList, null);
                 }
 
-                hit=hit||intersecting;
+                hit = hit || intersecting;
                 if (justTest && intersecting) {
                     return true;
                 }
@@ -1407,16 +1407,16 @@ export default class Narrowphase {
         return hit;
     }
 
-    boxHeightfield(si:Box, sj:Heightfield, xi:Vec3, xj:Vec3, qi:Quaternion, qj:Quaternion, bi:Body, bj:Body, rsi:Shape, rsj:Shape, justTest:boolean):boolean {
+    boxHeightfield(si: Box, sj: Heightfield, xi: Vec3, xj: Vec3, qi: Quaternion, qj: Quaternion, bi: Body, bj: Body, rsi: Shape, rsj: Shape, justTest: boolean): boolean {
         si.convexPolyhedronRepresentation.material = si.material;
         si.convexPolyhedronRepresentation.collisionResponse = si.collisionResponse;
         return this.convexHeightfield(si.convexPolyhedronRepresentation, sj, xi, xj, qi, qj, bi, bj, si, sj, justTest);
     }
 
-    sphereHeightfield(sphereShape:Sphere,hfShape:Heightfield,spherePos:Vec3,hfPos:Vec3,sphereQuat:Quaternion,hfQuat:Quaternion,
-            sphereBody:Body,hfBody:Body,
-            rsi:Shape,rsj:Shape,
-            justTest:boolean):boolean {
+    sphereHeightfield(sphereShape: Sphere, hfShape: Heightfield, spherePos: Vec3, hfPos: Vec3, sphereQuat: Quaternion, hfQuat: Quaternion,
+        sphereBody: Body, hfBody: Body,
+        rsi: Shape, rsj: Shape,
+        justTest: boolean): boolean {
         const data = hfShape.data;
         const radius = sphereShape.radius;
         const w = hfShape.elementSize;
@@ -1448,7 +1448,7 @@ export default class Narrowphase {
         if (iMaxY >= data[0].length) { iMaxY = data[0].length - 1; }
         if (iMinY >= data[0].length) { iMinY = data[0].length - 1; }
 
-        const minMax:f32[] = [];
+        const minMax: f32[] = [];
         hfShape.getRectMinMax(iMinX, iMinY, iMaxX, iMaxY, minMax);
         const min = minMax[0];
         const max = minMax[1];
@@ -1458,7 +1458,7 @@ export default class Narrowphase {
             return false;
         }
 
-        let hit=false;
+        let hit = false;
         const result = this.result;
         for (let i = iMinX; i < iMaxX; i++) {
             for (let j = iMinY; j < iMaxY; j++) {
@@ -1474,7 +1474,7 @@ export default class Narrowphase {
                     intersecting = this.sphereConvex(sphereShape, hfShape.pillarConvex, spherePos, worldPillarOffset, sphereQuat, hfQuat, sphereBody, hfBody, sphereShape, hfShape, justTest);
                 }
 
-                hit=hit||intersecting;
+                hit = hit || intersecting;
                 if (justTest && intersecting) {
                     return true;
                 }
@@ -1486,7 +1486,7 @@ export default class Narrowphase {
                     intersecting = this.sphereConvex(sphereShape, hfShape.pillarConvex, spherePos, worldPillarOffset, sphereQuat, hfQuat, sphereBody, hfBody, sphereShape, hfShape, justTest);
                 }
 
-                hit=hit||intersecting;
+                hit = hit || intersecting;
                 if (justTest && intersecting) {
                     return true;
                 }
@@ -1537,7 +1537,7 @@ const sphereTrimesh_va = new Vec3();
 const sphereTrimesh_vb = new Vec3();
 const sphereTrimesh_vc = new Vec3();
 const sphereTrimesh_localSphereAABB = new AABB();
-const sphereTrimesh_triangles:i32[] = [];   // i16?
+const sphereTrimesh_triangles: i32[] = [];   // i16?
 
 const point_on_plane_to_sphere = new Vec3();
 const plane_to_sphere_ortho = new Vec3();
@@ -1547,7 +1547,7 @@ const plane_to_sphere_ortho = new Vec3();
 const pointInPolygon_edge = new Vec3();
 const pointInPolygon_edge_x_normal = new Vec3();
 const pointInPolygon_vtp = new Vec3();
-function pointInPolygon(verts:Vec3[], normal:Vec3, p:Vec3) {
+function pointInPolygon(verts: Vec3[], normal: Vec3, p: Vec3) {
     let positiveResult = null;
     const N = verts.length;
     for (let i = 0; i !== N; i++) {

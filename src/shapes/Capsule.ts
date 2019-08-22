@@ -8,6 +8,7 @@ import Vec3 from "../math/Vec3";
 export default class Capsule extends Shape{
     radius:f32=1;
     height:f32=1;
+    noTrans=false;    // 站立的胶囊，可以简单处理
     //axis:Vec3;          // 主轴
     constructor(){
         super();
