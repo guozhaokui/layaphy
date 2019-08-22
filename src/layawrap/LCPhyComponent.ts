@@ -1,21 +1,20 @@
 import { Component } from "laya/components/Component";
-import { Scene3D } from "laya/d3/core/scene/Scene3D";
-import Body from "../objects/Body";
 import { Sprite3D } from "laya/d3/core/Sprite3D";
-import { LCPhyWorld } from "./LCPhyWorld";
-import Shape from "../shapes/Shape";
 import { Quaternion } from "laya/d3/math/Quaternion";
 import { Vector3 } from "laya/d3/math/Vector3";
-import Vec3 from "../math/Vec3";
 import phyQuat from "../math/Quaternion";
+import Vec3 from "../math/Vec3";
+import Body from "../objects/Body";
+import Shape from "../shapes/Shape";
+import { LCPhyWorld } from "./LCPhyWorld";
 
 export default class LCPhyComponent extends Component{
-    phyBody:Body=null;
+    phyBody:Body;
     constructor(){
         super();
     }
     _onEnable(){
-        let sce = this.owner.scene as Scene3D;
+        //let sce = this.owner.scene as Scene3D;
     }
     _onDisable(){
 

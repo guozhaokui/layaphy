@@ -42,11 +42,11 @@ export default class Sphere extends Shape {
 
     calculateWorldAABB(pos:Vec3, quat:Quaternion, min:Vec3, max:Vec3) {
         const r = this.radius;
-        const axes = ['x', 'y', 'z'];
-        for (let i = 0; i < axes.length; i++) {
-            const ax = axes[i];
-            min[ax] = pos[ax] - r;
-            max[ax] = pos[ax] + r;
-        }
+        min.x=pos.x-r;
+        max.x=pos.x+r;
+        min.y=pos.y-r;
+        max.y=pos.y+r;
+        min.z=pos.z-r;
+        max.z=pos.z+r;
     }
 }

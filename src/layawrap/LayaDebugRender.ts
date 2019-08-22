@@ -1,7 +1,6 @@
 import { Scene3D } from "laya/d3/core/scene/Scene3D";
-import World from "../world/World";
-import { PixelLineRenderer } from "laya/d3/core/pixelLine/PixelLineRenderer";
 import Shape, { SHAPETYPE } from "../shapes/Shape";
+import World from "../world/World";
 
 /**
  * 渲染物理线框

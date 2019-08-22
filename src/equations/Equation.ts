@@ -14,8 +14,8 @@ export default class Equation {
 
     minForce:f32 = -1e6;
     maxForce:f32 = 1e6;
-    bi: Body = null;
-    bj: Body = null;
+    bi: Body ;
+    bj: Body ;
 
     //SPOOK parameter
     a:f32 = 0;

@@ -41,11 +41,12 @@ export default class Vec3 {
         this.x = this.y = this.z = 0;
     }
 
-    vadd( v:Vec3, target?:Vec3) {
+    vadd( v:Vec3, target?:Vec3):Vec3 {
         if (target) {
             target.x = v.x + this.x;
             target.y = v.y + this.y;
             target.z = v.z + this.z;
+            return target;
         } else {
             return new Vec3(this.x + v.x,
                 this.y + v.y,
@@ -53,11 +54,12 @@ export default class Vec3 {
         }
     }
 
-    vsub(v:Vec3, target?:Vec3) {
+    vsub(v:Vec3, target?:Vec3):Vec3 {
         if (target) {
             target.x = this.x - v.x;
             target.y = this.y - v.y;
             target.z = this.z - v.z;
+            return target;
         } else {
             return new Vec3(this.x - v.x,
                 this.y - v.y,
@@ -284,10 +286,7 @@ export default class Vec3 {
     /**
      * Check if a vector equals is almost equal to another one.
      */
-    almostEquals(v:Vec3, precision:number) {
-        if (precision === undefined) {
-            precision = 1e-6;
-        }
+    almostEquals(v:Vec3, precision:f32=1e-6) {
         if (Math.abs(this.x - v.x) > precision ||
             Math.abs(this.y - v.y) > precision ||
             Math.abs(this.z - v.z) > precision) {

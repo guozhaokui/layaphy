@@ -1,13 +1,12 @@
-import { Script3D } from "laya/d3/component/Script3D";
-import World from "../world/World";
-import { Scene3D } from "laya/d3/core/scene/Scene3D";
 import { Laya } from "Laya";
-import LCPhyComponent from "./LCPhyComponent";
+import { Script3D } from "laya/d3/component/Script3D";
 import NaiveBroadphase from "../collision/NaiveBroadphase";
+import World from "../world/World";
+import LCPhyComponent from "./LCPhyComponent";
 
 export class LCPhyWorld extends Script3D{
     world = new World();
-    static inst:LCPhyWorld=null;
+    static inst:LCPhyWorld;
     bodies:LCPhyComponent[]=[];
 
     constructor(){

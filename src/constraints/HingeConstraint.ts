@@ -1,10 +1,8 @@
-import Constraint from './Constraint.js';
-import PointToPointConstraint from './PointToPointConstraint.js';
 import RotationalEquation from '../equations/RotationalEquation.js';
 import RotationalMotorEquation from '../equations/RotationalMotorEquation.js';
-import ContactEquation from '../equations/ContactEquation.js';
 import Vec3 from '../math/Vec3.js';
 import Body from '../objects/Body.js';
+import PointToPointConstraint from './PointToPointConstraint.js';
 
 /**
  * Hinge constraint. Think of it as a door hinge. It tries to keep the door in the correct place and with the correct orientation.
@@ -69,24 +67,16 @@ export default class HingeConstraint extends PointToPointConstraint {
         this.motorEquation.enabled = false;
     }
 
-    /**
-     * @method setMotorSpeed
-     * @param {number} speed
-     */
-    setMotorSpeed(speed) {
+    setMotorSpeed(speed:f32):void {
         this.motorEquation.targetVelocity = speed;
     }
 
-    /**
-     * @method setMotorMaxForce
-     * @param {number} maxForce
-     */
-    setMotorMaxForce(maxForce: number) {
+    setMotorMaxForce(maxForce: number):void {
         this.motorEquation.maxForce = maxForce;
         this.motorEquation.minForce = -maxForce;
     }
 
-    update() {
+    update():void {
         const bodyA = this.bodyA;
         const bodyB = this.bodyB;
         const motor = this.motorEquation;

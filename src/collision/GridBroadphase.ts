@@ -1,6 +1,6 @@
 import Broadphase from './Broadphase.js';
 import Vec3 from '../math/Vec3.js';
-import Shape, { SHAPETYPE } from '../shapes/Shape.js';
+import { SHAPETYPE } from '../shapes/Shape.js';
 import World from '../world/World.js';
 import Body from '../objects/Body.js';
 import Sphere from '../shapes/Sphere.js';
@@ -13,7 +13,7 @@ export default class GridBroadphase extends Broadphase {
     nz = 10;
     aabbMin = new Vec3(100, 100, 100);
     aabbMax = new Vec3(-100, -100, -100);
-    bins = [];
+    bins:Body[][] = [];
 
     // bins 数组中的每个数组的长度
     binLengths:number[] = [];//Rather than continually resizing arrays (thrashing the memory), just record length and allow them to grow
@@ -27,7 +27,7 @@ export default class GridBroadphase extends Broadphase {
      * @param  ny Number of boxes along y
      * @param  nz Number of boxes along z
      */
-    constructor(aabbMin: Vec3 = null, aabbMax: Vec3 = null, nx: number = null, ny: number = null, nz: number = null) {
+    constructor(aabbMin?: Vec3, aabbMax?: Vec3, nx:i32=10, ny:i32=10, nz:i32=10) {
         super();
         this.nx = nx || 10;
         this.ny = ny || 10;
@@ -80,9 +80,9 @@ export default class GridBroadphase extends Broadphase {
 
         const SPHERE = SHAPETYPE.SPHERE;
         const PLANE = SHAPETYPE.PLANE;
-        const BOX = SHAPETYPE.BOX;
-        const COMPOUND = SHAPETYPE.COMPOUND;
-        const CONVEXPOLYHEDRON = SHAPETYPE.CONVEXPOLYHEDRON;
+        //const BOX = SHAPETYPE.BOX;
+        //const COMPOUND = SHAPETYPE.COMPOUND;
+        //const CONVEXPOLYHEDRON = SHAPETYPE.CONVEXPOLYHEDRON;
         const bins = this.bins;
         const binLengths = this.binLengths;
         const Nbins = this.bins.length;

@@ -1,10 +1,8 @@
-import Body from './Body.js';
-import Vec3 from '../math/Vec3.js';
 import Quaternion from '../math/Quaternion.js';
-import RaycastResult from '../collision/RaycastResult.js';
-import Ray from '../collision/Ray.js';
-import WheelInfo from './WheelInfo.js';
+import Vec3 from '../math/Vec3.js';
 import World from '../world/World.js';
+import Body from './Body.js';
+import WheelInfo from './WheelInfo.js';
 
 /**
  * Vehicle helper class that casts rays from the wheel positions towards the ground and applies forces.
@@ -29,33 +27,27 @@ export default class RaycastVehicle {
      */
     sliding = false;
 
-    world:World = null;
+    world:World|null=null; // null 表示没有加到场景中
 
     /**
      * Index of the right axis, 0=x, 1=y, 2=z
-     * @property {integer} indexRightAxis
-     * @default 1
      */
-    indexRightAxis=1;
+    indexRightAxis:i32=1;
 
     /**
      * Index of the forward axis, 0=x, 1=y, 2=z
-     * @property {integer} indexForwardAxis
-     * @default 0
      */
-    indexForwardAxis = 0;
+    indexForwardAxis:i32 = 0;
 
     /**
      * Index of the up axis, 0=x, 1=y, 2=z
-     * @property {integer} indexUpAxis
-     * @default 2
      */
-    indexUpAxis = 2;
+    indexUpAxis:i32 = 2;
 
     currentVehicleSpeedKmHour=0;
     preStepCallback:()=>void;
 
-    constructor({ chassisBody, indexRightAxis, indexForwardAxis, indexUpAxis }) {
+    constructor( chassisBody:Body, indexRightAxis:i32, indexForwardAxis:i32, indexUpAxis:i32 ) {
         this.chassisBody = chassisBody;
         this.indexRightAxis = typeof (indexRightAxis) !== 'undefined' ? indexRightAxis : 1;
         this.indexForwardAxis = typeof (indexForwardAxis) !== 'undefined' ? indexForwardAxis : 0;
@@ -64,10 +56,9 @@ export default class RaycastVehicle {
 
     /**
      * Add a wheel. For information about the options, see WheelInfo.
-     * @method addWheel
-     * @param {object} [options]
+     * @param  [options]
      */
-    addWheel(options = {}) {
+    addWheel(options = {}):i32 {
         const info = new WheelInfo(options);
         const index = this.wheelInfos.length;
         this.wheelInfos.push(info);
@@ -77,39 +68,30 @@ export default class RaycastVehicle {
 
     /**
      * Set the steering value of a wheel.
-     * @method setSteeringValue
-     * @param {number} value
-     * @param {integer} wheelIndex
      */
-    setSteeringValue(value, wheelIndex) {
+    setSteeringValue(value:f32, wheelIndex:i32):void {
         const wheel = this.wheelInfos[wheelIndex];
         wheel.steering = value;
     }
 
     /**
      * Set the wheel force to apply on one of the wheels each time step
-     * @method applyEngineForce
-     * @param  {number} value
-     * @param  {integer} wheelIndex
      */
-    applyEngineForce(value, wheelIndex) {
+    applyEngineForce(value:f32, wheelIndex:i32):void {
         this.wheelInfos[wheelIndex].engineForce = value;
     }
 
     /**
      * Set the braking force of a wheel
-     * @method setBrake
-     * @param {number} brake
-     * @param {integer} wheelIndex
      */
-    setBrake(brake:number, wheelIndex) {
+    setBrake(brake:number, wheelIndex:i32):void {
         this.wheelInfos[wheelIndex].brake = brake;
     }
 
     /**
      * Add the vehicle including its constraints to the world.
      */
-    addToWorld(world:World) {
+    addToWorld(world:World):void {
         //const constraints = this.constraints;
         world.addBody(this.chassisBody);
         const that = this;
@@ -122,12 +104,8 @@ export default class RaycastVehicle {
 
     /**
      * Get one of the wheel axles, world-oriented.
-     * @private
-     * @method getVehicleAxisWorld
-     * @param  {integer} axisIndex
-     * @param  {Vec3} result
      */
-    getVehicleAxisWorld(axisIndex, result) {
+    private getVehicleAxisWorld(axisIndex:i32, result:Vec3):void {
         result.set(
             axisIndex === 0 ? 1 : 0,
             axisIndex === 1 ? 1 : 0,
@@ -271,7 +249,9 @@ export default class RaycastVehicle {
         this.world = null;
     }
 
-    castRay(wheel) {
+    castRay(wheel:WheelInfo) {
+        if(!this.world)
+            return;
         const rayvector = castRay_rayvector;
         const target = castRay_target;
 
@@ -287,7 +267,7 @@ export default class RaycastVehicle {
         source.vadd(rayvector, target);
         const raycastResult = wheel.raycastResult;
 
-        const param = 0;
+        //const param = 0;
 
         raycastResult.reset();
         // Turn off ray collision with the chassis temporarily
@@ -299,9 +279,7 @@ export default class RaycastVehicle {
         chassisBody.collisionResponse = oldState;
 
         const object = raycastResult.body;
-
         wheel.raycastResult.groundObject = 0;
-
         if (object) {
             depth = raycastResult.distance;
             wheel.raycastResult.hitNormalWorld = raycastResult.hitNormalWorld;
@@ -349,7 +327,7 @@ export default class RaycastVehicle {
         return depth;
     }
 
-    updateWheelTransformWorld(wheel) {
+    updateWheelTransformWorld(wheel:WheelInfo) {
         wheel.isInContact = false;
         const chassisBody = this.chassisBody;
         chassisBody.pointToWorldFrame(wheel.chassisConnectionPointLocal, wheel.chassisConnectionPointWorld);
@@ -362,7 +340,7 @@ export default class RaycastVehicle {
      * Note when rendering wheels: during each step, wheel transforms are updated BEFORE the chassis; ie. their position becomes invalid after the step. Thus when you render wheels, you must update wheel transforms before rendering them. See raycastVehicle demo for an example.
      * @param wheelIndex The wheel index to update.
      */
-    updateWheelTransform(wheelIndex) {
+    updateWheelTransform(wheelIndex:i32) {
         const up = tmpVec4;
         const right = tmpVec5;
         const fwd = tmpVec6;
@@ -416,14 +394,14 @@ export default class RaycastVehicle {
         const forwardWS = updateFriction_forwardWS;
         const axle = updateFriction_axle;
 
-        let numWheelsOnGround = 0;
+        //let numWheelsOnGround:i32 = 0;
 
         for (var i = 0; i < numWheels; i++) {
             var wheel = wheelInfos[i];
 
             var groundObject = wheel.raycastResult.body;
             if (groundObject) {
-                numWheelsOnGround++;
+                //numWheelsOnGround++;
             }
 
             wheel.sideImpulse = 0;
@@ -556,37 +534,39 @@ export default class RaycastVehicle {
 
             if (wheel.sideImpulse !== 0) {
                 var groundObject = wheel.raycastResult.body;
-
-                const rel_pos2 = new Vec3();
-                wheel.raycastResult.hitPointWorld.vsub(groundObject.position, rel_pos2);
-                //rel_pos2.copy(wheel.raycastResult.hitPointWorld);
-                const sideImp = new Vec3();
-                axle[i].scale(wheel.sideImpulse, sideImp);
-
-                // Scale the relative position in the up direction with rollInfluence.
-                // If rollInfluence is 1, the impulse will be applied on the hitPoint (easy to roll over), if it is zero it will be applied in the same plane as the center of mass (not easy to roll over).
-                chassisBody.vectorToLocalFrame(rel_pos, rel_pos);
-                rel_pos['xyz'[this.indexUpAxis]] *= wheel.rollInfluence;
-                chassisBody.vectorToWorldFrame(rel_pos, rel_pos);
-                chassisBody.applyImpulse(sideImp, rel_pos);
-
-                //apply friction impulse on the ground
-                sideImp.scale(-1, sideImp);
-                groundObject.applyImpulse(sideImp, rel_pos2);
+                if(groundObject){
+                    const rel_pos2 = new Vec3();
+                    wheel.raycastResult.hitPointWorld.vsub(groundObject.position, rel_pos2);
+                    //rel_pos2.copy(wheel.raycastResult.hitPointWorld);
+                    const sideImp = new Vec3();
+                    axle[i].scale(wheel.sideImpulse, sideImp);
+    
+                    // Scale the relative position in the up direction with rollInfluence.
+                    // If rollInfluence is 1, the impulse will be applied on the hitPoint (easy to roll over), if it is zero it will be applied in the same plane as the center of mass (not easy to roll over).
+                    chassisBody.vectorToLocalFrame(rel_pos, rel_pos);
+                    // rel_pos['xyz'[this.indexUpAxis]] *= wheel.rollInfluence;
+                    console.error('上面这句有问题，先删掉了');
+                    chassisBody.vectorToWorldFrame(rel_pos, rel_pos);
+                    chassisBody.applyImpulse(sideImp, rel_pos);
+    
+                    //apply friction impulse on the ground
+                    sideImp.scale(-1, sideImp);
+                    groundObject.applyImpulse(sideImp, rel_pos2);
+                    }
             }
         }
     }
 }
 
-const tmpVec1 = new Vec3();
-const tmpVec2 = new Vec3();
-const tmpVec3 = new Vec3();
+//const tmpVec1 = new Vec3();
+//const tmpVec2 = new Vec3();
+//const tmpVec3 = new Vec3();
 var tmpVec4 = new Vec3();
 var tmpVec5 = new Vec3();
 var tmpVec6 = new Vec3();
-const tmpRay = new Ray();
+//const tmpRay = new Ray();
 
-const torque = new Vec3();
+//const torque = new Vec3();
 
 var castRay_rayvector = new Vec3();
 var castRay_target = new Vec3();
@@ -599,15 +579,15 @@ var directions = [
 
 
 var updateFriction_surfNormalWS_scaled_proj = new Vec3();
-var updateFriction_axle = [];
-var updateFriction_forwardWS = [];
+var updateFriction_axle:Vec3[] = [];
+var updateFriction_forwardWS:Vec3[] = [];
 var sideFrictionStiffness2 = 1;
 
 const calcRollingFriction_vel1 = new Vec3();
 const calcRollingFriction_vel2 = new Vec3();
 const calcRollingFriction_vel = new Vec3();
 
-function calcRollingFriction(body0, body1, frictionPosWorld, frictionDirectionWorld, maxImpulse) {
+function calcRollingFriction(body0:Body, body1:Body, frictionPosWorld:Vec3, frictionDirectionWorld:Vec3, maxImpulse:f32) {
     let j1 = 0;
     const contactPosWorld = frictionPosWorld;
 
@@ -647,18 +627,18 @@ const computeImpulseDenominator_r0 = new Vec3();
 const computeImpulseDenominator_c0 = new Vec3();
 const computeImpulseDenominator_vec = new Vec3();
 const computeImpulseDenominator_m = new Vec3();
-function computeImpulseDenominator({ position, invInertiaWorld, invMass }, pos, normal) {
+function computeImpulseDenominator( body:Body, pos:Vec3, normal:Vec3) {
     const r0 = computeImpulseDenominator_r0;
     const c0 = computeImpulseDenominator_c0;
     const vec = computeImpulseDenominator_vec;
     const m = computeImpulseDenominator_m;
 
-    pos.vsub(position, r0);
+    pos.vsub(body.position, r0);
     r0.cross(normal, c0);
-    invInertiaWorld.vmult(c0, m);
+    body.invInertiaWorld.vmult(c0,m);
     m.cross(r0, vec);
 
-    return invMass + normal.dot(vec);
+    return body.invMass + normal.dot(vec);
 }
 
 

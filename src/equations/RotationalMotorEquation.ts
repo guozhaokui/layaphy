@@ -1,7 +1,6 @@
 import Vec3 from '../math/Vec3.js';
-import Mat3 from '../math/Mat3.js';
-import Equation from './Equation.js';
 import Body from '../objects/Body.js';
+import Equation from './Equation.js';
 
 /**
  * Rotational motor constraint. Tries to keep the relative angular velocity of the bodies to a given value.
@@ -29,10 +28,10 @@ export default class RotationalMotorEquation extends Equation {
     }
 
     computeB(h: f32) {
-        const a = this.a;
+        //const a = this.a;
         const b = this.b;
-        const bi = this.bi;
-        const bj = this.bj;
+        //const bi = this.bi;
+        //const bj = this.bj;
         const axisA = this.axisA;
         const axisB = this.axisB;
         const GA = this.jacobianElementA;

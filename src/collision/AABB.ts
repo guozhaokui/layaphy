@@ -218,7 +218,6 @@ export default class AABB {
      * Check if the AABB is hit by a ray.
      */
     overlapsRay( ray:Ray) {
-        const t = 0;
 
         // ray.direction is unit direction vector of ray
         var d = ray._direction;

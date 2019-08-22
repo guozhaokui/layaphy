@@ -7,7 +7,7 @@ export interface eventHandler {
  * @constructor
  */
 export default class EventTarget {
-    _listeners: { [type: string]: eventHandler[] } = null;
+    _listeners: { [type: string]: eventHandler[] }|null = null;
     constructor() {
 
     }
@@ -19,7 +19,7 @@ export default class EventTarget {
      * @param  {Function} listener
      * @return {EventTarget} The self object, for chainability.
      */
-    addEventListener(type: string, listener: eventHandler) {
+    addEventListener(type: string, listener: eventHandler):EventTarget {
         if (!this._listeners) { this._listeners = {}; }
         const listeners = this._listeners;
         if (listeners[type] === undefined) {
@@ -38,7 +38,7 @@ export default class EventTarget {
      * @param  {Function} listener
      * @return {Boolean}
      */
-    hasEventListener(type: string, listener: eventHandler) {
+    hasEventListener(type: string, listener: eventHandler) :boolean{
         if (!this._listeners) { return false; }
         const listeners = this._listeners;
         if (listeners[type] !== undefined && listeners[type].includes(listener)) {
@@ -53,7 +53,7 @@ export default class EventTarget {
      * @param  {String} type
      * @return {Boolean}
      */
-    hasAnyEventListener(type: string) {
+    hasAnyEventListener(type: string) :boolean{
         if (!this._listeners) { return false; }
         const listeners = this._listeners;
         return (listeners[type] !== undefined);
@@ -66,7 +66,7 @@ export default class EventTarget {
      * @param  {Function} listener
      * @return {EventTarget} The self object, for chainability.
      */
-    removeEventListener(type: string, listener: eventHandler) {
+    removeEventListener(type: string, listener: eventHandler):EventTarget {
         if (!this._listeners) { return this; }
         const listeners = this._listeners;
         if (listeners[type] === undefined) { return this; }
@@ -84,7 +84,7 @@ export default class EventTarget {
      * @param  {String} event.type
      * @return {EventTarget} The self object, for chainability.
      */
-    dispatchEvent(event: any) {
+    dispatchEvent(event: any):EventTarget {
         if (!this._listeners) { return this; }
         const listeners = this._listeners;
         const listenerArray = listeners[event.type];

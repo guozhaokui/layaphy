@@ -20,9 +20,6 @@ import Quaternion from "./math/Quaternion";
 
 //TEST
 
-class Main{
-
-}
 let scene:Scene3D;
 let mtl1:BlinnPhongMaterial;
 
@@ -41,7 +38,7 @@ var camera: Camera = (<Camera>scene.addChild(new Camera(0, 0.1, 100)));
 camera.transform.translate(new Vector3(0, 6, 19.5));
 camera.transform.rotate(new Vector3(-15, 0, 0), true, false);
 //camera.addComponent(CameraMoveScript);
-camera.clearColor = null;
+//camera.clearColor = null;
 
 //light
 var directionLight: DirectionLight = (<DirectionLight>scene.addChild(new DirectionLight()));
@@ -67,7 +64,7 @@ let planephy = plane.addComponent(LCPhyComponent) as LCPhyComponent;
 
 let shapeq = new Quaternion();
 shapeq.setFromAxisAngle(new Vec3(1,0,0),-Math.PI/2);
-planephy.addShape( new Plane(), null, shapeq);  // laya的plane是向上的，cannon的plane是向前（后？）的
+planephy.addShape( new Plane(), new Vector3(), shapeq);  // laya的plane是向上的，cannon的plane是向前（后？）的
 planephy.setMass(0);
 //planephy.phyBody.quaternion.setFromAxisAngle( new Vec3(1,0,0),0);
 

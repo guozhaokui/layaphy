@@ -62,36 +62,22 @@ export default class Mat3 {
 
     /**
      * Sets the matrix diagonal elements from a Vec3
-     * @method setTrace
-     * @param {Vec3} vec3
      */
-    setTrace({ x, y, z }) {
+    setTrace(vec3 :Vec3) {
         const e = this.elements;
-        e[0] = x;
-        e[4] = y;
-        e[8] = z;
+        e[0] = vec3.x;
+        e[4] = vec3.y;
+        e[8] = vec3.z;
     }
 
-    /**
-     * Gets the matrix diagonal elements
-     * @method getTrace
-     * @return {Vec3}
-     */
-    getTrace(target) {
-        var target = target || new Vec3();
-        const e = this.elements;
-        target.x = e[0];
-        target.y = e[4];
-        target.z = e[8];
-    }
 
     /**
      * Matrix-Vector multiplication
      * @method vmult
-     * @param {Vec3} v The vector to multiply with
-     * @param {Vec3} target Optional, target to save the result in.
+     * @param  v The vector to multiply with
+     * @param  target Optional, target to save the result in.
      */
-    vmult(v, target = new Vec3()) {
+    vmult(v:Vec3, target = new Vec3()):Vec3 {
         const e = this.elements;
         const x = v.x;
         const y = v.y;
@@ -135,16 +121,16 @@ export default class Mat3 {
     /**
      * Scale each column of the matrix
      * @method scale
-     * @param {Vec3} v
-     * @return {Mat3} The result.
+     * @param  v
+     * @return  The result.
      */
-    scale({ x, y, z }, target = new Mat3()) {
+    scale( v:Vec3, target = new Mat3()):Mat3 {
         const e = this.elements;
         const t = target.elements;
         for (let i = 0; i !== 3; i++) {
-            t[3 * i + 0] = x * e[3 * i + 0];
-            t[3 * i + 1] = y * e[3 * i + 1];
-            t[3 * i + 2] = z * e[3 * i + 2];
+            t[3 * i + 0] = v.x * e[3 * i + 0];
+            t[3 * i + 1] = v.y * e[3 * i + 1];
+            t[3 * i + 2] = v.z * e[3 * i + 2];
         }
         return target;
     }
@@ -183,7 +169,6 @@ export default class Mat3 {
         let np;
         const kp = 4; // num rows
         let p;
-        let els;
         do {
             i = k - n;
             if (eqns[i + nc * i] === 0) {
@@ -201,7 +186,7 @@ export default class Mat3 {
             }
             if (eqns[i + nc * i] !== 0) {
                 for (j = i + 1; j < k; j++) {
-                    const multiplier = eqns[i + nc * j] / eqns[i + nc * i];
+                    const multiplier:f32 = eqns[i + nc * j] / eqns[i + nc * i];
                     np = kp;
                     do {  // do ligne( k ) = ligne( k ) - multiplier * ligne( i )
                         p = kp - np;
@@ -230,13 +215,14 @@ export default class Mat3 {
      * @param  column
      * @param  value Optional. If provided, the matrix element will be set to this value.
      */
-    e(row:number, column:number, value:number) {
+    e(row:number, column:number, value:number):f32|undefined {
         if (value === undefined) {
             return this.elements[column + 3 * row];
         } else {
             // Set value
             this.elements[column + 3 * row] = value;
         }
+        return undefined;
     }
 
     /**
@@ -321,7 +307,7 @@ export default class Mat3 {
             }
             if (eqns[i + nc * i] !== 0) {
                 for (j = i + 1; j < k; j++) {
-                    var multiplier = eqns[i + nc * j] / eqns[i + nc * i];
+                    var multiplier:f32 = eqns[i + nc * j] / eqns[i + nc * i];
                     np = kp;
                     do { // do line( k ) = line( k ) - multiplier * line( i )
                         p = kp - np;

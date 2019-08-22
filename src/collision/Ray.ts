@@ -251,8 +251,8 @@ export default class Ray {
 
     
     private intersectHeightfield(shape:Heightfield, quat:Quaternion, position:Vec3, body:Body, reportedShape:Shape) {
-        const data = shape.data;
-        const w = shape.elementSize;
+        //const data = shape.data;
+        //const w = shape.elementSize;
 
         // Convert the ray to local heightfield coordinates
         const localRay = intersectHeightfield_localRay; //new Ray(this.from, this.to);
@@ -372,11 +372,11 @@ export default class Ray {
      * @param reportedShape 
      * @param options 
      */
-    intersectConvex(shape:ConvexPolyhedron, quat:Quaternion, position:Vec3, body:Body, reportedShape, options?:{faceList:number[]}) {
-        const minDistNormal = intersectConvex_minDistNormal;
+    intersectConvex(shape:ConvexPolyhedron, quat:Quaternion, position:Vec3, body:Body, reportedShape:Shape, options?:{faceList:number[]}) {
+        //const minDistNormal = intersectConvex_minDistNormal;
         const normal = intersectConvex_normal;
         const vector = intersectConvex_vector;
-        const minDistIntersect = intersectConvex_minDistIntersect;
+        //const minDistIntersect = intersectConvex_minDistIntersect;
         const faceList = (options && options.faceList) || null;
 
         // Checking faces
@@ -390,7 +390,7 @@ export default class Ray {
         const to = this.to;
         const fromToDistance = from.distanceTo(to);
 
-        const minDist = -1;
+        //const minDist = -1;
         const Nfaces = faceList ? faceList.length : faces.length;
         const result = this.result;
 
@@ -474,28 +474,28 @@ export default class Ray {
         const normal = intersectTrimesh_normal;
         const triangles = intersectTrimesh_triangles;
         const treeTransform = intersectTrimesh_treeTransform;
-        const minDistNormal = intersectConvex_minDistNormal;
+        //const minDistNormal = intersectConvex_minDistNormal;
         const vector = intersectConvex_vector;
-        const minDistIntersect = intersectConvex_minDistIntersect;
-        const localAABB = intersectTrimesh_localAABB;
+        //const minDistIntersect = intersectConvex_minDistIntersect;
+        //const localAABB = intersectTrimesh_localAABB;
         const localDirection = intersectTrimesh_localDirection;
         const localFrom = intersectTrimesh_localFrom;
         const localTo = intersectTrimesh_localTo;
         const worldIntersectPoint = intersectTrimesh_worldIntersectPoint;
         const worldNormal = intersectTrimesh_worldNormal;
-        const faceList = (options && options.faceList) || null;
+        //const faceList = (options && options.faceList) || null;
 
         // Checking faces
         const indices = mesh.indices;
 
-        const vertices = mesh.vertices;
-        const normals = mesh.normals;
+        //const vertices = mesh.vertices;
+        //const normals = mesh.normals;
 
         const from = this.from;
         const to = this.to;
         const direction = this._direction;
 
-        const minDist = -1;
+        //const minDist = -1;
         treeTransform.position.copy(position);
         treeTransform.quaternion.copy(quat);
 
@@ -674,7 +674,7 @@ export default class Ray {
 
 
 var tmpAABB = new AABB();
-var tmpArray = [];
+var tmpArray:Body[] = [];
 
 const v1 = new Vec3();
 const v2 = new Vec3();
@@ -690,31 +690,31 @@ const v2 = new Vec3();
 var intersectBody_xi = new Vec3();
 var intersectBody_qi = new Quaternion();
 
-const vector = new Vec3();
-const normal = new Vec3();
+//const vector = new Vec3();
+//const normal = new Vec3();
 var intersectPoint = new Vec3();
 
 var a = new Vec3();
 var b = new Vec3();
 var c = new Vec3();
-const d = new Vec3();
+//const d = new Vec3();
 
-const tmpRaycastResult = new RaycastResult();
+//const tmpRaycastResult = new RaycastResult();
 
 var intersectConvexOptions = {
     faceList: [0]
 };
 var worldPillarOffset = new Vec3();
 var intersectHeightfield_localRay = new Ray();
-var intersectHeightfield_index = [];
-const intersectHeightfield_minMax = [];
+var intersectHeightfield_index:i32[] = [];
+//const intersectHeightfield_minMax = [];
 
 var Ray_intersectSphere_intersectionPoint = new Vec3();
 var Ray_intersectSphere_normal = new Vec3();
 
 var intersectConvex_normal = new Vec3();
-var intersectConvex_minDistNormal = new Vec3();
-var intersectConvex_minDistIntersect = new Vec3();
+//var intersectConvex_minDistNormal = new Vec3();
+//var intersectConvex_minDistIntersect = new Vec3();
 var intersectConvex_vector = new Vec3();
 
 var intersectTrimesh_normal = new Vec3();
@@ -723,8 +723,8 @@ var intersectTrimesh_localFrom = new Vec3();
 var intersectTrimesh_localTo = new Vec3();
 var intersectTrimesh_worldNormal = new Vec3();
 var intersectTrimesh_worldIntersectPoint = new Vec3();
-var intersectTrimesh_localAABB = new AABB();
-var intersectTrimesh_triangles = [];
+//var intersectTrimesh_localAABB = new AABB();
+var intersectTrimesh_triangles:i32[] = [];
 var intersectTrimesh_treeTransform = new Transform();
 
 var v0 = new Vec3();

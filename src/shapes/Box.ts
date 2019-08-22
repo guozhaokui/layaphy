@@ -13,7 +13,7 @@ export default class Box extends Shape {
      * Used by the contact generator to make contacts with other convex polyhedra for example
      * 把BOX转成convex
      */
-    convexPolyhedronRepresentation:ConvexPolyhedron = null;
+    convexPolyhedronRepresentation:ConvexPolyhedron;
 
     constructor(halfExtents: Vec3) {
         super();
@@ -52,11 +52,13 @@ export default class Box extends Shape {
             [1, 2, 6, 5], // +x
         ];
 
+        /*
         const axes = [
             new V(0, 0, 1),
             new V(0, 1, 0),
             new V(1, 0, 0)
         ];
+        */
 
         const h = new ConvexPolyhedron(vertices, indices);
         this.convexPolyhedronRepresentation = h;
@@ -177,7 +179,7 @@ export default class Box extends Shape {
 
 
 var worldCornerTempPos = new Vec3();
-const worldCornerTempNeg = new Vec3();
+//const worldCornerTempNeg = new Vec3();
 
 var worldCornersTemp = [
     new Vec3(),

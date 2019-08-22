@@ -11,12 +11,14 @@ export default class RaycastResult {
     hitNormalWorld = new Vec3();
     hitPointWorld = new Vec3();
     hasHit = false;
-    shape = null;
+    shape:Shape|null=null;
 
+    directionWorld:Vec3;
+    suspensionLength:f32=0;
     /**
      * The hit body, or null.
      */
-    body = null;
+    body:Body|null=null;
 
     /**
      * The index of the hit triangle, if the hit shape was a trimesh.
@@ -32,6 +34,8 @@ export default class RaycastResult {
      * If the ray should stop traversing the bodies.
      */
     _shouldStop = false;
+
+    groundObject:i32;
 
     constructor() {
 

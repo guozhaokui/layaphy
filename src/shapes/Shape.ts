@@ -1,9 +1,9 @@
 
 
-import Vec3 from '../math/Vec3.js';
-import Body from '../objects/Body.js';
 import Material from '../material/Material.js';
 import Quaternion from '../math/Quaternion.js';
+import Vec3 from '../math/Vec3.js';
+import Body from '../objects/Body.js';
 
 export enum SHAPETYPE{
     SPHERE= 1,
@@ -16,13 +16,19 @@ export enum SHAPETYPE{
     CYLINDER= 128,
     TRIMESH= 256,
     CAPSULE=512,
+    VOXEL=1024,
 }
+
+function Path(target:any) {
+    console.log("I am decorator.")
+}
+
 /**
  * Base class for shapes
  */
-export default class Shape {
+@Path
+export default abstract class Shape {
     static idCounter = 0;
-
     id = Shape.idCounter++;
     type = 0;
 
@@ -30,6 +36,7 @@ export default class Shape {
      * The local bounding sphere radius of this shape.
      */
     boundingSphereRadius = 0;
+    //aabb:BoundBox
 
     /**
      * Whether to produce contact forces when in contact with other bodies. Note that contacts will be generated, but they will be disabled.
@@ -40,8 +47,8 @@ export default class Shape {
 
     collisionFilterMask = -1;
 
-    material: Material = null;
-    body: Body = null;
+    material: Material|null = null;
+    body: Body;
 
     constructor(options?: { type: number, collisionResponse: boolean, collisionFilterGroup: number, collisionFilterMask: number, material: Material }) {
         if(options){
@@ -56,26 +63,19 @@ export default class Shape {
     /**
      * Computes the bounding sphere radius. The result is stored in the property .boundingSphereRadius
      */
-    updateBoundingSphereRadius() {
-        throw `computeBoundingSphereRadius() not implemented for shape type ${this.type}`;
-    }
+    abstract updateBoundingSphereRadius():void;
 
-    calculateWorldAABB(pos: Vec3, quat: Quaternion, min: Vec3, max: Vec3){
-    }    
+    abstract calculateWorldAABB(pos: Vec3, quat: Quaternion, min: Vec3, max: Vec3):void;
     /**
      * Get the volume of this shape
      */
-    volume() {
-        throw `volume() not implemented for shape type ${this.type}`;
-    }
+    abstract volume():number;
 
     /**
      * Calculates the inertia in the local frame for this shape.
      * @see http://en.wikipedia.org/wiki/List_of_moments_of_inertia
      */
-    calculateLocalInertia(mass: number, target: Vec3) {
-        throw `calculateLocalInertia() not implemented for shape type ${this.type}`;
-    }
+    abstract calculateLocalInertia(mass: number, target: Vec3):void;
 
 }
 

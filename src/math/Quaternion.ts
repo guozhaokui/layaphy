@@ -89,15 +89,15 @@ export default class Quaternion {
         return this;
     }
 
-    mult({ x, y, z, w }, target = new Quaternion()) {
+    mult(q:Quaternion, target = new Quaternion()):Quaternion {
         const ax = this.x;
         const ay = this.y;
         const az = this.z;
         const aw = this.w;
-        const bx = x;
-        const by = y;
-        const bz = z;
-        const bw = w;
+        const bx = q.x;
+        const by = q.y;
+        const bz = q.z;
+        const bw = q.w;
 
         target.x = ax * bw + aw * bx + ay * bz - az * by;
         target.y = ay * bw + aw * by + az * bx - ax * bz;
@@ -222,9 +222,9 @@ export default class Quaternion {
      * @param string order Three-character string e.g. "YZX", which also is default.
      */
     toEuler(target:Vec3, order = "YZX") {
-        let heading:number;
-        let attitude:number;
-        let bank:number;
+        let heading:f32=0;
+        let attitude:f32=0;
+        let bank:f32=0;
         const x = this.x;
         const y = this.y;
         const z = this.z;
@@ -417,6 +417,6 @@ export default class Quaternion {
 var sfv_t1 = new Vec3();
 var sfv_t2 = new Vec3();
 
-const Quaternion_mult_va = new Vec3();
-const Quaternion_mult_vb = new Vec3();
-const Quaternion_mult_vaxvb = new Vec3();
+//const Quaternion_mult_va = new Vec3();
+//const Quaternion_mult_vb = new Vec3();
+//const Quaternion_mult_vaxvb = new Vec3();

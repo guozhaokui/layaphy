@@ -9,11 +9,11 @@ import Transform from '../math/Transform.js';
  * @param {Octree} [options.root]
  * @param {AABB} [options.aabb]
  */
-export class OctreeNode {
+export class OctreeNode<T> {
     /**
      * The root node
      */
-    root: OctreeNode = null;
+    root: OctreeNode<T>;    //root 在构造完之后必须有值了
 
     /**
      * Boundary of this node
@@ -23,18 +23,19 @@ export class OctreeNode {
     /**
      * Contained data at the current node level.
      */
-    data = [];
+    data:T[] = [];
 
-    maxDepth=0;
+    maxDepth:f32=0;
 
     /**
      * Children to this node
      */
-    children: OctreeNode[] = [];
-    constructor(options: { root?:OctreeNode, aabb?: AABB }) {
+    children: OctreeNode<T>[] = [];
+    constructor( root:OctreeNode<T>|null, options: { aabb?: AABB }) {
+        if(root)
+            root=root;
         if (options) {
-            this.root = options.root;
-            this.aabb = options.aabb.clone();
+            if(options.aabb) this.aabb= options.aabb.clone();
         }
     }
 
@@ -45,7 +46,7 @@ export class OctreeNode {
     /**
      * Insert data into this node
      */
-    insert(aabb?:AABB, elementData?:any, level?:number) {
+    insert(aabb:AABB, elementData:T, level?:number) {
         const nodeData = this.data;
         level = level || 0;
 
@@ -92,29 +93,24 @@ export class OctreeNode {
         const u = aabb.upperBound;
 
         const children = this.children;
+        const root = this.root || this;
 
         children.push(
-            new OctreeNode({ aabb: new AABB({ lowerBound: new Vec3(0, 0, 0) }) }),
-            new OctreeNode({ aabb: new AABB({ lowerBound: new Vec3(1, 0, 0) }) }),
-            new OctreeNode({ aabb: new AABB({ lowerBound: new Vec3(1, 1, 0) }) }),
-            new OctreeNode({ aabb: new AABB({ lowerBound: new Vec3(1, 1, 1) }) }),
-            new OctreeNode({ aabb: new AABB({ lowerBound: new Vec3(0, 1, 1) }) }),
-            new OctreeNode({ aabb: new AABB({ lowerBound: new Vec3(0, 0, 1) }) }),
-            new OctreeNode({ aabb: new AABB({ lowerBound: new Vec3(1, 0, 1) }) }),
-            new OctreeNode({ aabb: new AABB({ lowerBound: new Vec3(0, 1, 0) }) })
+            new OctreeNode(root,{ aabb: new AABB({ lowerBound: new Vec3(0, 0, 0) }) }),
+            new OctreeNode(root,{ aabb: new AABB({ lowerBound: new Vec3(1, 0, 0) }) }),
+            new OctreeNode(root,{ aabb: new AABB({ lowerBound: new Vec3(1, 1, 0) }) }),
+            new OctreeNode(root,{ aabb: new AABB({ lowerBound: new Vec3(1, 1, 1) }) }),
+            new OctreeNode(root,{ aabb: new AABB({ lowerBound: new Vec3(0, 1, 1) }) }),
+            new OctreeNode(root,{ aabb: new AABB({ lowerBound: new Vec3(0, 0, 1) }) }),
+            new OctreeNode(root,{ aabb: new AABB({ lowerBound: new Vec3(1, 0, 1) }) }),
+            new OctreeNode(root,{ aabb: new AABB({ lowerBound: new Vec3(0, 1, 0) }) })
         );
 
         u.vsub(l, halfDiagonal);
         halfDiagonal.scale(0.5, halfDiagonal);
 
-        const root = this.root || this;
-
         for (let i = 0; i !== 8; i++) {
             const child = children[i];
-
-            // Set current node as root
-            child.root = root;
-
             // Compute bounds
             const lowerBound = child.aabb.lowerBound;
             lowerBound.x *= halfDiagonal.x;
@@ -134,7 +130,7 @@ export class OctreeNode {
      */
     aabbQuery(aabb:AABB, result:number[]) {
 
-        const nodeData = this.data;
+        //const nodeData = this.data;
 
         // abort if the range does not intersect this node
         // if (!this.aabb.overlaps(aabb)){
@@ -146,7 +142,7 @@ export class OctreeNode {
 
         // Add child data
         // @todo unwrap recursion into a queue / loop, that's faster in JS
-        const children = this.children;
+        //const children = this.children;
 
 
         // for (var i = 0, N = this.children.length; i !== N; i++) {
@@ -155,7 +151,7 @@ export class OctreeNode {
 
         const queue = [this];
         while (queue.length) {
-            const node = queue.pop();
+            const node = queue.pop() as OctreeNode<T>;
             if (node.aabb.overlaps(aabb)) {
                 Array.prototype.push.apply(result, node.data);
             }
@@ -183,9 +179,9 @@ export class OctreeNode {
      * @method removeEmptyNodes
      */
     removeEmptyNodes() {
-        const queue = [this];
+        const queue:OctreeNode<T>[] = [this];
         while (queue.length) {
-            const node = queue.pop();
+            const node = queue.pop() as OctreeNode<T>;
             for (let i = node.children.length - 1; i >= 0; i--) {
                 if (!node.children[i].data.length) {
                     node.children.splice(i, 1);
@@ -203,14 +199,17 @@ export class OctreeNode {
  * @param {number} [options.maxDepth=8]
  * @extends OctreeNode
  */
-export class Octree extends OctreeNode {
+export class Octree<T> extends OctreeNode<T> {
     maxDepth=8;
     constructor(aabb?:AABB, options?:{maxDepth?:number,aabb?:AABB}) {
-        super(options);
+        super(null,options as any);
+        this.root=this;
         /**
          * Maximum subdivision depth
          */
-        this.maxDepth = typeof (options.maxDepth) !== 'undefined' ? options.maxDepth : 8;
+        if(options){
+            this.maxDepth = typeof (options.maxDepth) !== 'undefined' ? options.maxDepth : 8;
+        }
     }
 }
 

@@ -74,6 +74,6 @@ export default class ConeTwistConstraint extends PointToPointConstraint {
 
 ConeTwistConstraint.constructor = ConeTwistConstraint;
 
-const ConeTwistConstraint_update_tmpVec1 = new Vec3();
-const ConeTwistConstraint_update_tmpVec2 = new Vec3();
+//const ConeTwistConstraint_update_tmpVec1 = new Vec3();
+//const ConeTwistConstraint_update_tmpVec2 = new Vec3();
 

@@ -19,7 +19,7 @@ export default class SAPBroadphase extends Broadphase {
     /**
      * The world to search in.
      */
-    world: World = null;
+    world: World;
 
     /**
      * Axis to sort the bodies along. Set to 0 for x axis, and 1 for y axis. For best performance, choose an axis that the bodies are spread out more on.
@@ -192,14 +192,14 @@ export default class SAPBroadphase extends Broadphase {
             this.dirty = false;
         }
 
-        const axisIndex = this.axisIndex;
-        let axis = 'x';
-        if (axisIndex === 1) { axis = 'y'; }
-        if (axisIndex === 2) { axis = 'z'; }
+        //const axisIndex = this.axisIndex;
+        //let axis = 'x';
+        //if (axisIndex === 1) { axis = 'y'; }
+        //if (axisIndex === 2) { axis = 'z'; }
 
         const axisList = this.axisList;
-        const lower = aabb.lowerBound[axis];
-        const upper = aabb.upperBound[axis];
+        //const lower = aabb.lowerBound[axis];
+        //const upper = aabb.upperBound[axis];
         for (let i = 0; i < axisList.length; i++) {
             const b = axisList[i];
 
@@ -261,8 +261,8 @@ export default class SAPBroadphase extends Broadphase {
      * Check if the bounds of two bodies overlap, along the given SAP axis.
      */
     static checkBounds(bi: Body, bj: Body, axisIndex: i32) {
-        var biPos: f32;
-        var bjPos: f32;
+        var biPos: f32=0;
+        var bjPos: f32=0;
 
         if (axisIndex === 0) {
             biPos = bi.position.x;
@@ -277,10 +277,10 @@ export default class SAPBroadphase extends Broadphase {
 
         var ri = bi.boundingRadius,
             rj = bj.boundingRadius,
-            boundA1 = biPos - ri,
+            //boundA1 = biPos - ri,
             boundA2 = biPos + ri,
-            boundB1 = bjPos - rj,
-            boundB2 = bjPos + rj;
+            boundB1 = bjPos - rj;
+            //boundB2 = bjPos + rj;
 
         return boundB1 < boundA2;
     }

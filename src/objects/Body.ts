@@ -100,21 +100,20 @@ export default class Body extends EventTarget {
     /**
      * Reference to the world the body is living in
      */
-    world: World = null;
+    world: World|null =null;    // null 表示没有加到world中
 
     /**
      * Callback function that is used BEFORE stepping the system. Use it to apply forces, for example. Inside the function, "this" will refer to this Body object.
-     * @type {Function}
      * @deprecated Use World events instead
      */
-    preStep: () => void = null;
+    preStep:(b:Body)=>void|undefined;
 
     /**
      * Callback function that is used AFTER stepping the system. Inside the function, "this" will refer to this Body object.
      * @type {Function}
      * @deprecated Use World events instead
      */
-    postStep: () => void = null;
+    postStep:(b:Body)=>void|undefined;
 
     vlambda = new Vec3();
 
@@ -158,8 +157,7 @@ export default class Body extends EventTarget {
     _mass:f32  = 0;
     invMass:f32 = 0;
 
-    material = null;
-
+    material:Material|undefined|null = null;
     linearDamping:f32 = 0.01;
 
     /**
@@ -227,7 +225,7 @@ export default class Body extends EventTarget {
     /**
      * Orientation of each Shape, given in local Body space.
      */
-    shapeOrientations = [];
+    shapeOrientations:Quaternion[] = [];
 
     inertia = new Vec3();
 
@@ -271,7 +269,7 @@ export default class Body extends EventTarget {
 
     wlambda = new Vec3();
 
-    constructor(mass: f32 = 1, shape: Shape = null, options?: BodyInitOptions) {
+    constructor(mass: f32 = 1, shape: Shape|null = null, options?: BodyInitOptions) {
         super();
         this._mass = mass;
         this.invMass = mass > 0 ? 1.0 / mass : 0;
@@ -298,7 +296,7 @@ export default class Body extends EventTarget {
             }
 
             if (typeof (options.type) === typeof (BODYTYPE.STATIC)) {
-                this.type = options.type;
+                this.type = options.type as i32;
             }
             if (options.quaternion) {
                 this.quaternion.copy(options.quaternion);
@@ -414,8 +412,7 @@ export default class Body extends EventTarget {
     /**
      * Convert a world vector to local body frame.
      */
-    vectorToLocalFrame(worldVector: Vec3, result?: Vec3) {
-        var result = result || new Vec3();
+    vectorToLocalFrame(worldVector: Vec3, result=new Vec3()) {
         this.quaternion.conjugate().vmult(worldVector, result);
         return result;
     }
@@ -461,10 +458,15 @@ export default class Body extends EventTarget {
         this.updateBoundingRadius();
 
         this.aabbNeedsUpdate = true;
-
         shape.body = this;
-
         return this;
+    }
+
+    /**
+     * 同时添加多个shape，避免每次都重新计算转动惯量
+     */
+    addShapes(){
+
     }
 
     /**
@@ -541,7 +543,7 @@ export default class Body extends EventTarget {
         } else {
             const m1 = uiw_m1;
             const m2 = uiw_m2;
-            const m3 = uiw_m3;
+            //const m3 = uiw_m3;
             m1.setRotationFromQuaternion(this.quaternion);
             m1.transpose(m2);
             m1.scale(I, m1);
@@ -659,14 +661,23 @@ export default class Body extends EventTarget {
         const I = this.inertia;
         const fixed = this.fixedRotation;
 
-        // Approximate with AABB box
+        let shapes = this.shapes;
+        if(shapes.length<=0)
+            return;
+
         this.computeAABB();
         halfExtents.set(
             (this.aabb.upperBound.x - this.aabb.lowerBound.x) / 2,
             (this.aabb.upperBound.y - this.aabb.lowerBound.y) / 2,
             (this.aabb.upperBound.z - this.aabb.lowerBound.z) / 2
         );
-        Box.calculateInertia(halfExtents, this._mass, I);
+        // 组合形状的话，先用包围盒的转动惯量来模拟
+        if(this.shapes.length>1){
+            Box.calculateInertia(halfExtents, this._mass, I);
+        }else{
+            //TODO 测试
+            this.shapes[0].calculateLocalInertia(this.mass,I);
+        }
 
         this.invInertia.set(
             I.x > 0 && !fixed ? 1.0 / I.x : 0,
@@ -756,15 +767,15 @@ var computeAABB_shapeAABB = new AABB();
 
 var uiw_m1 = new Mat3();
 var uiw_m2 = new Mat3();
-var uiw_m3 = new Mat3();
+//var uiw_m3 = new Mat3();
 
-const Body_applyForce_r = new Vec3();
+//const Body_applyForce_r = new Vec3();
 var Body_applyForce_rotForce = new Vec3();
 
 var Body_applyLocalForce_worldForce = new Vec3();
 var Body_applyLocalForce_relativePointWorld = new Vec3();
 
-const Body_applyImpulse_r = new Vec3();
+//const Body_applyImpulse_r = new Vec3();
 var Body_applyImpulse_velo = new Vec3();
 var Body_applyImpulse_rotVelo = new Vec3();
 
@@ -773,7 +784,7 @@ var Body_applyLocalImpulse_relativePoint = new Vec3();
 
 var Body_updateMassProperties_halfExtents = new Vec3();
 
-const torque = new Vec3();
-const invI_tau_dt = new Vec3();
-const w = new Quaternion();
-const wq = new Quaternion();
+//const torque = new Vec3();
+//const invI_tau_dt = new Vec3();
+//const w = new Quaternion();
+//const wq = new Quaternion();

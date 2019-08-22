@@ -43,7 +43,7 @@ export default class Trimesh extends Shape {
     /**
      * References to vertex pairs, making up all unique edges in the trimesh.
      */
-    edges = null;
+    edges:Int16Array;
 
     /**
      * Local scaling of the mesh. Use .setScale() to set it.
@@ -53,7 +53,7 @@ export default class Trimesh extends Shape {
     /**
      * The indexed triangles. Use .updateTree() to update it.
      */
-    tree = new Octree();
+    tree = new Octree<number>();
 
     constructor(vertices: number[], indices: number[]) {
         super();
@@ -174,8 +174,8 @@ export default class Trimesh extends Shape {
      * Update the .edges property
      */
     updateEdges() {
-        const edges = {};
-        const add = (indexA, indexB) => {
+        const edges:{[key:string]:bool} = {};
+        const add = (indexA:i32, indexB:i32) => {
             const key = a < b ? `${a}_${b}` : `${b}_${a}`;
             edges[key] = true;
         };
@@ -297,7 +297,7 @@ export default class Trimesh extends Shape {
         const l = aabb.lowerBound;
         const u = aabb.upperBound;
         const n = this.vertices.length;
-        const vertices = this.vertices;
+        //const vertices = this.vertices;
         const v = computeLocalAABB_worldVert;
 
         this.getVertex(0, v);
@@ -485,6 +485,6 @@ var cli_aabb = new AABB();
 
 var computeLocalAABB_worldVert = new Vec3();
 
-const tempWorldVertex = new Vec3();
+//const tempWorldVertex = new Vec3();
 var calculateWorldAABB_frame = new Transform();
 var calculateWorldAABB_aabb = new AABB();

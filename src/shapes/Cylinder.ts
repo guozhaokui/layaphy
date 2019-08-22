@@ -2,6 +2,8 @@ import Vec3 from '../math/Vec3.js';
 import ConvexPolyhedron from './ConvexPolyhedron.js';
 
 /**
+ * 现在是用一个convex来做圆柱
+ * z向上。
  * @author schteppe / https://github.com/schteppe
  * @param {Number} numSegments The number of segments to build the cylinder out of
  */

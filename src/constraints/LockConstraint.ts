@@ -1,10 +1,7 @@
-import Constraint from './Constraint.js';
-import PointToPointConstraint from './PointToPointConstraint.js';
 import RotationalEquation from '../equations/RotationalEquation.js';
-import RotationalMotorEquation from '../equations/RotationalMotorEquation.js';
-import ContactEquation from '../equations/ContactEquation.js';
 import Vec3 from '../math/Vec3.js';
 import Body from '../objects/Body.js';
+import PointToPointConstraint from './PointToPointConstraint.js';
 
 /**
  * Lock constraint. Will remove all degrees of freedom between the bodies.
@@ -21,7 +18,7 @@ export default class LockConstraint extends PointToPointConstraint {
     rotationalEquation1:RotationalEquation;
     rotationalEquation2:RotationalEquation;
     rotationalEquation3:RotationalEquation;
-    motorEquation;
+    //motorEquation;
 
     constructor(bodyA:Body, bodyB:Body, maxForce:f32=1e6, axisA?:Vec3, axisB?:Vec3) {
 
@@ -57,12 +54,12 @@ export default class LockConstraint extends PointToPointConstraint {
     update() {
         const bodyA = this.bodyA;
         const bodyB = this.bodyB;
-        const motor = this.motorEquation;
+        //const motor = this.motorEquation;
         const r1 = this.rotationalEquation1;
         const r2 = this.rotationalEquation2;
         const r3 = this.rotationalEquation3;
-        const worldAxisA = LockConstraint_update_tmpVec1;
-        const worldAxisB = LockConstraint_update_tmpVec2;
+        //const worldAxisA = LockConstraint_update_tmpVec1;
+        //const worldAxisB = LockConstraint_update_tmpVec2;
 
         super.update();
 
@@ -80,6 +77,6 @@ export default class LockConstraint extends PointToPointConstraint {
 
 LockConstraint.constructor = LockConstraint;
 
-var LockConstraint_update_tmpVec1 = new Vec3();
-var LockConstraint_update_tmpVec2 = new Vec3();
+//var LockConstraint_update_tmpVec1 = new Vec3();
+//var LockConstraint_update_tmpVec2 = new Vec3();
 

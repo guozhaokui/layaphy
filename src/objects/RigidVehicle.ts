@@ -1,10 +1,9 @@
-import Body from './Body.js';
-import Sphere from '../shapes/Sphere.js';
-import Box from '../shapes/Box.js';
-import Vec3 from '../math/Vec3.js';
 import HingeConstraint from '../constraints/HingeConstraint.js';
-import Constraint from '../constraints/Constraint.js';
+import Vec3 from '../math/Vec3.js';
+import Box from '../shapes/Box.js';
+import Sphere from '../shapes/Sphere.js';
 import World from '../world/World.js';
+import Body from './Body.js';
 
 /**
  * Simple vehicle helper class with spherical rigid body wheels.
@@ -14,8 +13,8 @@ export default class RigidVehicle {
     coordinateSystem: Vec3;
     chassisBody: Body;
     constraints: HingeConstraint[] = [];
-    wheelAxes = [];
-    wheelForces = [];
+    wheelAxes:Vec3[] = [];
+    wheelForces:f32[] = [];
 
     constructor(coordinateSystem: Vec3, chassisBody: Body) {
         this.coordinateSystem = coordinateSystem ? coordinateSystem.clone() : new Vec3(1, 2, 3);
@@ -47,7 +46,7 @@ export default class RigidVehicle {
         this.wheelForces.push(0);
 
         // Position constrain wheels
-        const zero = new Vec3();
+        //const zero = new Vec3();
 
         // Set position locally to the chassis
         const worldPosition = new Vec3();
@@ -93,18 +92,15 @@ export default class RigidVehicle {
     /**
      * Set the target rotational speed of the hinge constraint.
      */
-    disableMotor(wheelIndex: i32) {
+    disableMotor(wheelIndex: i32):void {
         const hingeConstraint = this.constraints[wheelIndex];
         hingeConstraint.disableMotor();
     }
 
     /**
      * Set the wheel force to apply on one of the wheels each time step
-     * @method setWheelForce
-     * @param  {number} value
-     * @param  {integer} wheelIndex
      */
-    setWheelForce(value, wheelIndex) {
+    setWheelForce(value:number, wheelIndex:i32):void {
         this.wheelForces[wheelIndex] = value;
     }
 

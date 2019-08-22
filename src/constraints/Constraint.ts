@@ -12,8 +12,8 @@ export default class Constraint {
      */
     equations: Equation[] = [];
 
-    bodyA: Body = null;
-    bodyB: Body = null;
+    bodyA: Body;
+    bodyB: Body;
 
     id = Constraint.idCounter++;
 

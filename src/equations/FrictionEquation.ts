@@ -22,10 +22,10 @@ export default class FrictionEquation extends Equation {
     }
 
     computeB(h:number) {
-        const a = this.a;
+        //const a = this.a;
         const b = this.b;
-        const bi = this.bi;
-        const bj = this.bj;
+        //const bi = this.bi;
+        //const bj = this.bj;
         const ri = this.ri;
         const rj = this.rj;
         const rixt = FrictionEquation_computeB_temp1;

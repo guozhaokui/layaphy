@@ -38,7 +38,7 @@ export default class TupleDictionary<T> {
         const data = this.data;
         const keys = data.keys;
         while (keys.length > 0) {
-            const key = keys.pop();
+            const key = keys.pop() as string;
             delete data[key];
         }
     }

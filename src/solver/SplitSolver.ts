@@ -1,7 +1,14 @@
-import Solver from './Solver.js';
+import Equation from '../equations/Equation.js';
 import Body, { BODYTYPE } from '../objects/Body.js';
 import World from '../world/World.js';
-import Equation from '../equations/Equation.js';
+import Solver from './Solver.js';
+
+class _Node{
+    body:Body|null;
+    children:_Node[];
+    eqs:Equation[]
+    visited= false
+}
 
 /**
  * Splits the equations into islands and solves them independently. Can improve performance.
@@ -11,8 +18,8 @@ export default class SplitSolver extends Solver {
     iterations = 10;
     tolerance = 1e-7;
     subsolver: SplitSolver;
-    nodes = [];
-    nodePool = [];
+    nodes:_Node[] = [];
+    nodePool:_Node[] = [];
 
     constructor(subsolver: SplitSolver) {
         super();
@@ -23,7 +30,7 @@ export default class SplitSolver extends Solver {
         }
     }
 
-    createNode() {
+    createNode():_Node {
         return { body: null, children: [], eqs: [], visited: false };
     }
 
@@ -75,7 +82,7 @@ export default class SplitSolver extends Solver {
         subsolver.tolerance = this.tolerance;
         subsolver.iterations = this.iterations;
 
-        const dummyWorld = SplitSolver_solve_dummyWorld as World;
+        const dummyWorld = SplitSolver_solve_dummyWorld as unknown as World;
         while ((child = getUnvisitedNode(nodes))) {
             eqs.length = 0;
             dummyWorld.bodies.length = 0;
@@ -89,7 +96,7 @@ export default class SplitSolver extends Solver {
                 subsolver.addEquation(eqs[i]);
             }
 
-            const iter = subsolver.solve(dt, dummyWorld);
+            subsolver.solve(dt, dummyWorld);
             subsolver.removeAllEquations();
             n++;
         }
@@ -99,31 +106,32 @@ export default class SplitSolver extends Solver {
 }
 
 // Returns the number of subsystems
-var SplitSolver_solve_nodes = []; // All allocated node objects
-const SplitSolver_solve_nodePool = []; // All allocated node objects
-var SplitSolver_solve_eqs = [];   // Temp array
-const SplitSolver_solve_bds = [];   // Temp array
+var SplitSolver_solve_nodes:_Node[] = []; // All allocated node objects
+//const SplitSolver_solve_nodePool = []; // All allocated node objects
+var SplitSolver_solve_eqs:Equation[] = [];   // Temp array
+//const SplitSolver_solve_bds = [];   // Temp array
 var SplitSolver_solve_dummyWorld = { bodies: [] }; // Temp object
 
 const STATIC = BODYTYPE.STATIC;
-function getUnvisitedNode(nodes) {
+function getUnvisitedNode(nodes:_Node[]):_Node|null {
     const Nnodes = nodes.length;
     for (let i = 0; i !== Nnodes; i++) {
         const node = nodes[i];
-        if (!node.visited && !(node.body.type & STATIC)) {
+        // 不可见，并且不是static
+        if (!node.visited && node.body && !(node.body.type & STATIC)) {
             return node;
         }
     }
-    return false;
+    return null;
 }
 
-const queue = [];
-function bfs(root, visitFunc, bds, eqs) {
+const queue:_Node[] = [];
+function bfs(root:_Node, visitFunc:(node:_Node, bds:Body[], eqs:Equation[])=>void, bds:Body[], eqs:Equation[]) {
     queue.push(root);
     root.visited = true;
     visitFunc(root, bds, eqs);
     while (queue.length) {
-        const node = queue.pop();
+        const node = queue.pop() as _Node;
         // Loop over unvisited child nodes
         let child;
         while ((child = getUnvisitedNode(node.children))) {
@@ -134,7 +142,9 @@ function bfs(root, visitFunc, bds, eqs) {
     }
 }
 
-function visitFunc(node, bds, eqs) {
+function visitFunc(node:_Node, bds:Body[], eqs:Equation[]):void {
+    if(!node.body)
+        return;
     bds.push(node.body);
     const Neqs = node.eqs.length;
     for (let i = 0; i !== Neqs; i++) {

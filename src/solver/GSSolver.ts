@@ -30,7 +30,7 @@ export default class GSSolver extends Solver {
         const bodies = world.bodies;
         const Nbodies = bodies.length;
         const h = dt;
-        let q:number;
+        //let q:number;
         let B:number;
         let invC:number;
         let deltalambda:number;

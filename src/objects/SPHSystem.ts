@@ -130,7 +130,7 @@ export default class SPHSystem {
             // Init vars
             let Pij: number;
             let nabla: number;
-            let Vij: number;
+            //let Vij: number;
 
             // Sum up for all other neighbors
             var neighbors = this.neighbors[i];

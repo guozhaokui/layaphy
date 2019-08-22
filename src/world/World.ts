@@ -18,6 +18,7 @@ import Solver from '../solver/Solver.js';
 import ContactEquation from '../equations/ContactEquation.js';
 import FrictionEquation from '../equations/FrictionEquation.js';
 import Constraint from '../constraints/Constraint.js';
+import Shape from '../shapes/Shape.js';
 
 class profileData{
     frametm:i32=0;     // 帧时间
@@ -34,12 +35,78 @@ let perfNow = performance.now;
 
 class PhyEvent{
     type:string;
-    body:Body;
-    constructor(name:string,body:Body){
+    body:Body|null;
+    constructor(name:string,body:Body|null){
         this.type=name;
         this.body=body;
     }
 }
+
+class PhyCollideEvent extends PhyEvent{
+    contact:ContactEquation|null;
+    constructor(name:string, body:Body|null, c:ContactEquation|null){
+        super(name,body);
+        this.contact=c;
+    }
+}
+// Temp stuff
+var tmpRay = new Ray();
+
+var
+    /**
+     * Dispatched after the world has stepped forward in time.
+     * @event postStep
+     */
+    World_step_postStepEvent = { type: "postStep" }, // Reusable event objects to save memory
+    /**
+     * Dispatched before the world steps forward in time.
+     * @event preStep
+     */
+    World_step_preStepEvent:PhyEvent = { type: "preStep" , body:null},
+    World_step_collideEvent = new PhyCollideEvent( Body.COLLIDE_EVENT_NAME, null, null ),
+    World_step_oldContacts:ContactEquation[] = [], // Pools for unused objects
+    World_step_frictionEquationPool:FrictionEquation[] = [],
+    World_step_p1:Body[] = [], // Reusable arrays for collision pairs
+    World_step_p2:Body[] = [];
+
+var additions:i32[] = [];
+var removals:i32[] = [];
+
+interface ContactEvent{
+    type:string;
+    bodyA:Body|null;
+    bodyB:Body|null;
+}
+
+interface ShapeContactEvent extends ContactEvent{
+    shapeA:Shape|null;
+    shapeB:Shape|null;
+}
+var beginContactEvent:ContactEvent = {
+    type: 'beginContact',
+    bodyA: null,
+    bodyB: null
+};
+var endContactEvent:ContactEvent = {
+    type: 'endContact',
+    bodyA: null,
+    bodyB: null
+};
+var beginShapeContactEvent:ShapeContactEvent = {
+    type: 'beginShapeContact',
+    bodyA: null,
+    bodyB: null,
+    shapeA: null,
+    shapeB: null
+};
+var endShapeContactEvent:ShapeContactEvent = {
+    type: 'endShapeContact',
+    bodyA: null,
+    bodyB: null,
+    shapeA: null,
+    shapeB: null
+};
+
 
 /**
  * The physics world
@@ -146,7 +213,7 @@ export default class World extends EventTarget {
      */
     accumulator:f32 = 0;    //秒
 
-    subsystems = [];
+    subsystems:{update:()=>void}[] = [];
 
     /**
      * Dispatched after a body has been added to the world.
@@ -176,6 +243,9 @@ export default class World extends EventTarget {
         this.broadphase.setWorld(this);
     }
 
+    /**
+     * 接触事件
+     */
     emitContactEvents() {
         var hasBeginContact = this.hasAnyEventListener('beginContact');
         var hasEndContact = this.hasAnyEventListener('endContact');
@@ -217,8 +287,8 @@ export default class World extends EventTarget {
                 var shapeB = this.getShapeById(additions[i + 1]);
                 beginShapeContactEvent.shapeA = shapeA;
                 beginShapeContactEvent.shapeB = shapeB;
-                beginShapeContactEvent.bodyA = shapeA.body;
-                beginShapeContactEvent.bodyB = shapeB.body;
+                beginShapeContactEvent.bodyA = shapeA && shapeA.body;
+                beginShapeContactEvent.bodyB = shapeB && shapeB.body;
                 this.dispatchEvent(beginShapeContactEvent);
             }
             beginShapeContactEvent.bodyA = beginShapeContactEvent.bodyB = beginShapeContactEvent.shapeA = beginShapeContactEvent.shapeB = null;
@@ -230,8 +300,8 @@ export default class World extends EventTarget {
                 var shapeB = this.getShapeById(removals[i + 1]);
                 endShapeContactEvent.shapeA = shapeA;
                 endShapeContactEvent.shapeB = shapeB;
-                endShapeContactEvent.bodyA = shapeA.body;
-                endShapeContactEvent.bodyB = shapeB.body;
+                endShapeContactEvent.bodyA = shapeA && shapeA.body;
+                endShapeContactEvent.bodyB = shapeB && shapeB.body;
                 this.dispatchEvent(endShapeContactEvent);
             }
             endShapeContactEvent.bodyA = endShapeContactEvent.bodyB = endShapeContactEvent.shapeA = endShapeContactEvent.shapeB = null;
@@ -251,8 +321,8 @@ export default class World extends EventTarget {
                 force = b.force,
                 tau = b.torque;
 
-            b.force.set(0, 0, 0);
-            b.torque.set(0, 0, 0);
+            force.set(0, 0, 0);
+            tau.set(0, 0, 0);
         }
     }
 
@@ -357,9 +427,9 @@ export default class World extends EventTarget {
      * @param  {boolean} [options.skipBackfaces=false]
      * @param  {boolean} [options.checkCollisionResponse=true]
      * @param  {Function} callback
-     * @return {boolean} True if any body was hit.
+     * @return  True if any body was hit.
      */
-    raycastAll(from:Vec3, to:Vec3, options, callback) {
+    raycastAll(from:Vec3, to:Vec3, options:any, callback:any) :boolean{
         options.mode = Ray.ALL;
         options.from = from;
         options.to = to;
@@ -380,7 +450,7 @@ export default class World extends EventTarget {
      * @param  {RaycastResult} result
      * @return {boolean} True if any body was hit.
      */
-    raycastAny(from, to, options, result) {
+    raycastAny(from:Vec3, to:Vec3, options:any, result:RaycastResult):boolean {
         options.mode = Ray.ANY;
         options.from = from;
         options.to = to;
@@ -445,7 +515,7 @@ export default class World extends EventTarget {
     }
 
     // TODO Make a faster map
-    getShapeById(id:number) {
+    getShapeById(id:i32):Shape|null {
         var bodies = this.bodies;
         for (var i = 0, bl = bodies.length; i < bl; i++) {
             var shapes = bodies[i].shapes;
@@ -456,6 +526,7 @@ export default class World extends EventTarget {
                 }
             }
         }
+        return null;
     }
 
     /**
@@ -469,9 +540,9 @@ export default class World extends EventTarget {
     /**
      * Adds a contact material to the World
      * @method addContactMaterial
-     * @param {ContactMaterial} cmat
+     * @param  cmat
      */
-    addContactMaterial(cmat) {
+    addContactMaterial(cmat:ContactMaterial):void {
         // Add contact material
         this.contactmaterials.push(cmat);
         // Add current contact material to the material table
@@ -531,13 +602,13 @@ export default class World extends EventTarget {
             doProfiling = this.doProfiling,
             profile = this.profile,
             DYNAMIC = BODYTYPE.DYNAMIC,
-            profilingStart:f32,
+            profilingStart:f32=0,
             constraints = this.constraints,
             frictionEquationPool = World_step_frictionEquationPool,
-            gnorm = gravity.length(),
-            gx = gravity.x,
-            gy = gravity.y,
-            gz = gravity.z,
+            //gnorm:f32 = gravity.length(),
+            gx:f32 = gravity.x,
+            gy:f32 = gravity.y,
+            gz:f32 = gravity.z,
             i:i32 = 0;
 
         if (doProfiling) {
@@ -665,6 +736,7 @@ export default class World extends EventTarget {
 
             solver.addEquation(c);
 
+            if(mu>0){}
             // // Add friction constraint equation
             // if(mu > 0){
 
@@ -857,50 +929,4 @@ export default class World extends EventTarget {
 
 }
 
-// Temp stuff
-var tmpRay = new Ray();
-
-var
-    /**
-     * Dispatched after the world has stepped forward in time.
-     * @event postStep
-     */
-    World_step_postStepEvent = { type: "postStep" }, // Reusable event objects to save memory
-    /**
-     * Dispatched before the world steps forward in time.
-     * @event preStep
-     */
-    World_step_preStepEvent = { type: "preStep" },
-    World_step_collideEvent = { type: Body.COLLIDE_EVENT_NAME, body: null, contact: null },
-    World_step_oldContacts:ContactEquation[] = [], // Pools for unused objects
-    World_step_frictionEquationPool:FrictionEquation[] = [],
-    World_step_p1 = [], // Reusable arrays for collision pairs
-    World_step_p2 = [];
-
-var additions = [];
-var removals = [];
-var beginContactEvent = {
-    type: 'beginContact',
-    bodyA: null,
-    bodyB: null
-};
-var endContactEvent = {
-    type: 'endContact',
-    bodyA: null,
-    bodyB: null
-};
-var beginShapeContactEvent = {
-    type: 'beginShapeContact',
-    bodyA: null,
-    bodyB: null,
-    shapeA: null,
-    shapeB: null
-};
-var endShapeContactEvent = {
-    type: 'endShapeContact',
-    bodyA: null,
-    bodyB: null,
-    shapeA: null,
-    shapeB: null
-};
 

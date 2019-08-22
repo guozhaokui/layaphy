@@ -23,11 +23,16 @@ export default class Pool {
      * @method release
      * @param {Object} obj
      */
-    release(...args) {
+    releaseMany(args:Object[]) {
         const Nargs = args.length;
         for (let i = 0; i !== Nargs; i++) {
             this.objects.push(args[i]);
         }
+        return this;
+    }
+
+    release(o:Object){
+        this.objects.push(o);
         return this;
     }
 

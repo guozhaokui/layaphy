@@ -2,6 +2,7 @@ import Shape, { SHAPETYPE } from './Shape.js';
 import ConvexPolyhedron from './ConvexPolyhedron.js';
 import Vec3 from '../math/Vec3.js';
 import Quaternion from '../math/Quaternion.js';
+import AABB from '../collision/AABB.js';
 
 /**
  * Heightfield shape class. Height data is given as an array. These data points are spread out evenly with a given distance.
@@ -36,30 +37,30 @@ export default class Heightfield extends Shape {
     /**
      * An array of numbers, or height values, that are spread out along the x axis.
      */
-    data: number[][];
+    data: f32[][];
 
     /**
      * Max value of the data
      */
-    maxValue: number;
+    maxValue: f32;
 
     /**
      * Max value of the data
      */
-    minValue: number;
+    minValue: f32;
 
     /**
      * The width of each element
      * @todo elementSizeX and Y
      */
-    elementSize: number=1;
+    elementSize: i32=1;
 
     cacheEnabled = true;
 
     pillarConvex = new ConvexPolyhedron();
     pillarOffset = new Vec3();
 
-    _cachedPillars = {};
+    _cachedPillars:{[key:string]:{convex:ConvexPolyhedron,offset:Vec3}} = {};
     constructor(data: number[][], maxValue:number, minValue:number, elementSize:number) {
         super();
         this.type = SHAPETYPE.HEIGHTFIELD;
@@ -148,7 +149,7 @@ export default class Heightfield extends Shape {
      * @param   [result] An array to store the results in.
      * @return  The result array, if it was passed in. Minimum will be at position 0 and max at 1.
      */
-    getRectMinMax(iMinX:number, iMinY:number, iMaxX:number, iMaxY:number, result = []) {
+    getRectMinMax(iMinX:number, iMinY:number, iMaxX:number, iMaxY:number, result:f32[] = []) {
         // Get max and min of the data
         const data = this.data; // Set first value
 
@@ -172,7 +173,7 @@ export default class Heightfield extends Shape {
      * @param   clamp If the position should be clamped to the heightfield edge.
      * @return 
      */
-    getIndexOfPosition(x:number, y:number, result:number[], clamp:boolean) {
+    getIndexOfPosition(x:number, y:number, result:number[], clamp:bool) {
 
         // Get the index of the data points to test against
         const w = this.elementSize;
@@ -199,7 +200,7 @@ export default class Heightfield extends Shape {
         return true;
     }
 
-    getTriangleAt(x:number, y:number, edgeClamp:boolean, a:Vec3, b:Vec3, c:Vec3) {
+    getTriangleAt(x:f32, y:f32, edgeClamp:bool, a:Vec3, b:Vec3, c:Vec3):bool {
         const idx = getHeightAt_idx;
         this.getIndexOfPosition(x, y, idx, edgeClamp);
         let xi = idx[0];
@@ -219,7 +220,7 @@ export default class Heightfield extends Shape {
         return upper;
     }
 
-    getNormalAt(x, y, edgeClamp, result) {
+    getNormalAt(x:f32, y:f32, edgeClamp:bool, result:Vec3) {
         const a = getNormalAt_a;
         const b = getNormalAt_b;
         const c = getNormalAt_c;
@@ -238,16 +239,16 @@ export default class Heightfield extends Shape {
      * @param  {number} yi
      * @param  {AABB} result
      */
-    getAabbAtIndex(xi, yi, { lowerBound, upperBound }) {
+    getAabbAtIndex(xi:i32, yi:i32, result:AABB):void {
         const data = this.data;
         const elementSize = this.elementSize;
 
-        lowerBound.set(
+        result.lowerBound.set(
             xi * elementSize,
             yi * elementSize,
             data[xi][yi]
         );
-        upperBound.set(
+        result.upperBound.set(
             (xi + 1) * elementSize,
             (yi + 1) * elementSize,
             data[xi + 1][yi + 1]
@@ -261,7 +262,7 @@ export default class Heightfield extends Shape {
      * @param  {boolean} edgeClamp
      * @return {number}
      */
-    getHeightAt(x, y, edgeClamp) {
+    getHeightAt(x:f32, y:f32, edgeClamp:bool) {
         const data = this.data;
         const a = getHeightAt_a;
         const b = getHeightAt_b;
@@ -292,7 +293,7 @@ export default class Heightfield extends Shape {
         }
     }
 
-    getCacheConvexTrianglePillarKey(xi:number, yi:number, getUpperTriangle:boolean) {
+    getCacheConvexTrianglePillarKey(xi:number, yi:number, getUpperTriangle:boolean):string {
         return `${xi}_${yi}_${getUpperTriangle ? 1 : 0}`;
     }
 
@@ -300,7 +301,7 @@ export default class Heightfield extends Shape {
         return this._cachedPillars[this.getCacheConvexTrianglePillarKey(xi, yi, getUpperTriangle)];
     }
 
-    setCachedConvexTrianglePillar(xi:number, yi:number, getUpperTriangle:boolean, convex, offset) {
+    setCachedConvexTrianglePillar(xi:number, yi:number, getUpperTriangle:boolean, convex:ConvexPolyhedron, offset:Vec3) {
         this._cachedPillars[this.getCacheConvexTrianglePillarKey(xi, yi, getUpperTriangle)] = {
             convex,
             offset
@@ -366,7 +367,7 @@ export default class Heightfield extends Shape {
         let offsetResult = this.pillarOffset;
 
         if (this.cacheEnabled) {
-            var data = this.getCachedConvexTrianglePillar(xi, yi, getUpperTriangle);
+            let data = this.getCachedConvexTrianglePillar(xi, yi, getUpperTriangle);
             if (data) {
                 this.pillarConvex = data.convex;
                 this.pillarOffset = data.offset;
@@ -380,7 +381,7 @@ export default class Heightfield extends Shape {
             this.pillarOffset = offsetResult;
         }
 
-        var data = this.data;
+        let data = this.data;
         const elementSize = this.elementSize;
         const faces = result.faces;
 
@@ -591,6 +592,10 @@ export default class Heightfield extends Shape {
         canvas.width = image.width;
         canvas.height = image.height;
         const context = canvas.getContext('2d');
+        if(!context){
+            console.error('get context 2d error');
+            return;
+        }
         context.drawImage(image, 0, 0);
         const imageData = context.getImageData(0, 0, image.width, image.height);
 
@@ -623,7 +628,7 @@ export default class Heightfield extends Shape {
 }
 
 
-var getHeightAt_idx = [];
+var getHeightAt_idx:i32[] = [];
 var getHeightAt_weights = new Vec3();
 var getHeightAt_a = new Vec3();
 var getHeightAt_b = new Vec3();
@@ -636,7 +641,7 @@ var getNormalAt_e0 = new Vec3();
 var getNormalAt_e1 = new Vec3();
 
 // from https://en.wikipedia.org/wiki/Barycentric_coordinate_system
-function barycentricWeights(x, y, ax, ay, bx, by, cx, cy, result) {
+function barycentricWeights(x:f32, y:f32, ax:f32, ay:f32, bx:f32, by:f32, cx:f32, cy:f32, result:Vec3) {
     result.x = ((by - cy) * (x - cx) + (cx - bx) * (y - cy)) / ((by - cy) * (ax - cx) + (cx - bx) * (ay - cy));
     result.y = ((cy - ay) * (x - cx) + (ax - cx) * (y - cy)) / ((by - cy) * (ax - cx) + (cx - bx) * (ay - cy));
     result.z = 1 - result.x - result.y;

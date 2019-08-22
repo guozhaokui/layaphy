@@ -50,12 +50,7 @@ export default class OverlapKeeper {
         this.current.length = 0;
     }
 
-    /**
-     * @method getDiff
-     * @param  {array} additions
-     * @param  {array} removals
-     */
-    getDiff(additions, removals) {
+    getDiff(additions:i32[], removals:i32[]):void {
         const a = this.current;
         const b = this.previous;
         const al = a.length;
@@ -90,6 +85,6 @@ export default class OverlapKeeper {
     }
 }
 
-function unpackAndPush(array, key) {
+function unpackAndPush(array:i32[], key:i32):void {
     array.push((key & 0xFFFF0000) >> 16, key & 0x0000FFFF);
 }

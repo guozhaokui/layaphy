@@ -1,6 +1,5 @@
-import Body, { BODYTYPE } from '../objects/Body.js';
 import Vec3 from '../math/Vec3.js';
-import Quaternion from '../math/Quaternion.js';
+import Body, { BODYTYPE } from '../objects/Body.js';
 import World from '../world/World.js';
 import AABB from './AABB.js';
 
@@ -10,11 +9,11 @@ import AABB from './AABB.js';
  * @constructor
  * @author schteppe
  */
-export default class Broadphase {
+export default abstract class Broadphase {
     /**
     * The world to search for collisions in.
     */
-    world: World = null;
+    world: World;
 
     /**
      * If set to true, the broadphase uses bounding boxes for intersection test, else it uses bounding spheres.
@@ -32,9 +31,7 @@ export default class Broadphase {
     /**
      * Get the collision pairs from the world
      */
-    collisionPairs(world: World, p1: Body[], p2: Body[]) {
-        throw new Error("collisionPairs not implemented for this BroadPhase class!");
-    }
+    abstract collisionPairs(world: World, p1: Body[], p2: Body[]):void;
 
     /**
      * Check if a body pair needs to be intersection tested at all.
@@ -116,7 +113,7 @@ export default class Broadphase {
         pairs1.length = 0;
         pairs2.length = 0;
 
-        for (var i = 0; i !== N; i++) {
+        for (var i:i32 = 0; i !== N; i++) {
             const id1 = p1[i].id;
             const id2 = p2[i].id;
             var key = id1 < id2 ? `${id1},${id2}` : `${id2},${id1}`;
@@ -125,8 +122,8 @@ export default class Broadphase {
         }
 
         for (var i = 0; i !== t.keys.length; i++) {
-            const key = t.keys.pop();
-            const pairIndex = t[key];
+            const key = t.keys.pop() as string;
+            const pairIndex = t[key] as i32;
             pairs1.push(p1[pairIndex]);
             pairs2.push(p2[pairIndex]);
             delete t[key];
@@ -161,14 +158,12 @@ export default class Broadphase {
 
 // Temp objects
 var  Broadphase_collisionPairs_r = new Vec3();
-const Broadphase_collisionPairs_normal = new Vec3();
-const Broadphase_collisionPairs_quat = new Quaternion();
-const Broadphase_collisionPairs_relpos = new Vec3();
+//const Broadphase_collisionPairs_normal = new Vec3();
+//const Broadphase_collisionPairs_quat = new Quaternion();
+//const Broadphase_collisionPairs_relpos = new Vec3();
 
-var Broadphase_makePairsUnique_temp = { keys: [] };
-
+var Broadphase_makePairsUnique_temp:{[key:string]:i32|string[],keys:string[]} = { keys:[] };
 var Broadphase_makePairsUnique_p1: Body[] = [];
 var Broadphase_makePairsUnique_p2: Body[] = [];
 
-
-const bsc_dist = new Vec3();
+//const bsc_dist = new Vec3();

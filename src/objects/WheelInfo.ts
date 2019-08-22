@@ -113,6 +113,8 @@ export default class WheelInfo {
 
     isInContact = false;
 
+    slipInfo:i32=0; //不知道有什么用，应该没用
+
     constructor(options?: any) {
         /*
         if(options){
