@@ -96,14 +96,14 @@ export class OctreeNode<T> {
         const root = this.root || this;
 
         children.push(
-            new OctreeNode(root,{ aabb: new AABB({ lowerBound: new Vec3(0, 0, 0) }) }),
-            new OctreeNode(root,{ aabb: new AABB({ lowerBound: new Vec3(1, 0, 0) }) }),
-            new OctreeNode(root,{ aabb: new AABB({ lowerBound: new Vec3(1, 1, 0) }) }),
-            new OctreeNode(root,{ aabb: new AABB({ lowerBound: new Vec3(1, 1, 1) }) }),
-            new OctreeNode(root,{ aabb: new AABB({ lowerBound: new Vec3(0, 1, 1) }) }),
-            new OctreeNode(root,{ aabb: new AABB({ lowerBound: new Vec3(0, 0, 1) }) }),
-            new OctreeNode(root,{ aabb: new AABB({ lowerBound: new Vec3(1, 0, 1) }) }),
-            new OctreeNode(root,{ aabb: new AABB({ lowerBound: new Vec3(0, 1, 0) }) })
+            new OctreeNode(root,{ aabb: new AABB( new Vec3(0, 0, 0) ) }),
+            new OctreeNode(root,{ aabb: new AABB( new Vec3(1, 0, 0) ) }),
+            new OctreeNode(root,{ aabb: new AABB( new Vec3(1, 1, 0) ) }),
+            new OctreeNode(root,{ aabb: new AABB( new Vec3(1, 1, 1) ) }),
+            new OctreeNode(root,{ aabb: new AABB( new Vec3(0, 1, 1) ) }),
+            new OctreeNode(root,{ aabb: new AABB( new Vec3(0, 0, 1) ) }),
+            new OctreeNode(root,{ aabb: new AABB( new Vec3(1, 0, 1) ) }),
+            new OctreeNode(root,{ aabb: new AABB( new Vec3(0, 1, 0) ) })
         );
 
         u.vsub(l, halfDiagonal);

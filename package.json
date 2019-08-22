@@ -1,0 +1,27 @@
+{
+  "name": "phyengine",
+  "version": "1.0.0",
+  "description": "根据canno.js改写",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "j:/myrepo/phyengine.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/core": "^7.5.5",
+    "@babel/preset-env": "^7.5.5",
+    "babel-jest": "^24.9.0",
+    "jest": "^24.9.0"
+  },
+  "dependencies": {
+    "@types/jest": "^24.0.18"
+  }
+}
