@@ -31,7 +31,12 @@ class profileData{
     avgErr:f32=0;      // 平均每个对象的误差
 }    
 
-let perfNow = performance.now;
+let perfNow:()=>number;
+try{
+    perfNow = performance.now;
+}catch(e){
+    perfNow = Date.now;
+}
 
 class PhyEvent{
     type:string;
@@ -429,7 +434,7 @@ export default class World extends EventTarget {
      * @param  {Function} callback
      * @return  True if any body was hit.
      */
-    raycastAll(from:Vec3, to:Vec3, options:any, callback:any) :boolean{
+    raycastAll(from:Vec3, to:Vec3, options:any, callback:(result:RaycastResult)=>void) :boolean{
         options.mode = Ray.ALL;
         options.from = from;
         options.to = to;

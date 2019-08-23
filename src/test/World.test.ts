@@ -7,6 +7,7 @@ import RaycastResult from '../collision/RaycastResult';
 import Sphere from '../shapes/Sphere';
 import NaiveBroadphase from '../collision/NaiveBroadphase';
 import ArrayCollisionMatrix from '../collision/ArrayCollisionMatrix';
+import ObjectCollisionMatrix from '../collision/ObjectCollisionMatrix';
 
 test('clearForces', () => {
     const world = new World();
@@ -55,9 +56,7 @@ test('rayTestSphere', () => {
 
 test('single', () => {
     const world = new World();
-    const body = new Body({
-        shape: new Sphere(1)
-    });
+    const body = new Body( 1, new Sphere(1));
     world.addBody(body);
 
     const from = new Vec3(-10, 0, 0);
@@ -74,8 +73,8 @@ test('single', () => {
 
 test('order', () => {
     const world = new World();
-    const bodyA = new Body({ shape: new Sphere(1), position: new Vec3(-1, 0, 0) });
-    const bodyB = new Body({ shape: new Sphere(1), position: new Vec3(1, 0, 0) });
+    const bodyA = new Body(1,  new Sphere(1), new Vec3(-1, 0, 0));
+    const bodyB = new Body(1, new Sphere(1),  new Vec3(1, 0, 0) );
     world.addBody(bodyA);
     world.addBody(bodyB);
 
@@ -103,7 +102,7 @@ test('order', () => {
 
 test('simple', () => {
     const world = new World();
-    const body = new Body({ shape: new Sphere(1) });
+    const body = new Body(1, new Sphere(1) );
     world.addBody(body);
 
     const from = new Vec3(-10, 0, 0);
@@ -111,7 +110,7 @@ test('simple', () => {
 
     let hasHit;
     let numResults = 0;
-    let resultBody;
+    let resultBody:Body|null=new Body();
     let resultShape;
 
     const returnVal = world.raycastAll(from, to, {}, result => {
@@ -130,10 +129,10 @@ test('simple', () => {
 
 test('twoSpheres', () => {
     const world = new World();
-    const body = new Body({ shape: new Sphere(1) });
+    const body = new Body(1, new Sphere(1) );
     world.addBody(body);
 
-    const body2 = new Body({ shape: new Sphere(1) });
+    const body2 = new Body(1, new Sphere(1) );
     world.addBody(body2);
 
     const from = new Vec3(-10, 0, 0);
@@ -141,13 +140,11 @@ test('twoSpheres', () => {
 
     let hasHit = false;
     let numResults = 0;
-    let resultBody;
-    let resultShape;
 
     world.raycastAll(from, to, {}, result => {
         hasHit = result.hasHit;
-        resultShape = result.shape;
-        resultBody = result.body;
+        //let resultShape = result.shape;
+        //let resultBody = result.body;
         numResults++;
     });
 
@@ -157,18 +154,16 @@ test('twoSpheres', () => {
 
 test('skipBackFaces', () => {
     const world = new World();
-    const body = new Body({ shape: new Sphere(1) });
+    const body = new Body( 1, new Sphere(1) );
     world.addBody(body);
 
     let hasHit = false;
     let numResults = 0;
-    let resultBody;
-    let resultShape;
 
     world.raycastAll(new Vec3(-10, 0, 0), new Vec3(10, 0, 0), { skipBackfaces: true }, result => {
         hasHit = result.hasHit;
-        resultShape = result.shape;
-        resultBody = result.body;
+        //let resultShape = result.shape;
+        //let resultBody = result.body;
         numResults++;
     });
 
@@ -178,9 +173,7 @@ test('skipBackFaces', () => {
 
 test('collisionFilters', () => {
     const world = new World();
-    const body = new Body({
-        shape: new Sphere(1)
-    });
+    const body = new Body(1, new Sphere(1));
     world.addBody(body);
     body.collisionFilterGroup = 2;
     body.collisionFilterMask = 2;
@@ -211,7 +204,7 @@ test('collisionFilters', () => {
 
 test('raycastAny', () => {
     const world = new World();
-    world.addBody(new Body({ shape: new Sphere(1) }));
+    world.addBody(new Body(1, new Sphere(1)));
 
     const from = new Vec3(-10, 0, 0);
     const to = new Vec3(10, 0, 0);
@@ -224,8 +217,8 @@ test('raycastAny', () => {
 });
 
 test('collisionMatrix', () => {
-    function testCollisionMatrix(CollisionMatrix) {
-        const test_configs = [
+    function testCollisionMatrix(CollisionMatrix:typeof ArrayCollisionMatrix|typeof ObjectCollisionMatrix) {
+        const test_configs:{positions:number[][],colliding:{[key:string]:boolean}}[] = [
             {
                 positions: [
                     [0, 0, 0],
@@ -279,11 +272,11 @@ test('collisionMatrix', () => {
 
             const world = new World();
             world.broadphase = new NaiveBroadphase();
-            world.collisionMatrix = new CollisionMatrix();
-            world.collisionMatrixPrevious = new CollisionMatrix();
+            world.collisionMatrix = new (CollisionMatrix as typeof ArrayCollisionMatrix)();
+            world.collisionMatrixPrevious = new (CollisionMatrix as typeof ArrayCollisionMatrix)();
 
             for (let position_idx = 0; position_idx < test_config.positions.length; position_idx++) {
-                const body = new Body({ mass: 1 });
+                const body = new Body(1);
                 body.addShape(new Sphere(1.1));
                 let v = test_config.positions[position_idx];
                 body.position.set(v[0], v[1], v[2]);
@@ -310,5 +303,5 @@ test('collisionMatrix', () => {
     }
 
     testCollisionMatrix(ArrayCollisionMatrix);
-    testCollisionMatrix(testCollisionMatrix);
+    testCollisionMatrix(ObjectCollisionMatrix);
 });

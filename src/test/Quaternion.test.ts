@@ -37,6 +37,7 @@ test('toEuler', () => {
     const euler = new Vec3();
     q.toEuler(euler);
 
+    console.log('euler=', euler);
     // we should expect (0,0,pi/4)
     expect(euler.x).toBe( 0);//, `euler x should be zero, got ${euler.x}`);
     expect(euler.y).toBe( 0);//, `euler y should be yero, got ${euler.y}`);

@@ -14,7 +14,7 @@ export default class Mat3 {
     m21=0;m22=1;m23=0;
     m31=0;m32=0;m33=1;
     */
-    elements=[1,0,0, 0,1,0, 0,0,1];
+    elements=[0,0,0, 0,0,0, 0,0,0]; // 为什么不初始化为I
     constructor(elements?:number[]) {
         if (elements) {
             //this.m11=elements[0];

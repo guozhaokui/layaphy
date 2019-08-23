@@ -269,7 +269,7 @@ export default class Body extends EventTarget {
 
     wlambda = new Vec3();
 
-    constructor(mass: f32 = 1, shape: Shape|null = null, pos:Vec3|null=null, options?: BodyInitOptions) {
+    constructor(mass: number = 1, shape: Shape|null = null, pos:Vec3|null=null, options?: BodyInitOptions) {
         super();
         this._mass = mass;
         this.invMass = mass > 0 ? 1.0 / mass : 0;

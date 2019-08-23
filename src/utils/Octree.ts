@@ -31,11 +31,11 @@ export class OctreeNode<T> {
      * Children to this node
      */
     children: OctreeNode<T>[] = [];
-    constructor( root:OctreeNode<T>|null, options: { aabb?: AABB }) {
+    constructor( root:OctreeNode<T>|null, aabb?:AABB) {
         if(root)
-            root=root;
-        if (options) {
-            if(options.aabb) this.aabb= options.aabb.clone();
+            this.root=root;
+        if (aabb) {
+            this.aabb= aabb.clone();
         }
     }
 
@@ -96,14 +96,14 @@ export class OctreeNode<T> {
         const root = this.root || this;
 
         children.push(
-            new OctreeNode(root,{ aabb: new AABB( new Vec3(0, 0, 0) ) }),
-            new OctreeNode(root,{ aabb: new AABB( new Vec3(1, 0, 0) ) }),
-            new OctreeNode(root,{ aabb: new AABB( new Vec3(1, 1, 0) ) }),
-            new OctreeNode(root,{ aabb: new AABB( new Vec3(1, 1, 1) ) }),
-            new OctreeNode(root,{ aabb: new AABB( new Vec3(0, 1, 1) ) }),
-            new OctreeNode(root,{ aabb: new AABB( new Vec3(0, 0, 1) ) }),
-            new OctreeNode(root,{ aabb: new AABB( new Vec3(1, 0, 1) ) }),
-            new OctreeNode(root,{ aabb: new AABB( new Vec3(0, 1, 0) ) })
+            new OctreeNode(root, new AABB( new Vec3(0, 0, 0) ) ),
+            new OctreeNode(root, new AABB( new Vec3(1, 0, 0) ) ),
+            new OctreeNode(root, new AABB( new Vec3(1, 1, 0) ) ),
+            new OctreeNode(root, new AABB( new Vec3(1, 1, 1) ) ),
+            new OctreeNode(root, new AABB( new Vec3(0, 1, 1) ) ),
+            new OctreeNode(root, new AABB( new Vec3(0, 0, 1) ) ),
+            new OctreeNode(root, new AABB( new Vec3(1, 0, 1) ) ),
+            new OctreeNode(root, new AABB( new Vec3(0, 1, 0) ) )
         );
 
         u.vsub(l, halfDiagonal);
@@ -201,15 +201,13 @@ export class OctreeNode<T> {
  */
 export class Octree<T> extends OctreeNode<T> {
     maxDepth=8;
-    constructor(aabb?:AABB, options?:{maxDepth?:number,aabb?:AABB}) {
-        super(null,options as any);
+    constructor(aabb?:AABB, maxDepth:i32=8) {
+        super(null,aabb);
         this.root=this;
         /**
          * Maximum subdivision depth
          */
-        if(options){
-            this.maxDepth = typeof (options.maxDepth) !== 'undefined' ? options.maxDepth : 8;
-        }
+        this.maxDepth = maxDepth;
     }
 }
 

@@ -134,6 +134,10 @@ test('getIndexOfPosition', () => {
     expect(result).toEqual( [0, 0]);
 });
 
+/**
+ * 
+ * @param options {size:边的格子个数，总数为 size*size}
+ */
 function createHeightfield(options:{size?:number,linear?:boolean,minValue?:number} = {}) {
     const matrix:number[][] = [];
     const size = options.size || 20;
@@ -147,6 +151,6 @@ function createHeightfield(options:{size?:number,linear?:boolean,minValue?:numbe
             }
         }
     }
-    const hfShape = new Heightfield(matrix, options.minValue||null,null,1);
+    const hfShape = new Heightfield(matrix, options.minValue,null,1);
     return hfShape;
 }

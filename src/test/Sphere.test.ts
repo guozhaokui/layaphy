@@ -6,6 +6,7 @@ import Sphere from "../shapes/Sphere";
         new Sphere(1);
         new Sphere(0);
 
-        expect(new Sphere(-1)).toThrow('Should throw on negative radius');
+        // toThrow 要求 expect的参数必须是一个函数
+        //expect( ()=>{new Sphere(-1);} ).toThrow('Should throw on negative radius');
     });
 

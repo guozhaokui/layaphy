@@ -110,7 +110,7 @@ test('testSepAxis', () => {
     // Move away
     posA.x = -5;
     const found2 = hullA.testSepAxis(sepAxis, hullB, posA, quatA, posB, quatB);
-    expect(found2).toBeFalsy();//, false, "found separating axis though there are none");
+    expect(found2).toBeLessThan(0);//<0表示分离, false, "found separating axis though there are none");
 
     // Inclined 45 degrees, what happens then?
     posA.x = 1;

@@ -21,9 +21,7 @@ test('insertRoot',()=>{
 
 test('insertDeep',()=>{
     const aabb = new AABB(new Vec3(-1, -1, -1), new Vec3(1, 1, 1));
-    const tree = new Octree(aabb, {
-        maxDepth: 8
-    });
+    const tree = new Octree(aabb, 8);
 
     const nodeAABB = new AABB(new Vec3(-1, -1, -1), new Vec3(-1, -1, -1));
     const nodeData = 123;

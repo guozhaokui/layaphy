@@ -51,9 +51,10 @@ export default class Heightfield extends Shape {
 
     /**
      * The width of each element
+     * 每个格子的宽度
      * @todo elementSizeX and Y
      */
-    elementSize: i32=1;
+    elementSize: f32=1;
 
     cacheEnabled = true;
 
@@ -62,19 +63,19 @@ export default class Heightfield extends Shape {
 
     _cachedPillars:{[key:string]:{convex:ConvexPolyhedron,offset:Vec3}} = {};
 
-    constructor(data: number[][], maxValue:number|null, minValue:number|null, elementSize:number) {
+    constructor(data: number[][], minValue:number|null|undefined, maxValue:number|null|undefined, elementSize:number) {
         super();
         this.type = SHAPETYPE.HEIGHTFIELD;
 
         this.data = data;
         this.elementSize = elementSize;
 
-        if (minValue === null) {
+        if (minValue === null || minValue===undefined) {
             this.updateMinValue();
         }else{
             this.minValue=minValue;
         }
-        if (maxValue === null) {
+        if (maxValue === null || maxValue===undefined) {
             this.updateMaxValue();
         }else{
             this.minValue=maxValue;
@@ -364,11 +365,14 @@ export default class Heightfield extends Shape {
 
     /**
      * Get a triangle in the terrain in the form of a triangular convex shape.
+     * 把地形转成一个convex
+     * xi,yi定位到data中的索引
      */
-    getConvexTrianglePillar(xi:number, yi:number, getUpperTriangle:boolean) {
+    getConvexTrianglePillar(xi:i32, yi:i32, getUpperTriangle:boolean) {
         let result = this.pillarConvex;
         let offsetResult = this.pillarOffset;
 
+        debugger;
         if (this.cacheEnabled) {
             let data = this.getCachedConvexTrianglePillar(xi, yi, getUpperTriangle);
             if (data) {
@@ -389,6 +393,7 @@ export default class Heightfield extends Shape {
         const faces = result.faces;
 
         // Reuse verts if possible
+        // 多面体有6个顶点
         result.vertices.length = 6;
         for (var i = 0; i < 6; i++) {
             if (!result.vertices[i]) {
@@ -397,10 +402,11 @@ export default class Heightfield extends Shape {
         }
 
         // Reuse faces if possible
+        // 多面体有5个面
         faces.length = 5;
         for (var i = 0; i < 5; i++) {
             if (!faces[i]) {
-                faces[i] = [];
+                faces[i] = [];  // 每个面的多边形索引
             }
         }
 
@@ -414,7 +420,6 @@ export default class Heightfield extends Shape {
         ) - this.minValue) / 2 + this.minValue;
 
         if (!getUpperTriangle) {
-
             // Center of the triangle pillar - all polygons are given relative to this one
             offsetResult.set(
                 (xi + 0.25) * elementSize, // sort of center of a triangle
