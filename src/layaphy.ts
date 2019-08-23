@@ -17,6 +17,8 @@ import Plane from "./shapes/Plane";
 import Vec3 from "./math/Vec3";
 import Box from "./shapes/Box";
 import Quaternion from "./math/Quaternion";
+import Capsule from "./shapes/Capsule";
+import Sphere from "./shapes/Sphere";
 
 //TEST
 
@@ -28,10 +30,10 @@ scene = Laya.stage.addChild( new Scene3D() ) as Scene3D;
 
 let phy = scene.addComponent( LCPhyWorld) as LCPhyWorld;
 
-let mat1 = new BlinnPhongMaterial();
+let mtl2 = new BlinnPhongMaterial();
 //加载纹理资源
 Texture2D.load("res/rocks.jpg", Handler.create(this, function (tex: Texture2D): void {
-    mat1.albedoTexture = tex;
+    mtl2.albedoTexture = tex;
 }));
 
 var camera: Camera = (<Camera>scene.addChild(new Camera(0, 0.1, 100)));
@@ -67,13 +69,18 @@ shapeq.setFromAxisAngle(new Vec3(1,0,0),-Math.PI/2);
 planephy.addShape( new Plane(), new Vector3(), shapeq);  // laya的plane是向上的，cannon的plane是向前（后？）的
 planephy.setMass(0);
 //planephy.phyBody.quaternion.setFromAxisAngle( new Vec3(1,0,0),0);
-
+/*
 let y=5;
 for(let i=0; i<100; i++){
     //addBox(.1,.1,.1,Math.random()*10,5,Math.random()*10);
     addBox(.1,.1,.1,0,y,0);
     y+=0.22;
 }
+*/
+
+//addCapsule(1,1,2,2,2);
+
+addSphere(1,2,2,4);
 
 /*
 var planeStaticCollider: PhysicsCollider = plane.addComponent(PhysicsCollider);
@@ -84,7 +91,7 @@ planeStaticCollider.restitution = 0.3;
 
 function  addBox(sx:number, sy:number, sz:number, x:number, y:number,z:number){
     var box = (<MeshSprite3D>scene.addChild(new MeshSprite3D(PrimitiveMesh.createBox(sx, sy, sz))));
-    box.meshRenderer.material = mat1;
+    box.meshRenderer.material = mtl2;
     var transform = box.transform;
     var pos = transform.position;
     pos.setValue(x,y,z);
@@ -98,4 +105,30 @@ function  addBox(sx:number, sy:number, sz:number, x:number, y:number,z:number){
     var boxShape = new Box(new Vec3(sx,sy,sz));
     rigidBody.addShape(boxShape);
     rigidBody.setMass(1);
+}
+
+function addCapsule(r:f32, h:f32, x:f32, y:f32, z:f32):void{
+    var cap = scene.addChild(new MeshSprite3D( PrimitiveMesh.createCapsule(r,h))) as MeshSprite3D;
+    cap.meshRenderer.material = mtl2;
+    var transform = cap.transform;
+    var pos = transform.position;
+    pos.setValue(x,y,z);
+    transform.position = pos;
+
+    var phy = cap.addComponent(LCPhyComponent) as LCPhyComponent;
+    phy.addShape( new Capsule(r,h));
+    phy.setMass(1);
+}
+
+function addSphere(r:f32, x:f32, y:f32, z:f32):void{
+    var sph = scene.addChild(new MeshSprite3D( PrimitiveMesh.createSphere(r,12,12))) as MeshSprite3D;
+    sph.meshRenderer.material = mtl2;
+    var transform = sph.transform;
+    var pos = transform.position;
+    pos.setValue(x,y,z);
+    transform.position = pos;
+
+    var phy = sph.addComponent(LCPhyComponent) as LCPhyComponent;
+    phy.addShape( new Sphere(r) );
+    phy.setMass(1);
 }

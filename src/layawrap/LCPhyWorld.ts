@@ -24,7 +24,7 @@ export class LCPhyWorld extends Script3D{
 
     onUpdate(){
         let dt = Laya.systemTimer.delta/1000;
-        this.world.step(1/60,dt);
+        this.world.step(1/60);//,dt);
 
         let i:i32=0;
         let sz:i32=this.bodies.length;

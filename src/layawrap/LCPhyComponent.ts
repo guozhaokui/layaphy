@@ -20,6 +20,7 @@ export default class LCPhyComponent extends Component{
 
     }
 
+    // 添加到对象上的时候，自动创建物理对象 Body, 并添加到物理世界中
     _onAdded(){
         let body = this.phyBody;
         if(!body){

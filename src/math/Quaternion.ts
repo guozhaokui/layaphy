@@ -194,7 +194,6 @@ export default class Quaternion {
 
         // q*v
         const ix = qw * x + qy * z - qz * y;
-
         const iy = qw * y + qz * x - qx * z;
         const iz = qw * z + qx * y - qy * x;
         const iw = -qx * x - qy * y - qz * z;

@@ -17,6 +17,7 @@ import Sphere from '../shapes/Sphere.js';
 import Trimesh from '../shapes/Trimesh.js';
 import Vec3Pool from '../utils/Vec3Pool.js';
 import World from './World.js';
+import Capsule from '../shapes/Capsule.js';
 
 //declare type anyShape=Box|Sphere|Capsule|Voxel|ConvexPolyhedron|Heightfield|Trimesh;
 interface checkFunc {
@@ -69,6 +70,7 @@ export default class Narrowphase {
         shapeChecks[SHAPETYPE.SPHERE | SHAPETYPE.PLANE] = this.spherePlane;
         shapeChecks[SHAPETYPE.SPHERE | SHAPETYPE.BOX] = this.sphereBox;
         shapeChecks[SHAPETYPE.SPHERE | SHAPETYPE.CONVEXPOLYHEDRON] = this.sphereConvex;
+        shapeChecks[SHAPETYPE.CAPSULE| SHAPETYPE.PLANE ] = this.capsulePlane;
         shapeChecks[SHAPETYPE.PLANE | SHAPETYPE.BOX] = this.planeBox;
         shapeChecks[SHAPETYPE.PLANE | SHAPETYPE.CONVEXPOLYHEDRON] = this.planeConvex;
         shapeChecks[SHAPETYPE.CONVEXPOLYHEDRON] = this.convexConvex;
@@ -1054,6 +1056,45 @@ export default class Narrowphase {
             }
         }
         return found;
+    }
+
+    capsulePlane(si: Capsule, sj: Plane, xi: Vec3, xj: Vec3, qi: Quaternion, qj: Quaternion, bi: Body, bj: Body, rsi: Shape, rsj: Shape, justTest: boolean): boolean {
+        let ni = Narrowphase.nor1;  // 球的碰撞法线
+        // 平面的法线转换到平面的朝向上
+        ni.set(0, 0, 1);
+        qj.vmult(ni, ni);
+        ni.negate(ni); // 由于是球的碰撞法线，所以颠倒一下 body i is the sphere, flip normal
+        ni.normalize(); // Needed?
+
+        // Project down sphere on plane
+        xi.vsub(xj, point_on_plane_to_sphere);
+        ni.scale(ni.dot(point_on_plane_to_sphere), plane_to_sphere_ortho);
+
+        if (-point_on_plane_to_sphere.dot(ni) <= si.radius) {
+            if (justTest) {
+                return true;
+            }
+
+            const r = this.createContactEquation(bi, bj, si, sj, rsi, rsj);
+            r.ni.copy(ni);
+            // Vector from sphere center to contact point
+            // 球的碰撞点
+            ni.scale(si.radius, r.ri);
+            point_on_plane_to_sphere.vsub(plane_to_sphere_ortho, r.rj); // The sphere position projected to plane
+
+            // Make it relative to the body
+            const ri = r.ri;
+            const rj = r.rj;
+            ri.vadd(xi, ri);
+            ri.vsub(bi.position, ri);
+            rj.vadd(xj, rj);
+            rj.vsub(bj.position, rj);
+
+            this.result.push(r);
+            this.createFrictionEquationsFromContact(r, this.frictionResult);
+            return true;
+        }
+        return false;
     }
 
     planeBox(si: Plane, sj: Box, xi: Vec3, xj: Vec3, qi: Quaternion, qj: Quaternion, bi: Body, bj: Body, rsi: Shape, rsj: Shape, justTest: boolean): boolean {

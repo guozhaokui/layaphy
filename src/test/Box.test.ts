@@ -33,3 +33,52 @@ test('calculateWorldAABB', () => {
     expect(min.y).toBe( -1);
     expect(max.y).toBe( 1);
 });
+
+test('calculateWorldAABB1', () => {
+    const box = new Box(new Vec3(1, 1, 1));
+    const min = new Vec3();
+    const max = new Vec3();
+    let pos = new Vec3(3,0,0);
+    let q = new Quaternion(0,0,0,1);
+    q.setFromAxisAngle(new Vec3(0,0,1), Math.PI/4);
+    box.calculateWorldAABB(pos,q, min,max);
+    expect( min.almostEquals(new Vec3(1.585786437626905, -1.414213562373095, -1))).toBeTruthy();
+    expect( max.almostEquals(new Vec3(4.414213562373095, 1.414213562373095, 1))).toBeTruthy();
+
+    q.setFromAxisAngle(new Vec3(0,0,1), -Math.PI/4);
+    box.calculateWorldAABB(pos,q, min,max);
+    expect( min.almostEquals(new Vec3(1.585786437626905, -1.414213562373095, -1))).toBeTruthy();
+    expect( max.almostEquals(new Vec3(4.414213562373095, 1.414213562373095, 1))).toBeTruthy();
+
+    q.setFromAxisAngle(new Vec3(0,0,1), Math.PI*3/4);
+    box.calculateWorldAABB(pos,q, min,max);
+    expect( min.almostEquals(new Vec3(1.585786437626905, -1.414213562373095, -1))).toBeTruthy();
+    expect( max.almostEquals(new Vec3(4.414213562373095, 1.414213562373095, 1))).toBeTruthy();
+
+    q.setFromAxisAngle(new Vec3(0,0,1), -Math.PI*3/4);
+    box.calculateWorldAABB(pos,q, min,max);
+    expect( min.almostEquals(new Vec3(1.585786437626905, -1.414213562373095, -1))).toBeTruthy();
+    expect( max.almostEquals(new Vec3(4.414213562373095, 1.414213562373095, 1))).toBeTruthy();
+
+    q.setFromAxisAngle(new Vec3(0,0,1), -Math.PI/2);
+    box.calculateWorldAABB(pos,q, min,max);
+    expect( min.almostEquals(new Vec3(2,-1,-1))).toBeTruthy();
+    expect( max.almostEquals(new Vec3(4,1, 1))).toBeTruthy();
+
+    q.setFromAxisAngle(new Vec3(0,0,1), Math.PI);
+    box.calculateWorldAABB(pos,q, min,max);
+    expect( min.almostEquals(new Vec3(2,-1,-1))).toBeTruthy();
+    expect( max.almostEquals(new Vec3(4,1, 1))).toBeTruthy();
+
+    let axis = new Vec3(1,1,1);
+    axis.normalize();
+    q.setFromAxisAngle(axis, Math.PI*0.33);
+    box.calculateWorldAABB(pos,q, min,max);
+    expect( min.almostEquals(new Vec3(1.3334064408459838,-1.6665935591540162,-1.6665935591540162))).toBeTruthy();
+    expect( max.almostEquals(new Vec3(4.666593559154016,1.6665935591540162,1.6665935591540162))).toBeTruthy();
+   
+    q.setFromAxisAngle(axis, Math.PI*1.33);
+    box.calculateWorldAABB(pos,q, min,max);
+    expect( min.almostEquals(new Vec3(1.9879447789995046,-1.0120552210004954,-1.0120552210004954))).toBeTruthy();
+    expect( max.almostEquals(new Vec3(4.012055221000495,1.0120552210004954, 1.0120552210004954))).toBeTruthy();
+});
