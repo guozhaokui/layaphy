@@ -331,7 +331,7 @@ export default class Narrowphase {
     }
 
 
-    sphereSphere(si: Sphere, sj: Sphere, xi: Vec3, xj: Vec3, qi: Quaternion, qj: Quaternion, bi: Body, bj: Body, rsi: Shape, rsj: Shape, justTest: boolean): boolean {
+    sphereSphere(si: Sphere, sj: Sphere, xi: Vec3, xj: Vec3, qi: Quaternion, qj: Quaternion, bi: Body, bj: Body, rsi: Shape|null, rsj: Shape|null, justTest: boolean): boolean {
         let hit = xi.distanceSquared(xj) < (si.radius + sj.radius) ** 2;
         if (!hit || justTest) {
             return hit;
@@ -1415,7 +1415,7 @@ export default class Narrowphase {
 
     sphereHeightfield(sphereShape: Sphere, hfShape: Heightfield, spherePos: Vec3, hfPos: Vec3, sphereQuat: Quaternion, hfQuat: Quaternion,
         sphereBody: Body, hfBody: Body,
-        rsi: Shape, rsj: Shape,
+        rsi: Shape|null, rsj: Shape|null,
         justTest: boolean): boolean {
         const data = hfShape.data;
         const radius = sphereShape.radius;

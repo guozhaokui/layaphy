@@ -269,11 +269,17 @@ export default class Body extends EventTarget {
 
     wlambda = new Vec3();
 
-    constructor(mass: f32 = 1, shape: Shape|null = null, options?: BodyInitOptions) {
+    constructor(mass: f32 = 1, shape: Shape|null = null, pos:Vec3|null=null, options?: BodyInitOptions) {
         super();
         this._mass = mass;
         this.invMass = mass > 0 ? 1.0 / mass : 0;
         this.type = (mass <= 0.0 ? BODYTYPE.STATIC : BODYTYPE.DYNAMIC);
+        if(pos){
+            this.position.copy(pos);
+            this.previousPosition.copy(pos);
+            this.interpolatedPosition.copy(pos);
+            this.initPosition.copy(pos);
+        }
 
         if (options) {
             this.collisionFilterGroup = typeof (options.collisionFilterGroup) === 'number' ? options.collisionFilterGroup : 1;
@@ -285,12 +291,6 @@ export default class Body extends EventTarget {
             this.sleepTimeLimit = typeof (options.sleepTimeLimit) !== 'undefined' ? options.sleepTimeLimit : 1;
             this.fixedRotation = typeof (options.fixedRotation) !== "undefined" ? options.fixedRotation : false;
             this.angularDamping = typeof (options.angularDamping) !== 'undefined' ? options.angularDamping : 0.01;
-            if (options.position) {
-                this.position.copy(options.position);
-                this.previousPosition.copy(options.position);
-                this.interpolatedPosition.copy(options.position);
-                this.initPosition.copy(options.position);
-            }
             if (options.velocity) {
                 this.velocity.copy(options.velocity);
             }
@@ -402,8 +402,7 @@ export default class Body extends EventTarget {
     /**
      * Convert a world point to local body frame.
      */
-    pointToLocalFrame(worldPoint: Vec3, result: Vec3) {
-        var result = result || new Vec3();
+    pointToLocalFrame(worldPoint: Vec3, result: Vec3 = new Vec3()) {
         worldPoint.vsub(this.position, result);
         this.quaternion.conjugate().vmult(result, result);
         return result;
@@ -420,8 +419,7 @@ export default class Body extends EventTarget {
     /**
      * Convert a local body point to world frame.
      */
-    pointToWorldFrame(localPoint: Vec3, result: Vec3) {
-        var result = result || new Vec3();
+    pointToWorldFrame(localPoint: Vec3, result: Vec3=new Vec3()):Vec3 {
         this.quaternion.vmult(localPoint, result);
         result.vadd(this.position, result);
         return result;

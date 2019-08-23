@@ -63,9 +63,12 @@ export default class ContactMaterial extends Material {
      */
     frictionEquationRelaxation: number =3;
 
-    constructor(m1: Material, m2: Material, friction:number, restitution:number) {
+    constructor(m1: Material|null, m2: Material|null, friction:number, restitution:number) {
         super('contactMaterial', friction, restitution);
-        this.materials = [m1, m2];
+        if(m1 && m2)
+            this.materials = [m1, m2];
+        else 
+            this.materials = [];
     }
 }
 

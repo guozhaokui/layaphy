@@ -223,6 +223,7 @@ export default class ConvexPolyhedron extends Shape {
 
     /**
      * Find the separating axis between this hull and another
+     * 查找两个hull的分离轴
      * @param  hullB
      * @param  posA
      * @param  quatA
@@ -231,7 +232,7 @@ export default class ConvexPolyhedron extends Shape {
      * @param  target The target vector to save the axis in
      * @return Returns false if a separation is found, else true
      */
-    findSeparatingAxis(hullB:ConvexPolyhedron, posA:Vec3, quatA:Quaternion, posB:Vec3, quatB:Quaternion, target:Vec3, faceListA:number[]|null, faceListB:number[]|null) {
+    findSeparatingAxis(hullB:ConvexPolyhedron, posA:Vec3, quatA:Quaternion, posB:Vec3, quatB:Quaternion, target:Vec3, faceListA:number[]|null, faceListB:number[]|null):boolean {
         const faceANormalWS3 = fsa_faceANormalWS3;
         const Worldnormal1 = fsa_Worldnormal1;
         const deltaC = fsa_deltaC;
@@ -256,7 +257,7 @@ export default class ConvexPolyhedron extends Shape {
                 quatA.vmult(faceANormalWS3, faceANormalWS3);
 
                 var d = hullA.testSepAxis(faceANormalWS3, hullB, posA, quatA, posB, quatB);
-                if (d === false) {
+                if (d <-1) {
                     return false;
                 }
 
@@ -275,7 +276,7 @@ export default class ConvexPolyhedron extends Shape {
                 quatA.vmult(hullA.uniqueAxes[i], faceANormalWS3);
 
                 var d = hullA.testSepAxis(faceANormalWS3, hullB, posA, quatA, posB, quatB);
-                if (d === false) {
+                if (d <-1) {
                     return false;
                 }
 
@@ -298,7 +299,7 @@ export default class ConvexPolyhedron extends Shape {
                 quatB.vmult(Worldnormal1, Worldnormal1);
                 //curPlaneTests++;
                 var d = hullA.testSepAxis(Worldnormal1, hullB, posA, quatA, posB, quatB);
-                if (d === false) {
+                if (d <-1) {
                     return false;
                 }
 
@@ -315,7 +316,7 @@ export default class ConvexPolyhedron extends Shape {
 
                 //curPlaneTests++;
                 var d = hullA.testSepAxis(Worldnormal1, hullB, posA, quatA, posB, quatB);
-                if (d === false) {
+                if (d <-1) {
                     return false;
                 }
 
@@ -341,7 +342,7 @@ export default class ConvexPolyhedron extends Shape {
                 if (!Cross.almostZero()) {
                     Cross.normalize();
                     const dist = hullA.testSepAxis(Cross, hullB, posA, quatA, posB, quatB);
-                    if (dist === false) {
+                    if (dist <-1) {
                         return false;
                     }
                     if (dist < dmin) {
@@ -362,9 +363,9 @@ export default class ConvexPolyhedron extends Shape {
 
     /**
      * Test separating axis against two hulls. Both hulls are projected onto the axis and the overlap size is returned if there is one.
-     * @return  The overlap depth, or FALSE if no penetration.
+     * @return  The overlap depth, or -10 if no penetration.
      */
-    testSepAxis(axis:Vec3, hullB:ConvexPolyhedron, posA:Vec3, quatA:Quaternion, posB:Vec3, quatB:Quaternion) {
+    testSepAxis(axis:Vec3, hullB:ConvexPolyhedron, posA:Vec3, quatA:Quaternion, posB:Vec3, quatB:Quaternion):number {
         const hullA = this;
         ConvexPolyhedron.project(hullA, axis, posA, quatA, maxminA);
         ConvexPolyhedron.project(hullB, axis, posB, quatB, maxminB);
@@ -373,10 +374,11 @@ export default class ConvexPolyhedron extends Shape {
         const maxB = maxminB[0];
         const minB = maxminB[1];
         if (maxA < minB || maxB < minA) {
-            return false; // Separated
+            return -10; // Separated
         }
         const d0 = maxA - minB;
         const d1 = maxB - minA;
+        // 两个中取小的那个才是碰撞的距离
         const depth = d0 < d1 ? d0 : d1;
         return depth;
     }

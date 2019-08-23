@@ -7,7 +7,7 @@ export default class AABB {
     lowerBound = new Vec3();
     upperBound = new Vec3();
 
-    constructor( upperBound?:Vec3, lowerBound?:Vec3) {
+    constructor( lowerBound?:Vec3, upperBound?:Vec3) {
         lowerBound && this.lowerBound.copy(lowerBound);
         upperBound && this.upperBound.copy(upperBound);
     }

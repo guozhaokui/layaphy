@@ -427,7 +427,7 @@ export default class Trimesh extends Shape {
     /**
      * Create a Trimesh instance, shaped as a torus.
      */
-    createTorus(
+    static createTorus(
         radius = 1,
         tube = 0.5,
         radialSegments = 8,

@@ -103,8 +103,8 @@ export default class Mat3 {
      * @param  m Matrix to multiply with from left side.
      * @return  The result.
      */
-    mmult( m:Mat3, target:Mat3) {
-        const r = target || new Mat3();
+    mmult( m:Mat3, target:Mat3=new Mat3()) {
+        const r = target ;
         let e = m.elements;
         for (let i = 0; i < 3; i++) {
             for (let j = 0; j < 3; j++) {
@@ -215,7 +215,7 @@ export default class Mat3 {
      * @param  column
      * @param  value Optional. If provided, the matrix element will be set to this value.
      */
-    e(row:number, column:number, value:number):f32|undefined {
+    e(row:number, column:number, value?:number):f32|undefined {
         if (value === undefined) {
             return this.elements[column + 3 * row];
         } else {

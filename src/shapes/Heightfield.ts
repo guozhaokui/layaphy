@@ -61,20 +61,23 @@ export default class Heightfield extends Shape {
     pillarOffset = new Vec3();
 
     _cachedPillars:{[key:string]:{convex:ConvexPolyhedron,offset:Vec3}} = {};
-    constructor(data: number[][], maxValue:number, minValue:number, elementSize:number) {
+
+    constructor(data: number[][], maxValue:number|null, minValue:number|null, elementSize:number) {
         super();
         this.type = SHAPETYPE.HEIGHTFIELD;
 
         this.data = data;
-        this.maxValue = maxValue;
-        this.minValue = minValue;
         this.elementSize = elementSize;
 
         if (minValue === null) {
             this.updateMinValue();
+        }else{
+            this.minValue=minValue;
         }
         if (maxValue === null) {
             this.updateMaxValue();
+        }else{
+            this.minValue=maxValue;
         }
         this.updateBoundingSphereRadius();
         this._cachedPillars = {};

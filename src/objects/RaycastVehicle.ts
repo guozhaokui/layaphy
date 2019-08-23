@@ -47,7 +47,7 @@ export default class RaycastVehicle {
     currentVehicleSpeedKmHour=0;
     preStepCallback:()=>void;
 
-    constructor( chassisBody:Body, indexRightAxis:i32, indexForwardAxis:i32, indexUpAxis:i32 ) {
+    constructor( chassisBody:Body, indexRightAxis:i32=1, indexForwardAxis:i32=0, indexUpAxis:i32=2 ) {
         this.chassisBody = chassisBody;
         this.indexRightAxis = typeof (indexRightAxis) !== 'undefined' ? indexRightAxis : 1;
         this.indexForwardAxis = typeof (indexForwardAxis) !== 'undefined' ? indexForwardAxis : 0;
@@ -105,7 +105,7 @@ export default class RaycastVehicle {
     /**
      * Get one of the wheel axles, world-oriented.
      */
-    private getVehicleAxisWorld(axisIndex:i32, result:Vec3):void {
+    getVehicleAxisWorld(axisIndex:i32, result:Vec3):void {
         result.set(
             axisIndex === 0 ? 1 : 0,
             axisIndex === 1 ? 1 : 0,
