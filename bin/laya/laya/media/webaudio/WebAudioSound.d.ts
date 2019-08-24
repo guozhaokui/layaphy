@@ -1,0 +1,34 @@
+import { EventDispatcher } from "../../events/EventDispatcher";
+import { SoundChannel } from "../SoundChannel";
+export declare class WebAudioSound extends EventDispatcher {
+    private static _dataCache;
+    static webAudioEnabled: boolean;
+    static ctx: any;
+    static buffs: any[];
+    static isDecoding: boolean;
+    static _miniBuffer: any;
+    static e: EventDispatcher;
+    private static _unlocked;
+    static tInfo: any;
+    private static __loadingSound;
+    url: string;
+    loaded: boolean;
+    data: ArrayBuffer;
+    audioBuffer: any;
+    private __toPlays;
+    private _disposed;
+    static decode(): void;
+    private static _done;
+    private static _fail;
+    private static _playEmptySound;
+    private static _unlock;
+    static initWebAudio(): void;
+    load(url: string): void;
+    private _err;
+    private _loaded;
+    private _removeLoadEvents;
+    private __playAfterLoaded;
+    play(startTime?: number, loops?: number, channel?: SoundChannel): SoundChannel;
+    readonly duration: number;
+    dispose(): void;
+}

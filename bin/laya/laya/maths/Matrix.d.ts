@@ -1,0 +1,37 @@
+import { Point } from "./Point";
+export declare class Matrix {
+    static EMPTY: Matrix;
+    static TEMP: Matrix;
+    static _createFun: Function;
+    a: number;
+    b: number;
+    c: number;
+    d: number;
+    tx: number;
+    ty: number;
+    constructor(a?: number, b?: number, c?: number, d?: number, tx?: number, ty?: number, nums?: number);
+    identity(): Matrix;
+    setTranslate(x: number, y: number): Matrix;
+    translate(x: number, y: number): Matrix;
+    scale(x: number, y: number): Matrix;
+    rotate(angle: number): Matrix;
+    skew(x: number, y: number): Matrix;
+    invertTransformPoint(out: Point): Point;
+    transformPoint(out: Point): Point;
+    transformPointN(out: Point): Point;
+    getScaleX(): number;
+    getScaleY(): number;
+    invert(): Matrix;
+    setTo(a: number, b: number, c: number, d: number, tx: number, ty: number): Matrix;
+    concat(matrix: Matrix): Matrix;
+    static mul(m1: Matrix, m2: Matrix, out: Matrix): Matrix;
+    static mul16(m1: Matrix, m2: Matrix, out: any[]): any[];
+    scaleEx(x: number, y: number): void;
+    rotateEx(angle: number): void;
+    clone(): Matrix;
+    copyTo(dec: Matrix): Matrix;
+    toString(): string;
+    destroy(): void;
+    recover(): void;
+    static create(): Matrix;
+}

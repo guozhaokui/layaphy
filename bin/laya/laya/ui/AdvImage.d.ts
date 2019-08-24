@@ -1,0 +1,31 @@
+import { Image } from "./Image";
+export declare class AdvImage extends Image {
+    private advsListArr;
+    private resUrl;
+    private _http;
+    private _data;
+    private _resquestTime;
+    private _appid;
+    private _playIndex;
+    private _lunboTime;
+    constructor(skin?: string);
+    private setLoadUrl;
+    private init;
+    private initEvent;
+    private onAdvsImgClick;
+    private revertAdvsData;
+    isSupportJump(): boolean;
+    private jumptoGame;
+    private updateAdvsInfo;
+    private onLunbo;
+    private getCurrentAppidObj;
+    private onGetAdvsListData;
+    static randRange(minNum: any, maxNum: any): number;
+    private _onError;
+    private _onLoad;
+    private error;
+    private complete;
+    private getAdvsQArr;
+    private clear;
+    destroy(destroyChild?: boolean): void;
+}

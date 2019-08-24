@@ -1,0 +1,36 @@
+import { Matrix4x4 } from "./Matrix4x4";
+import { IClone } from "../core/IClone";
+export declare class Vector4 implements IClone {
+    static ZERO: Vector4;
+    static ONE: Vector4;
+    static UnitX: Vector4;
+    static UnitY: Vector4;
+    static UnitZ: Vector4;
+    static UnitW: Vector4;
+    x: number;
+    y: number;
+    z: number;
+    w: number;
+    constructor(x?: number, y?: number, z?: number, w?: number);
+    setValue(x: number, y: number, z: number, w: number): void;
+    fromArray(array: any[], offset?: number): void;
+    cloneTo(destObject: any): void;
+    clone(): any;
+    static lerp(a: Vector4, b: Vector4, t: number, out: Vector4): void;
+    static transformByM4x4(vector4: Vector4, m4x4: Matrix4x4, out: Vector4): void;
+    static equals(a: Vector4, b: Vector4): boolean;
+    length(): number;
+    lengthSquared(): number;
+    static normalize(s: Vector4, out: Vector4): void;
+    static add(a: Vector4, b: Vector4, out: Vector4): void;
+    static subtract(a: Vector4, b: Vector4, out: Vector4): void;
+    static multiply(a: Vector4, b: Vector4, out: Vector4): void;
+    static scale(a: Vector4, b: number, out: Vector4): void;
+    static Clamp(value: Vector4, min: Vector4, max: Vector4, out: Vector4): void;
+    static distanceSquared(value1: Vector4, value2: Vector4): number;
+    static distance(value1: Vector4, value2: Vector4): number;
+    static dot(a: Vector4, b: Vector4): number;
+    static min(a: Vector4, b: Vector4, out: Vector4): void;
+    static max(a: Vector4, b: Vector4, out: Vector4): void;
+    forNativeElement(nativeElements?: Float32Array): void;
+}

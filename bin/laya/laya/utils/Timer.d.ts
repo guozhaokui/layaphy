@@ -1,0 +1,30 @@
+export declare class Timer {
+    static gSysTimer: Timer;
+    private static _pool;
+    static _mid: number;
+    scale: number;
+    currTimer: number;
+    currFrame: number;
+    private _map;
+    private _handlers;
+    private _temp;
+    private _count;
+    constructor(autoActive?: boolean);
+    readonly delta: number;
+    private _clearHandlers;
+    private _recoverHandler;
+    private _indexHandler;
+    once(delay: number, caller: any, method: Function, args?: any[], coverBefore?: boolean): void;
+    loop(delay: number, caller: any, method: Function, args?: any[], coverBefore?: boolean, jumpFrame?: boolean): void;
+    frameOnce(delay: number, caller: any, method: Function, args?: any[], coverBefore?: boolean): void;
+    frameLoop(delay: number, caller: any, method: Function, args?: any[], coverBefore?: boolean): void;
+    toString(): string;
+    clear(caller: any, method: Function): void;
+    clearAll(caller: any): void;
+    private _getHandler;
+    callLater(caller: any, method: Function, args?: any[]): void;
+    runCallLater(caller: any, method: Function): void;
+    runTimer(caller: any, method: Function): void;
+    pause(): void;
+    resume(): void;
+}

@@ -1,0 +1,33 @@
+import { Sprite } from "./Sprite";
+export declare class AnimationBase extends Sprite {
+    static WRAP_POSITIVE: number;
+    static WRAP_REVERSE: number;
+    static WRAP_PINGPONG: number;
+    loop: boolean;
+    wrapMode: number;
+    protected _interval: number;
+    protected _index: number;
+    protected _count: number;
+    protected _isPlaying: boolean;
+    protected _labels: any;
+    protected _isReverse: boolean;
+    protected _frameRateChanged: boolean;
+    protected _actionName: string;
+    private _controlNode;
+    constructor();
+    play(start?: any, loop?: boolean, name?: string): void;
+    interval: number;
+    protected _getFrameByLabel(label: string): number;
+    protected _frameLoop(): void;
+    protected _resumePlay(): void;
+    stop(): void;
+    readonly isPlaying: boolean;
+    addLabel(label: string, index: number): void;
+    removeLabel(label: string): void;
+    private _removeLabelFromList;
+    gotoAndStop(position: any): void;
+    index: number;
+    protected _displayToIndex(value: number): void;
+    readonly count: number;
+    clear(): AnimationBase;
+}

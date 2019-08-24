@@ -1,0 +1,37 @@
+import { Vector4 } from "./Vector4";
+import { Quaternion } from "./Quaternion";
+import { Matrix4x4 } from "./Matrix4x4";
+import { IClone } from "../core/IClone";
+export declare class Vector3 implements IClone {
+    static distanceSquared(value1: Vector3, value2: Vector3): number;
+    static distance(value1: Vector3, value2: Vector3): number;
+    static min(a: Vector3, b: Vector3, out: Vector3): void;
+    static max(a: Vector3, b: Vector3, out: Vector3): void;
+    static transformQuat(source: Vector3, rotation: Quaternion, out: Vector3): void;
+    static scalarLength(a: Vector3): number;
+    static scalarLengthSquared(a: Vector3): number;
+    static normalize(s: Vector3, out: Vector3): void;
+    static multiply(a: Vector3, b: Vector3, out: Vector3): void;
+    static scale(a: Vector3, b: number, out: Vector3): void;
+    static lerp(a: Vector3, b: Vector3, t: number, out: Vector3): void;
+    static transformV3ToV3(vector: Vector3, transform: Matrix4x4, result: Vector3): void;
+    static transformV3ToV4(vector: Vector3, transform: Matrix4x4, result: Vector4): void;
+    static TransformNormal(normal: Vector3, transform: Matrix4x4, result: Vector3): void;
+    static transformCoordinate(coordinate: Vector3, transform: Matrix4x4, result: Vector3): void;
+    static Clamp(value: Vector3, min: Vector3, max: Vector3, out: Vector3): void;
+    static add(a: Vector3, b: Vector3, out: Vector3): void;
+    static subtract(a: Vector3, b: Vector3, o: Vector3): void;
+    static cross(a: Vector3, b: Vector3, o: Vector3): void;
+    static dot(a: Vector3, b: Vector3): number;
+    static equals(a: Vector3, b: Vector3): boolean;
+    x: number;
+    y: number;
+    z: number;
+    constructor(x?: number, y?: number, z?: number, nativeElements?: Float32Array);
+    setValue(x: number, y: number, z: number): void;
+    fromArray(array: any[], offset?: number): void;
+    cloneTo(destObject: any): void;
+    clone(): any;
+    toDefault(): void;
+    forNativeElement(nativeElements?: Float32Array): void;
+}
