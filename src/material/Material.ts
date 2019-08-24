@@ -5,9 +5,9 @@
  */
 export default class Material {
     static idCounter = 0;
-    name: string;
-
     id = Material.idCounter++;
+
+    name?: string;
 
     /**
      * Friction for this material. If non-negative, it will be used instead of the friction given by ContactMaterials. If there's no matching ContactMaterial, the value from .defaultContactMaterial in the World will be used.
@@ -19,7 +19,7 @@ export default class Material {
      */
     restitution = -1;
 
-    constructor(name:string,friction=-1,restitution=-1) {
+    constructor(name?:string,friction=-1,restitution=-1) {
         this.name = name;
         this.friction = friction;
         this.restitution = restitution;

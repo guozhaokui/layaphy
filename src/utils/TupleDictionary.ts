@@ -8,7 +8,7 @@ export default class TupleDictionary<T> {
         this.data = { keys: [] };
     }
 
-    get(i:number, j:number):T {
+    get(i:i32, j:i32):T {
         if (i > j) {
             // swap
             const temp = j;
@@ -18,7 +18,7 @@ export default class TupleDictionary<T> {
         return this.data[`${i}-${j}`];
     }
 
-    set(i:number, j:number, value:T) {
+    set(i:i32, j:i32, value:T) {
         if (i > j) {
             const temp = j;
             j = i;

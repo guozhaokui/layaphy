@@ -19,16 +19,18 @@ import Box from "./shapes/Box";
 import Quaternion from "./math/Quaternion";
 import Capsule from "./shapes/Capsule";
 import Sphere from "./shapes/Sphere";
+import Material from "./material/Material";
+import ContactMaterial from "./material/ContactMaterial";
 
 //TEST
 
 let scene:Scene3D;
-let mtl1:BlinnPhongMaterial;
+//let mtl1:BlinnPhongMaterial;
 
 Laya3D.init(1920,1080);
 scene = Laya.stage.addChild( new Scene3D() ) as Scene3D;
 
-let phy = scene.addComponent( LCPhyWorld) as LCPhyWorld;
+let phyworld = scene.addComponent( LCPhyWorld) as LCPhyWorld;
 
 let mtl2 = new BlinnPhongMaterial();
 //加载纹理资源
@@ -62,11 +64,23 @@ planeMtl.tilingOffset = tilingOffset;
 //设置材质
 plane.meshRenderer.material = planeMtl;
 
-let planephy = plane.addComponent(LCPhyComponent) as LCPhyComponent;
 
+// phyworld
+//phyworld.world.gravity.set(0,0,0);
+
+let phymtl1 = new Material();
+let phymtl2 = new Material();
+let phymtl3 = new Material();
+let cmtl1 = new ContactMaterial(phymtl1, phymtl2, 0,0);
+let cmtl2 = new ContactMaterial(phymtl1, phymtl3, 0,1);
+phyworld.world.addContactMaterial(cmtl1).addContactMaterial(cmtl2);
+
+let planephy = plane.addComponent(LCPhyComponent) as LCPhyComponent;
+planephy.setMaterial(phymtl1);
+planephy.setName('plane');
 let shapeq = new Quaternion();
 shapeq.setFromAxisAngle(new Vec3(1,0,0),-Math.PI/2);
-planephy.addShape( new Plane(), new Vector3(), shapeq);  // laya的plane是向上的，cannon的plane是向前（后？）的
+planephy.addShape( new Plane(), new Vector3(), shapeq);  // laya的plane是向上(y)的，cannon的plane是向前（后？）的
 planephy.setMass(0);
 //planephy.phyBody.quaternion.setFromAxisAngle( new Vec3(1,0,0),0);
 /*
@@ -77,10 +91,17 @@ for(let i=0; i<100; i++){
     y+=0.22;
 }
 */
-
 //addCapsule(1,1,2,2,2);
 
-addSphere(1,2,2,4);
+let sph = addSphere(1,2,2,4);
+sph.setVel(0,0,0);
+sph.setMaterial(phymtl2);
+sph.setName('sph1');
+
+let sph1 = addSphere(1,5,2,4);
+sph1.setVel(-1,0,0);
+sph.setMaterial(phymtl3);
+sph.setName('sph2');
 
 /*
 var planeStaticCollider: PhysicsCollider = plane.addComponent(PhysicsCollider);
@@ -120,7 +141,7 @@ function addCapsule(r:f32, h:f32, x:f32, y:f32, z:f32):void{
     phy.setMass(1);
 }
 
-function addSphere(r:f32, x:f32, y:f32, z:f32):void{
+function addSphere(r:f32, x:f32, y:f32, z:f32):LCPhyComponent{
     var sph = scene.addChild(new MeshSprite3D( PrimitiveMesh.createSphere(r,12,12))) as MeshSprite3D;
     sph.meshRenderer.material = mtl2;
     var transform = sph.transform;
@@ -131,4 +152,5 @@ function addSphere(r:f32, x:f32, y:f32, z:f32):void{
     var phy = sph.addComponent(LCPhyComponent) as LCPhyComponent;
     phy.addShape( new Sphere(r) );
     phy.setMass(1);
+    return phy;
 }

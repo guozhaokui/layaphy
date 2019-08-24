@@ -7,6 +7,7 @@ import Vec3 from "../math/Vec3";
 import Body from "../objects/Body";
 import Shape from "../shapes/Shape";
 import { LCPhyWorld } from "./LCPhyWorld";
+import Material from "../material/Material";
 
 export default class LCPhyComponent extends Component{
     phyBody:Body;
@@ -40,6 +41,10 @@ export default class LCPhyComponent extends Component{
         body.quaternion.set(q.x,q.y,q.z,q.w);
     }
 
+    setName(n:string):void{
+        this.phyBody.name=n;
+    }
+    
     setMass(m:f32){
         this.phyBody.mass=m;
     }
@@ -52,6 +57,19 @@ export default class LCPhyComponent extends Component{
     }
     setG(g:f32){
 
+    }
+
+    setVel(vx:f32, vy:f32, vz:f32):void{
+        this.phyBody.velocity.set(vx,vy,vz);
+    }
+
+    getVel(v:Vec3):Vec3{
+        v.copy(this.phyBody.velocity);
+        return v;
+    }
+
+    setMaterial( mtl:Material){
+        this.phyBody.material=mtl;
     }
 
     _onDestroy(){

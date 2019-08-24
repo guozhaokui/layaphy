@@ -1,10 +1,9 @@
 import Vec3 from '../math/Vec3.js';
 import Pool from './Pool.js';
 
-export default class Vec3Pool extends Pool {
+export default class Vec3Pool extends Pool<Vec3> {
     constructor() {
         super();
-        this.type=Vec3;
     }
 
     constructObject() {

@@ -96,6 +96,7 @@ export default class Body extends EventTarget {
 
     id = Body.idCounter++;
     index = 0;    //index in world bodies
+    name='noname';  // for debug
 
     /**
      * Reference to the world the body is living in
@@ -157,7 +158,7 @@ export default class Body extends EventTarget {
     _mass:f32  = 0;
     invMass:f32 = 0;
 
-    material:Material|undefined|null = null;
+    material?:Material;
     linearDamping:f32 = 0.01;
 
     /**
@@ -248,6 +249,7 @@ export default class Body extends EventTarget {
 
     /**
      * Use this property to limit the motion along any world axis. (1,1,1) will allow motion along all axes while (0,0,0) allows none.
+     * 1,1,1可以理解，就是一切按照物理来，0,0,0可以理解，就是关掉受力，其他的无法理解，建议不要用。
      */
     linearFactor = new Vec3(1, 1, 1);
 
@@ -386,6 +388,7 @@ export default class Body extends EventTarget {
 
     /**
      * If the body is sleeping, it should be immovable / have infinite mass during solve. We solve it by having a separate "solve mass".
+     * @TODO 问题：sleeping状态下，如果要solve，则必然会被唤醒，所以感觉这里有问题 
      */
     updateSolveMassProperties() {
         if (this.sleepState === Body.SLEEPING || this.type === BODYTYPE.KINEMATIC) {
@@ -651,11 +654,10 @@ export default class Body extends EventTarget {
      */
     updateMassProperties() {
         this.type = (this._mass <= 0.0 ? BODYTYPE.STATIC : BODYTYPE.DYNAMIC);
-        if(this.type==BODYTYPE.STATIC)
-            return;
+        this.invMass = this._mass > 0 ? 1.0 / this._mass : 0;
+
         const halfExtents = Body_updateMassProperties_halfExtents;
 
-        this.invMass = this._mass > 0 ? 1.0 / this._mass : 0;
         const I = this.inertia;
         const fixed = this.fixedRotation;
 
@@ -669,20 +671,26 @@ export default class Body extends EventTarget {
             (this.aabb.upperBound.y - this.aabb.lowerBound.y) / 2,
             (this.aabb.upperBound.z - this.aabb.lowerBound.z) / 2
         );
-        // 组合形状的话，先用包围盒的转动惯量来模拟
-        if(this.shapes.length>1){
-            Box.calculateInertia(halfExtents, this._mass, I);
-        }else{
-            //TODO 测试
-            this.shapes[0].calculateLocalInertia(this.mass,I);
-        }
 
-        this.invInertia.set(
-            I.x > 0 && !fixed ? 1.0 / I.x : 0,
-            I.y > 0 && !fixed ? 1.0 / I.y : 0,
-            I.z > 0 && !fixed ? 1.0 / I.z : 0
-        );
-        this.updateInertiaWorld(true);
+        if(this.type==BODYTYPE.STATIC){
+            // statci 不要旋转
+            this.invInertia.set(0,0,0);
+        }else{
+            // 组合形状的话，先用包围盒的转动惯量来模拟
+            if(this.shapes.length>1){
+                Box.calculateInertia(halfExtents, this._mass, I);
+            }else{
+                //TODO 测试
+                this.shapes[0].calculateLocalInertia(this.mass,I);
+            }
+
+            this.invInertia.set(
+                I.x > 0 && !fixed ? 1.0 / I.x : 0,
+                I.y > 0 && !fixed ? 1.0 / I.y : 0,
+                I.z > 0 && !fixed ? 1.0 / I.z : 0
+            );
+            this.updateInertiaWorld(true);
+        }
     }
 
     /**

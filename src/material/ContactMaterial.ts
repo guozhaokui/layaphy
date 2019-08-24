@@ -31,12 +31,13 @@ export default class ContactMaterial extends Material {
     /**
      * Friction coefficient
      */
-    friction: number = 0.3;
+    //friction: number = 0.3;
 
     /**
      * Restitution coefficient
+     * 范围是0到1， 1的弹性最大
      */
-    restitution: number = 0.3;
+    //restitution: number = 0.3;
 
     /**
      The stiffness approximately corresponds to the stiffness of a spring, which gives a force F=-k*x where x is the displacement of the spring. 

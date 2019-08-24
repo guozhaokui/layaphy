@@ -4,16 +4,11 @@
  * @class Pool
  * @constructor
  */
-export default class Pool {
+export default class Pool<T> {
     /**
      * The pooled objects
      */
-    objects: any[] = [];
-
-    /**
-     * Constructor of the objects
-     */
-    type:any;
+    objects: T[] = [];
 
     constructor() {
     }
@@ -23,7 +18,7 @@ export default class Pool {
      * @method release
      * @param {Object} obj
      */
-    releaseMany(args:Object[]) {
+    releaseMany(args:T[]) {
         const Nargs = args.length;
         for (let i = 0; i !== Nargs; i++) {
             this.objects.push(args[i]);
@@ -31,7 +26,7 @@ export default class Pool {
         return this;
     }
 
-    release(o:Object){
+    release(o:T){
         this.objects.push(o);
         return this;
     }
@@ -40,18 +35,18 @@ export default class Pool {
      * Get an object
      * @method get
      */
-    get() {
+    get():T {
         if (this.objects.length === 0) {
             return this.constructObject();
         } else {
-            return this.objects.pop();
+            return this.objects.pop() as T;
         }
     }
 
     /**
      * Construct an object. Should be implmented in each subclass.
      */
-    constructObject() {
+    constructObject():T {
         throw new Error("constructObject() not implemented in this Pool subclass yet!");
     }
 

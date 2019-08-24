@@ -18,7 +18,7 @@ export default class Plane extends Shape {
 
     computeWorldNormal(quat:Quaternion) {
         const n = this.worldNormal;
-        n.set(0, 0, 1); // 法线指向z，对当前坐标系来说，是朝向屏幕外面
+        n.set(0, 0, 1); // 法线指向z，对laya3d坐标系来说，是朝向屏幕外面
         quat.vmult(n, n);
         this.worldNormalNeedsUpdate = false;
     }

@@ -158,6 +158,7 @@ export default class Equation {
 
     /**
      * Add constraint velocity to the bodies.
+     * 由于约束力而产生的的对速度的修改
      */
     addToWlambda(deltalambda: number) {
         const GA = this.jacobianElementA;
@@ -166,11 +167,14 @@ export default class Equation {
         const bj = this.bj;
         const temp = addToWlambda_temp;
 
+        // 更新 bi和bj的 vlambda
+        // delta_lamba * G 相当于约束产生的力（这里的是delta，外面累加），然后乘以 invM 就是速度
         // Add to linear velocity
         // v_lambda += inv(M) * delta_lamba * G
         bi.vlambda.addScaledVector(bi.invMassSolve * deltalambda, GA.spatial, bi.vlambda);
         bj.vlambda.addScaledVector(bj.invMassSolve * deltalambda, GB.spatial, bj.vlambda);
 
+        // 更新bi和bj的 wlambda
         // Add to angular velocity
         bi.invInertiaWorldSolve.vmult(GA.rotational, temp);
         bi.wlambda.addScaledVector(deltalambda, temp, bi.wlambda);

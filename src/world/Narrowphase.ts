@@ -42,6 +42,9 @@ export default class Narrowphase {
 
     frictionEquationPool: FrictionEquation[] = [];
 
+    /**
+     * 碰撞结果保存为 ContactEquation
+     */
     result: ContactEquation[] = [];
     frictionResult: FrictionEquation[] = [];
 
@@ -769,7 +772,7 @@ export default class Narrowphase {
             }
         }
         v3pool.release(rj);
-        rj = null;
+        //rj = null;
 
         // Check edges
         const edgeTangent = v3pool.get() as Vec3;

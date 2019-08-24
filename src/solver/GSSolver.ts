@@ -52,6 +52,7 @@ export default class GSSolver extends Solver {
         const lambda = GSSolver_solve_lambda;   //
         Bs.length = lambda.length = invCs.length = Neq;
 
+        // 把 lamba[]清零
         // 在迭代期间 B和invCs是不变的，所以可以先计算出来
         for (var i = 0; i !== Neq; i++) {
             var c = equations[i];
@@ -61,14 +62,11 @@ export default class GSSolver extends Solver {
         }
 
         if (Neq !== 0) {
-            // Reset vlambda
             // 把每个Body的vlambda和wlambda清零
             for (var i = 0; i !== Nbodies; i++) {
                 var b = bodies[i];
-                const vlambda = b.vlambda;
-                const wlambda = b.wlambda;
-                vlambda.set(0, 0, 0);
-                wlambda.set(0, 0, 0);
+                b.vlambda.set(0,0,0);
+                b.wlambda.set(0,0,0);
             }
 
             // Iterate over equations
@@ -94,6 +92,7 @@ export default class GSSolver extends Solver {
 
                     deltalambdaTot += deltalambda > 0.0 ? deltalambda : -deltalambda; // abs(deltalambda)
 
+                    // 更新C关联的两个对象的速度 vlambda 和角速度 wlambda
                     c.addToWlambda(deltalambda);
                 }
 
@@ -125,7 +124,7 @@ export default class GSSolver extends Solver {
             let l = equations.length;
             const invDt = 1 / h;
             while (l--) {
-                equations[l].multiplier = lambda[l] * invDt;
+                equations[l].multiplier = lambda[l] * invDt;        // 这个好像没有用
             }
         }
         //console.log('Err=',deltalambdaTot,'iter=',iter);

@@ -194,6 +194,9 @@ export default class World extends EventTarget {
      */
     materials:Material[] = [];
 
+    /**
+     * 接触材质，发生碰撞后，根据a，b的材质，到这里找对应的接触材质
+     */
     contactmaterials:ContactMaterial[] = [];
 
     /**
@@ -547,11 +550,12 @@ export default class World extends EventTarget {
      * @method addContactMaterial
      * @param  cmat
      */
-    addContactMaterial(cmat:ContactMaterial):void {
+    addContactMaterial(cmat:ContactMaterial):World {
         // Add contact material
         this.contactmaterials.push(cmat);
         // Add current contact material to the material table
         this.contactMaterialTable.set(cmat.materials[0].id, cmat.materials[1].id, cmat);
+        return this;
     }
 
 
