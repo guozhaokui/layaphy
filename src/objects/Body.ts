@@ -131,10 +131,11 @@ export default class Body extends EventTarget {
      */
     position = new Vec3();
 
-    previousPosition = new Vec3();
+    previousPosition = new Vec3();  // 上次的位置
 
     /**
      * Interpolated position of the body.
+     * 在上次位置和这次位置之间的插值的值,还不知道有什么用
      */
     interpolatedPosition = new Vec3();
 

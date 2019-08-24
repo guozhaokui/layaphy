@@ -146,13 +146,14 @@ export default class World extends EventTarget {
 
     /**
      * The wall-clock time since simulation start
+     * 物理系统累计时间
      */
     time:f32 = 0.0;
 
     /**
      * Number of timesteps taken since start
      */
-    stepnumber:i32 = 0;
+    stepnumber:f32 = 0;
 
     /// Default and last timestep sizes
     default_dt:f32 = 1 / 60;
@@ -562,11 +563,12 @@ export default class World extends EventTarget {
     /**
      * Step the physics world forward in time.
      *
-     * There are two modes. The simple mode is fixed timestepping without interpolation. In this case you only use the first argument. The second case uses interpolation. In that you also provide the time since the function was last used, as well as the maximum fixed timesteps to take.
+     * There are two modes. The simple mode is fixed timestepping without interpolation. In this case you only use the first argument. 
+     * The second case uses interpolation. In that you also provide the time since the function was last used, as well as the maximum fixed timesteps to take.
      *
      * @param dt                       The fixed time step size to use. 单位是秒
-     * @param [timeSinceLastCalled]    The time elapsed since the function was last called.
-     * @param [maxSubSteps=10]         Maximum number of fixed steps to take per function call.
+     * @param [timeSinceLastCalled]    The time elapsed since the function was last called. 如果为0则直接使用dt来计算，表示固定时间间隔
+     * @param [maxSubSteps=10]         Maximum number of fixed steps to take per function call. 最大插值次数
      *
      * @example
      *     // fixed timestepping without interpolation
@@ -578,7 +580,7 @@ export default class World extends EventTarget {
             // Increment time
             this.time += dt;
         } else {
-            this.accumulator += timeSinceLastCalled;
+            this.accumulator += timeSinceLastCalled;   // 上次可能还有一部分时间没有处理，所以是 +=
             var substeps = 0;
             while (this.accumulator >= dt && substeps < maxSubSteps) {
                 // Do fixed steps to catch up
@@ -587,13 +589,16 @@ export default class World extends EventTarget {
                 substeps++;
             }
 
+            // accumulator可能还剩一些
+            /*
             var t = (this.accumulator % dt) / dt;
             for (var j = 0; j !== this.bodies.length; j++) {
                 var b = this.bodies[j];
-                b.previousPosition.lerp(b.position, t, b.interpolatedPosition);
+                b.previousPosition.lerp(b.position, t, b.interpolatedPosition); //  这个目前没有用上。
                 b.previousQuaternion.slerp(b.quaternion, t, b.interpolatedQuaternion);
                 b.previousQuaternion.normalize();
             }
+            */
             this.time += timeSinceLastCalled;
         }
     }

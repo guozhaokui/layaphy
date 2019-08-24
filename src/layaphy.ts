@@ -82,6 +82,7 @@ let shapeq = new Quaternion();
 shapeq.setFromAxisAngle(new Vec3(1,0,0),-Math.PI/2);
 planephy.addShape( new Plane(), new Vector3(), shapeq);  // laya的plane是向上(y)的，cannon的plane是向前（后？）的
 planephy.setMass(0);
+planephy.phyBody.position.set(10,0,0);
 //planephy.phyBody.quaternion.setFromAxisAngle( new Vec3(1,0,0),0);
 /*
 let y=5;
@@ -91,8 +92,9 @@ for(let i=0; i<100; i++){
     y+=0.22;
 }
 */
-//addCapsule(1,1,2,2,2);
+addCapsule(1,3,2,2,2);
 
+/*
 let sph = addSphere(1,2,2,4);
 sph.setVel(0,0,0);
 sph.setMaterial(phymtl2);
@@ -102,6 +104,7 @@ let sph1 = addSphere(1,5,2,4);
 sph1.setVel(-1,0,0);
 sph.setMaterial(phymtl3);
 sph.setName('sph2');
+*/
 
 /*
 var planeStaticCollider: PhysicsCollider = plane.addComponent(PhysicsCollider);

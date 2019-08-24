@@ -73,7 +73,7 @@ export default class Narrowphase {
         shapeChecks[SHAPETYPE.SPHERE | SHAPETYPE.PLANE] = this.spherePlane;
         shapeChecks[SHAPETYPE.SPHERE | SHAPETYPE.BOX] = this.sphereBox;
         shapeChecks[SHAPETYPE.SPHERE | SHAPETYPE.CONVEXPOLYHEDRON] = this.sphereConvex;
-        shapeChecks[SHAPETYPE.CAPSULE| SHAPETYPE.PLANE ] = this.capsulePlane;
+        shapeChecks[SHAPETYPE.CAPSULE| SHAPETYPE.PLANE ] = this.planeCapsule;
         shapeChecks[SHAPETYPE.PLANE | SHAPETYPE.BOX] = this.planeBox;
         shapeChecks[SHAPETYPE.PLANE | SHAPETYPE.CONVEXPOLYHEDRON] = this.planeConvex;
         shapeChecks[SHAPETYPE.CONVEXPOLYHEDRON] = this.convexConvex;
@@ -595,37 +595,37 @@ export default class Narrowphase {
     }
 
     private static nor1 = new Vec3();
-    spherePlane(si: Sphere, sj: Plane, xi: Vec3, xj: Vec3, qi: Quaternion, qj: Quaternion, bi: Body, bj: Body, rsi: Shape, rsj: Shape, justTest: boolean): boolean {
+    spherePlane(sphere: Sphere, plane: Plane, sphPos: Vec3, planePos: Vec3, qi: Quaternion, planeQ: Quaternion, sphBody: Body, planeBody: Body, rsi: Shape, rsj: Shape, justTest: boolean): boolean {
         let ni = Narrowphase.nor1;  // 球的碰撞法线
         // 平面的法线转换到平面的朝向上
         ni.set(0, 0, 1);
-        qj.vmult(ni, ni);
+        planeQ.vmult(ni, ni);
         ni.negate(ni); // 由于是球的碰撞法线，所以颠倒一下 body i is the sphere, flip normal
         ni.normalize(); // Needed?
 
         // Project down sphere on plane
-        xi.vsub(xj, point_on_plane_to_sphere);
+        sphPos.vsub(planePos, point_on_plane_to_sphere);
         ni.scale(ni.dot(point_on_plane_to_sphere), plane_to_sphere_ortho);
 
-        if (-point_on_plane_to_sphere.dot(ni) <= si.radius) {
+        if (-point_on_plane_to_sphere.dot(ni) <= sphere.radius) {
             if (justTest) {
                 return true;
             }
 
-            const r = this.createContactEquation(bi, bj, si, sj, rsi, rsj);
+            const r = this.createContactEquation(sphBody, planeBody, sphere, plane, rsi, rsj);
             r.ni.copy(ni);
             // Vector from sphere center to contact point
             // 球的碰撞点
-            ni.scale(si.radius, r.ri);
+            ni.scale(sphere.radius, r.ri);// 长度为半径
             point_on_plane_to_sphere.vsub(plane_to_sphere_ortho, r.rj); // The sphere position projected to plane
 
             // Make it relative to the body
             const ri = r.ri;
             const rj = r.rj;
-            ri.vadd(xi, ri);
-            ri.vsub(bi.position, ri);
-            rj.vadd(xj, rj);
-            rj.vsub(bj.position, rj);
+            ri.vadd(sphPos, ri);        
+            ri.vsub(sphBody.position, ri);   // pos+hitV-a.pos  正常情况下 pos == a.pos
+            rj.vadd(planePos, rj);
+            rj.vsub(planeBody.position, rj);
 
             this.result.push(r);
             this.createFrictionEquationsFromContact(r, this.frictionResult);
@@ -1061,41 +1061,38 @@ export default class Narrowphase {
         return found;
     }
 
-    capsulePlane(si: Capsule, sj: Plane, xi: Vec3, xj: Vec3, qi: Quaternion, qj: Quaternion, bi: Body, bj: Body, rsi: Shape, rsj: Shape, justTest: boolean): boolean {
+    planeCapsule(plane: Plane, capsule: Capsule,  planePos: Vec3, capPos: Vec3, planeQ: Quaternion, capQ: Quaternion,  planeBody: Body, capBody: Body,  rsi: Shape, rsj: Shape, justTest: boolean): boolean {
         let ni = Narrowphase.nor1;  // 球的碰撞法线
         // 平面的法线转换到平面的朝向上
         ni.set(0, 0, 1);
-        qj.vmult(ni, ni);
-        ni.negate(ni); // 由于是球的碰撞法线，所以颠倒一下 body i is the sphere, flip normal
+        planeQ.vmult(ni, ni);
         ni.normalize(); // Needed?
 
-        // Project down sphere on plane
-        xi.vsub(xj, point_on_plane_to_sphere);
-        ni.scale(ni.dot(point_on_plane_to_sphere), plane_to_sphere_ortho);
-
-        if (-point_on_plane_to_sphere.dot(ni) <= si.radius) {
-            if (justTest) {
+        let nearToPlane = point_on_plane_to_sphere;
+        let deep = capsule.hitPlane(capPos,planePos,ni,nearToPlane);
+        if(deep>=0){
+            if(justTest)
                 return true;
-            }
-
-            const r = this.createContactEquation(bi, bj, si, sj, rsi, rsj);
+            const r = this.createContactEquation(capBody, planeBody, capsule, plane, rsi, rsj);
+            ni.negate(ni);// capsule的法线
             r.ni.copy(ni);
-            // Vector from sphere center to contact point
-            // 球的碰撞点
-            ni.scale(si.radius, r.ri);
+
+            let planeHit = r.rj;
+            planeHit.copy(nearToPlane);
+            planeHit.addScaledVector(-deep,ni,planeHit);//ni朝向平面里面 = rj
             point_on_plane_to_sphere.vsub(plane_to_sphere_ortho, r.rj); // The sphere position projected to plane
 
             // Make it relative to the body
             const ri = r.ri;
             const rj = r.rj;
-            ri.vadd(xi, ri);
-            ri.vsub(bi.position, ri);
-            rj.vadd(xj, rj);
-            rj.vsub(bj.position, rj);
+            ri.copy(nearToPlane);
+            ri.vsub(capBody.position, ri);
+            rj.vsub(planeBody.position, rj);
 
             this.result.push(r);
             this.createFrictionEquationsFromContact(r, this.frictionResult);
             return true;
+
         }
         return false;
     }

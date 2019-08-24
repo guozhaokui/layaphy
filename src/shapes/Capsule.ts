@@ -3,7 +3,15 @@ import Vec3 from "../math/Vec3";
 import Quaternion from "../math/Quaternion";
 //import { quat_AABBExt_mult } from "./Box";
 
+/**
+ * 记录运行时计算的一些数据，防止重复计算
+ */
+class CapsuleRunData{
+
+}
 //let aabbExt = new Vec3();
+let tmpVec1=new Vec3();
+let tmpVec2 = new Vec3();
 /**
  * 缺省主轴是z轴
  * 测试的时候可以通过组合shape来模拟胶囊
@@ -39,7 +47,45 @@ export default class Capsule extends Shape{
         return axis;
     }
 
-    pointDistance(pos: Vec3, quat: Quaternion, p:Vec3):f32{
+    /**
+     * 某个方向上最远距离，相对于自己的原点。前提是已经计算了轴向了。类似于包围盒， dir*maxD 不一定在胶囊上，只有平行和垂直的时候才在表面上
+     * @param pos 胶囊所在世界空间的位置
+     * @param dir 世界空间的朝向
+     * @param outPos 最远的地方的点。 法线就是方向
+     */
+    supportFunction(myPos:Vec3, dir:Vec3, outPos:Vec3):f32{
+        dir.normalize();
+        return this.supportFuncion_norm(myPos, dir, outPos);
+    }
+
+    supportFuncion_norm(myPos:Vec3, normDir:Vec3, outPos?:Vec3):f32{
+        let axis = this.axis;
+        let d = axis.dot(normDir);
+        let nextend=false;
+        if(d<0){
+            d=-d;
+            nextend=true;   //取另一头
+        }
+        let l = d+this.radius;   //自身原点到这个点的距离
+        if(outPos){
+            // 需要计算最远的点在哪
+            if(d<1e-6){//只有垂直的时候，在圆柱上，稍微一动，就转到球上了
+                myPos.addScaledVector(this.radius, normDir, outPos);
+            }else{
+                if(nextend){
+                    myPos.vsub(axis,outPos);
+                    outPos.addScaledVector(this.radius,normDir,outPos);
+                }else{
+                    myPos.vadd(axis,outPos);
+                    outPos.addScaledVector(this.radius,normDir,outPos);
+                }
+            }
+        }
+        return l;
+    }
+
+    // 要求已经计算axis了    
+    pointDistance(pos: Vec3, p:Vec3):f32{
         let halfh=this.height/2;
         let dx = p.x - pos.x;
         let dy = p.y - pos.y;
@@ -64,6 +110,25 @@ export default class Capsule extends Shape{
 
         }
         return 0;
+    }
+
+    /**
+     * 到一个平面的距离，如果碰撞了，取碰撞点。
+     * 碰撞法线一定是平面法线
+     * @param hitPos   世界坐标的碰撞位置
+     * @return 进入深度， <0表示没有碰撞
+     */
+    hitPlane(myPos:Vec3, planePos:Vec3, planeNorm:Vec3,hitPos:Vec3):f32{
+        // 反向最远的点就是距离平面最近的点
+        tmpVec1.set(-planeNorm.x,-planeNorm.y,-planeNorm.z);
+        this.supportFuncion_norm(myPos, tmpVec1,hitPos);
+        //下面判断hitPos是否在平面下面
+        let planeToHit = tmpVec2;
+        hitPos.vsub(planePos,planeToHit);
+        let d = planeToHit.dot(planeNorm);        
+        if( d>0)    // 没有碰撞
+            return -1;
+        return -d;
     }
 
     /**
@@ -100,6 +165,9 @@ export default class Capsule extends Shape{
        let mz = Math.abs(ext.z)+r;
        min.x = pos.x-mx; min.y=pos.y-my; min.z=pos.z-mz;
        max.x = pos.x+mx; max.y=pos.y+my; max.z=pos.z+mz;
+
+       // 宽阶段会调用这个，所以更新一下
+       this.calcDir(quat);
     }
 
     volume(): f32 {
