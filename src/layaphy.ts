@@ -21,6 +21,22 @@ import Capsule from "./shapes/Capsule";
 import Sphere from "./shapes/Sphere";
 import Material from "./material/Material";
 import ContactMaterial from "./material/ContactMaterial";
+import { PhyRender } from "./layawrap/LayaDebugRender";
+
+function test(){
+    debugger;
+    const cap =new Capsule(1,2);
+    let q = new Quaternion();
+    cap.calcDir(q);
+    let hit = new Vec3();
+    let capPos = new Vec3();
+    let planePos = new Vec3(0,0,-2);
+    let planeNorm = new Vec3(0,0,1);
+    let deep = cap.hitPlane(capPos, planePos, planeNorm, hit);
+    console.log(deep);    
+}
+
+test();
 
 //TEST
 
@@ -68,6 +84,8 @@ plane.meshRenderer.material = planeMtl;
 // phyworld
 //phyworld.world.gravity.set(0,0,0);
 
+new PhyRender(scene,phyworld.world);
+
 let phymtl1 = new Material();
 let phymtl2 = new Material();
 let phymtl3 = new Material();
@@ -82,7 +100,7 @@ let shapeq = new Quaternion();
 shapeq.setFromAxisAngle(new Vec3(1,0,0),-Math.PI/2);
 planephy.addShape( new Plane(), new Vector3(), shapeq);  // laya的plane是向上(y)的，cannon的plane是向前（后？）的
 planephy.setMass(0);
-planephy.phyBody.position.set(10,0,0);
+//planephy.phyBody.position.set(10,0,0);
 //planephy.phyBody.quaternion.setFromAxisAngle( new Vec3(1,0,0),0);
 /*
 let y=5;
@@ -92,7 +110,9 @@ for(let i=0; i<100; i++){
     y+=0.22;
 }
 */
-addCapsule(1,3,2,2,2);
+let cap = addCapsule(0.2,1,2,4,2);
+cap.setVel(1,0,0);
+
 
 /*
 let sph = addSphere(1,2,2,4);
@@ -131,7 +151,7 @@ function  addBox(sx:number, sy:number, sz:number, x:number, y:number,z:number){
     rigidBody.setMass(1);
 }
 
-function addCapsule(r:f32, h:f32, x:f32, y:f32, z:f32):void{
+function addCapsule(r:f32, h:f32, x:f32, y:f32, z:f32):LCPhyComponent{
     var cap = scene.addChild(new MeshSprite3D( PrimitiveMesh.createCapsule(r,h))) as MeshSprite3D;
     cap.meshRenderer.material = mtl2;
     var transform = cap.transform;
@@ -139,9 +159,13 @@ function addCapsule(r:f32, h:f32, x:f32, y:f32, z:f32):void{
     pos.setValue(x,y,z);
     transform.position = pos;
 
+    let shapeq = new Quaternion();
+    shapeq.setFromAxisAngle(new Vec3(1,0,0),-Math.PI/2);
+
     var phy = cap.addComponent(LCPhyComponent) as LCPhyComponent;
-    phy.addShape( new Capsule(r,h));
+    phy.addShape( new Capsule(r,h), new Vector3(), shapeq);
     phy.setMass(1);
+    return phy;
 }
 
 function addSphere(r:f32, x:f32, y:f32, z:f32):LCPhyComponent{
@@ -153,7 +177,7 @@ function addSphere(r:f32, x:f32, y:f32, z:f32):LCPhyComponent{
     transform.position = pos;
 
     var phy = sph.addComponent(LCPhyComponent) as LCPhyComponent;
-    phy.addShape( new Sphere(r) );
+    phy.addShape( new Sphere(r));
     phy.setMass(1);
     return phy;
 }

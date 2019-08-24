@@ -112,6 +112,18 @@ var endShapeContactEvent:ShapeContactEvent = {
     shapeB: null
 };
 
+export enum PhyColor{
+    RED=0xffff0000,GREEN=0xff00ff00,BLUE=0xff0000ff,YELLOW=0xffffff00,PINK=0xffff7777,GRAY=0xff777777,WHITE=0xffffffff,
+}
+
+export interface IPhyRender{
+    stepStart():void;
+    stepEnd():void;
+    internalStep():void;
+    addSeg(stx:f32, sty:f32, stz:f32, dirx:f32, diry:f32, dirz:f32, color:i32):void;
+    addPoint(px:f32, py:f32, pz:f32, color:i32):void;
+}
+
 
 /**
  * The physics world
@@ -236,6 +248,8 @@ export default class World extends EventTarget {
     removeBodyEvent = new PhyEvent('removeBody', null); 
 
     idToBodyMap:{[id:string]:Body} = {};
+
+    phyRender:IPhyRender;
 
     constructor(options?:any) {
         super();
@@ -575,6 +589,9 @@ export default class World extends EventTarget {
      *     world.step(1/60);
      */
     step(dt: number, timeSinceLastCalled: number = 0, maxSubSteps: number = 10) {
+        if(this.phyRender){
+            this.phyRender.stepStart();
+        }
         if (timeSinceLastCalled === 0) { // Fixed, simple stepping
             this.internalStep(dt);
             // Increment time
@@ -600,6 +617,9 @@ export default class World extends EventTarget {
             }
             */
             this.time += timeSinceLastCalled;
+        }
+        if(this.phyRender){
+            this.phyRender.stepEnd();
         }
     }
 
@@ -938,6 +958,10 @@ export default class World extends EventTarget {
             for (i = 0; i !== N; i++) {
                 bodies[i].sleepTick(this.time);
             }
+        }
+
+        if(this.phyRender){
+            this.phyRender.internalStep();
         }
     }
 

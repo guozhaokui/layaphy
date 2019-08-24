@@ -16,7 +16,7 @@ import Shape, { SHAPETYPE } from '../shapes/Shape.js';
 import Sphere from '../shapes/Sphere.js';
 import Trimesh from '../shapes/Trimesh.js';
 import Vec3Pool from '../utils/Vec3Pool.js';
-import World from './World.js';
+import World, { PhyColor } from './World.js';
 import Capsule from '../shapes/Capsule.js';
 
 //declare type anyShape=Box|Sphere|Capsule|Voxel|ConvexPolyhedron|Heightfield|Trimesh;
@@ -1079,8 +1079,10 @@ export default class Narrowphase {
 
             let planeHit = r.rj;
             planeHit.copy(nearToPlane);
+            //DEBUG
+            this.world.phyRender.addPoint(nearToPlane.x, nearToPlane.y,nearToPlane.z, PhyColor.RED);
+            //DEBUG
             planeHit.addScaledVector(-deep,ni,planeHit);//ni朝向平面里面 = rj
-            point_on_plane_to_sphere.vsub(plane_to_sphere_ortho, r.rj); // The sphere position projected to plane
 
             // Make it relative to the body
             const ri = r.ri;
