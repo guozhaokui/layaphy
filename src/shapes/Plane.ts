@@ -31,6 +31,8 @@ export default class Plane extends Shape {
         return Number.MAX_VALUE; // The plane is infinite...
     }
 
+    onPreNarrowpase(stepId: number,pos:Vec3,quat:Quaternion): void {}
+
     calculateWorldAABB(pos:Vec3, quat:Quaternion, min:Vec3, max:Vec3) {
         // The plane AABB is infinite, except if the normal is pointing along any axis
         tempNormal.set(0, 0, 1); // Default plane normal is z

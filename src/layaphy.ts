@@ -36,7 +36,7 @@ function test(){
     console.log(deep);    
 }
 
-test();
+//test();
 
 //TEST
 
@@ -110,9 +110,19 @@ for(let i=0; i<100; i++){
     y+=0.22;
 }
 */
-let cap = addCapsule(0.2,1,2,4,2);
-cap.setVel(1,0,0);
+let cap = addCapsule(0.2,8,2,4,2);
+//cap.setVel(1,0,-1);
 
+//let bb = addBox(0.2,14,1,0,12,0);
+
+/*
+let y=5;
+for(let i=0; i<100; i++){
+    //addBox(.1,.1,.1,Math.random()*10,5,Math.random()*10);
+    addCapsule(0.2,9,0,y,0);
+    y+=0.22;
+}
+*/
 
 /*
 let sph = addSphere(1,2,2,4);
@@ -146,25 +156,31 @@ function  addBox(sx:number, sy:number, sz:number, x:number, y:number,z:number){
     //transform.rotationEuler = rotationEuler;
 
     var rigidBody = box.addComponent(LCPhyComponent) as LCPhyComponent;
-    var boxShape = new Box(new Vec3(sx,sy,sz));
+    var boxShape = new Box(new Vec3(sx/2,sy/2,sz/2));
     rigidBody.addShape(boxShape);
     rigidBody.setMass(1);
 }
 
 function addCapsule(r:f32, h:f32, x:f32, y:f32, z:f32):LCPhyComponent{
-    var cap = scene.addChild(new MeshSprite3D( PrimitiveMesh.createCapsule(r,h))) as MeshSprite3D;
+    var cap = scene.addChild(new MeshSprite3D( PrimitiveMesh.createCapsule(r,h+r+r))) as MeshSprite3D;
     cap.meshRenderer.material = mtl2;
     var transform = cap.transform;
     var pos = transform.position;
     pos.setValue(x,y,z);
     transform.position = pos;
+    //设置欧拉角
+    var rotationEuler = transform.rotationEuler;
+    //rotationEuler.setValue(Math.random() * 360,0,0);// Math.random() * 360, Math.random() * 360);
+    rotationEuler.setValue(0,0, 10);
+    //rotationEuler.setValue(10,0, 0);
+    transform.rotationEuler = rotationEuler;    
 
     let shapeq = new Quaternion();
     shapeq.setFromAxisAngle(new Vec3(1,0,0),-Math.PI/2);
 
     var phy = cap.addComponent(LCPhyComponent) as LCPhyComponent;
     phy.addShape( new Capsule(r,h), new Vector3(), shapeq);
-    phy.setMass(1);
+    phy.setMass(11);
     return phy;
 }
 

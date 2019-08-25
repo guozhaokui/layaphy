@@ -57,6 +57,7 @@ export default class Box extends Shape {
         this.updateBoundingSphereRadius();
     }
 
+    onPreNarrowpase(stepId: number,pos:Vec3,quat:Quaternion): void {}
     /**
      * Updates the local convex polyhedron representation used for some collisions.
      */

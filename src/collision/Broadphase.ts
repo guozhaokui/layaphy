@@ -83,10 +83,10 @@ export default abstract class Broadphase {
      */
     doBoundingBoxBroadphase(bodyA: Body, bodyB: Body, pairs1: Body[], pairs2: Body[]) {
         if (bodyA.aabbNeedsUpdate) {
-            bodyA.computeAABB();
+            bodyA.updateAABB();
         }
         if (bodyB.aabbNeedsUpdate) {
-            bodyB.computeAABB();
+            bodyB.updateAABB();
         }
 
         // Check AABB / AABB

@@ -32,12 +32,10 @@ export enum BODYTYPE{
      * A dynamic body is fully simulated. Can be moved manually by the user, but normally they move according to forces. A dynamic body can collide with all body types. A dynamic body always has finite, non-zero mass.
      */
     DYNAMIC = 1,
-
     /**
      * A static body does not move during simulation and behaves as if it has infinite mass. Static bodies can be moved manually by setting the position of the body. The velocity of a static body is always zero. Static bodies do not collide with other static or kinematic bodies.
      */
     STATIC = 2,
-
     /**
      * A kinematic body moves under simulation according to its velocity. They do not respond to forces. They can be moved manually, but normally a kinematic body is moved by setting its velocity. A kinematic body behaves as if it has infinite mass. Kinematic bodies do not collide with other static or kinematic bodies.
      */
@@ -461,7 +459,12 @@ export default class Body extends EventTarget {
 
         this.aabbNeedsUpdate = true;
         shape.body = this;
+        this.onShapeChange();
         return this;
+    }
+
+    onShapeChange(){
+        this.shapes.forEach( s=>{});
     }
 
     /**
@@ -495,9 +498,8 @@ export default class Body extends EventTarget {
 
     /**
      * Updates the .aabb
-     * @todo rename to updateAABB()
      */
-    computeAABB() {
+    updateAABB() {
         const shapes = this.shapes;
         const shapeOffsets = this.shapeOffsets;
         const shapeOrientations = this.shapeOrientations;
@@ -666,7 +668,7 @@ export default class Body extends EventTarget {
         if(shapes.length<=0)
             return;
 
-        this.computeAABB();
+        this.updateAABB();
         halfExtents.set(
             (this.aabb.upperBound.x - this.aabb.lowerBound.x) / 2,
             (this.aabb.upperBound.y - this.aabb.lowerBound.y) / 2,

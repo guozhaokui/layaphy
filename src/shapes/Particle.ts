@@ -7,6 +7,7 @@ import Quaternion from '../math/Quaternion.js';
  * @author schteppe
  */
 export default class Particle extends Shape {
+
     constructor() {
         super();
         this.type=SHAPETYPE.PARTICLE;
@@ -30,4 +31,5 @@ export default class Particle extends Shape {
         min.copy(pos);
         max.copy(pos);
     }
+    onPreNarrowpase(stepId: number,pos:Vec3,quat:Quaternion): void {}    
 }

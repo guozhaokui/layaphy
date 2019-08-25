@@ -116,12 +116,18 @@ export enum PhyColor{
     RED=0xffff0000,GREEN=0xff00ff00,BLUE=0xff0000ff,YELLOW=0xffffff00,PINK=0xffff7777,GRAY=0xff777777,WHITE=0xffffffff,
 }
 
-export interface IPhyRender{
-    stepStart():void;
-    stepEnd():void;
-    internalStep():void;
-    addSeg(stx:f32, sty:f32, stz:f32, dirx:f32, diry:f32, dirz:f32, color:i32):void;
-    addPoint(px:f32, py:f32, pz:f32, color:i32):void;
+export abstract class IPhyRender{
+    abstract stepStart():void;
+    abstract stepEnd():void;
+    abstract internalStep():void;
+    abstract addSeg(stx:f32, sty:f32, stz:f32, dirx:f32, diry:f32, dirz:f32, color:i32):void;
+    _addSeg(st:Vec3, dir:Vec3,color:i32):void{
+        this.addSeg(st.x,st.y,st.z,dir.x,dir.y,dir.z,color);
+    }
+    abstract addPoint(px:f32, py:f32, pz:f32, color:i32):void;
+    _addPoint(p:Vec3, color:i32):void{
+        return this.addPoint(p.x,p.y,p.z,color);
+    }
 }
 
 

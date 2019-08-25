@@ -50,6 +50,8 @@ export default abstract class Shape {
     material: Material|null = null;
     body: Body;
 
+    hasPreNarrowPhase=false;    // 是否要执行 onPreNarrowpase
+
     constructor(options?: { type: number, collisionResponse: boolean, collisionFilterGroup: number, collisionFilterMask: number, material: Material }) {
         if(options){
             this.type = options.type || 0;
@@ -77,6 +79,7 @@ export default abstract class Shape {
      */
     abstract calculateLocalInertia(mass: number, target: Vec3):void;
 
+    abstract onPreNarrowpase(stepId:i32,pos:Vec3, quat:Quaternion):void;
 }
 
 

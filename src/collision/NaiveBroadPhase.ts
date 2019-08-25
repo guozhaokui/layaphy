@@ -49,7 +49,7 @@ export default class NaiveBroadphase extends Broadphase {
             const b = bodies[i];
 
             if (b.aabbNeedsUpdate) {
-                b.computeAABB();
+                b.updateAABB();
             }
 
             // Ugly hack until Body gets aabb

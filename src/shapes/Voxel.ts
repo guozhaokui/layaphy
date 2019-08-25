@@ -3,7 +3,6 @@ import Quaternion from "../math/Quaternion";
 import Shape, { SHAPETYPE } from "./Shape";
 
 export class Voxel extends Shape{
-
     data:Uint8Array;
     pos:Vec3;
     quat:Quaternion;
@@ -13,8 +12,8 @@ export class Voxel extends Shape{
         this.type = SHAPETYPE.VOXEL;
     }
 
+    onPreNarrowpase(stepId: number,pos:Vec3,quat:Quaternion): void {}
     fill(){
-
     }
 
     updateBoundingSphereRadius(): void {

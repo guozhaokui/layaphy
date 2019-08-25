@@ -8,10 +8,10 @@ import AABB from "../collision/AABB";
 test('',()=>{
     const body = new Body(1);
     body.addShape(new Box(new Vec3(1,1,1)));
-    body.computeAABB();
+    body.updateAABB();
     expect(body.aabb).toEqual( new AABB(new Vec3(-1,-1,-1), new Vec3(1,1,1)));
     body.position.x=1;
-    body.computeAABB();
+    body.updateAABB();
     expect(body.aabb).toEqual( new AABB( new Vec3(0,-1,-1), new Vec3(2,1,1)));
 })
 
@@ -21,10 +21,10 @@ test('boxOffset', () => {
     quaternion.setFromAxisAngle(new Vec3(0, 0, 1), Math.PI / 2);
     const body = new Body(1);
     body.addShape(new Box(new Vec3(1, 1, 1)), new Vec3(1, 1, 1));
-    body.computeAABB();
+    body.updateAABB();
     expect(body.aabb).toEqual( new AABB(new Vec3(0,0,0), new Vec3(2,2,2)));
     body.position.x = 1;
-    body.computeAABB();
+    body.updateAABB();
 
     expect(body.aabb.lowerBound.x).toBe(1);
     expect(body.aabb.upperBound.x).toBe(3);

@@ -174,7 +174,7 @@ export default class GridBroadphase extends Broadphase {
 
                 default:
                     if (bi.aabbNeedsUpdate) {
-                        bi.computeAABB();
+                        bi.updateAABB();
                     }
 
                     addBoxToBins(

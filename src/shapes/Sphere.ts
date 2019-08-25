@@ -11,6 +11,7 @@ import Quaternion from '../math/Quaternion.js';
  * @author schteppe / http://github.com/schteppe
  */
 export default class Sphere extends Shape {
+    onPreNarrowpase(stepId: number,pos:Vec3,quat:Quaternion): void {}
     radius=1;
     constructor(radius:number) {
         super();

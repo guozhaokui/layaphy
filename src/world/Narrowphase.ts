@@ -262,19 +262,25 @@ export default class Narrowphase {
                 )
             );
 
+            //TODO
+            let stepNum=0;
+
             for (let i = 0; i < bi.shapes.length; i++) {
                 bi.quaternion.mult(bi.shapeOrientations[i], qi);
                 bi.quaternion.vmult(bi.shapeOffsets[i], xi);
                 xi.vadd(bi.position, xi);
                 const si = bi.shapes[i];
+                if(si.hasPreNarrowPhase)
+                    si.onPreNarrowpase(stepNum,xi,qi);
 
                 for (let j = 0; j < bj.shapes.length; j++) {
-
                     // Compute world transform of shapes
                     bj.quaternion.mult(bj.shapeOrientations[j], qj);
                     bj.quaternion.vmult(bj.shapeOffsets[j], xj);
                     xj.vadd(bj.position, xj);
                     const sj = bj.shapes[j];
+                    if(sj.hasPreNarrowPhase)
+                        sj.onPreNarrowpase(stepNum,xj,qj);
 
                     // 碰撞组判断
                     if (!((si.collisionFilterMask & sj.collisionFilterGroup) && (sj.collisionFilterMask & si.collisionFilterGroup))) {
@@ -1080,7 +1086,7 @@ export default class Narrowphase {
             let planeHit = r.rj;
             planeHit.copy(nearToPlane);
             //DEBUG
-            this.world.phyRender.addPoint(nearToPlane.x, nearToPlane.y,nearToPlane.z, PhyColor.RED);
+            this.world.phyRender._addPoint(nearToPlane, PhyColor.RED);
             //DEBUG
             planeHit.addScaledVector(-deep,ni,planeHit);//ni朝向平面里面 = rj
 
@@ -1092,7 +1098,7 @@ export default class Narrowphase {
             rj.vsub(planeBody.position, rj);
 
             this.result.push(r);
-            this.createFrictionEquationsFromContact(r, this.frictionResult);
+            //this.createFrictionEquationsFromContact(r, this.frictionResult);
             return true;
 
         }

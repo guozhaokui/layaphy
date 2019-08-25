@@ -3,12 +3,7 @@ import Vec3 from "../math/Vec3";
 import Quaternion from "../math/Quaternion";
 //import { quat_AABBExt_mult } from "./Box";
 
-/**
- * 记录运行时计算的一些数据，防止重复计算
- */
-class CapsuleRunData{
 
-}
 //let aabbExt = new Vec3();
 let tmpVec1=new Vec3();
 let tmpVec2 = new Vec3();
@@ -26,6 +21,8 @@ export default class Capsule extends Shape{
         this.type=SHAPETYPE.CAPSULE;
         this.radius=r;
         this.height=h;
+        this.axis.set(0,0,h/2);
+        this.hasPreNarrowPhase=true;
     }
 
     /**
@@ -140,8 +137,10 @@ export default class Capsule extends Shape{
      * @see https://zh.wikipedia.org/wiki/%E8%BD%89%E5%8B%95%E6%85%A3%E9%87%8F%E5%88%97%E8%A1%A8
      */
     calculateLocalInertia(mass: f32, target: Vec3) {
-        let r2=this.radius*this.radius;
-        let h2=this.height*this.height;
+        let h = this.height;
+        let r = this.radius;
+        let r2=r*r;
+        let h2=h*h;
         target.x=target.y=mass/60*(39*r2+35*h2);
         target.z =9/10*mass*r2;
     }
@@ -159,6 +158,7 @@ export default class Capsule extends Shape{
         pos.vadd(min,max);
         pos.vsub(min,min);
         */
+       // calcDir后会一直重用
        let ext = this.calcDir(quat);
        let mx = Math.abs(ext.x)+r;
        let my = Math.abs(ext.y)+r;
@@ -166,8 +166,6 @@ export default class Capsule extends Shape{
        min.x = pos.x-mx; min.y=pos.y-my; min.z=pos.z-mz;
        max.x = pos.x+mx; max.y=pos.y+my; max.z=pos.z+mz;
 
-       // 宽阶段会调用这个，所以更新一下
-       this.calcDir(quat);
     }
 
     volume(): f32 {
@@ -175,5 +173,10 @@ export default class Capsule extends Shape{
         let h = this.height;
         let p = Math.PI;
         return h*p*r*r+3/4*p*r*r*r;
-    }    
+    }   
+
+    onPreNarrowpase(stepId: number,pos:Vec3,quat:Quaternion): void {
+        this.calcDir(quat);
+    }
+
 }

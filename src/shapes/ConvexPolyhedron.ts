@@ -878,6 +878,7 @@ export default class ConvexPolyhedron extends Shape {
         result[1] = min;
     }
 
+    onPreNarrowpase(stepId: number,pos:Vec3,quat:Quaternion): void {}
 }
 
 var computeEdges_tmpEdge = new Vec3();

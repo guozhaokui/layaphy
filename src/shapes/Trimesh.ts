@@ -24,6 +24,7 @@ import {Octree} from '../utils/Octree.js';
  *     var trimeshShape = new Trimesh(vertices, indices);
  */
 export default class Trimesh extends Shape {
+    onPreNarrowpase(stepId: number,pos:Vec3,quat:Quaternion): void {}
     vertices: Float32Array;
     /**
      * Array of integers, indicating which vertices each triangle consists of. The length of this array is thus 3 times the number of triangles.

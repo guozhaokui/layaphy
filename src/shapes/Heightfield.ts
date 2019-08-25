@@ -34,6 +34,7 @@ import AABB from '../collision/AABB.js';
  *     world.addBody(heightfieldBody);
  */
 export default class Heightfield extends Shape {
+    onPreNarrowpase(stepId: number,pos:Vec3,quat:Quaternion): void {}
     /**
      * An array of numbers, or height values, that are spread out along the x axis.
      */
