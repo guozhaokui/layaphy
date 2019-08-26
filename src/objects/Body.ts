@@ -498,6 +498,7 @@ export default class Body extends EventTarget {
 
     /**
      * Updates the .aabb
+     * 计算世界空间的AABB
      */
     updateAABB() {
         const shapes = this.shapes;
@@ -656,6 +657,7 @@ export default class Body extends EventTarget {
 
     /**
      * Should be called whenever you change the body shape or mass.
+     * 更新对象的转动惯量相关值
      */
     updateMassProperties() {
         this.type = (this._mass <= 0.0 ? BODYTYPE.STATIC : BODYTYPE.DYNAMIC);
@@ -670,7 +672,12 @@ export default class Body extends EventTarget {
         if(shapes.length<=0)
             return;
 
+        // 要算转动惯量的包围盒，因此需要忽略旋转。（位置也要忽略，由于不影响下面的计算所以不管）
+        let cq = this.quaternion;
+        let oqx=cq.x; let oqy=cq.y; let oqz=cq.z; let oqw=cq.w;
+        cq.set(0,0,0,1);
         this.updateAABB();
+        cq.set(oqx,oqy,oqz,oqw);//恢复旋转
         halfExtents.set(
             (this.aabb.upperBound.x - this.aabb.lowerBound.x) / 2,
             (this.aabb.upperBound.y - this.aabb.lowerBound.y) / 2,

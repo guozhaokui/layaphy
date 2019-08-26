@@ -25,6 +25,7 @@ import { PhyRender } from "./layawrap/LayaDebugRender";
 import { Quaternion as LayaQuat } from "laya/d3/math/Quaternion";
 import Mat3 from "./math/Mat3";
 import { MouseCtrl1 } from "./layawrap/ctrls/MouseCtrl1";
+import { Event } from "laya/events/Event";
 
 function test() {
     debugger;
@@ -139,18 +140,32 @@ for(let i=0; i<100; i++){
     y+=0.22;
 }
 */
-addCapsule(0.2, 8, 2, 8, 2);
+let PI=Math.PI;
+let bodyQ = new Quaternion();
+let cap = addCapsule(0.2, 8, 2, 8, 2);
+
 //cap.setVel(1,0,-1);
 
+Laya.stage.on(Event.MOUSE_DOWN, null, ()=>{
+    let rx = Math.random() * 2*PI;
+    let ry = Math.random() * 2*PI;
+    let rz = Math.random() * 2*PI;
+    console.log('rot', rx, ry, rz)
+    
+    bodyQ.setFromEuler(rx,ry,rz);
+    cap.phyBody.quaternion = bodyQ;
+    cap.phyBody.position = new Vec3(0,10,0);
+    cap.phyBody.velocity.set(0,0,0);
+    cap.phyBody.wakeUp();
+});
+
 //let bb = addBox(0.2,14,1,0,12,0);
-/*
 let y=5;
 for(let i=0; i<100; i++){
     //addBox(.1,.1,.1,Math.random()*10,5,Math.random()*10);
     addCapsule(0.2,9,0,y,0);
     y+=0.22;
 }
-*/
 /*
 let sph = addSphere(1,2,2,4);
 sph.setVel(0,0,0);
@@ -189,7 +204,7 @@ function addBox(sx: number, sy: number, sz: number, x: number, y: number, z: num
 }
 
 function addCapsule(r: f32, h: f32, x: f32, y: f32, z: f32): LCPhyComponent {
-    var cap = scene.addChild(new MeshSprite3D(PrimitiveMesh.createCapsule(r, h + r + r))) as MeshSprite3D;
+    var cap = scene.addChild(new MeshSprite3D(PrimitiveMesh.createCapsule(r, h + r + r,0,0))) as MeshSprite3D;
     cap.meshRenderer.material = mtl2;
     var transform = cap.transform;
     var pos = transform.position;
@@ -200,12 +215,7 @@ function addCapsule(r: f32, h: f32, x: f32, y: f32, z: f32): LCPhyComponent {
     let rx = Math.random() * 360;
     let ry = Math.random() * 360;
     let rz = Math.random() * 360;
-    console.log('rot', rx, ry, rz)
     rotationEuler.setValue(rx, ry, rz);
-    //rotationEuler.setValue(84.6883384650402, 161.75529830182833,270.75765157887054); error
-    //rotationEuler.setValue(40,40,0);//rx,ry,rz);
-    //rotationEuler.setValue(0,0, 45);
-    //rotationEuler.setValue(10,0, 0);
     transform.rotationEuler = rotationEuler;
 
     let shapeq = new Quaternion();
