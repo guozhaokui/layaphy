@@ -38,13 +38,14 @@ export default class LCPhyComponent extends Component{
         let pos = trans.localPosition;
         body.position.set(pos.x,pos.y,pos.z);
         let q = trans.localRotation;
+        //问题 laya的四元数与这里是不是不兼容
         body.quaternion.set(q.x,q.y,q.z,q.w);
     }
 
     setName(n:string):void{
         this.phyBody.name=n;
     }
-    
+
     setMass(m:f32){
         this.phyBody.mass=m;
     }

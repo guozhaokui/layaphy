@@ -27,7 +27,7 @@ export class PhyRender extends IPhyRender{
         this.sce = sce;
         this.phyworld = world;
         world.phyRender=this;
-        let r = new PixelLineSprite3D(1024);
+        let r = new PixelLineSprite3D(1024*10);
         this.renders.push(r);
         sce.addChild(r);
     }

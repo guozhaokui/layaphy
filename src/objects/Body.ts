@@ -535,6 +535,7 @@ export default class Body extends EventTarget {
 
     /**
      * Update .inertiaWorld and .invInertiaWorld
+     * 转动惯量转到世界空间 I'=RIR'
      */
     updateInertiaWorld(force = false) {
         const I = this.invInertia;
@@ -545,6 +546,7 @@ export default class Body extends EventTarget {
             // In other words, we don't have to transform the inertia if all
             // inertia diagonal entries are equal.
         } else {
+            // = worldRotMat * diag(I) * invWorldRotMat
             const m1 = uiw_m1;
             const m2 = uiw_m2;
             //const m3 = uiw_m3;
@@ -680,13 +682,21 @@ export default class Body extends EventTarget {
             this.invInertia.set(0,0,0);
         }else{
             // 组合形状的话，先用包围盒的转动惯量来模拟
+            Box.calculateInertia(halfExtents, this._mass, I);
+            /* 如果要精确的话，考虑offset的影响则无法用Vec3来描述转动惯量了 所以先不精确处理了
             if(this.shapes.length>1){
                 Box.calculateInertia(halfExtents, this._mass, I);
             }else{
                 //TODO 测试
                 this.shapes[0].calculateLocalInertia(this.mass,I);
-            }
+                // 受到shape偏移的影响
+                let offpos = this.shapeOffsets[0];
+                let offq = this.shapeOrientations[0];
+                if(offq){
 
+                }
+            }
+            */
             this.invInertia.set(
                 I.x > 0 && !fixed ? 1.0 / I.x : 0,
                 I.y > 0 && !fixed ? 1.0 / I.y : 0,

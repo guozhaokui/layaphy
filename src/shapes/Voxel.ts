@@ -28,6 +28,23 @@ export class Voxel extends Shape{
     calculateLocalInertia(mass: number, target: Vec3): void {
         throw new Error("Method not implemented.");
     }    
+
+    hitPlane(myPos:Vec3, planePos:Vec3, planeNorm:Vec3,hitPos:Vec3):f32{
+        throw 'no';
+    }
+
+    hitVoxel(otherPos:Vec3, otherQuat:Quaternion, hitPos:Vec3 ):f32{
+        throw 'no'
+    }
+
+    isSolid(x:i32,y:i32,z:i32):boolean{
+        return false;
+    }
+    
+    // 获取xyz的法线
+    getNormal(x:i32,y:i32,z:i32,nout:Vec3):Vec3{
+        // 根据x,y,z的梯度变化
+    }
 }
 
 export class VoxelScene{

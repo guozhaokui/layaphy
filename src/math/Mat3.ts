@@ -120,6 +120,7 @@ export default class Mat3 {
 
     /**
      * Scale each column of the matrix
+     * 相当于把v当成一个对角矩阵，然后 this * diag(v) 
      * @method scale
      * @param  v
      * @return  The result.
@@ -132,6 +133,8 @@ export default class Mat3 {
             t[3 * i + 1] = v.y * e[3 * i + 1];
             t[3 * i + 2] = v.z * e[3 * i + 2];
         }
+
+
         return target;
     }
 
@@ -361,10 +364,7 @@ export default class Mat3 {
      * Set the matrix from a quaterion
      */
     setRotationFromQuaternion(q:Quaternion) {
-        const x = q.x;
-        const y = q.y;
-        const z = q.z;
-        const w = q.w;
+        const {x,y,z,w} = q;
         const x2 = x + x;
         const y2 = y + y;
         const z2 = z + z;
@@ -379,17 +379,17 @@ export default class Mat3 {
         const wz = w * z2;
         const e = this.elements;
 
-        e[3 * 0 + 0] = 1 - (yy + zz);
-        e[3 * 0 + 1] = xy - wz;
-        e[3 * 0 + 2] = xz + wy;
+        e[0] = 1 - (yy + zz);
+        e[1] = xy - wz;
+        e[2] = xz + wy;
 
-        e[3 * 1 + 0] = xy + wz;
-        e[3 * 1 + 1] = 1 - (xx + zz);
-        e[3 * 1 + 2] = yz - wx;
+        e[3] = xy + wz;
+        e[4] = 1 - (xx + zz);
+        e[5] = yz - wx;
 
-        e[3 * 2 + 0] = xz - wy;
-        e[3 * 2 + 1] = yz + wx;
-        e[3 * 2 + 2] = 1 - (xx + yy);
+        e[6] = xz - wy;
+        e[7] = yz + wx;
+        e[8] = 1 - (xx + yy);
 
         return this;
     }
@@ -404,11 +404,14 @@ export default class Mat3 {
         const Mt = target.elements;
         const M = this.elements;
 
+        Mt[1]=M[3]; Mt[3]=M[1]; Mt[2]=M[6]; Mt[6]=M[2]; Mt[5]=M[7];  Mt[7]=M[5]; Mt[0]=M[0]; Mt[4]=M[4]; Mt[8]=M[8];
+        /*
         for (let i = 0; i !== 3; i++) {
             for (let j = 0; j !== 3; j++) {
                 Mt[3 * i + j] = M[3 * j + i];
             }
         }
+        */
 
         return target;
     }

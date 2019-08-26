@@ -50,12 +50,12 @@ export default class Capsule extends Shape{
      * @param dir 世界空间的朝向
      * @param outPos 最远的地方的点。 法线就是方向
      */
-    supportFunction(myPos:Vec3, dir:Vec3, outPos:Vec3):f32{
+    supportPoint(myPos:Vec3, dir:Vec3, outPos:Vec3):f32{
         dir.normalize();
-        return this.supportFuncion_norm(myPos, dir, outPos);
+        return this.supportPoint_norm(myPos, dir, outPos);
     }
 
-    supportFuncion_norm(myPos:Vec3, normDir:Vec3, outPos?:Vec3):f32{
+    supportPoint_norm(myPos:Vec3, normDir:Vec3, outPos?:Vec3):f32{
         let axis = this.axis;
         let d = axis.dot(normDir);
         let nextend=false;
@@ -118,7 +118,7 @@ export default class Capsule extends Shape{
     hitPlane(myPos:Vec3, planePos:Vec3, planeNorm:Vec3,hitPos:Vec3):f32{
         // 反向最远的点就是距离平面最近的点
         tmpVec1.set(-planeNorm.x,-planeNorm.y,-planeNorm.z);
-        this.supportFuncion_norm(myPos, tmpVec1,hitPos);
+        this.supportPoint_norm(myPos, tmpVec1,hitPos);
         //下面判断hitPos是否在平面下面
         let planeToHit = tmpVec2;
         hitPos.vsub(planePos,planeToHit);
