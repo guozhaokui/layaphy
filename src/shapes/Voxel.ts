@@ -44,6 +44,7 @@ export class Voxel extends Shape{
     // 获取xyz的法线
     getNormal(x:i32,y:i32,z:i32,nout:Vec3):Vec3{
         // 根据x,y,z的梯度变化
+        throw 'NI';
     }
 }
 

@@ -5,7 +5,6 @@ import { BoundBox } from "laya/d3/math/BoundBox";
 import { Matrix4x4 } from "laya/d3/math/Matrix4x4";
 import { Quaternion } from "laya/d3/math/Quaternion";
 import { Vector3 } from "laya/d3/math/Vector3";
-import { Sprite } from "laya/display/Sprite";
 import { Event } from "laya/events/Event";
 import { Keyboard } from "laya/events/Keyboard";
 import { Tween } from "laya/utils/Tween";
@@ -54,7 +53,7 @@ export class MouseCtrl1 extends Script3D {
     pressR = false;
     bbxlimit = new BoundBox(new Vector3(-10000, 0, -10000), new Vector3(10000, 0, 10000));// 用一个bbx限制摄像机的位置
     maxDist:f32 = 500;
-    minDist:f32 = 10;
+    minDist:f32 = 1;
 
     private mouseScaleX:f32 = 1;		// 现在用的clientX，需要考虑画布缩放
     private mouseScaleY:f32 = 1;
@@ -93,6 +92,7 @@ export class MouseCtrl1 extends Script3D {
         if (Laya.stage._canvasTransform) {
             this.mouseScaleX *= Laya.stage._canvasTransform.a;
             this.mouseScaleY *= Laya.stage._canvasTransform.d;
+            console.log('canvas scale', this.mouseScaleX,this.mouseScaleY);
         }
     }
 
@@ -277,6 +277,9 @@ export class MouseCtrl1 extends Script3D {
     }
 
     protected rotDrag(stagex: f32, stagey: f32): void {
+        if(this.ctrlDown){
+            
+        }
         if (this.isRot) {
             var dragQuat = this.arcball.dragTo(stagex, stagey);	// 相对值
             dragQuat.invert(this.quatArcBallResult);	// 取逆表示不转物体，转摄像机对象

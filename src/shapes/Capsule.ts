@@ -128,6 +128,41 @@ export default class Capsule extends Shape{
         return -d;
     }
 
+    hitBox(myPos:Vec3, boxPos:Vec3, boxQuat:Quaternion, hitPos:Vec3, hitNormal:Vec3):f32{
+        return -1;
+    }
+
+    hitCapsule(myPos:Vec3, cap:Capsule, capPos:Vec3, capQuat:Quaternion, hitPos:Vec3, hitNormal:Vec3):f32{
+        let r1 = this.radius;
+        let r2 = cap.radius;
+        let h1 = this.height;
+        let h2 = cap.height;
+        let halfh1 = h1/2;
+        let halfh2 = h2/2;
+        let ax1 = this.axis;
+        let ax2 = cap.axis;
+        return -1;
+    }
+
+    hitSphere(myPos:Vec3, sphPos:Vec3, spheQuat:Quaternion, hitPos:Vec3, hitNormal:Vec3):f32{
+        /*
+        vector cylCenterVector = endPoint2 - endpoint1;
+        float distanceFactorFromEP1 = Dot(sphereCenter - endPoint1) / Dot(cylCenterVector , cylCenterVector );
+        if(distanceFactorFromEP1 < 0) distanceFactorFromEP1 = 0;// clamp to endpoints if neccesary
+        if(distanceFactorFromEP1 > 1) distanceFactorFromEP1 = 1;
+        vector closestPoint = endPoint1 + (cylCenterVector * distanceFactorFromEP1);
+        vector collisionVector = sphereCenter - closestPoint;
+        float distance = collisionVector.Length();
+        vector collisionNormal = collisionVector / distance;
+        if(distance < sphereRadius + cylRadius)
+        {
+          //collision occurred. use collisionNormal to reflect sphere off cyl
+        float factor = Dot(velocity, collisionNormal);
+        velocity = velocity - (2 * factor * collisionNormal);
+        }
+        */
+    }
+
     /**
      * 计算胶囊的转动惯量
      * 用圆柱和半球的转动惯量，结合平移轴原理组合出来

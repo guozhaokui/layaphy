@@ -7,6 +7,7 @@ declare type i8 = number;
 /** A 16-bit signed integer. */
 declare type i16 = number;
 /** A 32-bit signed integer. */
+declare type int = number;
 declare type i32 = number;
 /** A 64-bit signed integer. */
 declare type i64 = number;
