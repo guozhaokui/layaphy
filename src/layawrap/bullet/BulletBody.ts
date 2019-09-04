@@ -3,6 +3,7 @@ import { Component } from "laya/components/Component";
 import { Matrix4x4 } from "laya/d3/math/Matrix4x4";
 import { Sprite3D } from "laya/d3/core/Sprite3D";
 import { BtWorld } from "./BulletWorld";
+import Material from "../../material/Material";
 
 export class BtBody extends Component{
     cptr:int;
@@ -10,10 +11,7 @@ export class BtBody extends Component{
     mat:Matrix4x4 = new Matrix4x4();
     constructor(){
         super();
-        var bullet = this.bullet = getBullet();
-        if(bullet){
-            this.cptr = bullet.createRigidBodyByRBInfo();
-        }
+        this.bullet = getBullet();
     }
 
     destroy(){
@@ -36,7 +34,7 @@ export class BtBody extends Component{
             let sp = this.owner as Sprite3D;
             let trans = sp.transform.worldMatrix.elements;
             // 把自己的姿态同步给物理
-            let transptr = bullet.getATmpTransorm()>>4; //float64 
+            let transptr = bullet.getATmpTransorm()>>3; //float64 
             let btfloatbuf = bullet.f64buffer;
             btfloatbuf[transptr++]=trans[0];btfloatbuf[transptr++]=trans[1];btfloatbuf[transptr++]=trans[2];
             btfloatbuf[transptr++]=trans[4];btfloatbuf[transptr++]=trans[5];btfloatbuf[transptr++]=trans[6];
@@ -52,7 +50,7 @@ export class BtBody extends Component{
 
         }else{
             let btfloatbuf = this.bullet.f64buffer;
-            let poseptr:int = this.bullet.bodyGetPose(this.cptr)>>4;//float64
+            let poseptr:int = this.bullet.bodyGetPose(this.cptr)>>3;//float64
             let mate = this.mat.elements;
             mate[0]=btfloatbuf[poseptr++];
             // TODO 
@@ -71,5 +69,19 @@ export class BtBody extends Component{
 
     onCllision(){
         //TODO 
+    }
+
+    setMaterial( mtl:Material){
+    }
+    setName(name:string){
+
+    }
+
+    setShape(shape:i32){
+        let bullet = this.bullet;
+        if(bullet){
+            bullet.RBInfoSetShape(shape);
+            this.cptr = bullet.createRigidBodyByRBInfo();
+        }
     }
 }

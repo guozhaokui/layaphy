@@ -1,6 +1,7 @@
 import Shape, { SHAPETYPE } from "./Shape";
 import Vec3 from "../math/Vec3";
 import Quaternion from "../math/Quaternion";
+import { Voxel } from "./Voxel";
 //import { quat_AABBExt_mult } from "./Box";
 
 
@@ -16,6 +17,8 @@ export default class Capsule extends Shape{
     height:f32;
     noTrans=false;    // 站立的胶囊，可以简单处理
     axis:Vec3 = new Vec3();          // 主轴。是一半
+    voxel:Voxel|null=null;
+    
     constructor(r:f32=1, h:f32=1){
         super();
         this.type=SHAPETYPE.CAPSULE;
@@ -161,6 +164,7 @@ export default class Capsule extends Shape{
         velocity = velocity - (2 * factor * collisionNormal);
         }
         */
+       throw 'noimp';
     }
 
     /**
@@ -212,6 +216,10 @@ export default class Capsule extends Shape{
 
     onPreNarrowpase(stepId: number,pos:Vec3,quat:Quaternion): void {
         this.calcDir(quat);
+    }
+
+    voxelize():Voxel{
+
     }
 
 }

@@ -2,16 +2,16 @@ import { Laya } from "Laya";
 import { Script3D } from "laya/d3/component/Script3D";
 import NaiveBroadphase from "../collision/NaiveBroadphase";
 import World from "../world/World";
-import LCPhyComponent from "./LCPhyComponent";
+import CannonBody from "./CannonBody";
 
-export class LCPhyWorld extends Script3D{
+export class CannonWorld extends Script3D{
     world = new World();
-    static inst:LCPhyWorld;
-    bodies:LCPhyComponent[]=[];
+    static inst:CannonWorld;
+    bodies:CannonBody[]=[];
 
     constructor(){
         super();
-        LCPhyWorld.inst=this;
+        CannonWorld.inst=this;
         let world = this.world;
         world.quatNormalizeSkip = 0;
         world.quatNormalizeFast = false;

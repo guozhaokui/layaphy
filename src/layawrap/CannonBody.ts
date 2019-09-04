@@ -6,10 +6,10 @@ import phyQuat from "../math/Quaternion";
 import Vec3 from "../math/Vec3";
 import Body from "../objects/Body";
 import Shape from "../shapes/Shape";
-import { LCPhyWorld } from "./LCPhyWorld";
+import { CannonWorld } from "./CannonWorld";
 import Material from "../material/Material";
 
-export default class LCPhyComponent extends Component{
+export default class CannonBody extends Component{
     phyBody:Body;
     constructor(){
         super();
@@ -28,9 +28,9 @@ export default class LCPhyComponent extends Component{
             this.phyBody = body = new Body(1);
         }
 
-        LCPhyWorld.inst.bodies.push(this);//TODO 会多次添加么
+        CannonWorld.inst.bodies.push(this);//TODO 会多次添加么
 
-        let world = LCPhyWorld.inst.world
+        let world = CannonWorld.inst.world
         world.addBody(body);
         //let sce = this.owner.scene as Scene3D;
         let sp = this.owner as Sprite3D;
@@ -55,6 +55,9 @@ export default class LCPhyComponent extends Component{
             tempVec3.set(off.x,off.y,off.z);
         }
         body.addShape(s,tempVec3, offq as phyQuat);
+    }
+    setShape(){
+        
     }
     setG(g:f32){
 
@@ -96,4 +99,4 @@ export default class LCPhyComponent extends Component{
 }
 
 var tempVec3=new Vec3();
-var tempQuat=new phyQuat();
+//var tempQuat=new phyQuat();

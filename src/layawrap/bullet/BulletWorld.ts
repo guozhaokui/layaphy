@@ -36,11 +36,15 @@ export class BtWorld extends Script3D{
     onUpdate(){
         let dt = Laya.systemTimer.delta/1000;
         this._step(this.cptr,1/60,dt,10);
-        if(this.bullet){
-            let allmotioni = this._getAllMotionStateInfo();
-            let u32buffer=this.bullet.u32buffer;
+        let bullet = this.bullet;
+        if(bullet){
+            let allmotioni = this._getAllMotionStateInfo()>>2;
+            let u32buffer= bullet.u32buffer;
+            if(u32buffer.byteLength==0){
+                u32buffer = bullet.u32buffer = new Uint32Array(bullet.mem.buffer);
+            }
             //同步所有的活动对象的物理姿态。
-            let i32ptr = allmotioni>>2;
+            let i32ptr = allmotioni;
             let changednum:int = u32buffer[i32ptr];
             let changeDataPtr:int = u32buffer[i32ptr+1]>>2;
             for(let i=0; i<changednum; i++){

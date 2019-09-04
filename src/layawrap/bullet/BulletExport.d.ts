@@ -28,7 +28,7 @@ interface BulletExport{
     world_step:(worldptr:i32, fixdt:f32,dt:f32, maxstep:i32)=>void,
     world_getAllMotionState:()=>i32,    //MotionStateInfo。所有对象都计算完后需要同步，这个地址保存所有的需要同步的对象的信息。
     //shape
-    createBox:(x:f32,y:f32,z:f32)=>i32,
+    createBox:(x:f32,y:f32,z:f32, m:f32)=>i32,
     createCapsule:(h:f32,r:f32)=>void,
     createPlane:(nx:f32,ny:f32,nz:f32,d:f32)=>i32,
     createSphere:(r:f32)=>i32,

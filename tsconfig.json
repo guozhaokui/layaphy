@@ -11,5 +11,7 @@
         "preserveConstEnums": false,
         "outDir": "bin/js",
         "baseUrl": "bin/laya"
-    }
+    },"exclude": [
+        "node_modules"
+    ]
 }
