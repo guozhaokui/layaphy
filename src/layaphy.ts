@@ -122,7 +122,7 @@ plane.meshRenderer.material = planeMtl;
 
 
 function testCannon() {
-    let phyworld = scene.addComponent(CannonWorld);
+    let phyworld = scene.addComponent(CannonWorld) as CannonWorld;
 
     // phyworld
     //phyworld.world.gravity.set(0,0,0);
@@ -136,7 +136,7 @@ function testCannon() {
     let cmtl2 = new ContactMaterial(phymtl1, phymtl3, 0, 1);
     phyworld.world && phyworld.world.addContactMaterial(cmtl1).addContactMaterial(cmtl2);
 
-    let planephy = plane.addComponent(CannonBody) ;
+    let planephy = plane.addComponent(CannonBody) as CannonBody;
     planephy.setMaterial(phymtl1);
     planephy.setName('plane');
     let shapeq = new Quaternion();
@@ -153,6 +153,7 @@ function testCannon() {
         y+=0.22;
     }
     */
+   /*
     let PI = Math.PI;
     let bodyQ = new Quaternion();
     let cap = addCapsule(0.2, 8, 2, 8, 2);
@@ -171,14 +172,26 @@ function testCannon() {
         cap.phyBody.velocity.set(0, 0, 0);
         cap.phyBody.wakeUp();
     });
+    */
 
     //let bb = addBox(0.2,14,1,0,12,0);
+    let bb = addBox(1,1,1,0,1,0);
+    bb.setMass(0);
+    let cc = addBox(1,1,1,0,1,0);
+    Laya.stage.on(Event.MOUSE_DOWN, null, () => {
+        cc.phyBody.quaternion = new Quaternion(0,0,0,1);
+        cc.phyBody.position = new Vec3(0, 0.5, 0);
+        cc.phyBody.velocity.set(0, 0, 0);
+        cc.phyBody.wakeUp();
+    });    
+    /*
     let y = 5;
     for (let i = 0; i < 100; i++) {
         //addBox(.1,.1,.1,Math.random()*10,5,Math.random()*10);
         addCapsule(0.2, 9, 0, y, 0);
         y += 0.22;
     }
+    */
     /*
     let sph = addSphere(1,2,2,4);
     sph.setVel(0,0,0);
@@ -200,7 +213,7 @@ function testCannon() {
 }
 
 
-function addBox(sx: number, sy: number, sz: number, x: number, y: number, z: number) {
+function addBox(sx: number, sy: number, sz: number, x: number, y: number, z: number):CannonBody {
     var box = (<MeshSprite3D>scene.addChild(new MeshSprite3D(PrimitiveMesh.createBox(sx, sy, sz))));
     box.meshRenderer.material = mtl2;
     var transform = box.transform;
@@ -216,6 +229,7 @@ function addBox(sx: number, sy: number, sz: number, x: number, y: number, z: num
     var boxShape = new Box(new Vec3(sx / 2, sy / 2, sz / 2));
     rigidBody.addShape(boxShape);
     rigidBody.setMass(1);
+    return rigidBody;
 }
 
 function addCapsule(r: f32, h: f32, x: f32, y: f32, z: f32): CannonBody {

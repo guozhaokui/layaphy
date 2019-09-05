@@ -17,6 +17,16 @@ class VoxelData {
 
 }
 
+class StaticVoxel{
+    id=0;
+    voxData: VoxelData;
+    //data:Uint8Array;
+    pos: Vec3;
+    quat: Quaternion;
+    mat: Mat3;   // 相当于记录了xyz的轴
+    scale: Vec3;
+}
+
 export class Voxel extends Shape {
     voxData: VoxelData;
     //data:Uint8Array;
@@ -119,7 +129,11 @@ export class VoxelScene {
     // 统一格子管理
     gridsz: f32 = 1;   // 
 
-    addStaticVoxel(vox:VoxelData,pos:Vec3, quat:Quaternion, scale:Vec3):void{
+    addStaticVoxel(vox:StaticVoxel):void{
+
+    }
+
+    removeStaticVoxel(vox:StaticVoxel):void{
 
     }
 
@@ -128,3 +142,8 @@ export class VoxelScene {
     }
 
 }
+
+/**
+ * 占用同一个格子的多个静态模型不重复添加
+ * 
+ */
