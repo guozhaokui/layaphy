@@ -29,6 +29,9 @@ import { Event } from "laya/events/Event";
 import { loadBullet } from "./layawrap/bullet/bulletLoader";
 import { BtBody } from "./layawrap/bullet/BulletBody";
 import { BtWorld } from "./layawrap/bullet/BulletWorld";
+import { Voxel } from "./shapes/Voxel";
+import { VoxelSprite } from "./layawrap/debugger/VoxelRender/VoxelSprite";
+import { VoxelMaterial } from "./layawrap/debugger/VoxelRender/VoxelMtl";
 
 //let PhyWorld: typeof BtWorld | typeof CannonWorld;
 //let PhyBody: typeof BtBody | typeof CannonBody;
@@ -120,8 +123,13 @@ planeMtl.tilingOffset = tilingOffset;
 //设置材质
 plane.meshRenderer.material = planeMtl;
 
+VoxelMaterial.initShader();
+let vox = new VoxelSprite();
+scene.addChild(vox);
+
 
 function testCannon() {
+    return;
     let phyworld = scene.addComponent(CannonWorld) as CannonWorld;
 
     // phyworld
@@ -174,16 +182,9 @@ function testCannon() {
     });
     */
 
-    //let bb = addBox(0.2,14,1,0,12,0);
-    let bb = addBox(1,1,1,0,1,0);
-    bb.setMass(0);
-    let cc = addBox(1,1,1,0,1,0);
-    Laya.stage.on(Event.MOUSE_DOWN, null, () => {
-        cc.phyBody.quaternion = new Quaternion(0,0,0,1);
-        cc.phyBody.position = new Vec3(0, 0.5, 0);
-        cc.phyBody.velocity.set(0, 0, 0);
-        cc.phyBody.wakeUp();
-    });    
+    let bb = addBox(0.2,14,3,0,12,0);
+    addBox(1,1,1,10,2,0);
+ 
     /*
     let y = 5;
     for (let i = 0; i < 100; i++) {
@@ -268,6 +269,10 @@ function addSphere(r: f32, x: f32, y: f32, z: f32): CannonBody {
     phy.addShape(new Sphere(r));
     phy.setMass(1);
     return phy;
+}
+
+function addVoxel(x:f32,y:f32,z:f32, vox:Voxel):void{
+
 }
 //////////////////////////////////////////////////
 function btAddBox(sx: number, sy: number, sz: number, x: number, y: number, z: number) {

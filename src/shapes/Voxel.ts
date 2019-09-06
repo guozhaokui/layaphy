@@ -7,14 +7,99 @@ import Mat3 from "../math/Mat3";
 /**
  * 可以共享的数据
  * 类似八叉树管理数据
+ * 
  */
-class VoxelData {
+export class PhyVoxelData {
     data: Uint8Array;
+    xs:i32;
+    ys:i32;
+    zs:i32;
+    maxs:i32;
+
+    POT(v:i32):i32{
+        let r:i32=2;
+        while(v>r){
+            r=r<<1;
+        }
+        return r;
+    }
+
+    /**
+     * 
+     * @param dt 
+     * @param x 
+     * @param y 
+     * @param z 
+     * @param olddt 以前的格式，只是线性的把8个合成一个byte，
+     */
+    constructor(dt:Uint8Array|null, x:i32, y:i32, z:i32,olddt=true){
+        // 必须要POT
+        let nx=this.POT(x);
+        let ny=this.POT(y);
+        let nz=this.POT(z);
+        this.maxs = Math.max(nx,ny,nz);
+        if(!dt){
+            dt = new Uint8Array(nx*ny*nz/8);
+        }else{
+            this.data=dt;
+            if(olddt){
+
+            }
+            // 生成八叉树
+
+        }
+        this.xs=nx;
+        this.ys=ny;
+        this.zs=nz;
+    }
 
     has(x: i32, y: i32, z: i32): boolean {
         return false;
     }
 
+    buildOcttree():void{
+        let dt = this.data;
+        let xs = this.xs; 
+        let ys = this.ys;
+        let zs = this.zs;
+
+    }
+}
+
+function getBit(v:i8, p:i32):boolean{
+    //z,y,x
+
+    //      Y
+    //      |     010 011
+    //   110 111  000 001  
+    //   100 101 ________ X
+    //   /
+    // Z
+    return (v & (1<<p))!=0
+}
+
+class VoxelRawData{
+    
+}
+
+class VoxelOctree{
+
+}
+
+class VoxelCompletOctree{
+
+}
+
+class VoxelBVH{
+
+}
+
+
+class VoxelDataHash{
+    dataissolid=true;   // false则表示存的是空
+    constructor(dt:Uint8Array, xs:i32, ys:i32, zs:i32){
+        // 比较0和1那个多，保存数据少的
+    }
 }
 
 class StaticVoxel{
@@ -126,8 +211,10 @@ export class VoxelScene {
     min: Vec3;   // 场景包围盒
     max: Vec3;
 
-    // 统一格子管理
+    // 统一格子管理。每个场景可以不同，基本根据主角大小来定
     gridsz: f32 = 1;   // 
+    staticsVox:Voxel[]=[];
+    // dynamicVox:Voxel[]=[]; 动态格子暂时不做
 
     addStaticVoxel(vox:StaticVoxel):void{
 
@@ -135,10 +222,6 @@ export class VoxelScene {
 
     removeStaticVoxel(vox:StaticVoxel):void{
 
-    }
-
-    addDynamicVoxel(vox:VoxelData,pos:Vec3, quat:Quaternion, scale:Vec3):Voxel{
-        throw 'ni';
     }
 
 }
