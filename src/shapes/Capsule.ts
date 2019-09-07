@@ -219,7 +219,7 @@ export default class Capsule extends Shape{
     }
 
     voxelize():Voxel{
-
+        throw 'NI';
     }
 
 }

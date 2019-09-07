@@ -57,7 +57,7 @@ class ColorBoundingBox {
         var dg = this.maxg - this.ming;
         var db = this.maxb - this.minb;
 
-        var dir: String = 'r';
+        var dir = 'r';
         if (dg > dr) {
             if (db > dg) dir = 'b';
             else dir = 'g';
@@ -84,8 +84,8 @@ class ColorBoundingBox {
 
         // TODO 怎么没有处理颜色数量不够的情况
         var mid = this.bc.length / 2;
-        var lBox: ColorBoundingBox = new ColorBoundingBox(this.bc.slice(0, mid));
-        var rBox: ColorBoundingBox = new ColorBoundingBox(this.bc.slice(mid));
+        var lBox = new ColorBoundingBox(this.bc.slice(0, mid));
+        var rBox = new ColorBoundingBox(this.bc.slice(mid));
 
         return {
             left: lBox,
@@ -139,9 +139,9 @@ export class ColorQuantization_Mediancut {
      * @return {uint8[]}  256色调色板. 每个占3个字节
      */
     mediancut(src: Uint8Array, n = 256): number[] {
-        var incolorNum = src.length / 3;
+        var incolorNum = src.length / 3;    // 总数据个数
         // 统计
-        var inColors: Object = {};
+        var inColors: {[key:string]:number} = {};   // 每个颜色的个数统计
         var hex: string;
         var ci: number = 0;
         var i = 0;
@@ -160,9 +160,8 @@ export class ColorQuantization_Mediancut {
         var tmp: VoxelColor[] = [];
         for (hex in inColors) {
             var intv = parseInt(hex, 16);
-            var c: VoxelColor = new VoxelColor(intv >>> 16, (intv >>> 8) & 0xff, intv & 0xff, null);
-            c.w = inColors[hex];
-
+            var c = new VoxelColor(intv >>> 16, (intv >>> 8) & 0xff, intv & 0xff, null);
+            c.w = inColors[hex]; // 相同颜色个数
             tmp.push(c);
         }
 
@@ -174,7 +173,7 @@ export class ColorQuantization_Mediancut {
         // 每次都是把所有的节点切成两半，所以结果一定是2的n次方
         while (Q.length < n) {
             // recursively refine the tree
-            var cur = Q[0];
+            let cur = Q[0];
             Q.shift();
 
             var children = cur.split();
@@ -195,7 +194,7 @@ export class ColorQuantization_Mediancut {
 
     // 已经统计好各个颜色的数量了，这样可以快速一些。直接返回 Uint8Array
     mediancut1(colorData: Object, colNum:number, n = 256): Uint8Array {
-        var ret8: Uint8Array = new Uint8Array(n * 3);
+        var ret8 = new Uint8Array(n * 3);
         var colors: VoxelColor[] = new Array<VoxelColor>(colNum);	// r,g,b,num
 
         var ci = 0;
@@ -204,7 +203,7 @@ export class ColorQuantization_Mediancut {
             var b = ((ic >>> 10) & 0x1f);// 用的直接是555的
             var g = ((ic >>> 5) & 0x1f);
             var r = (ic & 0x1f);
-            var o: Object = colorData[c];
+            var o = colorData[c];
             var cc: VoxelColor = colors[ci] = new VoxelColor(r, g, b, o);
             cc.w = o[1];
             ci++;

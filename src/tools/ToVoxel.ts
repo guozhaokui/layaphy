@@ -5,7 +5,7 @@ import * as path from 'path';
 import * as dlg from "electron";
 import { Texture2D } from "laya/resource/Texture2D";
 import { Laya } from "Laya";
-import { Lh2Voxel } from "./Lh2Voxel";
+import { Mesh2Voxel } from "./Mesh2Voxel";
 import { Handler } from "laya/utils/Handler";
 import { BaseTexture } from "laya/resource/BaseTexture";
 
@@ -61,7 +61,7 @@ function convertObjFile(f: string, objmtl: OBJLoader_Material): void {
 }
 
 function toVoxel(verteices:any[], indices:number[], origFile:string):void {
-    var lv = new Lh2Voxel();
+    var lv = new Mesh2Voxel();
     lv.setModelData(verteices, indices);
     var i:int = 0;
     var sz = parseInt(input_sz.text);
@@ -119,7 +119,7 @@ function onOpenOBJ(f: string): void {
         return;
     }
 
-    var objmtl: OBJLoader_Material = new OBJLoader_Material('root');
+    var objmtl = new OBJLoader_Material('root');
     objmtl.parse(fs.readFileSync(mtlf, 'utf8'));
     // 加载所有的贴图
     var allimg = [];

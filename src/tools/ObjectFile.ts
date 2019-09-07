@@ -17,7 +17,7 @@ export class OBJLoader_Material {
     illumination = 0;// illum - the enum of the illumination model to use
     refractionIndex = 1;// Ni - Set to "normal" (air).
     sharpness = 0;// sharpness
-    mapDiffuse = null;// map_Kd
+    mapDiffuse:{filename:string}|null = null;// map_Kd
     mapAmbient = null;// map_Ka
     mapSpecular = null;// map_Ks
     mapSpecularExponent = null;// map_Ns
@@ -888,7 +888,7 @@ export class OBJLoader_Material {
 		}
 
 
-		addMaterialLibrary(mtl:) {
+		addMaterialLibrary(mtl:OBJLoader_Material) {
 			for (var name in mtl.materials) {
 				if (!(name in this.materialIndices)) {
 					// This material is not referenced by the mesh

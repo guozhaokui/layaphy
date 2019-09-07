@@ -8,11 +8,11 @@ export class ColorQuantization_SOM { }
  * @param sr 取完整输入样本中的多少作为输入
  * @return {{r:number,g:number,b:number}[]} 返回一个256色的调色板
  */
-function neuralnetwork(src: { w: number, h: number, getPixel: (x: number, y: number) => { r: number, g: number, b: number } }, n: int = 256, sr: number = 0.25): Object[] {
-    var h: int = src.h, w: int = src.w;
+export function neuralnetwork(src: { w: number, h: number, getPixel: (x: number, y: number) => { r: number, g: number, b: number } }, n = 256, sr = 0.25): Object[] {
+    var h = src.h, w = src.w;
     var inColors = [];
-    for (var y: int = 0; y < h; y++) {
-        for (var x: int = 0; x < w; x++) {
+    for (var y = 0; y < h; y++) {
+        for (var x = 0; x < w; x++) {
             inColors.push(src.getPixel(x, y));
         }
     }
@@ -21,7 +21,7 @@ function neuralnetwork(src: { w: number, h: number, getPixel: (x: number, y: num
     // 初始输出颜色（W0）是黑到白的渐变
     var colors: { r: number, g: number, b: number, freq: number, bias: number }[] = [];
     var step = 255 / (n - 1);
-    for (var i: int = 0; i < n; i++) {
+    for (var i = 0; i < n; i++) {
         colors.push({
             r: i * step,
             g: i * step,
@@ -33,31 +33,31 @@ function neuralnetwork(src: { w: number, h: number, getPixel: (x: number, y: num
 
     // sample the input colors
     // sample 是从输入中随机选择一部分。实际也可以换成完整的输入样本
-    var nsamples: int = inColors.length * sr;
+    var nsamples = inColors.length * sr;
     var samples = [];
-    for (var i: int = 0; i < nsamples; i++) {
+    for (var i = 0; i < nsamples; i++) {
         samples.push(inColors[Math.round(Math.random() * (inColors.length - 1))]);
     }
 
-    var ncycles: int = 100;	// 调整α的次数，相当于训练多少轮。
-    var delta: int = Math.round(samples.length / ncycles);
+    var ncycles = 100;	// 调整α的次数，相当于训练多少轮。
+    var delta = Math.round(samples.length / ncycles);
 
-    var gamma: int = 1024;
-    var beta: number = 1.0 / gamma;
+    var gamma = 1024;
+    var beta = 1.0 / gamma;
 
-    var alpha: number = 1.0;
+    var alpha = 1.0;
 
     // update the color entries using the samples
     // 用输入样本训练输出节点
-    for (var i: int = 0; i < samples.length; i++) {
+    for (var i = 0; i < samples.length; i++) {
         // find the best entrie for current color
         // 选出优胜节点
-        var idx: number = 0, minDist: number = Number.MAX_VALUE;
-        for (var j: int = 0; j < colors.length; j++) {
-            var dr: number = Math.abs(samples[i].r - colors[j].r);
-            var dg: number = Math.abs(samples[i].g - colors[j].g);
-            var db: number = Math.abs(samples[i].b - colors[j].b);
-            var dist: number = dr + dg + db - colors[j].bias;
+        var idx = 0, minDist: number = Number.MAX_VALUE;
+        for (var j = 0; j < colors.length; j++) {
+            var dr = Math.abs(samples[i].r - colors[j].r);
+            var dg = Math.abs(samples[i].g - colors[j].g);
+            var db = Math.abs(samples[i].b - colors[j].b);
+            var dist = dr + dg + db - colors[j].bias;
             if (dist < minDist) {
                 minDist = dist;
                 idx = j;
@@ -66,7 +66,7 @@ function neuralnetwork(src: { w: number, h: number, getPixel: (x: number, y: num
 
         // 调整节点的 frequency和bias。
         // 最合适的节点 和 其他节点的调整方向是相反的
-        for (var j: int = 0; j < colors.length; j++) {
+        for (var j = 0; j < colors.length; j++) {
             if (j == idx) {
                 colors[j].freq -= beta * (colors[j].freq - 1);
                 colors[j].bias += (colors[j].freq - 1);

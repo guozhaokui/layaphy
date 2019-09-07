@@ -32,6 +32,7 @@ import { BtWorld } from "./layawrap/bullet/BulletWorld";
 import { Voxel } from "./shapes/Voxel";
 import { VoxelSprite } from "./layawrap/debugger/VoxelRender/VoxelSprite";
 import { VoxelMaterial } from "./layawrap/debugger/VoxelRender/VoxelMtl";
+import { Mesh2Voxel } from "./tools/Mesh2Voxel";
 
 //let PhyWorld: typeof BtWorld | typeof CannonWorld;
 //let PhyBody: typeof BtBody | typeof CannonBody;
@@ -127,9 +128,11 @@ VoxelMaterial.initShader();
 let vox = new VoxelSprite();
 scene.addChild(vox);
 
+let m2v = new Mesh2Voxel();
+m2v.loadObj('res/house/house1.obj');
+
 
 function testCannon() {
-    return;
     let phyworld = scene.addComponent(CannonWorld) as CannonWorld;
 
     // phyworld

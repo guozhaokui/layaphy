@@ -3,6 +3,7 @@ import Quaternion from "../math/Quaternion";
 import Shape, { SHAPETYPE } from "./Shape";
 import RaycastResult from "../collision/RaycastResult";
 import Mat3 from "../math/Mat3";
+import AABB from "../collision/AABB";
 
 /**
  * 可以共享的数据
@@ -110,6 +111,7 @@ class StaticVoxel{
     quat: Quaternion;
     mat: Mat3;   // 相当于记录了xyz的轴
     scale: Vec3;
+    addToSceTick=-1;  // 
 }
 
 export class Voxel extends Shape {
@@ -205,25 +207,85 @@ function hashVec3(x: f32, y: f32, z: f32, l: f32, n: i32): i32 {
 }
 
 /**
- * 静态场景用一个静态hash表维护
+ * 层次场景的最后一级。大小是16x16x16。
+ * 用hash的方式管理
+ * 每个格子的信息
+ *  x:4bit,y:4bit,z:4bit,objid:4bit,  aabbid:12 unused:4
+ *  objid是本区域内的列表的
+ */
+class hashRegion{
+    isSolid=true;   //实心的少，所以hash的是实心的。为false则hash记录的是空，如果实心对象超过一个，必须记录实
+    solidInfo:i32[];      // 只是区分虚实的hash信息，可以用来判断是否碰撞
+    objlist:number[]|null=null; //实对象的id列表，如果只有一个最好了，记录空的情况
+    aabbinfo:number[];   // 格子内的aabb。0不用，min:4,4,4 max:4,4,4
+    //faceinfo:{nx:f32,ny:f32,nz:f32,d:f32}[];    //分割平面。如果内存太多也可以用一个int来表示
+
+    /**
+     * 添加新的voxel。后加的会覆盖前面的。
+     */
+    addData(vox:Voxel):void{
+
+    }
+    clearData():void{
+
+    }
+}
+
+/**
+ * 静态场景合并成为一个对象。
+ * 
  */
 export class VoxelScene {
     min: Vec3;   // 场景包围盒
     max: Vec3;
 
     // 统一格子管理。每个场景可以不同，基本根据主角大小来定
-    gridsz: f32 = 1;   // 
-    staticsVox:Voxel[]=[];
+    gridsz: f32 = 0.5;   // 
+    staticVox:StaticVoxel[]=[];
+    staticVoxAABB:AABB[];   // 每个对象添加到场景的时候对应的AABB
     // dynamicVox:Voxel[]=[]; 动态格子暂时不做
+    lv1Grids:Uint16Array;   // 一级格子。0表示没有内容。
+    lv2Grids:Uint16Array;   // 二级格子。0表示没有内容。
+    // 一级格子的大小
+    lv1szx:i32; 
+    lv1szy:i32;
+    lv1szz:i32;
 
-    addStaticVoxel(vox:StaticVoxel):void{
+    //叶子格子
+    hashgrids:hashRegion[];
 
+    constructor(scemin:Vec3, scemax:Vec3, gridsz:f32){
+        let lv2sz = gridsz*16;  // 最后一级是 16x16x16
+        let lv1gridsz = lv2sz*8;    // 每个一级格子包含 8x8x8=512个二级格子
+        //this.lv1szx = ;//TODO
+        //this.lv1szy=;
+        //this.lvlszz=;
+        let lv1gridnum = this.lv1szx*this.lv1szy*this.lv1szz;
+        this.lv1Grids = new Uint16Array(lv1gridnum);
+
+        // 一级格子的有效个数
+        let validLv1Num=0;  //TODO
+        let lv2GridNum = validLv1Num*512;   //每个一级包含512个二级（8x8x8）
+
+        // 统计二级格子中的有效格子
+        let hashGridNum=0;//TODO
+        this.hashgrids.length = hashGridNum;
+
+    }
+
+    addStaticVoxel(vox:StaticVoxel,updateSce=true):void{
+        this.staticVox.push(vox);
+        if(updateSce){
+            this.updateStaticSceneInfo();
+        }
     }
 
     removeStaticVoxel(vox:StaticVoxel):void{
-
+        // 根据格子中记录的voxel来恢复
     }
 
+    updateStaticSceneInfo():void{
+    }
 }
 
 /**

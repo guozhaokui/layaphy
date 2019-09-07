@@ -378,7 +378,7 @@ export class VoxelShadow {
         var maxLitFaceID = this.lightInvLine.maxLitFaceID;
         var faceLight = this.lightInvLine.faceLight;
         let _this = this;
-        this.forEachEdge(function (x: int, y: int, z: int) {
+        this.forEachEdge((x: int, y: int, z: int)=>{
             //var posidx: int = this.pos2id(x, y, z);
             //阴影的影响
             var canLit: Boolean = !_this.isInShadow(x, y, z);
@@ -459,13 +459,13 @@ export class VoxelShadow {
         //voxelLight.fill(0);	// 先设成0
 
         // 第一遍计算
-        forEachEdge(function (x: int, y: int, z: int) {
+        this.forEachEdge((x: int, y: int, z: int)=>{
             //var posidx:int = pos2id(x, y, z);
-            getDirectLight(x, y, z, tmpFaceLight);
+            this.getDirectLight(x, y, z, this.tmpFaceLight);
 
             //输出结果
             for (var fi = 0; fi < 6; fi++) {
-                outmesh.ChangeOneFaceColor(x, y, z, fi, tmpFaceLight[fi], false);
+                outmesh.ChangeOneFaceColor(x, y, z, fi, this.tmpFaceLight[fi], false);
             }
         });
 
