@@ -4,8 +4,10 @@ precision highp float;
 #else
 precision mediump float;
 #endif
+varying vec3 v_Normal;
+
 void main()
 { 
-    gl_FragColor = vec4(.4, .4, 0.4, 1.0);
+    gl_FragColor = vec4(v_Normal,1.0);
 }
 `
