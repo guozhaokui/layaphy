@@ -3,6 +3,7 @@ import Vec3 from '../math/Vec3.js';
 import ConvexPolyhedron from './ConvexPolyhedron.js';
 import Quaternion from '../math/Quaternion.js';
 
+// v可以与target相同
 export function quat_AABBExt_mult(q:Quaternion, v:Vec3, target = new Vec3()) {
     const {x,y,z} = v;
     const qx = q.x;
@@ -221,7 +222,82 @@ export default class Box extends Shape {
             }
         }
         */
-    }
+	}
+	
+	static orioff:Vec3 = new Vec3();
+	/**
+	 * 如果原点不在中心的包围盒的更新
+	 * @param pos 
+	 * @param quat 
+	 * @param scale 
+	 * @param min 	相对于原点的min
+	 * @param max 	相对于原点的max
+	 */
+    static calculateWorldAABB1(pos: Vec3, quat: Quaternion, scale:Vec3, min: Vec3, max: Vec3, outmin:Vec3, outmax:Vec3) {
+		let ext = Box.boxext1;
+		ext.x = (max.x-min.x)/2;
+		ext.y = (max.y-min.y)/2;
+		ext.z = (max.z-min.z)/2;
+		let off = Box.orioff;
+		off.x = (max.x+min.x)/2;
+		off.y = (max.y+min.y)/2;
+		off.z = (max.z+min.z)/2;
+		quat.vmult(off,off).vmul(scale,off); // 把这个偏移旋转一下  rot(off)*scale
+		quat_AABBExt_mult(quat,ext,ext).vmul(scale,ext);// 旋转原点在中心的包围盒	rot(ext)*scale
+        pos.vsub(ext,outmin).vadd(off,outmin);	// 计算原点在中心的包围盒	(pos+ext)+off
+		pos.vadd(ext,outmax).vadd(off,outmax);	// (pos-ext)+off
+        return ;
+	}	
+	
+	//原始的包围盒计算，用来验证算法的
+    static calculateWorldAABB11(pos: Vec3, quat: Quaternion, scale:Vec3, min: Vec3, max: Vec3, outmin:Vec3, outmax:Vec3):void {
+		let conr=new Array<Vec3>(8).fill(new Vec3());
+		conr.forEach((v,i,arr)=>{conr[i]=new Vec3();});
+        conr[0].set(min.x, min.y, min.z);
+        conr[1].set(min.x, max.y, min.z);
+        conr[2].set(min.x, max.y, max.z);
+        conr[3].set(min.x, min.y, max.z);
+        conr[4].set(max.x, min.y, min.z);
+        conr[5].set(max.x, max.y, min.z);
+        conr[6].set(max.x, max.y, max.z);
+        conr[7].set(max.x, min.y, max.z);
+
+		// 第一个点
+        var wc = conr[0];
+        quat.vmult(wc, wc).vmul(scale,wc);
+        pos.vadd(wc, wc);
+        outmax.copy(wc);
+		outmin.copy(wc);
+		// 剩下的7个点
+        for (let i = 1; i < 8; i++) {
+            var wc = conr[i];
+            quat.vmult(wc, wc).vmul(scale,wc);
+            pos.vadd(wc, wc);
+            const x = wc.x;
+            const y = wc.y;
+            const z = wc.z;
+            if (x > outmax.x) {
+                outmax.x = x;
+            }
+            if (y > outmax.y) {
+                outmax.y = y;
+            }
+            if (z > outmax.z) {
+                outmax.z = z;
+            }
+
+            if (x < outmin.x) {
+                outmin.x = x;
+            }
+            if (y < outmin.y) {
+                outmin.y = y;
+            }
+            if (z < outmin.z) {
+                outmin.z = z;
+            }
+        }
+    }	
+
 
     static calculateInertia(halfExtents: Vec3, mass: number, target: Vec3) {
         const e = halfExtents;

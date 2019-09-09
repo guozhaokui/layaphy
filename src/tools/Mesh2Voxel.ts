@@ -4,6 +4,8 @@ import { Handler } from "laya/utils/Handler";
 import { ColorQuantization_Mediancut } from "./ColorQuantization_Mediancut";
 import { OBJLoader_Material, OBJLoader_mesh } from "./ObjectFile";
 import { VoxTriangleFiller } from "./VoxTriangleFiller";
+import Vec3 from "../math/Vec3";
+import { SparseVoxData } from "../shapes/Voxel";
 
 /**
  * 使用方法：
@@ -49,18 +51,24 @@ export class Mesh2Voxel {
     objmtl:OBJLoader_Material|null=null;
 
     onloadOk:()=>void;
-
-    loadObj(url: string): void {
-        Laya.loader.load(url, new Handler(this, this.onLoadObj));
+    loadObj(url: string,gridsz:number, cb:(voxdata:SparseVoxData)=>void): void {
+        Laya.loader.load(url, new Handler(this, (data:string)=>{
+            let ret = new SparseVoxData();
+            ret.data = this.voxelizeObjMesh(data,gridsz);
+            let posx=this.minx; let posy=this.miny; let posz=this.minz;
+            let gridSize=this.gridSize;
+            let datasx=this.gridXSize; let datasy=this.gridYSize; let datasz = this.gridZSize;
+            ret.aabbmin=new Vec3(posx,posy,posz);
+            ret.aabbmax = new Vec3(posx+gridSize*datasx, posy+gridSize*datasy, posz+gridSize*datasz);
+            ret.gridsz=gridSize;
+            ret.dataszx=datasx; ret.dataszy=datasy; ret.dataszz=datasz;
+            cb && cb(ret);
+        }));
     }
 
     onLoadMtl(mtlstr:string):void{
     }
     
-    onLoadObj(data: string): void {
-        this.voxelizeObjMesh(data,128);
-    }
-
     parseObjMtl(mtlstr:string):OBJLoader_Material{
         var objmtl = this.objmtl = new OBJLoader_Material('root');
         objmtl.parse(mtlstr);
@@ -70,9 +78,9 @@ export class Mesh2Voxel {
     /**
      * 
      * @param data 
-     * @param sz 水平分割个数
+     * @param sz 小格子大小
      */
-    voxelizeObjMesh(data:string, sz:number):OBJLoader_mesh{
+    voxelizeObjMesh(data:string, sz:number){
         // 加载obj文件
         var objmesh = new OBJLoader_mesh(data, null);
         // 所有的顶点，index，texture
@@ -102,8 +110,7 @@ export class Mesh2Voxel {
 
         this.setModelData(vertex, objmesh.indices);
         var ret = this.renderToVoxel(sz);
-        ret;
-        return objmesh;
+        return ret;
     }
 
 
@@ -192,22 +199,19 @@ export class Mesh2Voxel {
 
     /**
      * 把当前对象保存的模型数据转换成格子信息。
-     * @param	xsize   水平方向拆成多少个格子
+     * @param	gridsz   每个小格子的大小
      * @return  返回一个对象数组 {x:number,y:number,z:number, color:number[]}[]  表示在什么位置有什么颜色。
      */
-    renderToVoxel(xsize:number) {
+    renderToVoxel(gridsz:number) {
         let modelXSize = this.modelXSize;
         let modelYSize = this.modelYSize;
         let modelZSize = this.modelZSize;
         console.log('modelsize ', modelXSize, modelYSize, modelZSize);
 
-        if (xsize <= 0 || !xsize) {
-            xsize = modelXSize;
-        }
-        let gridSize = this.gridSize = modelXSize / xsize;
+        let gridSize = this.gridSize = gridsz; 
 
         let trifiller = this.trifiller;
-        this.gridXSize = Math.max(Math.ceil(xsize), 1);
+        this.gridXSize = Math.max(Math.ceil(modelXSize / gridSize), 1);
         this.gridYSize = Math.max(Math.ceil(modelYSize / gridSize), 1);
         this.gridZSize = Math.max(Math.ceil(modelZSize / gridSize), 1);
 
@@ -286,7 +290,7 @@ export class Mesh2Voxel {
             //ret1.push( );
         }
         console.timeEnd('求平均值-输出');
-        console.log('gridnum=', gridnum, '每个格子重复度:', (repeatNum / gridnum));
+        console.log('总格子数目：',this.gridXSize*this.gridYSize*this.gridZSize,' 有效格子=', gridnum, '每个格子重复度:', (repeatNum / gridnum));
         return ret1;
     }
 

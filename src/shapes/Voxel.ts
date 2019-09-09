@@ -4,6 +4,67 @@ import Shape, { SHAPETYPE } from "./Shape";
 import RaycastResult from "../collision/RaycastResult";
 import Mat3 from "../math/Mat3";
 import AABB from "../collision/AABB";
+import Box from "./Box";
+
+/**
+ * 求vec3的哈希值
+ * http://www.beosil.com/download/CollisionDetectionHashing_VMV03.pdf
+ * @param x 
+ * @param y 
+ * @param z 
+ * @param l 格子的大小
+ * @param n hash表的大小
+ */
+function hashVec3(x: f32, y: f32, z: f32, l: f32, n: i32): i32 {
+    let ix = (x / l) | 0;
+    let iy = (y / l) | 0;
+    let iz = (z / l) | 0;
+    let p1 = 73856093;
+    let p2 = 19349663;  //TODO 这个并不是一个质数 19349669 
+    let p3 = 83492791;
+    return ((ix * p1) ^ (iy * p2) ^ (iz * p3)) % n
+}
+
+function hashIGrid(x:i32, y:i32, z:i32, n:i32):i32{
+	return (((x*73856093)^(y*19349663)^(z*83492791))&0x7fffffff)%n;
+}
+
+
+export interface voxdata{
+    x:number;y:number;z:number;color:number;
+}
+export class SparseVoxData{
+    data:voxdata[];   
+    gridsz:f32;     // 每个格子的大小
+    dataszx:i32;    // x方向多少个格子
+    dataszy:i32;
+    dataszz:i32;
+    aabbmin:Vec3;   // local坐标的包围盒。相对于本地原点
+	aabbmax:Vec3;
+}
+
+export class hashData{
+    x:i32;
+    y:i32;
+    z:i32;
+    v:i32;  //现在不是表示颜色而是对象id
+}
+
+// 把 SparseVoxData 转成普通的 hash数组
+export function hashSparseVox(vox:SparseVoxData):hashData[][]{
+    let solidnum = vox.data.length;
+    let data = new Array<hashData[]>(solidnum);
+    vox.data.forEach( v=>{
+        let hashi = hashIGrid(v.x,v.y,v.z,solidnum);
+        let cdt = data[hashi];
+        if(!cdt){ 
+            data[hashi]=cdt=[];
+        }
+        cdt.push({x:v.x,y:v.y,z:v.z,v:v.color});
+    });
+    return data;
+}
+
 
 /**
  * 可以共享的数据
@@ -58,6 +119,10 @@ export class PhyVoxelData {
         return false;
     }
 
+    set(x:i32,y:i32,z:i32,v:i32):void{
+
+    }
+
     buildOcttree():void{
         let dt = this.data;
         let xs = this.xs; 
@@ -79,33 +144,9 @@ function getBit(v:i8, p:i32):boolean{
     return (v & (1<<p))!=0
 }
 
-class VoxelRawData{
-    
-}
-
-class VoxelOctree{
-
-}
-
-class VoxelCompletOctree{
-
-}
-
-class VoxelBVH{
-
-}
-
-
-class VoxelDataHash{
-    dataissolid=true;   // false则表示存的是空
-    constructor(dt:Uint8Array, xs:i32, ys:i32, zs:i32){
-        // 比较0和1那个多，保存数据少的
-    }
-}
-
 class StaticVoxel{
     id=0;
-    voxData: VoxelData;
+    voxData: PhyVoxelData;
     //data:Uint8Array;
     pos: Vec3;
     quat: Quaternion;
@@ -115,7 +156,7 @@ class StaticVoxel{
 }
 
 export class Voxel extends Shape {
-    voxData: VoxelData;
+    voxData: PhyVoxelData;
     //data:Uint8Array;
     pos: Vec3;
     quat: Quaternion;
@@ -187,24 +228,6 @@ export class Voxel extends Shape {
     }
 }
 
-/**
- * 求vec3的哈希值
- * http://www.beosil.com/download/CollisionDetectionHashing_VMV03.pdf
- * @param x 
- * @param y 
- * @param z 
- * @param l 格子的大小
- * @param n hash表的大小
- */
-function hashVec3(x: f32, y: f32, z: f32, l: f32, n: i32): i32 {
-    let ix = (x / l) | 0;
-    let iy = (y / l) | 0;
-    let iz = (z / l) | 0;
-    let p1 = 73856093;
-    let p2 = 19349663;  //TODO 这个并不是一个质数 19349669 
-    let p3 = 83492791;
-    return ((ix * p1) ^ (iy * p2) ^ (iz * p3)) % n
-}
 
 /**
  * 层次场景的最后一级。大小是16x16x16。
@@ -212,6 +235,8 @@ function hashVec3(x: f32, y: f32, z: f32, l: f32, n: i32): i32 {
  * 每个格子的信息
  *  x:4bit,y:4bit,z:4bit,objid:4bit,  aabbid:12 unused:4
  *  objid是本区域内的列表的
+ * 
+ * 注意：这个类个数可能很多，所以要尽可能的小。
  */
 class hashRegion{
     isSolid=true;   //实心的少，所以hash的是实心的。为false则hash记录的是空，如果实心对象超过一个，必须记录实
@@ -222,8 +247,35 @@ class hashRegion{
 
     /**
      * 添加新的voxel。后加的会覆盖前面的。
+     * 这个vox可能超越本区域大小，所以可能需要裁减
      */
-    addData(vox:Voxel):void{
+    addData(vox:StaticVoxel,min:Vec3, max:Vec3):void{
+        vox.pos;
+    }
+
+    /**
+     * 虽然是添加voxel，但实际上格子单位不统一，所以与添加mesh其实差不多
+     * @param vox 
+     * @param pos 
+     * @param q 
+     * @param scale 
+     * @param mymin  当前区域的包围盒
+     * @param mymax 
+     */
+    addVox(vox:SparseVoxData, pos:Vec3, q:Quaternion, scale:Vec3, mymin:Vec3, mymax:Vec3):void{
+		let bmin = vox.aabbmin;
+		let bmax = vox.aabbmax;
+		// 变换vox的包围盒
+		let nmin = new Vec3();
+		let nmax = new Vec3();
+		Box.calculateWorldAABB1(pos,q,scale,bmin,bmax,nmin,nmax);
+
+		// 包围盒判断
+		
+
+    }
+
+    setVox(x:i32,y:i32,z:i32,v:i32,id:i32):void{
 
     }
     clearData():void{

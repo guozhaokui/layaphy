@@ -29,10 +29,10 @@ import { Event } from "laya/events/Event";
 import { loadBullet } from "./layawrap/bullet/bulletLoader";
 import { BtBody } from "./layawrap/bullet/BulletBody";
 import { BtWorld } from "./layawrap/bullet/BulletWorld";
-import { Voxel } from "./shapes/Voxel";
+import { Voxel, hashSparseVox } from "./shapes/Voxel";
 import { VoxelSprite } from "./layawrap/debugger/VoxelRender/VoxelSprite";
 import { VoxelMaterial } from "./layawrap/debugger/VoxelRender/VoxelMtl";
-import { Mesh2Voxel } from "./tools/Mesh2Voxel";
+import { Mesh2Voxel, voxdata, SparseVoxelData } from "./tools/Mesh2Voxel";
 
 //let PhyWorld: typeof BtWorld | typeof CannonWorld;
 //let PhyBody: typeof BtBody | typeof CannonBody;
@@ -129,7 +129,15 @@ let vox = new VoxelSprite();
 scene.addChild(vox);
 
 let m2v = new Mesh2Voxel();
-m2v.loadObj('res/house/house1.obj');
+m2v.loadObj('res/house/house1.obj',0.5,(voxdata:SparseVoxelData)=>{
+    let ret = hashSparseVox(voxdata);
+    let s = 0;
+    ret.forEach( v=>{
+        if(v) s++;
+    })
+    console.log('length=',ret.length, 'space=', ret.length-s);
+    debugger;
+});
 
 
 function testCannon() {
