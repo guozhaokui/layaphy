@@ -26,7 +26,7 @@ export default class ContactEquation extends Equation {
 
     /**
      * Contact normal, pointing out of body i.
-     * 指向第一个对象碰撞点的法线
+     * 碰撞法线，指向第一个对象外面。
      */
     ni = new Vec3();
 

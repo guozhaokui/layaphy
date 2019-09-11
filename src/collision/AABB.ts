@@ -89,6 +89,9 @@ export default class AABB {
         this.upperBound.z = Math.max(this.upperBound.z, aabb.upperBound.z);
     }
 
+	static Overlaps(min1:Vec3, max1:Vec3, min2:Vec3, max2:Vec3):boolean{
+		throw '';
+	}
     /**
      * Returns true if the given AABB overlaps this AABB.
      */

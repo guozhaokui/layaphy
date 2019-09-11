@@ -73,7 +73,8 @@ export default class Narrowphase {
         shapeChecks[SHAPETYPE.SPHERE | SHAPETYPE.PLANE] = this.spherePlane;
         shapeChecks[SHAPETYPE.SPHERE | SHAPETYPE.BOX] = this.sphereBox;
         shapeChecks[SHAPETYPE.SPHERE | SHAPETYPE.CONVEXPOLYHEDRON] = this.sphereConvex;
-        shapeChecks[SHAPETYPE.CAPSULE| SHAPETYPE.PLANE ] = this.planeCapsule;
+		shapeChecks[SHAPETYPE.CAPSULE| SHAPETYPE.PLANE ] = this.planeCapsule;
+		shapeChecks[SHAPETYPE.CAPSULE| SHAPETYPE.SPHERE] = this.sphereCapsule;
         shapeChecks[SHAPETYPE.PLANE | SHAPETYPE.BOX] = this.planeBox;
         shapeChecks[SHAPETYPE.PLANE | SHAPETYPE.CONVEXPOLYHEDRON] = this.planeConvex;
         shapeChecks[SHAPETYPE.CONVEXPOLYHEDRON] = this.convexConvex;
@@ -1067,10 +1068,33 @@ export default class Narrowphase {
         return found;
     }
 
+    sphereCapsule(sphere: Sphere, capsule: Capsule,  sphPos: Vec3, capPos: Vec3, sphQ: Quaternion, capQ: Quaternion,  sphBody: Body, capBody: Body,  rsi: Shape, rsj: Shape, justTest: boolean): boolean {
+		let ni = Narrowphase.nor1;
+		let hitpos = point_on_plane_to_sphere;
+		let deep = capsule.hitSphere(capPos,sphere,sphPos,sphQ,hitpos,ni,justTest);
+		if(deep>=0){
+			if(justTest)return true;
+			let r = this.createContactEquation(capBody,sphBody,capsule,sphere,rsi,rsj);
+			let rj = r.rj;
+			let l1 =sphere.radius-deep;	// r-deep 剩余的没有碰撞的长度
+			ni.scale(l1,rj);			// rj = left*sphere.hitnorml 
+
+            ni.negate(ni);// 
+			r.ni.copy(ni);
+			let ri = r.ri;
+			ri.copy(hitpos); ri.vsub(capBody.position,ri);
+
+            this.result.push(r);
+			this.createFrictionEquationsFromContact(r, this.frictionResult);
+			return true;			
+		}
+		return false;
+	}
+
     planeCapsule(plane: Plane, capsule: Capsule,  planePos: Vec3, capPos: Vec3, planeQ: Quaternion, capQ: Quaternion,  planeBody: Body, capBody: Body,  rsi: Shape, rsj: Shape, justTest: boolean): boolean {
         let ni = Narrowphase.nor1;  // 球的碰撞法线
         // 平面的法线转换到平面的朝向上
-        ni.set(0, 0, 1);
+        ni.set(0, 0, 1);		// 平面法线，TODO 以后换成laya坐标系，0,1,0
         planeQ.vmult(ni, ni);
         ni.normalize(); // Needed?
 
@@ -1078,27 +1102,26 @@ export default class Narrowphase {
         let deep = capsule.hitPlane(capPos,planePos,ni,nearToPlane);
         if(deep>=0){
             if(justTest)
-                return true;
+				return true;
             const r = this.createContactEquation(capBody, planeBody, capsule, plane, rsi, rsj);
-            ni.negate(ni);// capsule的法线
+            ni.negate(ni);// capsule身上的法线 -planeNormal
             r.ni.copy(ni);
 
-            let planeHit = r.rj;
-            planeHit.copy(nearToPlane);
+            let planeHit = r.rj;	// 平面的碰撞点
+            planeHit.copy(nearToPlane);	// r.rj = hitpos
             //DEBUG
             this.world.phyRender._addPoint(nearToPlane, PhyColor.RED);
             //DEBUG
-            planeHit.addScaledVector(-deep,ni,planeHit);//ni朝向平面里面 = rj
+			planeHit.addScaledVector(-deep,ni,planeHit);//ni朝向平面里面 = rj
+			planeHit.vsub(planeBody.position,planeHit);// 转到相对自己的位置
 
-            // Make it relative to the body
+            // 把ri,rj转成相对坐标
             const ri = r.ri;
-            const rj = r.rj;
             ri.copy(nearToPlane);
             ri.vsub(capBody.position, ri);
-            rj.vsub(planeBody.position, rj);
 
             this.result.push(r);
-            //this.createFrictionEquationsFromContact(r, this.frictionResult);
+            this.createFrictionEquationsFromContact(r, this.frictionResult);
             return true;
 
         }

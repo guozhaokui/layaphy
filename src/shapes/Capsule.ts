@@ -2,12 +2,18 @@ import Shape, { SHAPETYPE } from "./Shape";
 import Vec3 from "../math/Vec3";
 import Quaternion from "../math/Quaternion";
 import { Voxel } from "./Voxel";
+import Sphere from "./Sphere";
+import { tmpdir } from "os";
 //import { quat_AABBExt_mult } from "./Box";
 
 
 //let aabbExt = new Vec3();
 let tmpVec1=new Vec3();
 let tmpVec2 = new Vec3();
+let tmpVec3 = new Vec3();
+let tmpDir = new Vec3();
+let A1=new Vec3();
+
 /**
  * 缺省主轴是z轴
  * 测试的时候可以通过组合shape来模拟胶囊
@@ -115,7 +121,8 @@ export default class Capsule extends Shape{
     /**
      * 到一个平面的距离，如果碰撞了，取碰撞点。
      * 碰撞法线一定是平面法线
-     * @param hitPos   世界坐标的碰撞位置
+     * @param hitPos   世界坐标的碰撞位置	.在自己身上
+	 * @param hitNormal 碰撞点的法线，这个应该取对方的，意味着把碰撞点沿着这个法线推出
      * @return 进入深度， <0表示没有碰撞
      */
     hitPlane(myPos:Vec3, planePos:Vec3, planeNorm:Vec3,hitPos:Vec3):f32{
@@ -147,24 +154,70 @@ export default class Capsule extends Shape{
         return -1;
     }
 
-    hitSphere(myPos:Vec3, sphPos:Vec3, spheQuat:Quaternion, hitPos:Vec3, hitNormal:Vec3):f32{
-        /*
-        vector cylCenterVector = endPoint2 - endpoint1;
-        float distanceFactorFromEP1 = Dot(sphereCenter - endPoint1) / Dot(cylCenterVector , cylCenterVector );
-        if(distanceFactorFromEP1 < 0) distanceFactorFromEP1 = 0;// clamp to endpoints if neccesary
-        if(distanceFactorFromEP1 > 1) distanceFactorFromEP1 = 1;
-        vector closestPoint = endPoint1 + (cylCenterVector * distanceFactorFromEP1);
-        vector collisionVector = sphereCenter - closestPoint;
-        float distance = collisionVector.Length();
-        vector collisionNormal = collisionVector / distance;
-        if(distance < sphereRadius + cylRadius)
-        {
-          //collision occurred. use collisionNormal to reflect sphere off cyl
-        float factor = Dot(velocity, collisionNormal);
-        velocity = velocity - (2 * factor * collisionNormal);
-        }
-        */
-       throw 'noimp';
+	/**
+	 * 
+	 * @param myPos 
+	 * @param sphere 
+	 * @param sphPos 
+	 * @param spheQuat 
+	 * @param hitPos 	自己身上的碰撞点
+	 * @param hitNormal 是球上面的法线（与自己的相反）
+	 * @param onlyTest  只检测碰撞，不要具体结果
+	 */
+    hitSphere(myPos:Vec3, sphere:Sphere, sphPos:Vec3, spheQuat:Quaternion, hitPos:Vec3, hitNormal:Vec3,onlyTest:boolean):f32{
+		let p0 = tmpVec1;
+		let dp = tmpVec2;
+		let A = A1;
+		let axis = this.axis;
+		let r1 = this.radius;
+		let r2 = sphere.radius;
+
+		axis.scale(2,A);
+		let r = r1+r2; 
+		let rr = r*r;
+		myPos.vsub(axis,p0);//p0=mypos-axis
+		p0.vsub(sphPos,dp); //dp=p0-sph.pos
+		// A=2*axis
+		// px=p0+t*A
+		// dist = (px-sph.pos)^2 = (p0-sph.pos+t*A)^2 = (dp+t*A)^2 = dp*dp + 2*t*dp*A + A*A
+		// deep = rr - dist
+		// dist最小的情况 = (dp+tA)*A=0
+		// 求出最靠近点的t t=-dp*A/(A*A) = -dot(dp,A)/dot(A,A) 
+		let d1 = dp.dot(A);
+		let d2 = A.dot(A);
+		let t = -d1/d2;
+		let nearestPos = tmpVec3;
+		if(t<0){
+			// 直接计算p0到球的位置
+			nearestPos=p0;
+		}else if(t>1){
+			// 直接计算p1到球的位置
+			p0.vadd(A,nearestPos);
+		}else{
+			nearestPos.x=p0.x+t*A.x;
+			nearestPos.y=p0.y+t*A.y;
+			nearestPos.z=p0.z+t*A.z;
+		}
+
+		let d=tmpDir;
+		nearestPos.vsub(sphPos,d);	// d = nearestPos-sphPos 从球指向自己
+		let l2 = d.dot(d);
+		if(l2<=rr){
+			if(onlyTest){
+				return 1;
+			}else{
+				let l = Math.sqrt(l2);
+				let deep = r-l;
+				hitNormal.x=d.x/l;
+				hitNormal.y=d.y/l;
+				hitNormal.z=d.z/l;
+				hitPos.x=nearestPos.x-hitNormal.x*r1;
+				hitPos.y=nearestPos.y-hitNormal.y*r1;
+				hitPos.z=nearestPos.z-hitNormal.z*r1;
+				return deep;
+			}
+		}
+		return -1;// 没有碰撞
     }
 
     /**
