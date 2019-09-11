@@ -11,7 +11,8 @@ import { tmpdir } from "os";
 let tmpVec1=new Vec3();
 let tmpVec2 = new Vec3();
 let tmpVec3 = new Vec3();
-let tmpDir = new Vec3();
+let tmpDir1 = new Vec3();
+let tmpDir2 = new Vec3();
 let A1=new Vec3();
 
 /**
@@ -142,15 +143,52 @@ export default class Capsule extends Shape{
         return -1;
     }
 
-    hitCapsule(myPos:Vec3, cap:Capsule, capPos:Vec3, capQuat:Quaternion, hitPos:Vec3, hitNormal:Vec3):f32{
+    hitCapsule(myPos:Vec3, cap:Capsule, capPos:Vec3, hitPos:Vec3, hitNormal:Vec3, justtest:boolean):f32{
         let r1 = this.radius;
         let r2 = cap.radius;
         let h1 = this.height;
         let h2 = cap.height;
-        let halfh1 = h1/2;
-        let halfh2 = h2/2;
         let ax1 = this.axis;
-        let ax2 = cap.axis;
+		let ax2 = cap.axis;
+		let D1 = tmpDir1; ax1.scale(2,D1);
+		let D2 = tmpDir2; ax2.scale(2,D2);
+		let P0 = tmpVec1; myPos.vsub(ax1,P0);	//我的起点
+		let P1 = tmpVec2; capPos.vsub(ax2,P1);	//对方的起点
+		let d = tmpVec3; P0.vsub(P1,d);
+		// 两个线段之间的距离: | P0+t1D1 -(P1+t2D2) |
+		// P0-P1 = d
+		// (d + t1D1-t2D2)^2 是距离的平方，对这个取全微分
+		// 2(d+t1D1-t2D2)*D1, 2(d+t1D1-t2D2)*D2 这两个都是0
+		// 显然这时候与D1,D2都垂直
+		// 先用多项式的方法求解 Ax=b
+		// | D1D1  -D1D2 | |t1|    |-dD1|
+		// |             | |  |  = |    |
+		// | D1D2  -D2D2 | |t2|    |-dD2|
+		//
+		// 如果平行，则有个方向的d永远为0
+		let A = D1.dot(D1); let B = -D1.dot(D2);
+		let C = -B;  let D = D2.dot(D2);
+		let b1 = -d.dot(D1);
+		let b2 = -d.dot(D2);
+		let dd = 1/(A*D-B*C); //只要胶囊没有退化为球，这个就没有问题
+		let t1 = (D*b1-B*b2)*dd;
+		let t2 = (-C*b1+A*b2)*dd;
+
+		if(t1>1){
+
+		}else if(t1<0){
+
+		}else{
+
+		}
+		if(t2>1){
+
+		}else if(t2<0){
+
+		}else{
+
+		}
+
         return -1;
     }
 
@@ -162,9 +200,9 @@ export default class Capsule extends Shape{
 	 * @param spheQuat 
 	 * @param hitPos 	自己身上的碰撞点
 	 * @param hitNormal 是球上面的法线（与自己的相反）
-	 * @param onlyTest  只检测碰撞，不要具体结果
+	 * @param justtest  只检测碰撞，不要具体结果
 	 */
-    hitSphere(myPos:Vec3, sphere:Sphere, sphPos:Vec3, spheQuat:Quaternion, hitPos:Vec3, hitNormal:Vec3,onlyTest:boolean):f32{
+    hitSphere(myPos:Vec3, sphere:Sphere, sphPos:Vec3, spheQuat:Quaternion, hitPos:Vec3, hitNormal:Vec3,justtest:boolean):f32{
 		let p0 = tmpVec1;
 		let dp = tmpVec2;
 		let A = A1;
@@ -199,11 +237,11 @@ export default class Capsule extends Shape{
 			nearestPos.z=p0.z+t*A.z;
 		}
 
-		let d=tmpDir;
+		let d=tmpDir1;
 		nearestPos.vsub(sphPos,d);	// d = nearestPos-sphPos 从球指向自己
 		let l2 = d.dot(d);
 		if(l2<=rr){
-			if(onlyTest){
+			if(justtest){
 				return 1;
 			}else{
 				let l = Math.sqrt(l2);

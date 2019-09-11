@@ -73,6 +73,7 @@ export default class Narrowphase {
         shapeChecks[SHAPETYPE.SPHERE | SHAPETYPE.PLANE] = this.spherePlane;
         shapeChecks[SHAPETYPE.SPHERE | SHAPETYPE.BOX] = this.sphereBox;
         shapeChecks[SHAPETYPE.SPHERE | SHAPETYPE.CONVEXPOLYHEDRON] = this.sphereConvex;
+		shapeChecks[SHAPETYPE.CAPSULE] = this.CapsuleCapsule;
 		shapeChecks[SHAPETYPE.CAPSULE| SHAPETYPE.PLANE ] = this.planeCapsule;
 		shapeChecks[SHAPETYPE.CAPSULE| SHAPETYPE.SPHERE] = this.sphereCapsule;
         shapeChecks[SHAPETYPE.PLANE | SHAPETYPE.BOX] = this.planeBox;
@@ -1066,7 +1067,18 @@ export default class Narrowphase {
             }
         }
         return found;
-    }
+	}
+	
+	CapsuleCapsule(cap1: Capsule, cap2: Capsule,  pos1: Vec3, pos2: Vec3, q1: Quaternion, q2: Quaternion, body1: Body, body2: Body,  rsi: Shape, rsj: Shape, justTest: boolean): boolean {
+		let ni = Narrowphase.nor1;
+		let hitpos = point_on_plane_to_sphere;
+		let deep = cap1.hitCapsule(pos1,cap2,pos2,hitpos,ni,justTest);
+		if(deep>=0){
+			if(justTest) return true;
+			let r = this.createContactEquation(body1,body2,cap1,cap2,rsi,rsj);
+
+		}
+	}
 
     sphereCapsule(sphere: Sphere, capsule: Capsule,  sphPos: Vec3, capPos: Vec3, sphQ: Quaternion, capQ: Quaternion,  sphBody: Body, capBody: Body,  rsi: Shape, rsj: Shape, justTest: boolean): boolean {
 		let ni = Narrowphase.nor1;
