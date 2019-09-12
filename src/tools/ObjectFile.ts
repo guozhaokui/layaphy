@@ -155,9 +155,9 @@ export class OBJLoader_Material {
             values.push(defaultValue);
         }
 
-        option.u = parseFloat(values[0]);
-        option.v = parseFloat(values[1]);
-        option.w = parseFloat(values[2]);
+        option.u = parseFloat(values[0] as string);
+        option.v = parseFloat(values[1] as string);
+        option.w = parseFloat(values[2] as string);
     }
 
 

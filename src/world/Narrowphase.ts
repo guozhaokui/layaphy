@@ -1072,29 +1072,35 @@ export default class Narrowphase {
 	CapsuleCapsule(cap1: Capsule, cap2: Capsule,  pos1: Vec3, pos2: Vec3, q1: Quaternion, q2: Quaternion, body1: Body, body2: Body,  rsi: Shape, rsj: Shape, justTest: boolean): boolean {
 		let ni = Narrowphase.nor1;
 		let hitpos = point_on_plane_to_sphere;
-		let deep = cap1.hitCapsule(pos1,cap2,pos2,hitpos,ni,justTest);
+		let hit1 =Cap_Cap_tmpV1;
+		let deep = cap1.hitCapsule(pos1,cap2,pos2,hitpos,hit1,ni,justTest);
 		if(deep>=0){
 			if(justTest) return true;
 			let r = this.createContactEquation(body1,body2,cap1,cap2,rsi,rsj);
+			ni.negate(ni);
+			r.ni.copy(ni);
+			hitpos.vsub(pos1,r.ri);
+			hit1.vsub(pos2,r.rj);
 
+            this.result.push(r);
+			this.createFrictionEquationsFromContact(r, this.frictionResult);
+			return true;
 		}
+		return false;
 	}
 
     sphereCapsule(sphere: Sphere, capsule: Capsule,  sphPos: Vec3, capPos: Vec3, sphQ: Quaternion, capQ: Quaternion,  sphBody: Body, capBody: Body,  rsi: Shape, rsj: Shape, justTest: boolean): boolean {
 		let ni = Narrowphase.nor1;
 		let hitpos = point_on_plane_to_sphere;
-		let deep = capsule.hitSphere(capPos,sphere,sphPos,sphQ,hitpos,ni,justTest);
+		let hit1 =Cap_Cap_tmpV1;
+		let deep = capsule.hitSphere(capPos,sphere.radius,sphPos,hitpos,hit1,ni,justTest);
 		if(deep>=0){
 			if(justTest)return true;
 			let r = this.createContactEquation(capBody,sphBody,capsule,sphere,rsi,rsj);
-			let rj = r.rj;
-			let l1 =sphere.radius-deep;	// r-deep 剩余的没有碰撞的长度
-			ni.scale(l1,rj);			// rj = left*sphere.hitnorml 
-
             ni.negate(ni);// 
 			r.ni.copy(ni);
-			let ri = r.ri;
-			ri.copy(hitpos); ri.vsub(capBody.position,ri);
+			hitpos.vsub(capPos,r.ri);
+			hit1.vsub(sphPos,r.rj);
 
             this.result.push(r);
 			this.createFrictionEquationsFromContact(r, this.frictionResult);
@@ -1602,6 +1608,8 @@ var tmpVec2 = new Vec3();
 var tmpQuat1 = new Quaternion();
 var tmpQuat2 = new Quaternion();
 
+var Cap_Cap_tmpV1=new Vec3();
+
 const planeTrimesh_normal = new Vec3();
 const planeTrimesh_relpos = new Vec3();
 const planeTrimesh_projected = new Vec3();
@@ -1788,3 +1796,4 @@ const convexHeightfield_faceList = [0];
 
 const sphereHeightfield_tmp1 = new Vec3();
 const sphereHeightfield_tmp2 = new Vec3();
+

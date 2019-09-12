@@ -3,14 +3,15 @@ import Vec3 from "../math/Vec3";
 import Quaternion from "../math/Quaternion";
 import { Voxel } from "./Voxel";
 import Sphere from "./Sphere";
-import { tmpdir } from "os";
+import { PhyRender } from "../layawrap/PhyRender";
 //import { quat_AABBExt_mult } from "./Box";
 
-
 //let aabbExt = new Vec3();
-let tmpVec1=new Vec3();
+let tmpVec1 = new Vec3();
 let tmpVec2 = new Vec3();
 let tmpVec3 = new Vec3();
+let tmpVec4 = new Vec3();
+let tmpVec5 = new Vec3();
 let tmpDir1 = new Vec3();
 let tmpDir2 = new Vec3();
 let A1=new Vec3();
@@ -143,119 +144,157 @@ export default class Capsule extends Shape{
         return -1;
     }
 
-    hitCapsule(myPos:Vec3, cap:Capsule, capPos:Vec3, hitPos:Vec3, hitNormal:Vec3, justtest:boolean):f32{
+	/**
+	 * 
+	 * @param myPos 
+	 * @param cap 
+	 * @param capPos 
+	 * @param hitPos 
+	 * @param hitPos 	另一个对象的碰撞点
+	 * @param hitNormal 把自己推开的法线，即对方身上的，朝向自己的。
+	 * @param justtest 
+	 */
+    hitCapsule(myPos:Vec3, cap:Capsule, capPos:Vec3, hitPos:Vec3, hitPos1:Vec3, hitNormal:Vec3, justtest:boolean):f32{
         let r1 = this.radius;
         let r2 = cap.radius;
-        let h1 = this.height;
-        let h2 = cap.height;
         let ax1 = this.axis;
 		let ax2 = cap.axis;
 		let D1 = tmpDir1; ax1.scale(2,D1);
 		let D2 = tmpDir2; ax2.scale(2,D2);
-		let P0 = tmpVec1; myPos.vsub(ax1,P0);	//我的起点
-		let P1 = tmpVec2; capPos.vsub(ax2,P1);	//对方的起点
-		let d = tmpVec3; P0.vsub(P1,d);
-		// 两个线段之间的距离: | P0+t1D1 -(P1+t2D2) |
-		// P0-P1 = d
+		let P1 = tmpVec1; myPos.vsub(ax1,P1);	//我的起点
+		let P2 = tmpVec2; capPos.vsub(ax2,P2);	//对方的起点
+		let d = tmpVec3; P1.vsub(P2,d);
+		// 两个线段之间的距离: | P1+t1D1 -(P2+t2D2) |
+		// P1-P2 = d
 		// (d + t1D1-t2D2)^2 是距离的平方，对这个取全微分
-		// 2(d+t1D1-t2D2)*D1, 2(d+t1D1-t2D2)*D2 这两个都是0
+		// 2(d+t1D1-t2D2)*D1, -2(d+t1D1-t2D2)*D2 这两个都是0
 		// 显然这时候与D1,D2都垂直
+		// -dD1 -t1D1^2 + t2D1D2  = 0
+		// -dD2 -t1D1D2 + t2D2^2  = 0
 		// 先用多项式的方法求解 Ax=b
-		// | D1D1  -D1D2 | |t1|    |-dD1|
-		// |             | |  |  = |    |
-		// | D1D2  -D2D2 | |t2|    |-dD2|
+		// | -D1^2  D1D2 | |t1|    |dD1|
+		// |             | |  |  = |   |
+		// | -D1D2  D2^2 | |t2|    |dD2|
 		//
 		// 如果平行，则有个方向的d永远为0
-		let A = D1.dot(D1); let B = -D1.dot(D2);
+		let A = -D1.dot(D1); let B = D1.dot(D2);
 		let C = -B;  let D = D2.dot(D2);
-		let b1 = -d.dot(D1);
-		let b2 = -d.dot(D2);
-		let dd = 1/(A*D-B*C); //只要胶囊没有退化为球，这个就没有问题
+		let b1 = d.dot(D1);
+		let b2 = d.dot(D2);
+		let adbc = A*D-B*C;
+		if(adbc>-1e-6&&adbc<1e-6){
+			//平行
+			return -1;
+		}
+		let dd = 1/adbc; //只要胶囊没有退化为球，这个就没有问题
 		let t1 = (D*b1-B*b2)*dd;
 		let t2 = (-C*b1+A*b2)*dd;
-
-		if(t1>1){
-
-		}else if(t1<0){
-
+		let QQ = Sphere.SpherehitSphere;
+		let deep=0;
+		//根据t1,t2所在范围，一共有9种组合
+		if(t1<0){
+			if(t2<0){
+				//p1和p2
+				deep = QQ(r1,P1,r2,P2,hitPos,hitNormal,hitPos1,justtest);
+			}else if(t2>1){
+				//p1和p2+D2
+				let p2e = tmpVec4;
+				P2.vadd(D2,p2e);
+				deep = QQ(r1,P1,r2,p2e,hitPos,hitNormal,hitPos1,justtest);
+			}else{
+				//p1和线段2，只能取t1=0,重新计算这时候对应的t2
+				t2 = b2/D;
+				let np = tmpVec4;
+				P2.addScaledVector(t2, D2,np);
+				deep = QQ(r1,P1,r2,np,hitPos,hitNormal,hitPos1,justtest);
+			}
+		}else if(t1>1){
+			let p1e = tmpVec4;
+			P1.vadd(D1,p1e);
+			if(t2<0){
+				//p1+d1和p2
+				deep = QQ(r1,p1e,r2,P2,hitPos,hitNormal,hitPos1,justtest);
+			}else if(t2>1){
+				//p1+d1和p2+d2
+				let p2e = tmpVec5;
+				P2.vadd(D2,p2e);
+				deep = QQ(r1,p1e,r2,p2e,hitPos,hitNormal,hitPos1,justtest);
+			}else{
+				//p1+d1和线段2
+				// 取t1=1, 从新计算t2
+				t2 = (b2 -C)/D;
+				let np = tmpVec5;
+				P2.addScaledVector(t2, D2,np);
+				deep = QQ(r1, p1e, r2, np, hitPos,hitNormal,hitPos1,justtest);
+			}
 		}else{
-
+			let p1 = tmpVec4;
+			let p2 = tmpVec5;
+			P1.addScaledVector(t1,D1,p1);
+			if(t2<0){
+				//线段1和p2
+				//取t2=0,重新计算t1
+				t1 = b1/A;
+				p2 = P2;
+			}else if(t2>1){
+				//线段1和p2+d2
+				//取t2=1重新计算t1
+				t1 = (b1-B)/A;
+				P2.vadd(D2,p2);
+			}else{
+				P2.addScaledVector(t2,D2,p2);
+			}
+			deep = QQ(r1,p1,r2,p2,hitPos,hitNormal,hitPos1, justtest);
 		}
-		if(t2>1){
-
-		}else if(t2<0){
-
-		}else{
-
+		//DEBUG
+		if(deep>=0){
+			let phyr = PhyRender.inst;
+			phyr.addPoint(hitPos1.x, hitPos1.y, hitPos1.z, 0xffff00);
 		}
-
-        return -1;
+		//DEBUG
+        return deep;
     }
 
 	/**
 	 * 
 	 * @param myPos 
-	 * @param sphere 
+	 * @param r2  球的半径
 	 * @param sphPos 
-	 * @param spheQuat 
 	 * @param hitPos 	自己身上的碰撞点
 	 * @param hitNormal 是球上面的法线（与自己的相反）
 	 * @param justtest  只检测碰撞，不要具体结果
 	 */
-    hitSphere(myPos:Vec3, sphere:Sphere, sphPos:Vec3, spheQuat:Quaternion, hitPos:Vec3, hitNormal:Vec3,justtest:boolean):f32{
+    hitSphere(myPos:Vec3, r2:f32, sphPos:Vec3, hitPos:Vec3, hitPos1:Vec3, hitNormal:Vec3,justtest:boolean):f32{
 		let p0 = tmpVec1;
 		let dp = tmpVec2;
-		let A = A1;
+		let D = A1;
 		let axis = this.axis;
+		axis.scale(2,D);
 		let r1 = this.radius;
-		let r2 = sphere.radius;
 
-		axis.scale(2,A);
 		let r = r1+r2; 
 		let rr = r*r;
 		myPos.vsub(axis,p0);//p0=mypos-axis
 		p0.vsub(sphPos,dp); //dp=p0-sph.pos
-		// A=2*axis
-		// px=p0+t*A
-		// dist = (px-sph.pos)^2 = (p0-sph.pos+t*A)^2 = (dp+t*A)^2 = dp*dp + 2*t*dp*A + A*A
-		// deep = rr - dist
-		// dist最小的情况 = (dp+tA)*A=0
-		// 求出最靠近点的t t=-dp*A/(A*A) = -dot(dp,A)/dot(A,A) 
-		let d1 = dp.dot(A);
-		let d2 = A.dot(A);
-		let t = -d1/d2;
+		// D=2*axis
+		// px=p0+t*D
+		// dist = (px-sph.pos)^2 = (p0-sph.pos+t*D)^2 = (dp+t*D)^2 
+		// dist最小的情况 = (dp+tD)*D=0
+		// 求出最靠近点的t t=-dp*D/(D*D) = -dot(dp,D)/dot(D,D) 
+		let t = -dp.dot(D)/D.dot(D);
 		let nearestPos = tmpVec3;
 		if(t<0){
 			// 直接计算p0到球的位置
 			nearestPos=p0;
 		}else if(t>1){
 			// 直接计算p1到球的位置
-			p0.vadd(A,nearestPos);
+			p0.vadd(D,nearestPos);
 		}else{
-			nearestPos.x=p0.x+t*A.x;
-			nearestPos.y=p0.y+t*A.y;
-			nearestPos.z=p0.z+t*A.z;
+			p0.addScaledVector(t,D,nearestPos);
 		}
 
-		let d=tmpDir1;
-		nearestPos.vsub(sphPos,d);	// d = nearestPos-sphPos 从球指向自己
-		let l2 = d.dot(d);
-		if(l2<=rr){
-			if(justtest){
-				return 1;
-			}else{
-				let l = Math.sqrt(l2);
-				let deep = r-l;
-				hitNormal.x=d.x/l;
-				hitNormal.y=d.y/l;
-				hitNormal.z=d.z/l;
-				hitPos.x=nearestPos.x-hitNormal.x*r1;
-				hitPos.y=nearestPos.y-hitNormal.y*r1;
-				hitPos.z=nearestPos.z-hitNormal.z*r1;
-				return deep;
-			}
-		}
-		return -1;// 没有碰撞
+		let deep = Sphere.SpherehitSphere(r1,nearestPos,r2,sphPos,hitPos,hitNormal,hitPos1, justtest);
+		return deep;
     }
 
     /**

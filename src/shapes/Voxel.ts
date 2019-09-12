@@ -362,9 +362,6 @@ export class Voxel extends Shape {
     }
 }
 
-class OctRegion{
-
-}
 
 /**
  * 层次场景的最后一级。大小是16x16x16。

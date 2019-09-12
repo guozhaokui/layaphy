@@ -34,7 +34,7 @@ Texture2D.load("res/rocks.jpg", Handler.create(null, function (tex: Texture2D): 
     mtl2.albedoTexture = tex;
 }));
 
-var camera = (<Camera>scene.addChild(new Camera(0, 0.1, 100)));
+var camera = (<Camera>scene.addChild(new Camera(0, 1, 1000)));
 camera.transform.translate(new Vector3(0, 6, 19.5));
 camera.transform.rotate(new Vector3(-15, 0, 0), true, false);
 let camctrl = camera.addComponent(MouseCtrl1) as MouseCtrl1;
@@ -50,7 +50,7 @@ var mat = directionLight.transform.worldMatrix;
 mat.setForward(new Vector3(-1.0, -1.0, -1.0));
 directionLight.transform.worldMatrix = mat;
 
-var plane = (<MeshSprite3D>scene.addChild(new MeshSprite3D(PrimitiveMesh.createPlane(10, 10, 10, 10))));
+var plane = (<MeshSprite3D>scene.addChild(new MeshSprite3D(PrimitiveMesh.createPlane(100, 100, 10, 10))));
 var planeMtl = new BlinnPhongMaterial();
 Texture2D.load("res/grass.png", Handler.create(null, function (tex: Texture2D): void {
     planeMtl.albedoTexture = tex;
@@ -62,9 +62,12 @@ planeMtl.tilingOffset = tilingOffset;
 //设置材质
 plane.meshRenderer.material = planeMtl;
 
+/*
+显示voxel
 VoxelMaterial.initShader();
 let vox = new VoxelSprite();
 scene.addChild(vox);
+*/
 
 let m2v = new Mesh2Voxel();
 m2v.loadObj('res/house/house1.obj',0.5,(voxdata:SparseVoxData)=>{

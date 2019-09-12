@@ -196,6 +196,7 @@ export default class Vec3 {
 
     /**
      * Scale a vector and add it to this vector. Save the result in "target". (target = this + vector * scalar)
+	 * target = this + scalar*v
      */
     addScaledVector(scalar:number, v:Vec3, target = new Vec3()) {
         target.x = this.x + scalar * v.x;

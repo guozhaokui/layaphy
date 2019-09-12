@@ -21,7 +21,11 @@ export class PhyRender extends IPhyRender{
     sce: Scene3D;
     phyworld: World;
     drawAllShape = true;
-    renders:PixelLineSprite3D[]=[];
+	renders:PixelLineSprite3D[]=[];
+	posInd = new Vector3();
+	posIndColor=Color.BLUE;
+	setPosInd=false;
+	static inst:PhyRender;
     constructor(sce: Scene3D, world: World) {
         super();
         this.sce = sce;
@@ -29,8 +33,14 @@ export class PhyRender extends IPhyRender{
         world.phyRender=this;
         let r = new PixelLineSprite3D(1024*10);
         this.renders.push(r);
-        sce.addChild(r);
+		sce.addChild(r);
+		PhyRender.inst=this;
     }
+
+	showPos(x:f32,y:f32,z:f32){
+		this.posInd.setValue(x,y,z);
+		this.setPosInd=true;
+	}
 
     addRay(stx: number, sty: number, stz: number, dirx: number, diry: number, dirz: number, color: number): void {
         let r = this.renders[0];
@@ -83,11 +93,20 @@ export class PhyRender extends IPhyRender{
         })
 
         // 坐标轴
-        let r = this.renders[0];
+		let r = this.renders[0];
         let origin = new Vector3();
         r.addLine(origin, new Vector3(10,0,0), Color.RED,Color.RED);
         r.addLine(origin, new Vector3(0,10,0), Color.GREEN, Color.GREEN);
-        r.addLine(origin, new Vector3(0,0,10), Color.BLUE, Color.BLUE);
+		r.addLine(origin, new Vector3(0,0,10), Color.BLUE, Color.BLUE);
+		
+		//某个指示器
+		if(this.setPosInd){
+			let pi = this.posInd;
+			let pic = this.posIndColor;
+			r.addLine(pi, new Vector3(pi.x+3,pi.y,pi.z),pic,pic);
+			r.addLine(pi, new Vector3(pi.x,pi.y+3,pi.z),pic,pic);
+			r.addLine(pi, new Vector3(pi.x,pi.y,pi.z+3),pic,pic);
+		}
     }
 
     stepEnd():void{
@@ -161,7 +180,7 @@ export class PhyRender extends IPhyRender{
     createCapsuleLine(cap:Capsule, pos:Vec3, q:Quaternion):void{
         let seg1:i32=16;
         let h = cap.height;
-        let r = cap.radius*1.2;
+        let r = cap.radius;//*1.2;
         let i:i32=0;
         let pts:Vec3[]=[];
         pts.length=seg1+1;
@@ -189,8 +208,8 @@ export class PhyRender extends IPhyRender{
     }
 
     createPlaneLine(plane:Plane, pos:Vec3, q:Quaternion):void{
-        let norm = new Vec3(0,0,1);
-        let wnorm = q.vmult(norm,norm);
+        //let norm = new Vec3(0,0,1);
+        //let wnorm = q.vmult(norm,norm);
         
     }
 }
