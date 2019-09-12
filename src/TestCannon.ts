@@ -82,8 +82,6 @@ export function testCannon(renderScene:Scene3D, plane:MeshSprite3D, rmtl:BlinnPh
     //let bb = addBox(0.2,14,3,0,12,0);
 	//addBox(1,1,1,10,2,0);
 	
-	addSphere(1,2,2,2);
- 
 	let c1 = addCapsule(2, 4,  1,4, 0,  false);
 	//let c1 = addBox(0.2,4,0.2, 1,4,0, false);
 	c1.phyBody.allowSleep=false;
@@ -102,15 +100,15 @@ export function testCannon(renderScene:Scene3D, plane:MeshSprite3D, rmtl:BlinnPh
 			//b.angularVelocity.set(0,0,0);
 		})
 
-		let s = addSphere(1,0,1,0);
-		s.phyBody.velocity.set(0,0,-2);
+		//let s = addSphere(1,0,1,0);
+		//s.phyBody.velocity.set(0,0,-2);
 	});
 
 	Laya.stage.on(Event.MOUSE_MOVE, null, (e:{stageX:number,stageY:number})=>{
 	});
 
     let y = 5;
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 0; i++) {
         //addBox(.1,10,.1,Math.random()*10,5,Math.random()*10,true);
 		let c = addCapsule(.5, 16, 0, y, 0);
 		c.phyBody.allowSleep=false;
@@ -160,7 +158,7 @@ function addBox(sx: number, sy: number, sz: number, x: number, y: number, z: num
 }
 
 function addCapsule(r: f32, h: f32, x: f32, y: f32, z: f32,randr=true): CannonBody {
-    var cap = scene.addChild(new MeshSprite3D(PrimitiveMesh.createCapsule(r, h + r + r, 10, 10))) as MeshSprite3D;
+    var cap = scene.addChild(new MeshSprite3D(PrimitiveMesh.createCapsule(r, h + r + r, 0, 0))) as MeshSprite3D;
     cap.meshRenderer.material = mtl;
     var transform = cap.transform;
     var pos = transform.position;

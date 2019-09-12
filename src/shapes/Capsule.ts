@@ -140,7 +140,12 @@ export default class Capsule extends Shape{
         return -d;
     }
 
-    hitBox(myPos:Vec3, boxPos:Vec3, boxQuat:Quaternion, hitPos:Vec3, hitNormal:Vec3):f32{
+    hitBox(myPos:Vec3, boxsize:Vec3, boxPos:Vec3, boxQuat:Quaternion, hitPos:Vec3, hitpos1:Vec3, hitNormal:Vec3, justtest:boolean):f32{
+		// 相当于一个线段与一个膨胀了的盒子做检测
+		// 与6个面的距离
+			// 直接取相应的xyz就行
+		// 与12条边的距离（线段和capsule）
+
         return -1;
     }
 
@@ -249,7 +254,7 @@ export default class Capsule extends Shape{
 		//DEBUG
 		if(deep>=0){
 			let phyr = PhyRender.inst;
-			phyr.addPoint(hitPos1.x, hitPos1.y, hitPos1.z, 0xffff00);
+			//phyr.addPoint(hitPos1.x, hitPos1.y, hitPos1.z, 0xffff00);
 		}
 		//DEBUG
         return deep;
@@ -295,8 +300,8 @@ export default class Capsule extends Shape{
 
 		let deep = Sphere.SpherehitSphere(r1,nearestPos,r2,sphPos,hitPos,hitNormal,hitPos1, justtest);
 		return deep;
-    }
-
+	}
+	
     /**
      * 计算胶囊的转动惯量
      * 用圆柱和半球的转动惯量，结合平移轴原理组合出来
