@@ -83,7 +83,7 @@ export function testCannon(renderScene:Scene3D, plane:MeshSprite3D, rmtl:BlinnPh
 	//addBox(1,1,1,10,2,0);
 	
 	let c1 = addCapsule(2, 4,  1,4, 0,  false);
-	//let c1 = addBox(0.2,4,0.2, 1,4,0, false);
+	//let c1 = addBox(2,4,2, 1,4,0, false);
 	c1.phyBody.allowSleep=false;
 	c1.phyBody.applyForce(new Vec3(0,0,-421), new Vec3(2,1,0));
 	//let c2 = addCapsule(0.2, 4, 3.15,1.2, 0,false);

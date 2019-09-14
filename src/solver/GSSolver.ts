@@ -1,3 +1,4 @@
+import { PhyRender } from './../layawrap/PhyRender';
 import Solver from './Solver.js';
 import World from '../world/World.js';
 
@@ -17,6 +18,8 @@ export default class GSSolver extends Solver {
      * When tolerance is reached, the system is assumed to be converged.
      */
     tolerance = 1e-7;
+
+    _phyr:PhyRender|null=null;
     constructor() {
         super();
     }
@@ -103,6 +106,7 @@ export default class GSSolver extends Solver {
             }
 
             // Add result to velocity
+            let phyr = this._phyr;
             /**
              * 已经计算出λ了，下面计算新的速度
              */
@@ -118,6 +122,8 @@ export default class GSSolver extends Solver {
                 // 角速度
                 b.wlambda.vmul(b.angularFactor, b.wlambda);
                 w.vadd(b.wlambda, w);
+
+                phyr && phyr.addRay(b.position.x, b.position.y, b.position.z, b.vlambda.x*10, b.vlambda.y*10, b.vlambda.z*10, 0xffff);
             }
 
             // Set the .multiplier property of each equation

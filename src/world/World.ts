@@ -19,6 +19,7 @@ import ContactEquation from '../equations/ContactEquation.js';
 import FrictionEquation from '../equations/FrictionEquation.js';
 import Constraint from '../constraints/Constraint.js';
 import Shape from '../shapes/Shape.js';
+import { PhyRender } from '../layawrap/PhyRender.js';
 
 class profileData{
     frametm:i32=0;     // 帧时间
@@ -255,7 +256,7 @@ export default class World extends EventTarget {
 
     idToBodyMap:{[id:string]:Body} = {};
 
-    phyRender:IPhyRender;
+    _phyRender:IPhyRender;
 
     constructor(options?:any) {
         super();
@@ -272,6 +273,13 @@ export default class World extends EventTarget {
         this.broadphase.setWorld(this);
     }
 
+    set phyRender(r:IPhyRender){
+        this._phyRender=r;
+        (this.solver as GSSolver)._phyr=r as PhyRender;
+    }
+    get phyRender(){
+        return this._phyRender;
+    }
     /**
      * 接触事件
      */
