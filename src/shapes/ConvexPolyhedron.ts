@@ -229,7 +229,7 @@ export default class ConvexPolyhedron extends Shape {
      * @param  quatA
      * @param  posB
      * @param  quatB
-     * @param  target The target vector to save the axis in
+     * @param  target The target vector to save the axis in 。 如果发生了碰撞，这个深度最浅的分离轴
      * @return Returns false if a separation is found, else true
      */
     findSeparatingAxis(hullB:ConvexPolyhedron, posA:Vec3, quatA:Quaternion, posB:Vec3, quatB:Quaternion, target:Vec3, faceListA:number[]|null, faceListB:number[]|null):boolean {
@@ -250,15 +250,15 @@ export default class ConvexPolyhedron extends Shape {
 
             // Test face normals from hullA
             for (var i = 0; i < numFacesA; i++) {
-                var fi = faceListA ? faceListA[i] : i;
+                var fi = faceListA ? faceListA[i] : i;	// face i
 
                 // Get world face normal
                 faceANormalWS3.copy(hullA.faceNormals[fi]);
-                quatA.vmult(faceANormalWS3, faceANormalWS3);
+                quatA.vmult(faceANormalWS3, faceANormalWS3);	// 转到世界空间
 
                 var d = hullA.testSepAxis(faceANormalWS3, hullB, posA, quatA, posB, quatB);
                 if (d <-1) {
-                    return false;
+                    return false;	// 找到一个分离轴了，立即返回。
                 }
 
                 if (d < dmin) {
@@ -327,7 +327,7 @@ export default class ConvexPolyhedron extends Shape {
             }
         }
 
-        // Test edges
+        // Test edges 再检查两两边cross后的向量作为分离轴
         for (let e0 = 0; e0 !== hullA.uniqueEdges.length; e0++) {
 
             // Get world edge
@@ -353,6 +353,7 @@ export default class ConvexPolyhedron extends Shape {
             }
         }
 
+		// 没有找到，一定相交。分离轴要从B指向A
         posB.vsub(posA, deltaC);
         if ((deltaC.dot(target)) > 0.0) {
             target.negate(target);
@@ -363,6 +364,8 @@ export default class ConvexPolyhedron extends Shape {
 
     /**
      * Test separating axis against two hulls. Both hulls are projected onto the axis and the overlap size is returned if there is one.
+	 * 用axis来投影两个hull，看是否发生重叠
+	 * @parame axis 世界空间的向量
      * @return  The overlap depth, or -10 if no penetration.
      */
     testSepAxis(axis:Vec3, hullB:ConvexPolyhedron, posA:Vec3, quatA:Quaternion, posB:Vec3, quatB:Quaternion):number {

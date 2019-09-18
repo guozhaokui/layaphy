@@ -76,6 +76,7 @@ export default class Narrowphase {
 		shapeChecks[SHAPETYPE.CAPSULE] = this.CapsuleCapsule;
 		shapeChecks[SHAPETYPE.CAPSULE| SHAPETYPE.PLANE ] = this.planeCapsule;
 		shapeChecks[SHAPETYPE.CAPSULE| SHAPETYPE.SPHERE] = this.sphereCapsule;
+		shapeChecks[SHAPETYPE.BOX|SHAPETYPE.CAPSULE] = this.boxCapsule;
         shapeChecks[SHAPETYPE.PLANE | SHAPETYPE.BOX] = this.planeBox;
         shapeChecks[SHAPETYPE.PLANE | SHAPETYPE.CONVEXPOLYHEDRON] = this.planeConvex;
         shapeChecks[SHAPETYPE.CONVEXPOLYHEDRON] = this.convexConvex;
@@ -1145,6 +1146,10 @@ export default class Narrowphase {
         }
         return false;
     }
+
+	boxCapsule(box: Box, capsule: Capsule,  boxPos: Vec3, capPos: Vec3, boxQ: Quaternion, capQ: Quaternion,  boxBody: Body, capBody: Body,  rsi: Shape, rsj: Shape, justTest: boolean): boolean {
+		return false;
+	}
 
     planeBox(si: Plane, sj: Box, xi: Vec3, xj: Vec3, qi: Quaternion, qj: Quaternion, bi: Body, bj: Body, rsi: Shape, rsj: Shape, justTest: boolean): boolean {
         sj.convexPolyhedronRepresentation.material = sj.material;

@@ -178,7 +178,9 @@ export default class Ray {
             case SHAPETYPE.PLANE: this.intersectPlane(shape as Plane, quat,position,body,shape); break;
             case SHAPETYPE.CONVEXPOLYHEDRON: this.intersectConvex(shape as ConvexPolyhedron, quat,position,body,shape); break;
             case SHAPETYPE.TRIMESH: this.intersectTrimesh(shape as Trimesh, quat,position,body,shape); break;
-            case SHAPETYPE.HEIGHTFIELD: this.intersectHeightfield(shape as Heightfield, quat,position,body,shape); break;
+			case SHAPETYPE.HEIGHTFIELD: this.intersectHeightfield(shape as Heightfield, quat,position,body,shape); break;
+			case SHAPETYPE.CAPSULE:break;
+			case SHAPETYPE.VOXEL:break;
         }
         /*
         const intersectMethod = this[shape.type];
