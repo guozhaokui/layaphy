@@ -5,6 +5,7 @@ import { Voxel } from "./Voxel";
 import Sphere from "./Sphere";
 import { PhyRender } from "../layawrap/PhyRender";
 import Mat3 from "../math/Mat3";
+import { MinkowskiShape } from "./MinkowskiShape";
 //import { quat_AABBExt_mult } from "./Box";
 
 //let aabbExt = new Vec3();
@@ -19,16 +20,21 @@ let tmpDir2 = new Vec3();
 let A1 = new Vec3();
 
 /**
+ * TODO y向上直立的capsule
+ */
+
+/**
  * 缺省主轴是z轴
  * 测试的时候可以通过组合shape来模拟胶囊
  */
-export default class Capsule extends Shape {
+export default class Capsule extends Shape implements MinkowskiShape{
 	radius: f32;
-	height: f32;
+	height: f32;		// 高度
 	noTrans = false;    // 站立的胶囊，可以简单处理
 	axis: Vec3 = new Vec3();          // 主轴。是一半
 	voxel: Voxel | null = null;
 	//mat = new Mat3();
+	minkowski = this;
 
 	constructor(r: f32 = 1, h: f32 = 1) {
 		super();
@@ -38,6 +44,16 @@ export default class Capsule extends Shape {
 		this.axis.set(0, 0, h / 2);
 		this.hasPreNarrowPhase = true;
 	}
+
+	getSupportVertex(dir: Vec3, sup: Vec3): Vec3 {
+		if(dir.z>0){//现在假设z轴向上
+			sup.set(0,0,this.height/2);
+		}else{
+			sup.set(0,0,-this.height/2);
+		}
+		sup.addScaledVector(this.radius,dir,sup);// 线段 + 球
+		return sup;
+	}	
 
     /**
      * 计算halfh向量变换后的值

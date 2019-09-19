@@ -1,12 +1,7 @@
 import { MinkowskiShape } from "../shapes/MinkowskiShape";
 import Transform from "../math/Transform";
 import Vec3 from "../math/Vec3";
-
-class MinkowskiDiff {
-	EnableMargin(b: boolean): void {
-
-	}
-}
+import { VoronoiSimplexSolver } from "./VoronoiSimplexSolver";
 
 class SupportVector {
 	v = new Vec3();		// minkowski sum
@@ -28,7 +23,7 @@ function nearZeroF(v: number) {
 var ORIGIN = new Vec3(0, 0, 0);
 class Simplex {
 	supportVertex = [new SupportVector(), new SupportVector(), new SupportVector(), new SupportVector()];
-	lastAddIdx = -1;
+	lastAddIdx = -1;	// 最后一个添加的位置
 	reset() {
 		this.lastAddIdx = -1;
 	}
@@ -195,7 +190,49 @@ class Simplex {
 	}
 
 	doSimplex4(dir: Vec3): i32 {
+		let supVerts = this.supportVertex;
+		let A = supVerts[this.lastAddIdx];
+		let B = supVerts[2];
+		let C = supVerts[1];
+		let D = supVerts[0];
 
+		// 检查四面体是否有效,最后加的点如果在三角形上就不行
+		let dist = this.ptTriDist2(A.v,B.v,C.v,D.v);
+		if(nearZeroF(dist)){
+			return -1;	// 新加的点没有扩展成体，还在三角面上，这种情况表示没有碰撞
+		}
+		// 检查四个面，原点是否在这四个面上，是的话，表示碰撞了
+		dist = this.ptTriDist2(ORIGIN, A.v,B.v,C.v);
+		if(nearZeroF(dist)) 
+			return 1;
+		dist = this.ptTriDist2(ORIGIN, A.v,C.v,D.v);
+		if(nearZeroF(dist)) 
+			return 1;
+		dist = this.ptTriDist2(ORIGIN, A.v,B.v,D.v);
+		if(nearZeroF(dist)) 
+			return 1;
+		dist = this.ptTriDist2(ORIGIN, B.v,C.v,D.v);
+		if(nearZeroF(dist)) 
+			return 1;
+
+		let AO = new Vec3();
+		let AB = new Vec3();
+		let AC = new Vec3();
+		let AD = new Vec3();
+		let ABC = new Vec3();
+		let ACD = new Vec3();
+		let ADB = new Vec3();
+
+		AO.copy(A.v).negate();	// AO = -A.v
+		B.v.vsub(A.v,AB);	//AB=B-A
+		C.v.vsub(A.v,AC); 	//AC=C-A
+		D.v.vsub(A.v,AD);	//AD=D-A
+		AB.cross(AC,ABC);	// ABC平面的法线
+		AC.cross(AD,ACD);	// ACD平面的法线
+		AD.cross(AB,ADB);	// ADB平面的法线
+		
+		throw 'NI';
+				
 	}
 
 	/**
@@ -303,23 +340,33 @@ var _computeSupport_Vec1 = new Vec3();
 var _computeSupport_Vec2 = new Vec3();
 var _computeSupport_Vec3 = new Vec3();
 var _computeSupport_Vec4 = new Vec3();
-class GJKPairDetector {
+export class GJKPairDetector {
 	shapeA: MinkowskiShape;
 	shapeB: MinkowskiShape;
+
+	simplexSolver=new VoronoiSimplexSolver();
 
 	/**
 	 * 计算A和B的最近点
 	 * @param transA 
 	 * @param transB 
 	 */
-	getClosestPoint(transA: Transform, transB: Transform) {
-		let cen = tmpVec1;	// 两个对象的中点
+	getClosestPoint1(transA: Transform, transB: Transform) {
+		// 把transform改成相对于两个对象中心的
+		let cen = tmpVec1;	
+		let oldTransA = transA.position;
+		let oldTransB = transB.position;
+		transA.position = new Vec3();		// 记得后面要恢复
+		transB.position = new Vec3();
 		transA.position.vadd(transB.position, cen).scale(0.5, cen);
+		oldTransA.vsub(cen,transA.position);	// tranA.postion -= center;
+		oldTransB.vsub(cen,transB.position);	
+
 		let maxIt = 1000;
 		let curIt = 0;
 
-		let sepAix = tmpVec2;
-		sepAix.set(0, 1, 0);
+		let sepAxis = tmpVec2;
+		sepAxis.set(0, 1, 0);
 		let margin = 0;
 
 		let simp1 = new Simplex();
@@ -368,7 +415,203 @@ class GJKPairDetector {
 				break;
 			}
 		}
+
+		//simplexSolver.reset()
+		// 另外一种方法
+		/** 碰撞点的B上的法线 */
+		let normalInB=new Vec3(0,0,0);	
+		let squaredDistance=1e20;
+		let checkSimplex=false;
+		let degenerateSimplex=0;
+		let REL_ERROR2 = 1e-12;
+		let simpSolver = this.simplexSolver;
+		while(true){
+			this.computeSupport(transA,transB,sepAxis,worldA,worldB,AminB);//TODO dir谁取反的问题
+			let delta = sepAxis.dot(AminB);
+			if(delta<=0){// =? 如果沿着dir方向取A,沿着反向取B，但是dot却<0表示两个对象是分离的
+						// 即找到了一个dir方向能把对象分离
+				checkSimplex=true;
+				degenerateSimplex=10;
+				break;
+			}
+
+			// 新得到的点已经在smplex中了，表示无法更接近了
+			if(simpSolver.inSimplex(AminB)){
+				degenerateSimplex=1;
+				checkSimplex=true;
+				break;
+			}
+
+			// 再近一点
+			
+			let f0 = squaredDistance-delta;
+			let f1 = squaredDistance*REL_ERROR2;
+			if(f0<=f1){
+				// 如果dist已经很小了
+				if(f0<=0){
+					degenerateSimplex=2;
+				}else{
+					degenerateSimplex=11;
+				}
+				checkSimplex=true;
+				break;
+			}
+
+			simpSolver.addVertex(AminB,worldA,worldB);
+			let newSepAx = new Vec3();
+			if(!simpSolver.closest(newSepAx)){
+				// 如果找不到更近的点
+				degenerateSimplex=3;
+				checkSimplex=true;
+				break;
+			}
+			if(newSepAx.lengthSquared()<REL_ERROR2){
+				sepAxis.copy(newSepAx);	//TODO 是不是可以用同一个对象
+				degenerateSimplex=6;
+				checkSimplex=true;
+				break;
+			}
+
+			let previousSquaredDistance = squaredDistance;
+			squaredDistance = newSepAx.lengthSquared();
+
+			if(previousSquaredDistance<=squaredDistance){
+				//新的分离轴没有更靠近？
+				checkSimplex=true;
+				degenerateSimplex=12;
+				break;
+			}
+
+			sepAxis.copy(newSepAx);
+
+			let check = !simpSolver.fullSimplex();
+			if(!check){//if full
+				degenerateSimplex=13;
+				break;
+			}
+
+			let pointOnA=new Vec3();
+			let pointOnB=new Vec3();
+			if(checkSimplex){
+				simpSolver.compute_points(pointOnA, pointOnB);
+			}
+		}
+
+		// 恢复transform
+		transA.position=oldTransB;
+		transB.position=oldTransB;
 	}
+
+	/**
+	 * 计算A和B的最近点
+	 * @param transA 
+	 * @param transB 
+	 */
+	getClosestPoint(transA: Transform, transB: Transform) {
+		// 把transform改成相对于两个对象中心的
+		let cen = tmpVec1;	
+		let oldTransA = transA.position;
+		let oldTransB = transB.position;
+		transA.position = new Vec3();		// 记得后面要恢复
+		transB.position = new Vec3();
+		oldTransA.vadd(oldTransB, cen).scale(0.5, cen);
+		oldTransA.vsub(cen,transA.position);	// tranA.postion -= center;
+		oldTransB.vsub(cen,transB.position);	
+
+		let sepAxis = tmpVec2;
+		sepAxis.set(0, 1, 0);
+		let margin = 0;
+
+		let worldA = new Vec3();
+		let worldB = new Vec3();
+		let AminB = new Vec3();
+
+		let simpSolver = this.simplexSolver;
+		simpSolver.reset();
+
+		/** 碰撞点的B上的法线 */
+		let normalInB=new Vec3(0,0,0);	
+		let squaredDistance=1e20;
+		let checkSimplex=false;
+		let degenerateSimplex=0;
+		let REL_ERROR2 = 1e-12;
+		while(true){
+			this.computeSupport(transA,transB,sepAxis,worldA,worldB,AminB);//TODO dir谁取反的问题
+			let delta = sepAxis.dot(AminB);
+			if(delta<=0){// =? 如果沿着dir方向取A,沿着反向取B，但是dot却<0表示两个对象是分离的
+						// 即找到了一个dir方向能把对象分离
+				checkSimplex=true;
+				degenerateSimplex=10;
+				break;
+			}
+
+			// 新得到的点已经在smplex中了，表示无法更接近了
+			if(simpSolver.inSimplex(AminB)){
+				degenerateSimplex=1;
+				checkSimplex=true;
+				break;
+			}
+
+			// 再近一点
+			
+			let f0 = squaredDistance-delta;
+			let f1 = squaredDistance*REL_ERROR2;
+			if(f0<=f1){
+				// 如果dist已经很小了
+				if(f0<=0){
+					degenerateSimplex=2;
+				}else{
+					degenerateSimplex=11;
+				}
+				checkSimplex=true;
+				break;
+			}
+
+			simpSolver.addVertex(AminB,worldA,worldB);
+			let newSepAx = new Vec3();
+			if(!simpSolver.closest(newSepAx)){
+				// 如果找不到更近的点
+				degenerateSimplex=3;
+				checkSimplex=true;
+				break;
+			}
+			if(newSepAx.lengthSquared()<REL_ERROR2){
+				sepAxis.copy(newSepAx);	//TODO 是不是可以用同一个对象
+				degenerateSimplex=6;
+				checkSimplex=true;
+				break;
+			}
+
+			let previousSquaredDistance = squaredDistance;
+			squaredDistance = newSepAx.lengthSquared();
+
+			if(previousSquaredDistance<=squaredDistance){
+				//新的分离轴没有更靠近？
+				checkSimplex=true;
+				degenerateSimplex=12;
+				break;
+			}
+
+			sepAxis.copy(newSepAx);
+
+			let check = !simpSolver.fullSimplex();
+			if(!check){//if full
+				degenerateSimplex=13;
+				break;
+			}
+
+			let pointOnA=new Vec3();
+			let pointOnB=new Vec3();
+			if(checkSimplex){
+				simpSolver.compute_points(pointOnA, pointOnB);
+			}
+		}
+
+		// 恢复transform
+		transA.position=oldTransB;
+		transB.position=oldTransB;
+	}
+
 
 	/**
 	 * 获得A，B的support点，以及A-B
@@ -385,17 +628,27 @@ class GJKPairDetector {
 		//先把dir转换到本地空间
 		let dirA = _computeSupport_Vec1;
 		let dirB = _computeSupport_Vec2;
-		transA.pointToLocal(dir, dirA);
-		transB.pointToLocal(dir, dirB);
+		let negDir = new Vec3();
+		negDir.copy(dir).negate(negDir);
+		// 把dir转换到本地空间		
+		let qA = transA.quaternion;
+        qA.w *= -1;
+        qA.vmult(dir, dirA);
+		qA.w *= -1;
+		
+		let qB = transB.quaternion;
+		qB.w *=-1;
+		qB.vmult(negDir,dirB);
+		qB.w *=-1;
 
 		let supA = _computeSupport_Vec3;
 		let supB = _computeSupport_Vec4;
 		A.getSupportVertex(dirA, supA);
-		B.getSupportVertex(dirB, supB);
+		B.getSupportVertex(dirB, supB);		//问题：例如盒子，得到的support会不会抖动，例如不转的时候，轴向采样的话四个点都可以
 		// 转换到世界空间
 		transA.pointToWorld(supA, worldA);
 		transB.pointToWorld(supB, worldB);
-		worldA.vsub(worldB, aMinB);
+		worldA.vsub(worldB, aMinB);	//A-B 就是 B指向A
 	}
 
 

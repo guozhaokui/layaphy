@@ -2,6 +2,7 @@ import Shape, { SHAPETYPE } from './Shape.js';
 import Vec3 from '../math/Vec3.js';
 import ConvexPolyhedron from './ConvexPolyhedron.js';
 import Quaternion from '../math/Quaternion.js';
+import { MinkowskiShape } from './MinkowskiShape.js';
 
 // v可以与target相同
 export function quat_AABBExt_mult(q:Quaternion, v:Vec3, target = new Vec3()) {
@@ -41,14 +42,14 @@ export function quat_AABBExt_mult(q:Quaternion, v:Vec3, target = new Vec3()) {
 /**
  * A 3d box shape.
  */
-export default class Box extends Shape {
+export default class Box extends Shape implements MinkowskiShape {
     halfExtents: Vec3;
-
     /**
      * Used by the contact generator to make contacts with other convex polyhedra for example
      * 把BOX转成convex
      */
-    convexPolyhedronRepresentation:ConvexPolyhedron;
+	convexPolyhedronRepresentation:ConvexPolyhedron;
+	minkowski=this;
 
     constructor(halfExtents: Vec3) {
         super();
@@ -56,7 +57,15 @@ export default class Box extends Shape {
         this.halfExtents = halfExtents;
         this.updateConvexPolyhedronRepresentation();
         this.updateBoundingSphereRadius();
-    }
+	}
+	
+	getSupportVertex(dir: Vec3, sup: Vec3): Vec3 {
+		let sz = this.halfExtents;
+		sup.x = dir.x>0?sz.x:-sz.x;
+		sup.y = dir.y>0?sz.y:-sz.y;
+		sup.z = dir.z>0?sz.z:-sz.z;
+		return sup;
+	}
 
     onPreNarrowpase(stepId: number,pos:Vec3,quat:Quaternion): void {}
     /**

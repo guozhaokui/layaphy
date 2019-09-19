@@ -4,6 +4,7 @@ import Material from '../material/Material.js';
 import Quaternion from '../math/Quaternion.js';
 import Vec3 from '../math/Vec3.js';
 import Body from '../objects/Body.js';
+import { MinkowskiShape } from './MinkowskiShape.js';
 
 export enum SHAPETYPE{
     SPHERE= 1,
@@ -50,7 +51,9 @@ export default abstract class Shape {
     material: Material|null = null;
     body: Body;
 
-    hasPreNarrowPhase=false;    // 是否要执行 onPreNarrowpase
+	hasPreNarrowPhase=false;    // 是否要执行 onPreNarrowpase
+	
+	minkowski:MinkowskiShape|null=null;
 
     constructor(options?: { type: number, collisionResponse: boolean, collisionFilterGroup: number, collisionFilterMask: number, material: Material }) {
         if(options){

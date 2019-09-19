@@ -18,6 +18,7 @@ import Trimesh from '../shapes/Trimesh.js';
 import Vec3Pool from '../utils/Vec3Pool.js';
 import World, { PhyColor } from './World.js';
 import Capsule from '../shapes/Capsule.js';
+import { GJKPairDetector } from '../collision/GJKEPA.js';
 
 //declare type anyShape=Box|Sphere|Capsule|Voxel|ConvexPolyhedron|Heightfield|Trimesh;
 interface checkFunc {
@@ -61,6 +62,8 @@ export default class Narrowphase {
      * @property {Boolean} enableFrictionReduction
      */
     enableFrictionReduction = false;
+
+	gjkdist = new GJKPairDetector();
 
     constructor(world: World) {
         this.world = world;
@@ -1147,7 +1150,19 @@ export default class Narrowphase {
         return false;
     }
 
+	static trans1=new Transform();
+	static trans2=new Transform();
 	boxCapsule(box: Box, capsule: Capsule,  boxPos: Vec3, capPos: Vec3, boxQ: Quaternion, capQ: Quaternion,  boxBody: Body, capBody: Body,  rsi: Shape, rsj: Shape, justTest: boolean): boolean {
+		let gjk = this.gjkdist;
+		gjk.shapeA=box.minkowski;
+		gjk.shapeB=capsule.minkowski;
+		let transA = Narrowphase.trans1;
+		let transB = Narrowphase.trans2;
+		transA.position=boxPos;
+		transA.quaternion=boxQ;
+		transB.position=capPos;
+		transB.quaternion=capQ;
+		this.gjkdist.getClosestPoint(transA,transB);
 		return false;
 	}
 
