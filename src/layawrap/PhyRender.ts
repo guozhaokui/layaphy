@@ -25,6 +25,12 @@ export class PhyRender extends IPhyRender{
 	posInd = new Vector3();
 	posIndColor=Color.BLUE;
 	setPosInd=false;
+
+	/** 持久显示的点，直到clear */
+	persistPoint:Vec3[]=[];	
+	/** 持久显示的矢量。格式是 vec,pos,vec,pos, ... 直到clear */
+	persistVec:Vec3[]=[];
+	
 	static inst:PhyRender;
     constructor(sce: Scene3D, world: World) {
         super();
@@ -35,6 +41,11 @@ export class PhyRender extends IPhyRender{
         this.renders.push(r);
 		sce.addChild(r);
 		PhyRender.inst=this;
+		// 添加到window上，方便调试
+		(window as any).phyr=this;
+		(window as any).showPoint=this.addPersistPoint.bind(this);
+		(window as any).showVec = this.addPersistVec.bind(this);
+		(window as any).clearPhy=this.clearPersist.bind(this);
     }
 
 	showPos(x:f32,y:f32,z:f32){
@@ -42,7 +53,17 @@ export class PhyRender extends IPhyRender{
 		this.setPosInd=true;
 	}
 
-    addRay(stx: number, sty: number, stz: number, dirx: number, diry: number, dirz: number, color: number): void {
+	/**
+	 * 在st位置显示dir矢量
+	 * @param stx 
+	 * @param sty 
+	 * @param stz 
+	 * @param dirx 
+	 * @param diry 
+	 * @param dirz 
+	 * @param color 
+	 */
+    addVec(stx: number, sty: number, stz: number, dirx: number, diry: number, dirz: number, color: number): void {
         let r = this.renders[0];
         p1.setValue(stx,sty,stz);
         p2.setValue(dirx,diry,dirz);
@@ -51,7 +72,26 @@ export class PhyRender extends IPhyRender{
         col1.g = ((color>>8)&0xff)/255;
         col1.b = ((color)&0xff)/255;
         r.addLine(p1,p3,col1, col1);
-    }
+	}
+	
+	addPersistPoint(x:number,y:number,z:number,name:string){
+		this.persistPoint.push(new Vec3(x,y,z));
+		return this.persistPoint.length-1;
+	}
+	delPersistPoint(id:i32){
+		this.persistPoint = this.persistPoint.splice(id,1);
+	}
+	addPersistVec(dx:number,dy:number,dz:number,x:number=0,y:number=0,z:number=0, name:string){
+		this.persistVec.push( new Vec3(dx,dy,dz), new Vec3(x,y,z));
+		return this.persistVec.length/2-1;
+	}
+	delPersistVec(id:i32){
+		this.persistVec=this.persistVec.splice(id*2,2)
+	}
+	clearPersist(){
+		this.persistPoint.length=0;
+		this.persistVec.length=0;
+	}
 
     addSeg(stx: number, sty: number, stz: number, edx: number, edy: number, edz: number, color: number): void {
         let r = this.renders[0];
@@ -63,12 +103,19 @@ export class PhyRender extends IPhyRender{
         r.addLine(p1,p2,col1, col1);
     }    
 
+	/**
+	 * 显示一个点
+	 * @param px 
+	 * @param py 
+	 * @param pz 
+	 * @param color 
+	 */
     addPoint(px: number, py: number, pz: number, color: number): void {
         let axlen=0.4;
         let hAxlen=0.2;
-        this.addRay(px-hAxlen,py,pz,axlen,0,0,color);
-        this.addRay(px,py-hAxlen,pz,0,axlen,0,color);
-        this.addRay(px,py,pz-hAxlen,0,0,axlen,color);
+        this.addVec(px-hAxlen,py,pz,axlen,0,0,color);
+        this.addVec(px,py-hAxlen,pz,0,axlen,0,color);
+        this.addVec(px,py,pz-hAxlen,0,0,axlen,color);
     }
 
     drawLine(pts:Vec3[],color:number):void{
@@ -106,6 +153,16 @@ export class PhyRender extends IPhyRender{
 			r.addLine(pi, new Vector3(pi.x+3,pi.y,pi.z),pic,pic);
 			r.addLine(pi, new Vector3(pi.x,pi.y+3,pi.z),pic,pic);
 			r.addLine(pi, new Vector3(pi.x,pi.y,pi.z+3),pic,pic);
+		}
+
+		this.persistPoint.forEach(v=>{
+			this.addPoint(v.x,v.y,v.z,0xff);
+		});
+		let pv =this.persistVec;
+		for(let i=0,l=pv.length/2; i<l; i++){
+			let v = pv[i*2];
+			let p = pv[i*2+1];
+			this.addVec(p.x,p.y,p.z,v.x,v.y, v.z, 0xff00);
 		}
     }
 

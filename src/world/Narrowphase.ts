@@ -88,7 +88,7 @@ export default class Narrowphase {
         shapeChecks[SHAPETYPE.PARTICLE | SHAPETYPE.CONVEXPOLYHEDRON] = this.convexParticle;
         shapeChecks[SHAPETYPE.CONVEXPOLYHEDRON | SHAPETYPE.HEIGHTFIELD] = this.convexHeightfield;
         shapeChecks[SHAPETYPE.BOX | SHAPETYPE.HEIGHTFIELD] = this.boxHeightfield;
-        shapeChecks[SHAPETYPE.SPHERE | SHAPETYPE.HEIGHTFIELD] = this.sphereHeightfield;
+		shapeChecks[SHAPETYPE.SPHERE | SHAPETYPE.HEIGHTFIELD] = this.sphereHeightfield;
     }
 
     /**

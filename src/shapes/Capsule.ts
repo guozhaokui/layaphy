@@ -43,8 +43,15 @@ export default class Capsule extends Shape implements MinkowskiShape{
 		this.height = h;
 		this.axis.set(0, 0, h / 2);
 		this.hasPreNarrowPhase = true;
+		this.margin = r;				//对capsule来说margin可以大到r
 	}
 
+	/**
+	 * MinkowskiShape 的接口
+	 * 暂时沿着z
+	 * @param dir 必须是规格化的
+	 * @param sup 
+	 */
 	getSupportVertex(dir: Vec3, sup: Vec3): Vec3 {
 		if(dir.z>0){//现在假设z轴向上
 			sup.set(0,0,this.height/2);
@@ -54,7 +61,14 @@ export default class Capsule extends Shape implements MinkowskiShape{
 		sup.addScaledVector(this.radius,dir,sup);// 线段 + 球
 		return sup;
 	}	
-
+	getSupportVertexWithoutMargin(dir: Vec3, sup: Vec3): Vec3 {
+		if(dir.z>0){//现在假设z轴向上
+			sup.set(0,0,this.height/2);
+		}else{
+			sup.set(0,0,-this.height/2);
+		}
+		return sup;
+	}	
     /**
      * 计算halfh向量变换后的值
      * @param q 

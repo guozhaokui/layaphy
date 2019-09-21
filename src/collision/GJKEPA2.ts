@@ -16,10 +16,24 @@ export class MinkowskiDiff {
 	EnableMargin(b: boolean) {
 
 	}
-	support0(d: Vec3) {
+
+	Support0( d:Vec3):Vec3{
+		//return (((m_shapes[0])->*(Ls))(d));
+		throw '';
 	}
-	Support(d: Vec3, idx: i32): Vec3 {
-		throw ''
+	Support1(d:Vec3):Vec3{
+		//return (m_toshape0 * ((m_shapes[1])->*(Ls))(m_toshape1 * d));
+		throw '';
+	}	
+	Support(d: Vec3, idx: i32):Vec3 {
+		if (idx)
+			return this.Support1(d);
+		else
+			return this.Support0(d);		
+	}
+	Support_(d: Vec3): Vec3 {
+		//return this.Support0(d) - this.Support1(-d);
+		throw '';
 	}
 }
 
@@ -84,7 +98,7 @@ export function Distance(shape0: ConvexShape, wtrs0: Transform, shape1: ConvexSh
 	}
 }
 
-export function Penetration(shape0: ConvexShape, wtrs0: Transform, shape1: ConvexShape, wtrs1: Transform, guess: Vec3, results: sResults, usemargins: boolean) {
+export function Penetration(shape0: ConvexShape, wtrs0: Transform, shape1: ConvexShape, wtrs1: Transform, guess: Vec3, results: sResults, usemargins: boolean=true) {
 	let shape = new MinkowskiDiff();
 	Initialize(shape0, wtrs0, shape1, wtrs1, results, shape, usemargins);
 	let gjk = new GJK();

@@ -1,5 +1,6 @@
 import Vec3 from "../math/Vec3";
 
+const ORIGIN = new Vec3();
 /**
  * 子多面体的最近点的结果
  */
@@ -40,7 +41,7 @@ export class VoronoiSimplexSolver{
 	MAXVERTS=5;
 	vertNum=0;		//当前指针，
 	needUpdate=true;
-	vecW  =[new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3()];		// P-Q
+	vecW  =[new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3()];		// P-Q. 注意不要看成是矢量，是Minkowski多边形上的点，
 	pointP=[new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3()];
 	pointQ=[new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3()];
 
@@ -79,7 +80,10 @@ export class VoronoiSimplexSolver{
 
 	closest(newDir:Vec3):boolean{
 		let succes = this.updateClosestVectorAndPoints();
-		newDir.copy(this.cachedV);
+		// 如果点正好在单形上，会返回false，怎么处理
+		//newDir.copy(this.cachedV);
+		// 更新采样方向，要朝向原点，所以取cachedV的反向
+		this.cachedV.negate(newDir);
 		return succes;
 	}
 
@@ -230,6 +234,7 @@ export class VoronoiSimplexSolver{
 	 * @param c 
 	 * @param d 
 	 * @param finalResult 
+	 * @return 
 	 */
 	closestPtPointTetrahedron( p:Vec3, a:Vec3, b:Vec3, c:Vec3, d:Vec3,finalResult:SubSimplexClosestResult){
 		let tempResult = new SubSimplexClosestResult();
@@ -408,11 +413,10 @@ export class VoronoiSimplexSolver{
 				{
 					//closest point origin from triangle
 					let vecW = this.vecW;
-					let  p = new Vec3();
 					let a = vecW[0];
 					let b = vecW[1];
 					let c = vecW[2];
-					this.closestPtPointTriangle(p, a, b, c, cachedBC);
+					this.closestPtPointTriangle(ORIGIN, a, b, c, cachedBC);
 					let bcCoord = cachedBC.barycentricCoords;
 					{
 						let a=bcCoord[0],b=bcCoord[1],c=bcCoord[2];
@@ -433,14 +437,12 @@ export class VoronoiSimplexSolver{
 				break;
 				case 4: // 四面体
 				{
-					let p = new Vec3();
-
 					let a = Vs[0];
 					let b = Vs[1];
 					let c = Vs[2];
 					let d = Vs[3];
 
-					let hasSeparation = this.closestPtPointTetrahedron(p, a, b, c, d, cachedBC);
+					let hasSeparation = this.closestPtPointTetrahedron(ORIGIN, a, b, c, d, cachedBC);
 
 					if (hasSeparation){
 						let bcCoord = cachedBC.barycentricCoords;
@@ -459,6 +461,7 @@ export class VoronoiSimplexSolver{
 					else{
 						//					printf("sub distance got penetration\n");
 						if (cachedBC.degenerate){
+							//如果点已经在表面上了，则正常
 							this.cachedValidClosest = false;
 						}
 						else{

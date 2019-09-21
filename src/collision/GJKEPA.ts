@@ -2,7 +2,11 @@ import { MinkowskiShape } from "../shapes/MinkowskiShape";
 import Transform from "../math/Transform";
 import Vec3 from "../math/Vec3";
 import { VoronoiSimplexSolver } from "./VoronoiSimplexSolver";
-import { Result_Status, sResults, Penetration } from "./GJKEPA2";
+import { Result_Status, sResults, Penetration, Distance } from "./GJKEPA2";
+import { PhyRender } from "../layawrap/PhyRender";
+
+const PHYEPSILON = 1e-10;	//
+const PHYEPS2 = PHYEPSILON ** 2;
 
 class SupportVector {
 	v = new Vec3();		// minkowski sum
@@ -340,12 +344,12 @@ class GjkEpaPenetrationDepthSolver {
 		let o1 = transformA.position;
 		let o2 = transformB.position;
 		let d1 = calcdepth_v1;
-		o1.vsub(o2,d1);
+		o1.vsub(o2, d1);
 		d1.normalize();
 
 		let guessVectors = [
-			new Vec3(-d1.x,-d1.y,-d1.z),	//o2-o1
-			new Vec3(d1.x,d1.y,d1.z),		//o1-o2
+			new Vec3(-d1.x, -d1.y, -d1.z),	//o2-o1
+			new Vec3(d1.x, d1.y, d1.z),		//o1-o2
 			new Vec3(0, 0, 1),
 			new Vec3(0, 1, 0),
 			new Vec3(1, 0, 0),
@@ -367,9 +371,8 @@ class GjkEpaPenetrationDepthSolver {
 				wWitnessOnB = results.witnesses[1];
 				v = results.normal;
 				return true;
-			}
-				else {
-				if (btGjkEpaSolver2:: Distance(pConvexA, transformA, pConvexB, transformB, guessVector, results)) {
+			} else {
+				if (Distance(pConvexA, transformA, pConvexB, transformB, guessVector, results)) {
 					wWitnessOnA = results.witnesses[0];
 					wWitnessOnB = results.witnesses[1];
 					v = results.normal;
@@ -398,6 +401,8 @@ export class GJKPairDetector {
 	shapeB: MinkowskiShape;
 	simplexSolver = new VoronoiSimplexSolver();
 	penetrationDepthSolver = new GjkEpaPenetrationDepthSolver();
+	marginA = 0;
+	marginB = 0;
 
 	/**
 	 * 计算A和B的最近点
@@ -427,14 +432,14 @@ export class GJKPairDetector {
 		let worldA = new Vec3();
 		let worldB = new Vec3();
 		let AminB = new Vec3();
-		this.computeSupport(transA, transB, dir, worldA, worldB, AminB);
+		this.computeSupport(transA, transB, dir, worldA, worldB, AminB, false);
 
 		let last = new SupportVector(AminB, worldA, worldB);
 		simp1.addCopy(last);
 		AminB.negate(dir);	// dir = -AminB
 		let status = -2;
 		for (let i = 0; i < maxIt; i++) {
-			this.computeSupport(transA, transB, dir, worldA, worldB, AminB);
+			this.computeSupport(transA, transB, dir, worldA, worldB, AminB, false);
 			let delta = AminB.dot(dir);
 			if (delta < 0) {
 				// 当前检测方向，与当前支撑点，在原点的同一侧。例如w在原点的左侧，却对应超右的支撑方向，即w已经在最右边了，依然在左侧，则没有碰撞
@@ -479,7 +484,7 @@ export class GJKPairDetector {
 		let REL_ERROR2 = 1e-12;
 		let simpSolver = this.simplexSolver;
 		while (true) {
-			this.computeSupport(transA, transB, sepAxis, worldA, worldB, AminB);//TODO dir谁取反的问题
+			this.computeSupport(transA, transB, sepAxis, worldA, worldB, AminB, true);//TODO dir谁取反的问题
 			let delta = sepAxis.dot(AminB);
 			if (delta <= 0) {// =? 如果沿着dir方向取A,沿着反向取B，但是dot却<0表示两个对象是分离的
 				// 即找到了一个dir方向能把对象分离
@@ -561,6 +566,12 @@ export class GJKPairDetector {
 	 * @param transB 
 	 */
 	getClosestPoint(transA: Transform, transB: Transform) {
+		//DEBUG
+		//let phyr = PhyRender.inst;
+		let phyr:PhyRender=(window as any).phyr;
+		let showit:number = (window as any).dbgit;
+
+		//DEBUG
 		// 把transform改成相对于两个对象中心的
 		let cen = tmpVec1;
 		let oldTransA = transA.position;
@@ -573,28 +584,47 @@ export class GJKPairDetector {
 
 		let sepAxis = tmpVec2;
 		sepAxis.set(0, 1, 0);
-		let margin = 0;
+		let margin = this.shapeA.margin + this.shapeB.margin;
 		let distance = 0;
 		let isValid = false;	// sepAxis 有效
 
 		let worldA = new Vec3();
 		let worldB = new Vec3();
 		let AminB = new Vec3();
+		let normSep = new Vec3();	//规格化之后的测试轴
 
 		let simpSolver = this.simplexSolver;
 		simpSolver.reset();
 
 		/** 碰撞点的B上的法线 */
 		let normalInB = new Vec3(0, 0, 0);
+		/** 分离轴的长度 */
 		let squaredDistance = 1e20;
 		let checkSimplex = false;
 		let degenerateSimplex = 0;
 		let REL_ERROR2 = 1e-12;
+		let itNum=0;
 		while (true) {
-			this.computeSupport(transA, transB, sepAxis, worldA, worldB, AminB);//TODO dir谁取反的问题
-			let delta = sepAxis.dot(AminB);
-			if (delta <= 0) {// =? 如果沿着dir方向取A,沿着反向取B，但是dot却<0表示两个对象是分离的
-				// 即找到了一个dir方向能把对象分离
+			let showdbg = showit==itNum;
+			itNum++;
+			let sepLen = sepAxis.length();
+			sepAxis.scale(1 / sepLen, normSep);	//TODO 这个是不是在computeSupport函数内部做更好
+			this.computeSupport(transA, transB, normSep, worldA, worldB, AminB, true);//TODO dir谁取反的问题
+			//DEBUG
+			if(showdbg){
+				phyr.addPoint(worldA.x+cen.x,worldA.y+cen.y,worldA.z+cen.z,0x77);
+				phyr.addPoint(worldB.x+cen.x,worldB.y+cen.y,worldB.z+cen.z,0xff);
+				phyr.addPoint(AminB.x,AminB.y,AminB.z,0xff0000);
+				phyr.addVec(0,0,0,sepAxis.x,sepAxis.y,sepAxis.z,0xff00);
+			}
+			//DEBUG
+			/** A-B点在采样方向上的投影，如果小于0，表示当前方向上两个对象的距离 */
+			let delta = normSep.dot(AminB);
+			if (delta < -margin) {// 如果沿着dir方向取A,沿着反向取B，但是dot却<0表示两个对象是分离的
+				// 沿着采样方向采样minkow形，结果点在后面，则原点一定不在minkow形内
+				// 相当于找到了一个dir方向能把对象分离
+				// 由于采样的是没有margin的，因此要把marin考虑在内
+				// 注意不能=，因为=算碰撞
 				checkSimplex = true;
 				degenerateSimplex = 10;
 				break;
@@ -607,8 +637,7 @@ export class GJKPairDetector {
 				break;
 			}
 
-			// 再近一点
-
+			// 更靠近一些了么
 			let f0 = squaredDistance - delta;
 			let f1 = squaredDistance * REL_ERROR2;
 			if (f0 <= f1) {
@@ -623,6 +652,7 @@ export class GJKPairDetector {
 			}
 
 			simpSolver.addVertex(AminB, worldA, worldB);
+
 			let newSepAx = new Vec3();
 			if (!simpSolver.closest(newSepAx)) {
 				// 如果找不到更近的点
@@ -630,7 +660,8 @@ export class GJKPairDetector {
 				checkSimplex = true;
 				break;
 			}
-			if (newSepAx.lengthSquared() < REL_ERROR2) {
+			let newSepLen2 = newSepAx.lengthSquared();
+			if ( newSepLen2 < REL_ERROR2) {
 				sepAxis.copy(newSepAx);	//TODO 是不是可以用同一个对象
 				degenerateSimplex = 6;
 				checkSimplex = true;
@@ -638,7 +669,7 @@ export class GJKPairDetector {
 			}
 
 			let previousSquaredDistance = squaredDistance;
-			squaredDistance = newSepAx.lengthSquared();
+			squaredDistance = newSepLen2;// newSepAx.lengthSquared();
 
 			if (previousSquaredDistance - squaredDistance <= previousSquaredDistance * 1e-10) {
 				// 即 previousSquaredDistance<=squaredDistance 只是误差与previousSquaredDistance大小有关，避免都用相同误差
@@ -655,39 +686,72 @@ export class GJKPairDetector {
 				degenerateSimplex = 13;
 				break;
 			}
+		}
+		console.log('itnum=',itNum);
 
-			let pointOnA = new Vec3();
-			let pointOnB = new Vec3();
-			if (checkSimplex) {
-				// 计算或者copy上次朝向采样的两个点（可能是计算的点，不一定在边界？）
-				simpSolver.compute_points(pointOnA, pointOnB);
-				normalInB.copy(sepAxis);
-				let lenSqr = sepAxis.lengthSquared();
-				if (lenSqr < 1e-12) {
-					degenerateSimplex = 5;//dir无效
-				} else {
-					let len = Math.sqrt(lenSqr);
-					let rlen = 1 / len;
-					normalInB.scale(rlen, normalInB);	//规格化一下
-					//let s = Math.sqrt(squaredDistance);	//TODO 是不是重复了
-					// pointOnA.addScaledVector(margin, normalInB, pointOnA); 	TODO 谁加谁减
-					// pointOnB.addScaledVector(-margin, normalInB, pointOnB);
-					distance = len - margin;
-					isValid = true;
-				}
+		let pointOnA = new Vec3();
+		let pointOnB = new Vec3();
+		if (checkSimplex) {
+			// 计算或者copy上次朝向采样的两个点（可能是计算的点，不一定在边界？）
+			simpSolver.compute_points(pointOnA, pointOnB);
+			// 由于采样方向是-AminB 所以是指向B，所以下面取反
+			sepAxis.negate(normalInB);
+			//normalInB.copy(sepAxis);
+			let lenSqr = sepAxis.lengthSquared();
+			if (lenSqr < 1e-12) {
+				degenerateSimplex = 5;//dir无效
+			} else {
+				let len = Math.sqrt(lenSqr);
+				let rlen = 1 / len;
+				normalInB.scale(rlen, normalInB);	//规格化一下
+				//let s = Math.sqrt(squaredDistance);	//TODO 是不是重复了
+				// pointOnA.addScaledVector(margin, normalInB, pointOnA); 	TODO 谁加谁减
+				// pointOnB.addScaledVector(-margin, normalInB, pointOnB);
+				distance = len - margin;
+				isValid = true;
 			}
 		}
 
 		let catchDegeneratePenetrationCase = distance + margin < 1e-13
-		// 如果深度太大，需要EPA解决
 		if (!isValid || catchDegeneratePenetrationCase) {
+			// 如果上面没有检测到，或者太深，GJK无法计算深度，只能用复杂的EPA解决
 			if (this.penetrationDepthSolver) {
-
+				let tmpPointOnA = new Vec3();
+				let tmpPointOnB = new Vec3();
+				sepAxis.set(0, 0, 0);
+				let isValid2 = this.penetrationDepthSolver.calcPenDepth(this.simplexSolver, this.shapeA, this.shapeB, transA, transB, sepAxis, tmpPointOnA, tmpPointOnB);
+				let sepLen = sepAxis.lengthSquared();
+				if (sepLen > 0) {
+					if (isValid2) {
+						let tmpNormalInB = new Vec3();
+						tmpPointOnB.vsub(tmpPointOnA, tmpNormalInB);
+						let lenSqr = tmpNormalInB.lengthSquared();
+						if (lenSqr <= PHYEPS2) {
+							//==0
+							tmpNormalInB.copy(sepAxis);
+							lenSqr = sepLen;
+						} else {
+							//>0
+							tmpNormalInB.scale(1 / Math.sqrt(lenSqr));//normalize
+							let d = new Vec3();
+							tmpPointOnA.vsub(tmpPointOnB, d);
+							let l = -d.length();	// 深度是负的
+							if (!isValid || l < distance) {
+								// 深度取更深的。
+								// 如果gjk没有检测到，或者epa检测的深度更大。
+								//TODO add contact
+								isValid = true;
+							}
+						}
+					} else {
+						//都这样了，EPA还是没有检测到碰撞的情况
+					}
+				}
 			}
 		}
 
 		//if(isValid && (distance<0||distance*distance<maxDistSquared))
-		if (isValid && distance < 0) {
+		if (isValid) { //&& distance < 0) { TODO distanc合理性检查
 			// 确定碰撞了，处理碰撞
 
 		}
@@ -706,7 +770,7 @@ export class GJKPairDetector {
 	 * @param worldB 
 	 * @param aMinB 
 	 */
-	computeSupport(transA: Transform, transB: Transform, dir: Vec3, worldA: Vec3, worldB: Vec3, aMinB: Vec3) {
+	computeSupport(transA: Transform, transB: Transform, dir: Vec3, worldA: Vec3, worldB: Vec3, aMinB: Vec3, noMargin: boolean) {
 		let A = this.shapeA;
 		let B = this.shapeB;
 		//先把dir转换到本地空间
@@ -727,8 +791,13 @@ export class GJKPairDetector {
 
 		let supA = _computeSupport_Vec3;
 		let supB = _computeSupport_Vec4;
-		A.getSupportVertex(dirA, supA);
-		B.getSupportVertex(dirB, supB);		//问题：例如盒子，得到的support会不会抖动，例如不转的时候，轴向采样的话四个点都可以
+		if (noMargin) {
+			A.getSupportVertexWithoutMargin(dirA, supA);
+			B.getSupportVertexWithoutMargin(dirB, supB);
+		} else {
+			A.getSupportVertex(dirA, supA);
+			B.getSupportVertex(dirB, supB);		//问题：例如盒子，得到的support会不会抖动，例如不转的时候，轴向采样的话四个点都可以
+		}
 		// 转换到世界空间
 		transA.pointToWorld(supA, worldA);
 		transB.pointToWorld(supB, worldB);

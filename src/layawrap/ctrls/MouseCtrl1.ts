@@ -82,6 +82,9 @@ export class MouseCtrl1 extends Script3D {
         handleSprite.on(Event.RIGHT_MOUSE_UP, this, this.onRightMouseUpHandler);
         handleSprite.on(Event.MOUSE_WHEEL, this, this.onMouseWheelHandler);
 
+		handleSprite.on(Event.KEY_DOWN,this,this.onKeyDown);
+		handleSprite.on(Event.KEY_UP, this,this.onKeyUp);
+
         if (!this.isInitArcball && Laya.stage.width > 0) {
             this.arcball.init(Laya.stage.width, Laya.stage.height);
             this.isInitArcball = true;
@@ -107,7 +110,11 @@ export class MouseCtrl1 extends Script3D {
         //pc兼容
         handleSprite.off(Event.RIGHT_MOUSE_DOWN, this, this.onRightMouseDownHandler);
         handleSprite.off(Event.RIGHT_MOUSE_UP, this, this.onRightMouseUpHandler);
-        handleSprite.off(Event.MOUSE_WHEEL, this, this.onMouseWheelHandler);
+		handleSprite.off(Event.MOUSE_WHEEL, this, this.onMouseWheelHandler);
+
+		handleSprite.off(Event.KEY_DOWN,this,this.onKeyDown);
+		handleSprite.off(Event.KEY_UP, this,this.onKeyUp);
+		
     }
 
     //pc兼容处理

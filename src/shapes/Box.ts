@@ -61,9 +61,18 @@ export default class Box extends Shape implements MinkowskiShape {
 	
 	getSupportVertex(dir: Vec3, sup: Vec3): Vec3 {
 		let sz = this.halfExtents;
-		sup.x = dir.x>0?sz.x:-sz.x;
-		sup.y = dir.y>0?sz.y:-sz.y;
-		sup.z = dir.z>0?sz.z:-sz.z;
+		sup.x = dir.x>=0?sz.x:-sz.x;
+		sup.y = dir.y>=0?sz.y:-sz.y;
+		sup.z = dir.z>=0?sz.z:-sz.z;
+		return sup;
+	}	
+	getSupportVertexWithoutMargin(dir: Vec3, sup: Vec3): Vec3 {
+		let sz = this.halfExtents;
+		let margin =this.margin;
+		let lx =sz.x-margin; let ly=sz.y-margin; let lz=sz.z-margin;
+		sup.x = dir.x>=0?lx:-lx;
+		sup.y = dir.y>=0?ly:-ly;
+		sup.z = dir.z>=0?lz:-lz;
 		return sup;
 	}
 

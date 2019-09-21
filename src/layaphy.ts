@@ -50,7 +50,8 @@ var mat = directionLight.transform.worldMatrix;
 mat.setForward(new Vector3(-1.0, -1.0, -1.0));
 directionLight.transform.worldMatrix = mat;
 
-var plane = (<MeshSprite3D>scene.addChild(new MeshSprite3D(PrimitiveMesh.createPlane(100, 100, 10, 10))));
+let plane = new MeshSprite3D(PrimitiveMesh.createPlane(100, 100, 10, 10));
+//scene.addChild(plane);
 var planeMtl = new BlinnPhongMaterial();
 Texture2D.load("res/grass.png", Handler.create(null, function (tex: Texture2D): void {
     planeMtl.albedoTexture = tex;

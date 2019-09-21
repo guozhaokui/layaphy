@@ -15,6 +15,7 @@ export default class Sphere extends Shape {
 	radius = 1;
 	constructor(radius: number) {
 		super();
+		this.margin=radius;
 		this.type = SHAPETYPE.SPHERE;
 		this.radius = radius !== undefined ? radius : 1.0;
 

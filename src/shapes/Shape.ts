@@ -52,9 +52,9 @@ export default abstract class Shape {
     body: Body;
 
 	hasPreNarrowPhase=false;    // 是否要执行 onPreNarrowpase
-	
-	minkowski:MinkowskiShape|null=null;
 
+	minkowski:MinkowskiShape|null=null;
+	margin=0.04;	// 缺省的margin，如果形状过小或者有其他特殊特点，可以在子类里面设置
     constructor(options?: { type: number, collisionResponse: boolean, collisionFilterGroup: number, collisionFilterMask: number, material: Material }) {
         if(options){
             this.type = options.type || 0;

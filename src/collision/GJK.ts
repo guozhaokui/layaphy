@@ -294,7 +294,7 @@ export class GJK {
 	getsupport(d: Vec3, sv: GJK_sSV) {
 		let l = d.length();
 		d.scale(1 / l, sv.d); // 规格化d. sv.d=d/||d||
-		this.m_shape.Support(sv.d, sv.w);	// 在方向d上采样，放到 sv.w
+		this.m_shape.Support_(sv.d);	// 在方向d上采样，放到 sv.w
 	}
 
 	/**
