@@ -1153,6 +1153,10 @@ export default class Narrowphase {
 	static trans1=new Transform();
 	static trans2=new Transform();
 	boxCapsule(box: Box, capsule: Capsule,  boxPos: Vec3, capPos: Vec3, boxQ: Quaternion, capQ: Quaternion,  boxBody: Body, capBody: Body,  rsi: Shape, rsj: Shape, justTest: boolean): boolean {
+		let ni = Narrowphase.nor1;
+		let hitpos = point_on_plane_to_sphere;
+        let hit1 =Cap_Cap_tmpV1;
+        
 		let gjk = this.gjkdist;
 		gjk.shapeA=box.minkowski;
 		gjk.shapeB=capsule.minkowski;
@@ -1162,7 +1166,19 @@ export default class Narrowphase {
 		transA.quaternion=boxQ;
 		transB.position=capPos;
 		transB.quaternion=capQ;
-		this.gjkdist.getClosestPoint(transA,transB);
+		let deep = this.gjkdist.getClosestPoint(transA,transB, hitpos, hit1, ni, justTest);
+		if(deep>=0){
+			if(justTest)return true;
+			let r = this.createContactEquation(boxBody,capBody, box, capsule, rsi, rsj);
+            ni.negate(ni);// 
+			r.ni.copy(ni);
+			hitpos.vsub(boxPos,r.ri);
+			hit1.vsub(capPos,r.rj);
+
+            this.result.push(r);
+			this.createFrictionEquationsFromContact(r, this.frictionResult);
+			return true;			
+		}
 		return false;
 	}
 

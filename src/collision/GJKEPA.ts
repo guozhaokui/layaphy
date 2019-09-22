@@ -564,8 +564,15 @@ export class GJKPairDetector {
 	 * 计算A和B的最近点
 	 * @param transA 
 	 * @param transB 
+	 * @param hitNorm 把A推开的法线，即B身上的，朝向A的。
+	 * @return 碰撞深度， <0表示没有碰撞，
 	 */
-	getClosestPoint(transA: Transform, transB: Transform) {
+	getClosestPoint(transA: Transform, transB: Transform,hitA:Vec3,hitB:Vec3, hitNorm:Vec3, justtest:boolean):f32 {
+		//performance.clearMarks('getcloseptstart');
+		//performance.clearMarks('getcloseptend');
+		//performance.clearMeasures('getClosePoint');
+
+		//performance.mark('getcloseptstart');
 		//DEBUG
 		//let phyr = PhyRender.inst;
 		let phyr:PhyRender=(window as any).phyr;
@@ -598,14 +605,15 @@ export class GJKPairDetector {
 
 		/** 碰撞点的B上的法线 */
 		let normalInB = new Vec3(0, 0, 0);
-		/** 分离轴的长度 */
+		/** 分离轴的长度平方 */
 		let squaredDistance = 1e20;
 		let checkSimplex = false;
 		let degenerateSimplex = 0;
-		let REL_ERROR2 = 1e-12;
+		let collision=false;
+		const REL_ERROR2 = 1e-12;
 		let itNum=0;
 		while (true) {
-			let showdbg = showit==itNum;
+			let showdbg = showit==itNum;//debug
 			itNum++;
 			let sepLen = sepAxis.length();
 			sepAxis.scale(1 / sepLen, normSep);	//TODO 这个是不是在computeSupport函数内部做更好
@@ -618,7 +626,7 @@ export class GJKPairDetector {
 				phyr.addVec(0,0,0,sepAxis.x,sepAxis.y,sepAxis.z,0xff00);
 			}
 			//DEBUG
-			/** A-B点在采样方向上的投影，如果小于0，表示当前方向上两个对象的距离 */
+			/** A-B点在采样方向上的投影 */
 			let delta = normSep.dot(AminB);
 			if (delta < -margin) {// 如果沿着dir方向取A,沿着反向取B，但是dot却<0表示两个对象是分离的
 				// 沿着采样方向采样minkow形，结果点在后面，则原点一定不在minkow形内
@@ -627,6 +635,7 @@ export class GJKPairDetector {
 				// 注意不能=，因为=算碰撞
 				checkSimplex = true;
 				degenerateSimplex = 10;
+				collision=false;
 				break;
 			}
 
@@ -634,14 +643,14 @@ export class GJKPairDetector {
 			if (simpSolver.inSimplex(AminB)) {
 				degenerateSimplex = 1;
 				checkSimplex = true;
+				collision=true;
 				break;
 			}
 
-			// 更靠近一些了么
-			let f0 = squaredDistance - delta;
+			// 判断投影长度delta是不是超过了采样射线，超过了表示原点在里面
+			let f0 = squaredDistance - delta + margin;
 			let f1 = squaredDistance * REL_ERROR2;
 			if (f0 <= f1) {
-				// 如果dist已经很小了
 				if (f0 <= 0) {
 					degenerateSimplex = 2;
 				} else {
@@ -658,13 +667,16 @@ export class GJKPairDetector {
 				// 如果找不到更近的点
 				degenerateSimplex = 3;
 				checkSimplex = true;
+				collision=true;
 				break;
 			}
 			let newSepLen2 = newSepAx.lengthSquared();
 			if ( newSepLen2 < REL_ERROR2) {
+				// 如果分离轴已经很短了
 				sepAxis.copy(newSepAx);	//TODO 是不是可以用同一个对象
 				degenerateSimplex = 6;
 				checkSimplex = true;
+				collision=true;
 				break;
 			}
 
@@ -676,6 +688,7 @@ export class GJKPairDetector {
 				//新的分离轴没有更靠近？
 				checkSimplex = true;
 				degenerateSimplex = 12;
+				collision=true;
 				break;
 			}
 
@@ -687,7 +700,13 @@ export class GJKPairDetector {
 				break;
 			}
 		}
-		console.log('itnum=',itNum);
+		//console.log('itnum=',itNum);
+
+		if(!collision){
+			return -1;
+		}
+		if(justtest)
+			return 1;
 
 		let pointOnA = new Vec3();
 		let pointOnB = new Vec3();
@@ -713,7 +732,7 @@ export class GJKPairDetector {
 		}
 
 		let catchDegeneratePenetrationCase = distance + margin < 1e-13
-		if (!isValid || catchDegeneratePenetrationCase) {
+		if(!isValid || catchDegeneratePenetrationCase) {
 			// 如果上面没有检测到，或者太深，GJK无法计算深度，只能用复杂的EPA解决
 			if (this.penetrationDepthSolver) {
 				let tmpPointOnA = new Vec3();
@@ -753,11 +772,24 @@ export class GJKPairDetector {
 		//if(isValid && (distance<0||distance*distance<maxDistSquared))
 		if (isValid) { //&& distance < 0) { TODO distanc合理性检查
 			// 确定碰撞了，处理碰撞
-
+			sepAxis.normalize();
+			sepAxis.negate(hitNorm);
+			//hitNorm.copy(sepAxis);
+			// 具体的碰撞点要把margin加上
+			pointOnA.addScaledVector(this.shapeA.margin, sepAxis, hitA);// hitA = pointOnA - margin*norm
+			hitA.vadd(cen,hitA);	//TODO 这个cen能去掉么，不知道有什么好处
+			//hitA.copy(pointOnA);
+			//hitB.copy(pointOnB);
+			pointOnB.addScaledVector(this.shapeB.margin,hitNorm,hitB);	//hitB = pointOnB+margin*norm
+			hitB.vadd(cen,hitB);
 		}
 		// 恢复transform
 		transA.position = oldTransB;
 		transB.position = oldTransB;
+
+		//performance.mark('getcloseptend');
+		//performance.measure('getClosePoint','getcloseptstart','getcloseptend');
+		return -distance;
 	}
 
 
