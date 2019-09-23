@@ -30,7 +30,7 @@ export function testCannon(renderScene:Scene3D, plane:MeshSprite3D, rmtl:BlinnPh
 	mtl=rmtl;
     let phyworld = scene.addComponent(CannonWorld) as CannonWorld;
     // phyworld
-    phyworld.world.gravity.set(0,0,0);
+    //phyworld.world.gravity.set(0,0,0);
 
     (window as any).phyr = new PhyRender(scene, phyworld.world);
 
@@ -41,7 +41,6 @@ export function testCannon(renderScene:Scene3D, plane:MeshSprite3D, rmtl:BlinnPh
     let cmtl2 = new ContactMaterial(phymtl1, phymtl3, 0, 1);
     phyworld.world.addContactMaterial(cmtl1).addContactMaterial(cmtl2);
 
-	/*
     let planephy = plane.addComponent(CannonBody) as CannonBody;
     planephy.setMaterial(phymtl1);
     planephy.setName('plane');
@@ -49,7 +48,6 @@ export function testCannon(renderScene:Scene3D, plane:MeshSprite3D, rmtl:BlinnPh
     shapeq.setFromAxisAngle(new Vec3(1, 0, 0), -Math.PI / 2);
     planephy.addShape(new Plane(), new Vector3(), shapeq);  // laya的plane是向上(y)的，cannon的plane是向前（后？）的
 	planephy.setMass(0);
-	*/
     //planephy.phyBody.position.set(10,0,0);
     //planephy.phyBody.quaternion.setFromAxisAngle( new Vec3(1,0,0),0);
     /*
@@ -110,7 +108,7 @@ export function testCannon(renderScene:Scene3D, plane:MeshSprite3D, rmtl:BlinnPh
 	});
 
     let y = 5;
-    for (let i = 0; i < 0; i++) {
+    for (let i = 0; i < 10; i++) {
         //addBox(.1,10,.1,Math.random()*10,5,Math.random()*10,true);
 		let c = addCapsule(.5, 16, 0, y, 0);
 		c.phyBody.allowSleep=false;

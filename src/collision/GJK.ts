@@ -27,14 +27,17 @@ export class GJK_sSimlex {
 	p = [0, 0, 0, 0];
 	rank = 0;	// 单形类型。1点， 2线段 3三角形 4四面体
 }
+
 export const enum GJK_eStatus {
 	Valid = 0,
 	Inside = 1,
 	Failed = 2
 }
 
+var vec3_4 = [new Vec3(), new Vec3(), new Vec3(), new Vec3()];
+
 export class GJK {
-	m_shape = new MinkowskiDiff();
+	m_shape:MinkowskiDiff;
 	m_ray = new Vec3();				// 当前检测方向
 	m_distance = 0;
 	/** simplex[2] */
@@ -59,8 +62,8 @@ export class GJK {
 	}
 
 	/**
-	 * 
-	 * @param shapearg 
+	 * 执行GJK算法
+	 * @param shapearg 	
 	 * @param guess 初始检测方向
 	 */
 	Evaluate(shapearg: MinkowskiDiff, guess: Vec3) {
@@ -69,7 +72,7 @@ export class GJK {
 		let iterations = 0;
 		let sqdist = 0;
 		let alpha = 0;
-		let lastw = [new Vec3(), new Vec3(), new Vec3(), new Vec3()];
+		let lastw = vec3_4;//Vec3[4]
 		let clastw = 0;
 		/* Initialize solver		*/
 		let m_free = this.m_free;
@@ -85,7 +88,9 @@ export class GJK {
 		this.m_distance = 0;
 
 		/* Initialize simplex		*/
-		m_simplices[0].rank = 0;
+		let curSimp = m_simplices[0];
+		curSimp.rank = 0;
+		
 		m_ray.copy(guess);
 		let sqrl = m_ray.lengthSquared();
 
@@ -94,10 +99,10 @@ export class GJK {
 		if (sqrl > 0) {
 			m_ray.negate(smpDir);
 		}
-		this.appendvertice(m_simplices[0], smpDir);
+		this.appendvertice(curSimp, smpDir);
 
-		m_simplices[0].p[0] = 1;
-		m_ray.copy(m_simplices[0].c[0].w);
+		curSimp.p[0] = 1;
+		m_ray.copy(curSimp.c[0].w);
 
 		sqdist = sqrl;
 		lastw[0].copy(m_ray);	// lastw = simp[0].c[0].w

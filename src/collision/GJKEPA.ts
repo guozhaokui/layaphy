@@ -2,7 +2,7 @@ import { MinkowskiShape } from "../shapes/MinkowskiShape";
 import Transform from "../math/Transform";
 import Vec3 from "../math/Vec3";
 import { VoronoiSimplexSolver } from "./VoronoiSimplexSolver";
-import { Result_Status, sResults, Penetration, Distance } from "./GJKEPA2";
+import { sResults, Penetration, Distance, MinkowskiDiff } from "./GJKEPA2";
 import { PhyRender } from "../layawrap/PhyRender";
 
 const PHYEPSILON = 1e-10;	//
@@ -339,49 +339,57 @@ class Simplex {
 }
 
 var calcdepth_v1 = new Vec3();
+let guessVectors = [
+	new Vec3(),	//o2-o1
+	new Vec3(),		//o1-o2
+	new Vec3(0, 0, 1),
+	new Vec3(0, 1, 0),
+	new Vec3(1, 0, 0),
+	new Vec3(1, 1, 0),
+	new Vec3(1, 1, 1),
+	new Vec3(0, 1, 1),
+	new Vec3(1, 0, 1),
+];
+
+var  calcPenDepth_results = new sResults();
+/**
+ * 用EPA算法找到碰撞深度
+ */
 class GjkEpaPenetrationDepthSolver {
-	calcPenDepth(simplexSolver: VoronoiSimplexSolver, pConvexA, pConvexB, transformA: Transform, transformB: Transform, v: Vec3, wWitnessOnA: Vec3, wWitnessOnB: Vec3) {
+	calcPenDepth(simplexSolver: VoronoiSimplexSolver, pConvexA:MinkowskiShape, pConvexB:MinkowskiShape, transformA: Transform, transformB: Transform, v: Vec3, wWitnessOnA: Vec3, wWitnessOnB: Vec3) {
 		let o1 = transformA.position;
 		let o2 = transformB.position;
 		let d1 = calcdepth_v1;
 		o1.vsub(o2, d1);
-		d1.normalize();
+		d1.normalize();		//BA矢量
 
-		let guessVectors = [
-			new Vec3(-d1.x, -d1.y, -d1.z),	//o2-o1
-			new Vec3(d1.x, d1.y, d1.z),		//o1-o2
-			new Vec3(0, 0, 1),
-			new Vec3(0, 1, 0),
-			new Vec3(1, 0, 0),
-			new Vec3(1, 1, 0),
-			new Vec3(1, 1, 1),
-			new Vec3(0, 1, 1),
-			new Vec3(1, 0, 1),
-		];
+		let guessVecs = guessVectors;
+		guessVecs[0].set(-d1.x, -d1.y, -d1.z);	//o2-o1
+		guessVecs[1].set(d1.x, d1.y, d1.z);		//o1-o2
 
-		let numVectors = guessVectors.length;
+		let numVectors = guessVecs.length;
+		let results = calcPenDepth_results;
+		//各个方向来一次
 		for (let i = 0; i < numVectors; i++) {
 			simplexSolver.reset();
-			let guessVector = guessVectors[i];
-
-			let results = new sResults();
-
+			let guessVector = guessVecs[i];
 			if (Penetration(pConvexA, transformA, pConvexB, transformB, guessVector, results)) {
-				wWitnessOnA = results.witnesses[0];
-				wWitnessOnB = results.witnesses[1];
-				v = results.normal;
+				wWitnessOnA.copy(results.witnessA);
+				wWitnessOnB.copy(results.witnessB);
+				v.copy(results.normal);
 				return true;
 			} else {
+				return false;// 并不想要计算距离。下面的代码还没验证
 				if (Distance(pConvexA, transformA, pConvexB, transformB, guessVector, results)) {
-					wWitnessOnA = results.witnesses[0];
-					wWitnessOnB = results.witnesses[1];
-					v = results.normal;
+					wWitnessOnA.copy(results.witnessA);
+					wWitnessOnB.copy(results.witnessB);
+					v.copy(results.normal);
 					return false;
 				}
 			}
 		}
 
-		//failed to find a distance/penetration
+		//failed to find a distance/penetration 算法失败了
 		wWitnessOnA.set(0, 0, 0);
 		wWitnessOnB.set(0, 0, 0);
 		v.set(0, 0, 0);

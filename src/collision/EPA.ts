@@ -3,11 +3,11 @@ import Vec3 from "../math/Vec3";
 
 declare type sSV = GJK_sSV;
 
-var EPA_MAX_VERTICES = 128;
-var EPA_MAX_FACES = EPA_MAX_VERTICES * 2;
-var EPA_MAX_ITERATIONS = 255;
-var EPA_ACCURACY = 1e-12;
-var EPA_PLANE_EPS = 1e-14;
+const EPA_MAX_VERTICES = 128;
+const EPA_MAX_FACES = EPA_MAX_VERTICES * 2;
+const EPA_MAX_ITERATIONS = 255;
+const EPA_ACCURACY = 1e-12;
+const EPA_PLANE_EPS = 1e-14;
 
 /**
  * 平面定义
