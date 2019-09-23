@@ -70,8 +70,8 @@ export class ContactManifold {
         p.position.set(x, y, z);
         p.normal.set(nx, ny, nz);
 
-        p.localPoint1.vsub(p.position, this.bodyA.position).applyMatrix3(this.bodyA.rotation);
-        p.localPoint2.vsub(p.position, this.bodyB.position).applyMatrix3(this.bodyB.rotation);
+        //p.localPoint1.vsub(p.position, this.bodyA.position).applyMatrix3(this.bodyA.rotation);
+        //p.localPoint2.vsub(p.position, this.bodyB.position).applyMatrix3(this.bodyB.rotation);
 
         p.normalImpulse = 0;
 
@@ -91,18 +91,18 @@ export class ContactManifold {
      */
     RearrangeContactPoints(){
         let maxDepth:f32=1e6;
-        let deepestIndex:i32=0;
+        //let deepestIndex:i32=0;
         let ptNum = this.numPoints;
         let pts = this.points;
         for(let i=0; i<ptNum; i++){
             let cp = pts[i];
             if( cp.penetration<maxDepth){
-                deepestIndex=i;
+                //deepestIndex=i;
                 maxDepth = cp.penetration;
             }
         }
 
-        let newPoint = pts[3];//4-1
+        //let newPoint = pts[3];//4-1
         //let indexToRemove=;
         this.numPoints--;
     }

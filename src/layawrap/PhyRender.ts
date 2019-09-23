@@ -1,21 +1,20 @@
-import { Scene3D } from "laya/d3/core/scene/Scene3D";
-import Shape, { SHAPETYPE } from "../shapes/Shape";
-import World, { IPhyRender } from "../world/World";
+import { RenderState } from "laya/d3/core/material/RenderState";
+import { UnlitMaterial } from "laya/d3/core/material/UnlitMaterial";
+import { MeshSprite3D } from "laya/d3/core/MeshSprite3D";
 import { PixelLineSprite3D } from "laya/d3/core/pixelLine/PixelLineSprite3D";
-import { Vector3 } from "laya/d3/math/Vector3";
+import { Scene3D } from "laya/d3/core/scene/Scene3D";
 import { Color } from "laya/d3/math/Color";
-import Vec3 from "../math/Vec3";
+import { Vector3 } from "laya/d3/math/Vector3";
+import { PrimitiveMesh } from "laya/d3/resource/models/PrimitiveMesh";
+import { Sprite } from "laya/display/Sprite";
+import { Texture2D } from "laya/resource/Texture2D";
 import Quaternion from "../math/Quaternion";
+import Vec3 from "../math/Vec3";
 import { BODYTYPE } from "../objects/Body";
 import Capsule from "../shapes/Capsule";
 import Plane from "../shapes/Plane";
-import { Sprite } from "laya/display/Sprite";
-import { MeshSprite3D } from "laya/d3/core/MeshSprite3D";
-import { UnlitMaterial } from "laya/d3/core/material/UnlitMaterial";
-import { Texture2D } from "laya/resource/Texture2D";
-import { PrimitiveMesh } from "laya/d3/resource/models/PrimitiveMesh";
-import { RenderState } from "laya/d3/core/material/RenderState";
-import { BlinnPhongMaterial } from "laya/d3/core/material/BlinnPhongMaterial";
+import Shape, { SHAPETYPE } from "../shapes/Shape";
+import World, { IPhyRender } from "../world/World";
 
 let col1 = new Color();
 let p1 = new Vector3();
@@ -115,15 +114,22 @@ export class PhyRender extends IPhyRender {
 		r.addLine(p1, p3, col1, col1);
 	}
 
-	addPersistPoint(x: number, y: number, z: number, name: string) {
-		this.persistPoint.push(new Vec3(x, y, z));
+	addPersistPoint(x: number|Vec3, y?: number, z?: number, name?: string) {
+		if((x as Vec3).x!=undefined){
+			this.persistPoint.push(x as Vec3);	
+		}else
+			this.persistPoint.push(new Vec3(x as number, y, z));
 		return this.persistPoint.length - 1;
 	}
 	delPersistPoint(id: i32) {
 		this.persistPoint = this.persistPoint.splice(id, 1);
 	}
-	addPersistVec(dx: number, dy: number, dz: number, x: number = 0, y: number = 0, z: number = 0, name: string) {
-		this.persistVec.push(new Vec3(dx, dy, dz), new Vec3(x, y, z));
+	addPersistVec(dx: number|Vec3, dy: number|Vec3, dz?: number, x: number = 0, y: number = 0, z: number = 0, name?: string) {
+		if((dx as Vec3).x!=undefined){
+			this.persistVec.push(dx as Vec3 ,dy as Vec3);	
+		}else{
+			this.persistVec.push(new Vec3(dx as number, dy as number, dz), new Vec3(x, y, z));
+		}
 		return this.persistVec.length / 2 - 1;
 	}
 	delPersistVec(id: i32) {

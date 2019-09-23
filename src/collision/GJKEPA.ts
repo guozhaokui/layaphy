@@ -447,7 +447,7 @@ export class GJKPairDetector {
 		AminB.negate(dir);	// dir = -AminB
 		let status = -2;
 		for (let i = 0; i < maxIt; i++) {
-			this.computeSupport(transA, transB, dir, worldA, worldB, AminB, false);
+			this.computeSupport(transA, transB, dir, worldA, worldB, AminB, false);	//TODO 这个能简化一下么，里面空间转换太多
 			let delta = AminB.dot(dir);
 			if (delta < 0) {
 				// 当前检测方向，与当前支撑点，在原点的同一侧。例如w在原点的左侧，却对应超右的支撑方向，即w已经在最右边了，依然在左侧，则没有碰撞
@@ -589,6 +589,7 @@ export class GJKPairDetector {
 		//DEBUG
 		// 把transform改成相对于两个对象中心的
 		let cen = tmpVec1;
+		/* 先不做这个，直接用世界坐标
 		let oldTransA = transA.position;
 		let oldTransB = transB.position;
 		transA.position = new Vec3();		// 记得后面要恢复
@@ -596,6 +597,7 @@ export class GJKPairDetector {
 		oldTransA.vadd(oldTransB, cen).scale(0.5, cen);
 		oldTransA.vsub(cen, transA.position);	// tranA.postion -= center;
 		oldTransB.vsub(cen, transB.position);
+		*/
 
 		let sepAxis = tmpVec2;
 		sepAxis.set(0, 1, 0);
@@ -634,7 +636,7 @@ export class GJKPairDetector {
 				phyr.addVec(0,0,0,sepAxis.x,sepAxis.y,sepAxis.z,0xff00);
 			}
 			//DEBUG
-			/** A-B点在采样方向上的投影 */
+			/** 新的采样点在采样方向上的投影。即采样点-原点 在采样方向的投影 */
 			let delta = normSep.dot(AminB);
 			if (delta < -margin) {// 如果沿着dir方向取A,沿着反向取B，但是dot却<0表示两个对象是分离的
 				// 沿着采样方向采样minkow形，结果点在后面，则原点一定不在minkow形内
@@ -656,7 +658,10 @@ export class GJKPairDetector {
 			}
 
 			// 判断投影长度delta是不是超过了采样射线，超过了表示原点在里面
-			let f0 = squaredDistance - delta + margin;
+			// 投影长度约等于delta，表示原点就在采样起点上
+			// 投影长度比采样向量大，由于原点一定在采样向量前面，投影长度大的话，说明采样点一定跨越了原点
+			/*
+			let f0 = squaredDistance - delta;// + margin;
 			let f1 = squaredDistance * REL_ERROR2;
 			if (f0 <= f1) {
 				if (f0 <= 0) {
@@ -665,8 +670,10 @@ export class GJKPairDetector {
 					degenerateSimplex = 11;
 				}
 				checkSimplex = true;
+				collision=true;
 				break;
 			}
+			*/
 
 			simpSolver.addVertex(AminB, worldA, worldB);
 
@@ -680,7 +687,8 @@ export class GJKPairDetector {
 			}
 			let newSepLen2 = newSepAx.lengthSquared();
 			if ( newSepLen2 < REL_ERROR2) {
-				// 如果分离轴已经很短了
+				// 如果分离轴已经很短了。表示最近点已经是原点了，原点在simplex上
+				// 这种情况下，无法确定碰撞方向
 				sepAxis.copy(newSepAx);	//TODO 是不是可以用同一个对象
 				degenerateSimplex = 6;
 				checkSimplex = true;
@@ -792,9 +800,11 @@ export class GJKPairDetector {
 			hitB.vadd(cen,hitB);
 		}
 		// 恢复transform
-		transA.position = oldTransB;
-		transB.position = oldTransB;
-
+		// 先不做这个，直接用世界坐标
+		//transA.position = oldTransB;
+		//transB.position = oldTransB;
+//DEBUG
+return -1;
 		//performance.mark('getcloseptend');
 		//performance.measure('getClosePoint','getcloseptstart','getcloseptend');
 		return -distance;

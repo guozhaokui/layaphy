@@ -12,8 +12,6 @@ import { Handler } from "laya/utils/Handler";
 import { Laya3D } from "Laya3D";
 import { loadBullet } from "./layawrap/bullet/bulletLoader";
 import { MouseCtrl1 } from "./layawrap/ctrls/MouseCtrl1";
-import { VoxelMaterial } from "./layawrap/debugger/VoxelRender/VoxelMtl";
-import { VoxelSprite } from "./layawrap/debugger/VoxelRender/VoxelSprite";
 import { hashSparseVox, SparseVoxData } from "./shapes/Voxel";
 import { testBullet } from "./TestBullet";
 import { testCannon } from "./TestCannon";

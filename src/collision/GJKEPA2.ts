@@ -7,47 +7,108 @@ import { MinkowskiShape } from "../shapes/MinkowskiShape";
 
 const GJK_MIN_DISTANCE = 1e-12;
 
+let sup1 = new Vec3();
+let sup2 = new Vec3();
+let sup_negd=new Vec3();
+
+let sup_dir1=new Vec3();
+let sup_dir2=new Vec3();
+
+let tmpVec=new Vec3();	//保证在局部范围用的
+let worldA=new Vec3();
+let worldB=new Vec3();
+
 export class MinkowskiDiff {
-	//shapes: MinkowskiShape[] = [];
 	shapeA:MinkowskiShape;
 	shapeB:MinkowskiShape;
 
-	toshape1 = new Mat3();
-	toshape0 = new Transform();
+	//toshape1 = new Mat3();			// 用来把采样方向转到shape1本地空间
+	//toshape0 = new Transform();		// 用来把一个点转
+	transA:Transform;
+	transB:Transform;
 
-	constructor(shapeA:MinkowskiShape,shapeB:MinkowskiShape){
-		this.reset(shapeA,shapeB);
+	constructor(){
 	}
 
-	reset(shapeA:MinkowskiShape,shapeB:MinkowskiShape){
+	reset(shapeA:MinkowskiShape,shapeB:MinkowskiShape, transA:Transform, transB:Transform){
 		this.shapeA=shapeA;
 		this.shapeB=shapeB;
+		this.transA=transA;
+		this.transB=transB;
+		return this;
 		//this.toshape1 = wtrs1.getBasis().transposeTimes(wtrs0.getBasis());	TODO
 		//this.toshape0 = wtrs0.inverseTimes(wtrs1);
 	}
 
 	//btVector3 (btConvexShape::*Ls)(btVector3&) const;
 	EnableMargin(b: boolean) {
-
 	}
 
-	Support0(d: Vec3): Vec3 {
-		//return (((m_shapes[0])->*(Ls))(d));
-		throw '';
+	/**
+	 * 沿着d方向采样shapeA
+	 * @param d A的本地空间
+	 */
+	Support0(d: Vec3,out=new Vec3()): Vec3 {
+		this.shapeA.getSupportVertex(d,out);
+		return out;
 	}
-	Support1(d: Vec3): Vec3 {
+
+	/**
+	 * 沿着d方向采样shapeB
+	 * @param d 
+	 */
+	Support1(d: Vec3,out=new Vec3()): Vec3 {
 		//return (m_toshape0 * ((m_shapes[1])->*(Ls))(m_toshape1 * d));
 		throw '';
 	}
-	Support(d: Vec3, idx: i32): Vec3 {
-		if (idx)
-			return this.Support1(d);
-		else
-			return this.Support0(d);
-	}
-	Support_(d: Vec3): Vec3 {
-		//return this.Support0(d) - this.Support1(-d);
-		throw '';
+
+	/**
+	 * 沿着d方向采样
+	 * @param d 
+	 * @TODO 空间转换部分要优化
+	 */
+	Support(d: Vec3,noMargin:boolean,out=new Vec3()): Vec3 {
+		/*
+		this.Support0(d,sup1);
+		d.negate(sup_negd);
+		this.Support1(sup_negd,sup2);
+		sup1.vsub(sup2,out);
+		return out;
+		*/
+		let transA=this.transA;
+		let transB=this.transB;
+		let A = this.shapeA;
+		let B = this.shapeB;
+		//先把dir转换到本地空间
+		let dirA = sup_dir1;
+		let dirB = sup_dir2;
+		let negDir = new Vec3();
+		negDir.copy(d).negate(negDir);
+		// 把dir转换到本地空间		
+		let qA = transA.quaternion;
+		qA.w *= -1;
+		qA.vmult(d, dirA);
+		qA.w *= -1;
+
+		let qB = transB.quaternion;
+		qB.w *= -1;
+		qB.vmult(negDir, dirB);
+		qB.w *= -1;
+
+		let supA = sup1;
+		let supB = sup2;
+		if (noMargin) {
+			A.getSupportVertexWithoutMargin(dirA, supA);
+			B.getSupportVertexWithoutMargin(dirB, supB);
+		} else {
+			A.getSupportVertex(dirA, supA);
+			B.getSupportVertex(dirB, supB);		//问题：例如盒子，得到的support会不会抖动，例如不转的时候，轴向采样的话四个点都可以
+		}
+		// 转换到世界空间
+		transA.pointToWorld(supA, worldA);
+		transB.pointToWorld(supB, worldB);
+		worldA.vsub(worldB, out);	//A-B 就是 B指向A		
+		return out;
 	}
 }
 
@@ -71,21 +132,13 @@ export class sResults {
 	}
 };
 
-function Initialize( wtrs0: Transform,  wtrs1: Transform, results: sResults, shape: MinkowskiDiff) {
-	results.witnessA.set(0, 0, 0);
-	results.witnessB.set(0, 0, 0);
-	results.status = Result_Status.Separated;
-	//shape.toshape1 = wtrs1.getBasis().transposeTimes(wtrs0.getBasis());	TODO
-	//shape.toshape0 = wtrs0.inverseTimes(wtrs1);
-}
-
 var negVec = new Vec3();
 var tmpV1 = new Vec3();
 
 export function Distance(shape0: MinkowskiShape, wtrs0: Transform, shape1: MinkowskiShape, wtrs1: Transform, guess: Vec3, results: sResults) {
-	let shape = new MinkowskiDiff(shape0,shape1);
-	shape.EnableMargin(false);
-	Initialize(wtrs0, wtrs1, results, shape);
+	let shape = new MinkowskiDiff();
+	shape.reset(shape0,shape1,wtrs0,wtrs1).EnableMargin(false);
+	results.reset();
 	let gjk = new GJK();
 	let gjk_status = gjk.Evaluate(shape, guess);
 	if (gjk_status == GJK_eStatus.Valid) {
@@ -93,12 +146,12 @@ export function Distance(shape0: MinkowskiShape, wtrs0: Transform, shape1: Minko
 		let w1 = new Vec3();
 		for (let i = 0; i < gjk.m_simplex.rank; ++i) {
 			let p = gjk.m_simplex.p[i];
-			let cd = gjk.m_simplex.c[i].d;
-			let sup = shape.Support(cd, 0);
+			let cd = gjk.m_simplex.supv[i].d;
+			let sup = shape.Support0(cd);
 			w0.addScaledVector(p, sup, w0);	//w0 += shape.Support(cd, 0) * p;
 
 			cd.negate(negVec);
-			sup = shape.Support(negVec, 1);
+			sup = shape.Support1(negVec);
 			w1.addScaledVector(p, sup, w1);	//w1 += shape.Support(-cd, 1) * p;
 		}
 		//results.witnesses[0] = wtrs0 * w0;
@@ -116,6 +169,7 @@ export function Distance(shape0: MinkowskiShape, wtrs0: Transform, shape1: Minko
 	}
 }
 
+let minkShape = new MinkowskiDiff();
 /**
  * 计算shape0和shape1之间的碰撞深度。
  * @param shape0 
@@ -128,12 +182,11 @@ export function Distance(shape0: MinkowskiShape, wtrs0: Transform, shape1: Minko
  * @return false 没有检测到碰撞
  */
 export function Penetration(shape0: MinkowskiShape, wtrs0: Transform, shape1: MinkowskiShape, wtrs1: Transform, guess: Vec3, results: sResults, usemargins: boolean = true) {
-	let shape = new MinkowskiDiff(shape0,shape1);
-	shape.EnableMargin(usemargins);
-	Initialize(wtrs0, wtrs1, results,shape);
+	let shape = minkShape;
+	shape.reset(shape0,shape1,wtrs0,wtrs1).EnableMargin(usemargins);
+	results.reset();
 	let gjk = new GJK();
-	guess.negate(negVec);
-	let gjk_status = gjk.Evaluate(shape, negVec);
+	let gjk_status = gjk.Evaluate(shape, guess.negate(negVec));
 	switch (gjk_status) {
 		case GJK_eStatus.Inside:// GJK 判断发生了碰撞，下面开始用EPA计算距离
 			{
@@ -142,12 +195,14 @@ export function Penetration(shape0: MinkowskiShape, wtrs0: Transform, shape1: Mi
 				if (epa_status != EPA_eStatus.Failed) {
 					// EPA正常
 					let w0 = new Vec3();
+					//根据重心坐标计算出最近的点
 					for (let i = 0; i < epa.m_result.rank; ++i) {
-						let sup = shape.Support(epa.m_result.c[i].d, 0);
+						let sup = shape.Support0(epa.m_result.supv[i].d);	// 根据结果中保存的朝向采样shape0
 						//w0 += shape.Support(epa.m_result.c[i] . d, 0) * epa.m_result.p[i];
 						w0.addScaledVector(epa.m_result.p[i], sup, w0);
 					}
 					results.status = Result_Status.Penetrating;
+					// 把结果转换到世界空间
 					//results.witnesses[0] = wtrs0 * w0;
 					wtrs0.pointToWorld(w0, results.witnessA)
 					w0.addScaledVector(-epa.m_depth, epa.m_normal, tmpV1);//tmpV1 = (w0 - epa.m_normal * epa.m_depth)
