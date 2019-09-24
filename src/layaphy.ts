@@ -16,6 +16,7 @@ import { hashSparseVox, SparseVoxData } from "./shapes/Voxel";
 import { testBullet } from "./TestBullet";
 import { testCannon } from "./TestCannon";
 import { Mesh2Voxel } from "./tools/Mesh2Voxel";
+import { Main } from "./testPlanetGravity";
 
 //let PhyWorld: typeof BtWorld | typeof CannonWorld;
 //let PhyBody: typeof BtBody | typeof CannonBody;
@@ -80,7 +81,8 @@ m2v.loadObj('res/house/house1.obj',0.5,(voxdata:SparseVoxData)=>{
 });
 
 if(1){
-	testCannon(scene,plane,mtl2);
+	//testCannon(scene,plane,mtl2);
+	Main(scene,mtl2,camctrl);
 }else{
 	loadBullet('./bullet1.wasm').then((bullet:BulletExport) => {
 		testBullet(scene,plane,mtl2,bullet);

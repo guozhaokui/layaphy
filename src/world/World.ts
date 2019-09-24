@@ -666,7 +666,12 @@ export default class World extends EventTarget {
         // Add gravity to all objects
         for (i = 0; i !== N; i++) {
             var bi = bodies[i];
-            if (bi.type === DYNAMIC) { // Only for dynamic bodies
+			if (bi.type === DYNAMIC && bi.enable) { // Only for dynamic bodies
+				//temp
+				if(bi.onStep){
+					bi.onStep();
+				}
+				//temp
                 var f = bi.force, m = bi._mass;
                 f.x += m * gx;
                 f.y += m * gy;

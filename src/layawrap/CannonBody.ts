@@ -2,14 +2,32 @@ import { Component } from "laya/components/Component";
 import { Sprite3D } from "laya/d3/core/Sprite3D";
 import { Quaternion } from "laya/d3/math/Quaternion";
 import { Vector3 } from "laya/d3/math/Vector3";
+import Material from "../material/Material";
 import phyQuat from "../math/Quaternion";
 import Vec3 from "../math/Vec3";
 import Body from "../objects/Body";
 import Shape from "../shapes/Shape";
 import { CannonWorld } from "./CannonWorld";
-import Material from "../material/Material";
+import { IPhyBody } from "./PhyInterface";
 
-export default class CannonBody extends Component{
+export default class CannonBody extends Component implements IPhyBody{
+	addCenterForce(f: Vector3): void {
+		let b = this.phyBody;
+		b.force.x+=f.x;
+		b.force.y+=f.y;
+		b.force.z+=f.z;
+	}
+	addForce(f: Vector3, pos: Vector3): void {
+		throw new Error("Method not implemented.");
+	}
+	mass: number;
+	lineVel: Vector3;
+	angVel: Vector3;
+	gravity: Vector3 | null;
+	noRotate: boolean;
+	collisionGroup: number;
+	canCollideWith: number;
+	_enablePhy=false;
     phyBody:Body;
     constructor(){
         super();
@@ -31,16 +49,19 @@ export default class CannonBody extends Component{
         CannonWorld.inst.bodies.push(this);//TODO 会多次添加么
 
         let world = CannonWorld.inst.world
-        world.addBody(body);
+		world.addBody(body);
+		this.phyUseRenderPose();
         //let sce = this.owner.scene as Scene3D;
-        let sp = this.owner as Sprite3D;
-        let trans = sp.transform;
-        let pos = trans.localPosition;
-        body.position.set(pos.x,pos.y,pos.z);
-        let q = trans.localRotation;
-        //问题 laya的四元数与这里是不是不兼容
-        body.quaternion.set(q.x,q.y,q.z,q.w);
     }
+
+	enablePhy(b: boolean): void {
+		if(!this._enablePhy&&b){
+			//每次启用都要同步渲染位置
+			this.phyUseRenderPose();
+		}
+		this._enablePhy=b;
+		this.phyBody.enable=b;
+	}
 
     setName(n:string):void{
         this.phyBody.name=n;
@@ -81,7 +102,20 @@ export default class CannonBody extends Component{
     }
     _onAwake(){
 
-    }
+	}
+	
+	phyUseRenderPose(){
+		let body = this.phyBody;
+        let sp = this.owner as Sprite3D;
+        let trans = sp.transform;
+        let pos = trans.localPosition;
+        body.position.set(pos.x,pos.y,pos.z);
+        let q = trans.localRotation;
+        //问题 laya的四元数与这里是不是不兼容
+		body.quaternion.set(q.x,q.y,q.z,q.w);
+		body.angularVelocity.set(0,0,0);
+		body.velocity.set(0,0,0);
+	}
 
     applyPose(){
         let body = this.phyBody;
@@ -100,3 +134,4 @@ export default class CannonBody extends Component{
 
 var tempVec3=new Vec3();
 //var tempQuat=new phyQuat();
+

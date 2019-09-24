@@ -197,6 +197,7 @@ void main_normal()
 		float lerpFact=clamp((1.0/gl_FragCoord.w-u_FogStart)/u_FogRange,0.0,1.0);
 		gl_FragColor.rgb=mix(gl_FragColor.rgb,u_FogColor,lerpFact);
 	#endif
+	gl_FragColor.a=0.5;
 }
 
 void main()

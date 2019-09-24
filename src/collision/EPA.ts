@@ -15,6 +15,7 @@ const EPA_PLANE_EPS = 1e-14;
 export class EPA_sFace {
 	/** 平面法线 */
 	n = new Vec3();	// 平面是 n.v=d
+	/** 原点到平面的距离 */
 	d = 0;
 	/** face 的三个点 */
 	vert: sSV[] = new Array(3);//sSV*[]
@@ -24,7 +25,8 @@ export class EPA_sFace {
 	e = [0, 0, 0];
 
 	/** 面的列表，所有的面组成一个双向链表，用来遍历 */
-	l: (EPA_sFace | null)[] = new Array(2);//sFace*[]
+	link: (EPA_sFace | null)[] = new Array(2);//sFace*[]
+	/** 经过多少次迭代 */
 	pass: i32 = 0;
 	copy(o: EPA_sFace) {
 		this.n.copy(o.n);
@@ -36,7 +38,7 @@ export class EPA_sFace {
 		let f1 = this.f; let f2 = o.f;
 		f1[0] = f2[0]; f1[1] = f2[1]; f1[2] = f2[2];
 
-		this.l[0] = o.l[0]; this.l[1] = o.l[1];
+		this.link[0] = o.link[0]; this.link[1] = o.link[1];
 
 		this.e[0] = o.e[0]; this.e[1] = o.e[1]; this.e[2] = o.e[2]
 
@@ -93,7 +95,9 @@ export class EPA {
 	m_result = new GJK_sSimlex();
 	m_normal = new Vec3();
 	m_depth = 0;
+	/** 顶点的缓存 */
 	m_sv_store = newArray<GJK_sSV>(GJK_sSV, EPA_MAX_VERTICES);
+	/** face 的缓存 */
 	m_fc_store = newArray<EPA_sFace>(EPA_sFace, EPA_MAX_FACES);
 	m_nextsv = 0;
 	m_hull = new EPA_sList();
@@ -123,9 +127,9 @@ export class EPA {
 	 * @param face 
 	 */
 	append(list: EPA_sList, face: EPA_sFace) {
-		face.l[0] = null;
-		face.l[1] = list.root;
-		if (list.root) list.root.l[0] = face;
+		face.link[0] = null;
+		face.link[1] = list.root;
+		if (list.root) list.root.link[0] = face;
 		list.root = face;
 		++list.count;
 	}
@@ -136,9 +140,9 @@ export class EPA {
 	 * @param face 
 	 */
 	remove(list: EPA_sList, face: EPA_sFace) {
-		if (face.l[1]) face.l[1].l[0] = face.l[0];
-		if (face.l[0]) face.l[0].l[1] = face.l[1];
-		if (face == list.root) list.root = face.l[1];
+		if (face.link[1]) face.link[1].link[0] = face.link[0];
+		if (face.link[0]) face.link[0].link[1] = face.link[1];
+		if (face == list.root) list.root = face.link[1];
 		--list.count;
 	}
 
@@ -392,7 +396,7 @@ export class EPA {
 		let minf = m_hull.root;
 		if (minf) {
 			let mind = minf.d * minf.d;
-			for (let f = minf.l[1]; f; f = f.l[1]) {
+			for (let f = minf.link[1]; f; f = f.link[1]) {
 				let sqd = f.d * f.d;
 				if (sqd < mind) {// 直接比较 d*d 即可
 					minf = f;

@@ -25,7 +25,7 @@ export class MouseCtrl1 extends Script3D {
     protected isMove: boolean;
 
     target = new Vector3();	// 摄像机的目标
-    dist: f32 = 10;				// 到目标的距离
+    _dist: f32 = 10;				// 到目标的距离
     camWorldMatrix  = new Matrix4x4(); // 计算出来的摄像机的世界矩阵。 没有平移。有也会被忽略。
     outMatrix  = new Matrix4x4();		// 最终给摄像机的矩阵。主要是加了target的影响
 
@@ -130,11 +130,11 @@ export class MouseCtrl1 extends Script3D {
 
     private onMouseWheelHandler(e: Event): void {
         if (e.delta > 0)
-            this.dist /= 1.2;
+            this._dist /= 1.2;
         else
-            this.dist *= 1.2;
-        if (this.dist < this.minDist) this.dist = this.minDist;
-        if (this.dist > this.maxDist) this.dist = this.maxDist;
+            this._dist *= 1.2;
+        if (this._dist < this.minDist) this._dist = this.minDist;
+        if (this._dist > this.maxDist) this._dist = this.maxDist;
         this.changed = true;
         this.updateCam();
     }
@@ -179,7 +179,7 @@ export class MouseCtrl1 extends Script3D {
         var mat = this.camWorldMatrix.elements;
         mat[12] = this.target.x;
         mat[13] = this.target.y;
-        mat[14] = this.target.z + this.dist;
+        mat[14] = this.target.z + this._dist;
         this.camera.transform.worldMatrix = this.camWorldMatrix;
         this.owner.event("scrollView");
     }
@@ -190,7 +190,7 @@ export class MouseCtrl1 extends Script3D {
         mat[0] = 0; mat[1] = 0; mat[2] = -1;	//x 轴转到了-z上
         // y不变
         mat[8] = 1; mat[9] = 0; mat[10] = 0;	 	// z轴转到 x上
-        mat[12] = this.target.x + this.dist;
+        mat[12] = this.target.x + this._dist;
         mat[13] = this.target.y;
         mat[14] = this.target.z;
         this.camera.transform.worldMatrix = this.camWorldMatrix;
@@ -203,7 +203,7 @@ export class MouseCtrl1 extends Script3D {
         mat[4] = 0; mat[5] = 0; mat[6] = -1;
         mat[8] = 0; mat[9] = 1, mat[10] = 0;
         mat[12] = this.target.x;
-        mat[13] = this.target.y + this.dist;
+        mat[13] = this.target.y + this._dist;
         mat[14] = this.target.z;
         this.camera.transform.worldMatrix = this.camWorldMatrix;
         this.owner.event("scrollView");
@@ -223,14 +223,23 @@ export class MouseCtrl1 extends Script3D {
     }
 
     setDist(l: number): void {
-        this.dist = l;
-        this.changed = true;
-    }
+        this._dist = l;
+		this.changed = true;
+		this.updateCam();
+	}
+	
+	set dist(l:number){
+		this.setDist(l);
+	}
+
+	get dist():number{
+		return this._dist;
+	}
 
     // 更新摄像机的世界矩阵
     updateCam(force = false): void {
         if (this.changed || force) {
-            let dist = this.dist;
+            let dist = this._dist;
             let target = this.target;
             let outMatrix = this.outMatrix;
             this.camWorldMatrix.cloneTo(outMatrix);
@@ -328,14 +337,14 @@ export class MouseCtrl1 extends Script3D {
                     //this.hitGround = true;
                     this.hitGroundX = posx - t * zx;
                     this.hitGroundZ = posz - t * zz;
-                    this.dist = t;
+                    this._dist = t;
                     this.target.x = this.hitGroundX;
                     this.target.y = 0;
                     this.target.z = this.hitGroundZ;
                 }
             }
         }
-        this.startDist = this.dist;	// 上面可能修改了，所以要放到这里。
+        this.startDist = this._dist;	// 上面可能修改了，所以要放到这里。
     }
 
     update2ptGesture(touches: any[]): void {
@@ -355,9 +364,9 @@ export class MouseCtrl1 extends Script3D {
                 var s = cursz / this.lastGesSize;
                 //console.log('scale=', s);
                 if (s > 0 && s < 10) {
-                    this.dist = this.startDist / s;	// 当放大手势的时候，希望靠近，缩小dist
-                    if (this.dist < this.minDist) this.dist = this.minDist;
-                    if (this.dist > this.maxDist) this.dist = this.maxDist;
+                    this._dist = this.startDist / s;	// 当放大手势的时候，希望靠近，缩小dist
+                    if (this._dist < this.minDist) this._dist = this.minDist;
+                    if (this._dist > this.maxDist) this._dist = this.maxDist;
                     this.changed = true;
                 }
                 //lastGesSize = cursz;
@@ -376,9 +385,9 @@ export class MouseCtrl1 extends Script3D {
                 this.lastMouseY = cury;
                 // mvdx,mvdy对应摄像机xy空间，把他转到世界空间，并根据dist缩放
                 var mat = this.camWorldMatrix.elements;
-                var mx = (mat[0] * mvdx + mat[4] * mvdy) * this.dist;
-                var my = (mat[1] * mvdx + mat[5] * mvdy) * this.dist;
-                var mz = (mat[2] * mvdx + mat[6] * mvdy) * this.dist;
+                var mx = (mat[0] * mvdx + mat[4] * mvdy) * this._dist;
+                var my = (mat[1] * mvdx + mat[5] * mvdy) * this._dist;
+                var mz = (mat[2] * mvdx + mat[6] * mvdy) * this._dist;
                 this.target.x -= mx;
                 this.target.y -= my;
                 this.target.z -= mz;
@@ -395,7 +404,7 @@ export class MouseCtrl1 extends Script3D {
      * @param	dis		到目标点的距离
      */
     initCamera(pos: Vector3, ro: Vector3, dis: f32 = 4): void {
-        this.dist = dis;
+        this._dist = dis;
         this.target.x = pos.x;
         this.target.y = pos.y;
         this.target.z = pos.z;
@@ -409,7 +418,7 @@ export class MouseCtrl1 extends Script3D {
     }
 
     get distance(): f32 {
-        return this.dist;
+        return this._dist;
     }
 
     set distance(value: f32) {

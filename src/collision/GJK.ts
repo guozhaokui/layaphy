@@ -226,7 +226,8 @@ export class GJK {
 	}
 
 	/**
-	 * 检查当前的simplex是否包含了原点
+	 * 构建四面体，把原点包起来
+	 * @return false
 	 */
 	EncloseOrigin(): boolean {
 		let m_simplex = this.m_simplex;

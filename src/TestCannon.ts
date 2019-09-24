@@ -28,6 +28,7 @@ let caps:Body[]=[];
 export function testCannon(renderScene:Scene3D, plane:MeshSprite3D, rmtl:BlinnPhongMaterial) {
 	scene=renderScene;
 	mtl=rmtl;
+	mtl.renderMode=BlinnPhongMaterial.RENDERMODE_TRANSPARENT;
     let phyworld = scene.addComponent(CannonWorld) as CannonWorld;
     // phyworld
     phyworld.world.gravity.set(0,0,0);
@@ -187,7 +188,8 @@ function addCapsule(r: f32, h: f32, x: f32, y: f32, z: f32,randr=true): CannonBo
 }
 
 function addSphere(r: f32, x: f32, y: f32, z: f32): CannonBody {
-    var sph = scene.addChild(new MeshSprite3D(PrimitiveMesh.createSphere(r, 12, 12))) as MeshSprite3D;
+	let sph = new MeshSprite3D(PrimitiveMesh.createSphere(r, 12, 12));
+    scene.addChild(sph);
     sph.meshRenderer.material = mtl;
     var transform = sph.transform;
     var pos = transform.position;

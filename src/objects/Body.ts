@@ -94,7 +94,9 @@ export default class Body extends EventTarget {
 
     id = Body.idCounter++;
     index = 0;    //index in world bodies
-    name='noname';  // for debug
+	name='noname';  // for debug
+	
+	enable=true;
 
     /**
      * Reference to the world the body is living in
@@ -782,7 +784,9 @@ export default class Body extends EventTarget {
 
         // Update world inertia
         this.updateInertiaWorld();
-    }
+	}
+	
+	onStep:()=>void;
 }
 
 

@@ -45,9 +45,7 @@ export default class ArrayCollisionMatrix {
      * Sets all elements to zero
      */
     reset() {
-        for (let i = 0, l = this.matrix.length; i !== l; i++) {
-            this.matrix[i] = 0;
-        }
+		this.matrix.fill(0);
     }
 
     /**

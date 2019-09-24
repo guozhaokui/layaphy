@@ -37,6 +37,8 @@ export default abstract class Broadphase {
      * Check if a body pair needs to be intersection tested at all.
      */
     needBroadphaseCollision(bodyA: Body, bodyB: Body) {
+		if(!bodyA.enable || !bodyB.enable)
+			return false;
 
         // Check collision filter masks
         if ((bodyA.collisionFilterGroup & bodyB.collisionFilterMask) === 0 || (bodyB.collisionFilterGroup & bodyA.collisionFilterMask) === 0) {
