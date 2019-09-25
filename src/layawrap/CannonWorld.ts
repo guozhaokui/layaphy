@@ -17,7 +17,6 @@ export class CannonWorld extends Script3D{
         world.quatNormalizeFast = false;
     
         world.gravity.set(0,-10,0);
-        world.broadphase = new NaiveBroadphase();
         world.allowSleep=true;
         world.stepnumber=1;
     }

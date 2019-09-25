@@ -16,7 +16,9 @@ import { hashSparseVox, SparseVoxData } from "./shapes/Voxel";
 import { testBullet } from "./TestBullet";
 import { testCannon } from "./TestCannon";
 import { Mesh2Voxel } from "./tools/Mesh2Voxel";
-import { Main } from "./testPlanetGravity";
+//import { Main } from "./testPlanetGravity";
+import { initDemo } from "./DemoUtils";
+import { Main } from "./testPush";
 
 //let PhyWorld: typeof BtWorld | typeof CannonWorld;
 //let PhyBody: typeof BtBody | typeof CannonBody;
@@ -33,7 +35,7 @@ Texture2D.load("res/rocks.jpg", Handler.create(null, function (tex: Texture2D): 
     mtl2.albedoTexture = tex;
 }));
 
-var camera = (<Camera>scene.addChild(new Camera(0, 1, 1000)));
+var camera = (<Camera>scene.addChild(new Camera(0, 1, 10000)));
 camera.transform.translate(new Vector3(0, 6, 19.5));
 camera.transform.rotate(new Vector3(-15, 0, 0), true, false);
 let camctrl = camera.addComponent(MouseCtrl1) as MouseCtrl1;
@@ -81,8 +83,10 @@ m2v.loadObj('res/house/house1.obj',0.5,(voxdata:SparseVoxData)=>{
 });
 
 if(1){
+	initDemo(scene,mtl2);
 	//testCannon(scene,plane,mtl2);
 	Main(scene,mtl2,camctrl);
+	
 }else{
 	loadBullet('./bullet1.wasm').then((bullet:BulletExport) => {
 		testBullet(scene,plane,mtl2,bullet);

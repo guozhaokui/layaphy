@@ -20,6 +20,7 @@ import FrictionEquation from '../equations/FrictionEquation.js';
 import Constraint from '../constraints/Constraint.js';
 import Shape from '../shapes/Shape.js';
 import { PhyRender } from '../layawrap/PhyRender.js';
+import GridBroadphase from '../collision/GridBroadphase.js';
 
 class profileData{
     frametm:i32=0;     // 帧时间
@@ -183,7 +184,7 @@ export default class World extends EventTarget {
     /**
      * The broadphase algorithm to use. Default is NaiveBroadphase
      */
-    broadphase: Broadphase = new NaiveBroadphase();
+    broadphase: Broadphase = new NaiveBroadphase();// new GridBroadphase(); Grid的有问题
 
     /**
      * @property bodies
@@ -268,8 +269,8 @@ export default class World extends EventTarget {
         if (options.gravity) {
             this.gravity.copy(options.gravity);
         }
-        this.broadphase = options.broadphase !== undefined ? options.broadphase : new NaiveBroadphase();
-        this.solver = options.solver !== undefined ? options.solver : new GSSolver();
+        options.broadphase !== undefined && (this.broadphase = options.broadphase);
+        options.solver !== undefined && (this.solver = options.solver);
         this.broadphase.setWorld(this);
     }
 

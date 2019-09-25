@@ -15,6 +15,7 @@ import Capsule from "../shapes/Capsule";
 import Plane from "../shapes/Plane";
 import Shape, { SHAPETYPE } from "../shapes/Shape";
 import World, { IPhyRender } from "../world/World";
+import { RenderTexture2D } from "laya/resource/RenderTexture2D";
 
 let col1 = new Color();
 let p1 = new Vector3();
@@ -27,7 +28,7 @@ let p3 = new Vector3();
 class UIPlane extends MeshSprite3D {
 	plane: MeshSprite3D;
 	mat: UnlitMaterial;
-	texture2D: Texture2D;
+	texture2D: RenderTexture2D;
 
 	constructor(s: Sprite | null) {
 		super(PrimitiveMesh.createPlane(1, 1));
@@ -46,9 +47,13 @@ class UIPlane extends MeshSprite3D {
 
 	buildTex(s: Sprite) {
 		let bound = s.getBounds();
-		let tex = s.drawToTexture(bound.width+1, bound.height+1, 0, 0);
+		let rt=this.texture2D;
+		if(!rt){
+			rt = this.texture2D = new RenderTexture2D(bound.width,bound.height);
+		}
+		s.drawToTexture(bound.width+1, bound.height+1, 0, 0,rt);
 		//给材质贴图
-		this.mat.albedoTexture = tex.bitmap as Texture2D;
+		this.mat.albedoTexture = rt;// tex.bitmap as Texture2D;
 	}
 }
 /**

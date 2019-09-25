@@ -52,8 +52,8 @@ export class MouseCtrl1 extends Script3D {
     pressL= false;				// 为了项目做的潜规则
     pressR = false;
     bbxlimit = new BoundBox(new Vector3(-10000, 0, -10000), new Vector3(10000, 0, 10000));// 用一个bbx限制摄像机的位置
-    maxDist:f32 = 500;
-    minDist:f32 = 1;
+    maxDist:f32 = 1500;
+    minDist:f32 = 0.1;
 
     private mouseScaleX:f32 = 1;		// 现在用的clientX，需要考虑画布缩放
     private mouseScaleY:f32 = 1;
