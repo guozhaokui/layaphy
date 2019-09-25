@@ -67,7 +67,7 @@ export default class Narrowphase {
 
     constructor(world: World) {
         this.world = world;
-        shapeChecks[SHAPETYPE.BOX | SHAPETYPE.BOX] = this.boxBox;
+        shapeChecks[SHAPETYPE.BOX] = this.boxBox;
         shapeChecks[SHAPETYPE.BOX | SHAPETYPE.CONVEXPOLYHEDRON] = this.boxConvex;
         shapeChecks[SHAPETYPE.BOX | SHAPETYPE.PARTICLE] = this.boxParticle;
         shapeChecks[SHAPETYPE.SPHERE] = this.sphereSphere;
@@ -316,6 +316,11 @@ export default class Narrowphase {
                             retval = resolver.call(this, sj, si, xj, xi, qj, qi, bj, bi, si, sj, justTest);
                         }
 
+						if(retval){
+							// 唤醒sleep的对象
+							bi.wakeUp();
+							bj.wakeUp();
+						}
                         if (retval && justTest) {
                             // Register overlap
                             world.shapeOverlapKeeper.set(si.id, sj.id);
@@ -1205,7 +1210,7 @@ export default class Narrowphase {
 
         let hit = false;
         let numContacts = 0;
-        const relpos = planeConvex_relpos;
+		const relpos = planeConvex_relpos;
         for (let i = 0; i !== convexShape.vertices.length; i++) {
 
             // Get world convex vertex
@@ -1218,7 +1223,7 @@ export default class Narrowphase {
             if (dot <= 0.0) {
                 if (justTest) {
                     return true;
-                }
+				}
                 hit = true;
                 const r = this.createContactEquation(planeBody, convexBody, planeShape, convexShape, si, sj);
 
@@ -1289,14 +1294,15 @@ export default class Narrowphase {
                 ri.vadd(xi, ri);
                 ri.vsub(bi.position, ri);
                 rj.vadd(xj, rj);
-                rj.vsub(bj.position, rj);
+				rj.vsub(bj.position, rj);
 
                 this.result.push(r);
                 numContacts++;
                 if (!this.enableFrictionReduction) {
                     this.createFrictionEquationsFromContact(r, this.frictionResult);
                 }
-            }
+			}
+
             if (this.enableFrictionReduction && numContacts) {
                 this.createFrictionFromAverage(numContacts);
             }
