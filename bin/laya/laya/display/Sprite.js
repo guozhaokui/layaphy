@@ -1181,6 +1181,7 @@ export class Sprite extends Node {
         canvasWidth |= 0;
         canvasHeight |= 0;
         var ctx = rt ? Sprite.drawtocanvCtx : new Context();
+        ctx.clear();
         ctx.size(canvasWidth, canvasHeight);
         if (rt) {
             ctx._targets = rt;
