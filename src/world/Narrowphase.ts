@@ -318,8 +318,8 @@ export default class Narrowphase {
 
 						if(retval){
 							// 唤醒sleep的对象
-							bi.wakeUp();
-							bj.wakeUp();
+							//bi.wakeUp();
+							//bj.wakeUp();
 						}
                         if (retval && justTest) {
                             // Register overlap

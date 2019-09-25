@@ -17,10 +17,10 @@ import { testBullet } from "./TestBullet";
 import { testCannon } from "./TestCannon";
 import { Mesh2Voxel } from "./tools/Mesh2Voxel";
 import { initDemo } from "./DemoUtils";
-//import { Main } from "./testPlanetGravity";
-import { Main } from "./testPush";
 import Quaternion from "./math/Quaternion";
-
+//import { Main } from "./testPlanetGravity";
+//import { Main } from "./testPush";
+import { Main } from "./testVoxel";
 //let PhyWorld: typeof BtWorld | typeof CannonWorld;
 //let PhyBody: typeof BtBody | typeof CannonBody;
 
@@ -95,23 +95,6 @@ planeMtl.tilingOffset = tilingOffset;
 //设置材质
 plane.meshRenderer.material = planeMtl;
 
-/*
-显示voxel
-VoxelMaterial.initShader();
-let vox = new VoxelSprite();
-scene.addChild(vox);
-*/
-
-let m2v = new Mesh2Voxel();
-m2v.loadObj('res/house/house1.obj',0.5,(voxdata:SparseVoxData)=>{
-    let ret = hashSparseVox(voxdata);
-    let s = 0;
-    ret.forEach( v=>{
-        if(v) s++;
-    })
-    console.log('length=',ret.length, 'space=', ret.length-s);
-    //debugger;
-});
 
 if(1){
 	initDemo(scene,mtl2);

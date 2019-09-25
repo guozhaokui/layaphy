@@ -36,6 +36,7 @@ function initPhy(scene:Scene3D){
 }
 
 // 左右推动
+// 问题：感觉推板插入物体了
 function testPush(){
 	world.world.gravity.set(0,0,0);
 	//plane
@@ -73,35 +74,27 @@ function testPush(){
 }
 
 // 上下推动
+// 问题：向下的时候，由于物体跟不上，会抖动
 function testLift(){
-	world.world.gravity.set(0,-10,0);
-	let ch1 = addBox(new Vec3(1,2,1), new Vec3(0,0,0), 1, phymtl1);
+	world.world.gravity.set(0,-30,0);
+	let ch1 = addBox(new Vec3(1,2,1), new Vec3(0,1,0), 1, phymtl1);
 	ch1.fixedRotation=true;
 	ch1.phyBody._name='zhu'
 
-	let b = addBox( new Vec3(1,0.1,1), new Vec3(3,0,0), 0, phymtl2);
+	let b = addBox( new Vec3(2,0.1,2), new Vec3(0,0,0), 0, phymtl2);
 	b.phyBody.type=BODYTYPE.KINEMATIC;
 	b.phyBody.allowSleep=false;
 	b.phyBody._name='ban';
 	let tm=0;
 	b.phyBody.onStep=()=>{
 		let b1 = b.phyBody;
-		b1.position.x=2+10*Math.sin(tm++/100);
-
-	}
-
-	let b2 = addBox( new Vec3(1,0.1,1), new Vec3(-3,0,0), 0, phymtl3);
-	b2.phyBody.type=BODYTYPE.KINEMATIC;
-	b2.phyBody.allowSleep=false;
-	b2.phyBody._name='ban';
-	b2.phyBody.onStep=()=>{
-		let b1 = b2.phyBody;
-		b1.position.x=2+10*Math.sin(tm/100)-6;
+		b1.position.y=4*Math.sin(tm++/100);
 
 	}
 }
 
 // 测试传送带
+// 问题：kinematic无法带动其他对象。dynamic能，为什么？
 function testConveyorbelt(){
 	world.world.gravity.set(0,-10,0);
 
