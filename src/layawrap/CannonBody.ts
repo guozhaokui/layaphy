@@ -11,6 +11,17 @@ import { CannonWorld } from "./CannonWorld";
 import { IPhyBody } from "./PhyInterface";
 
 export default class CannonBody extends Component implements IPhyBody{
+	set fixedRotation(v: boolean){
+		let b = this.phyBody;
+		if(b.fixedRotation!=v){
+			b.fixedRotation=v;
+			b.updateMassProperties();
+		}
+	}
+
+	get fixedRotation():boolean{
+		return this.phyBody.fixedRotation;
+	}
 	addCenterForce(f: Vector3): void {
 		let b = this.phyBody;
 		b.force.x+=f.x;

@@ -27,17 +27,22 @@ export interface BodyInitOptions {
     angularFactor?: Vec3;
 }
 
-export enum BODYTYPE{
+export const enum BODYTYPE{
     /**
-     * A dynamic body is fully simulated. Can be moved manually by the user, but normally they move according to forces. A dynamic body can collide with all body types. A dynamic body always has finite, non-zero mass.
+     * A dynamic body is fully simulated. Can be moved manually by the user, but normally they move according to forces. 
+	 * A dynamic body can collide with all body types. A dynamic body always has finite, non-zero mass.
      */
     DYNAMIC = 1,
     /**
-     * A static body does not move during simulation and behaves as if it has infinite mass. Static bodies can be moved manually by setting the position of the body. The velocity of a static body is always zero. Static bodies do not collide with other static or kinematic bodies.
+     * A static body does not move during simulation and behaves as if it has infinite mass. 
+	 * Static bodies can be moved manually by setting the position of the body. The velocity of a static body is always zero. 
+	 * Static bodies do not collide with other static or kinematic bodies.
      */
     STATIC = 2,
     /**
-     * A kinematic body moves under simulation according to its velocity. They do not respond to forces. They can be moved manually, but normally a kinematic body is moved by setting its velocity. A kinematic body behaves as if it has infinite mass. Kinematic bodies do not collide with other static or kinematic bodies.
+     * A kinematic body moves under simulation according to its velocity. They do not respond to forces. 
+	 * They can be moved manually, but normally a kinematic body is moved by setting its velocity.
+	 * A kinematic body behaves as if it has infinite mass. Kinematic bodies do not collide with other static or kinematic bodies.
      */
     KINEMATIC = 4,
 
@@ -94,7 +99,7 @@ export default class Body extends EventTarget {
 
     id = Body.idCounter++;
     index = 0;    //index in world bodies
-	name='noname';  // for debug
+	_name='noname';  // for debug
 	
 	enable=true;
 
@@ -346,7 +351,7 @@ export default class Body extends EventTarget {
         this.sleepState = 0;
         this._wakeUpAfterNarrowphase = false;
         if (s === Body.SLEEPING) {
-            this.dispatchEvent(Body.wakeupEvent);
+			this.dispatchEvent(Body.wakeupEvent);
         }
     }
 

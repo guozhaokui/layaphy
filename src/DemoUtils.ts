@@ -9,6 +9,7 @@ import { Vector3 } from "laya/d3/math/Vector3";
 import Sphere from "./shapes/Sphere";
 import { Scene3D } from "laya/d3/core/scene/Scene3D";
 import { BlinnPhongMaterial } from "laya/d3/core/material/BlinnPhongMaterial";
+import PhyMtl from "./material/Material";
 
 var scene:Scene3D;
 var mtl:BlinnPhongMaterial;
@@ -18,7 +19,7 @@ export function initDemo(sce:Scene3D, m:BlinnPhongMaterial){
 	mtl=m;
 }
 
-export function addBox( size:Vec3, pos:Vec3, mass:number, randr=false):CannonBody {
+export function addBox( size:Vec3, pos:Vec3, mass:number, phyMtl:PhyMtl, randr=false):CannonBody {
 	let box = new MeshSprite3D(PrimitiveMesh.createBox(size.x,size.y,size.z));
     scene.addChild(box);
     box.meshRenderer.material = mtl;
@@ -36,7 +37,8 @@ export function addBox( size:Vec3, pos:Vec3, mass:number, randr=false):CannonBod
     var rigidBody = box.addComponent(CannonBody) as CannonBody;
     var boxShape = new Box(new Vec3(size.x / 2, size.y / 2, size.z / 2));
     rigidBody.addShape(boxShape);
-    rigidBody.setMass(mass);
+	rigidBody.setMass(mass);
+	rigidBody.phyBody.material = phyMtl;
     return rigidBody;
 }
 

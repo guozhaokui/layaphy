@@ -16,13 +16,44 @@ import { hashSparseVox, SparseVoxData } from "./shapes/Voxel";
 import { testBullet } from "./TestBullet";
 import { testCannon } from "./TestCannon";
 import { Mesh2Voxel } from "./tools/Mesh2Voxel";
-//import { Main } from "./testPlanetGravity";
 import { initDemo } from "./DemoUtils";
+//import { Main } from "./testPlanetGravity";
 import { Main } from "./testPush";
+import Quaternion from "./math/Quaternion";
 
 //let PhyWorld: typeof BtWorld | typeof CannonWorld;
 //let PhyBody: typeof BtBody | typeof CannonBody;
 
+// Determine quaternion from roll, pitch, and yaw euler angles: http://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
+// just using roll and pitch here
+
+function EulerToQuat(phi:number, theta:number, psi:number, q:Quaternion) {
+	var c = Math.cos, s = Math.sin, f=phi, t=theta, p=psi;		
+	var p2 = p*0.5, t2 = t*0.5, f2=f*0.5;
+	q.w = c(f2)*c(t2)*c(p2)+s(f2)*s(t2)*s(p2);
+	q.x = s(f2)*c(t2)*c(p2)-c(f2)*s(t2)*s(p2);
+	q.y = c(f2)*s(t2)*c(p2)+s(f2)*c(t2)*s(p2);
+	q.z = c(f2)*c(t2)*s(p2)-s(f2)*s(t2)*c(p2);
+}
+
+// http://www.gamedev.net/topic/423462-rotation-difference-between-two-quaternions/
+// to compute the angular velocity to make correct collision resolution
+
+function QuatToAxisAngle(q:Quaternion) {
+	var angle = 2*Math.acos(q.w), scale = 1.0/Math.sqrt(1.0-q.w*q.w);
+	var x = q.x*scale;
+	var y = q.y*scale;
+	var z = q.z*scale;
+	return [x,y,z,angle];
+}
+
+function QuatToEuler(q:Quaternion) {
+	var f,t,p;
+	f = Math.atan2(2*(q.w*q.x+q.y*q.z),1-2*(q.x*q.x+q.y*q.y));
+	t = Math.asin(2*(q.w*q.y-q.z*q.x));
+	p = Math.atan2(2*(q.w*q.z+q.x*q.y),1-2*(q.y*q.y+q.z*q.z));
+	return [f,t,p];
+}
 
 
 let scene: Scene3D;

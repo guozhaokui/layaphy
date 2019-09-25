@@ -28,6 +28,7 @@ export interface IPhyBody {
 	enablePhy(b:boolean):void;	
 	addCenterForce(f:Vector3):void;
 	addForce(f:Vector3, pos:Vector3):void;
+	fixedRotation:boolean;
 }
 
 /**

@@ -650,7 +650,8 @@ export default class World extends EventTarget {
             gravity = this.gravity,
             doProfiling = this.doProfiling,
             profile = this.profile,
-            DYNAMIC = BODYTYPE.DYNAMIC,
+			DYNAMIC = BODYTYPE.DYNAMIC,
+			KINEMATIC=BODYTYPE.KINEMATIC,
             profilingStart:f32=0,
             constraints = this.constraints,
             frictionEquationPool = World_step_frictionEquationPool,
@@ -667,16 +668,27 @@ export default class World extends EventTarget {
         // Add gravity to all objects
         for (i = 0; i !== N; i++) {
             var bi = bodies[i];
-			if (bi.type === DYNAMIC && bi.enable) { // Only for dynamic bodies
+			if ( bi.enable) { 
 				//temp
 				if(bi.onStep){
 					bi.onStep();
 				}
+				if(bi.type==KINEMATIC){
+					//由于碰撞处理需要速度，如果kinematic没有速度的话，需要计算
+					//if(bi.velocity.almostZero()){
+						//bi.position.vsub(bi.previousPosition,bi.velocity);
+						//bi.velocity.scale(1/dt);	// TODO 如果插值多次会有问题么
+						//bi.velocity.set(1,0,0);
+					//}
+					// bi.quaternion; 旋转先不管，必须通过设置角速度来达到效果
+				}
 				//temp
-                var f = bi.force, m = bi._mass;
-                f.x += m * gx;
-                f.y += m * gy;
-                f.z += m * gz;
+				if(bi.type===DYNAMIC){// static和kinematic的不响应受力的
+					var f = bi.force, m = bi._mass;
+					f.x += m * gx;
+					f.y += m * gy;
+					f.z += m * gz;
+				}
             }
         }
 
