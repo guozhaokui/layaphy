@@ -152,8 +152,10 @@ export default class Narrowphase {
 
         if (friction > 0) {
 
-            // Create 2 tangent equations
-            const mug = friction * world.gravity.length();
+			// Create 2 tangent equations
+			// TODO 这里要改成 a和b的受力在法线上的投影?
+			let maxf = Math.max(friction * world.gravity.lengthSquared(),bodyA.force.lengthSquared(), bodyB.force.lengthSquared());
+			const mug = Math.sqrt(maxf);
             let reducedMass = (bodyA.invMass + bodyB.invMass);
             if (reducedMass > 0) {
                 reducedMass = 1 / reducedMass;

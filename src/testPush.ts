@@ -96,7 +96,7 @@ function testLift(){
 // 测试传送带
 // 问题：kinematic无法带动其他对象。dynamic能，为什么？
 function testConveyorbelt(){
-	world.world.gravity.set(0,-10,0);
+	//world.world.gravity.set(0,-10,0);
 
 	let ch1 = addBox(new Vec3(1,2,1), new Vec3(0,1,0), 1, phymtl1);
 	ch1.fixedRotation=true;
