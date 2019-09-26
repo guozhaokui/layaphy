@@ -670,8 +670,8 @@ export default class World extends EventTarget {
             var bi = bodies[i];
 			if ( bi.enable) { 
 				//temp
-				if(bi.onStep){
-					bi.onStep();
+				if(bi.preCollision){
+					bi.preCollision();
 				}
 				if(bi.type==KINEMATIC && bi.kinematicUsePos){
 					//由于碰撞处理需要速度，如果kinematic没有速度的话，需要计算

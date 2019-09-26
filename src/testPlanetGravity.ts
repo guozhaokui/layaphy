@@ -43,7 +43,7 @@ class gameBody extends MeshSprite3D{
 		var boxShape = new Box(new Vec3(wx / 2, wy / 2, wz / 2));
 		rigidBody.addShape(boxShape);
 		rigidBody.setMass(mass);
-		rigidBody.phyBody.onStep=this.phystep.bind(this);
+		rigidBody.phyBody.preCollision=this.phystep.bind(this);
 		rigidBody.enablePhy(false);
 	}
 	phystep(){

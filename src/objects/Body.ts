@@ -802,7 +802,7 @@ export default class Body extends EventTarget {
         this.updateInertiaWorld();
 	}
 	
-	onStep:()=>void;
+	preCollision:()=>void;
 }
 
 
