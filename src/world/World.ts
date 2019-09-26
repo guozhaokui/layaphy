@@ -8,7 +8,7 @@ import ArrayCollisionMatrix from '../collision/ArrayCollisionMatrix.js';
 import OverlapKeeper from '../collision/OverlapKeeper.js';
 import Material from '../material/Material.js';
 import ContactMaterial from '../material/ContactMaterial.js';
-import Body, { BODYTYPE } from '../objects/Body.js';
+import Body, { BODYTYPE, BODY_SLEEP_STATE } from '../objects/Body.js';
 import TupleDictionary from '../utils/TupleDictionary.js';
 import RaycastResult from '../collision/RaycastResult.js';
 import Ray from '../collision/Ray.js';
@@ -673,13 +673,10 @@ export default class World extends EventTarget {
 				if(bi.onStep){
 					bi.onStep();
 				}
-				if(bi.type==KINEMATIC){
+				if(bi.type==KINEMATIC && bi.kinematicUsePos){
 					//由于碰撞处理需要速度，如果kinematic没有速度的话，需要计算
-					//if(bi.velocity.almostZero()){
-						//bi.position.vsub(bi.previousPosition,bi.velocity);
-						//bi.velocity.scale(1/dt);	// TODO 如果插值多次会有问题么
-						//bi.velocity.set(1,0,0);
-					//}
+					bi.position.vsub(bi.previousPosition,bi.velocity);
+					bi.velocity.scale(1/dt, bi.velocity);	// TODO 如果插值多次会有问题么
 					// bi.quaternion; 旋转先不管，必须通过设置角速度来达到效果
 				}
 				//temp
@@ -731,7 +728,8 @@ export default class World extends EventTarget {
         }
         contacts.length = 0;
 
-        // Transfer FrictionEquation from current list to the pool for reuse
+		// Transfer FrictionEquation from current list to the pool for reuse
+		// TODO  效率 这个是不是可以通过交换完成
         var NoldFrictionEquations = this.frictionEquations.length;
         for (i = 0; i !== NoldFrictionEquations; i++) {
             frictionEquationPool.push(this.frictionEquations[i]);
@@ -753,7 +751,8 @@ export default class World extends EventTarget {
             profilingStart = perfNow();
         }
 
-        // Add all friction eqs
+		// Add all friction eqs
+		// TODO 效率，这个为什么不在getContacts的时候直接push， 是因为顺序么
         for (var i = 0; i < this.frictionEquations.length; i++) {
             solver.addEquation(this.frictionEquations[i]);
         }
@@ -842,10 +841,11 @@ export default class World extends EventTarget {
             // 	solver.addEquation(c2);
             // }
 
+			// 发生碰撞的两个对象，是否需要wakeup
             if (bi.allowSleep &&
                 bi.type === BODYTYPE.DYNAMIC &&
-                bi.sleepState === Body.SLEEPING &&
-                bj.sleepState === Body.AWAKE &&
+                bi.sleepState === BODY_SLEEP_STATE.SLEEPING &&
+                bj.sleepState === BODY_SLEEP_STATE.AWAKE &&
                 bj.type !== BODYTYPE.STATIC
             ) {
                 var speedSquaredB = bj.velocity.lengthSquared() + bj.angularVelocity.lengthSquared();
@@ -857,8 +857,8 @@ export default class World extends EventTarget {
 
             if (bj.allowSleep &&
                 bj.type === BODYTYPE.DYNAMIC &&
-                bj.sleepState === Body.SLEEPING &&
-                bi.sleepState === Body.AWAKE &&
+                bj.sleepState === BODY_SLEEP_STATE.SLEEPING &&
+                bi.sleepState === BODY_SLEEP_STATE.AWAKE &&
                 bi.type !== BODYTYPE.STATIC
             ) {
                 var speedSquaredA = bi.velocity.lengthSquared() + bi.angularVelocity.lengthSquared();

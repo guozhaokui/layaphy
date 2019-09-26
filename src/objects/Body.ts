@@ -48,6 +48,12 @@ export const enum BODYTYPE{
 
 }
 
+export const enum BODY_SLEEP_STATE{
+    AWAKE = 0,
+    SLEEPY = 1,
+    SLEEPING = 2
+}
+
 /**
  * Base class for all body types.
  * @example
@@ -68,10 +74,6 @@ export default class Body extends EventTarget {
      * @param {ContactEquation} contact The details of the collision.
      */
     static COLLIDE_EVENT_NAME = "collide";
-
-    static AWAKE = 0;
-    static SLEEPY = 1;
-    static SLEEPING = 2;
 
     static idCounter = 0;
 
@@ -180,7 +182,7 @@ export default class Body extends EventTarget {
     /**
      * Current sleep state.
      */
-    sleepState = 0;
+    sleepState=BODY_SLEEP_STATE.AWAKE;
 
     /**
      * If the speed (the norm of the velocity) is smaller than this value, the body is considered sleepy.
@@ -194,6 +196,7 @@ export default class Body extends EventTarget {
 
     timeLastSleepy = 0;
 
+	/** 由于碰撞后满足wakeup条件，需要wakeup了。 一次性的 */
     _wakeUpAfterNarrowphase = false;
 
     /**
@@ -275,7 +278,10 @@ export default class Body extends EventTarget {
      */
     boundingRadius = 0;
 
-    wlambda = new Vec3();
+	wlambda = new Vec3();
+
+	/** 如果是kinematic对象，用速度控制还是用位置控制。 */
+	kinematicUsePos=false;
 
     constructor(mass: number = 1, shape: Shape|null = null, pos:Vec3|null=null, options?: BodyInitOptions) {
         super();
@@ -348,9 +354,9 @@ export default class Body extends EventTarget {
      */
     wakeUp() {
         const s = this.sleepState;
-        this.sleepState = 0;
+        this.sleepState = BODY_SLEEP_STATE.AWAKE;
         this._wakeUpAfterNarrowphase = false;
-        if (s === Body.SLEEPING) {
+        if (s === BODY_SLEEP_STATE.SLEEPING) {
 			this.dispatchEvent(Body.wakeupEvent);
         }
     }
@@ -360,14 +366,14 @@ export default class Body extends EventTarget {
      * @method sleep
      */
     sleep() {
-        this.sleepState = Body.SLEEPING;
+        this.sleepState = BODY_SLEEP_STATE.SLEEPING;
         this.velocity.set(0, 0, 0);
         this.angularVelocity.set(0, 0, 0);
         this._wakeUpAfterNarrowphase = false;
     }
 
     isSleep(){
-        return this.sleepState===Body.SLEEPING;
+        return this.sleepState===BODY_SLEEP_STATE.SLEEPING;
     }
 
     /**
@@ -379,13 +385,13 @@ export default class Body extends EventTarget {
             const sleepState = this.sleepState;
             const speedSquared = this.velocity.lengthSquared() + this.angularVelocity.lengthSquared();
             const speedLimitSquared = this.sleepSpeedLimit ** 2;
-            if (sleepState === Body.AWAKE && speedSquared < speedLimitSquared) {
-                this.sleepState = Body.SLEEPY; // Sleepy
+            if (sleepState === BODY_SLEEP_STATE.AWAKE && speedSquared < speedLimitSquared) {
+                this.sleepState = BODY_SLEEP_STATE.SLEEPY; // Sleepy
                 this.timeLastSleepy = time;
                 this.dispatchEvent(Body.sleepyEvent);
-            } else if (sleepState === Body.SLEEPY && speedSquared > speedLimitSquared) {
+            } else if (sleepState === BODY_SLEEP_STATE.SLEEPY && speedSquared > speedLimitSquared) {
                 this.wakeUp(); // Wake up
-            } else if (sleepState === Body.SLEEPY && (time - this.timeLastSleepy) > this.sleepTimeLimit) {
+            } else if (sleepState === BODY_SLEEP_STATE.SLEEPY && (time - this.timeLastSleepy) > this.sleepTimeLimit) {
                 this.sleep(); // Sleeping
                 this.dispatchEvent(Body.sleepEvent);
             }
@@ -397,7 +403,7 @@ export default class Body extends EventTarget {
      * @TODO 问题：sleeping状态下，如果要solve，则必然会被唤醒，所以感觉这里有问题 
      */
     updateSolveMassProperties() {
-        if (this.sleepState === Body.SLEEPING || this.type === BODYTYPE.KINEMATIC) {
+        if (this.sleepState === BODY_SLEEP_STATE.SLEEPING || this.type === BODYTYPE.KINEMATIC) {
             this.invMassSolve = 0;
             this.invInertiaSolve.setZero();
             this.invInertiaWorldSolve.setZero();
@@ -740,11 +746,16 @@ export default class Body extends EventTarget {
     integrate(dt: f32, quatNormalize: boolean, quatNormalizeFast: boolean) {
         // Save previous position
         this.previousPosition.copy(this.position);
-        this.previousQuaternion.copy(this.quaternion);
-
-        if (!(this.type === BODYTYPE.DYNAMIC || this.type === BODYTYPE.KINEMATIC) || this.sleepState === Body.SLEEPING) { // Only for dynamic
+		this.previousQuaternion.copy(this.quaternion);
+		
+        if ( this.type===BODYTYPE.STATIC || this.sleepState === BODY_SLEEP_STATE.SLEEPING) { // Only for dynamic
             return;
         }
+
+		// kinematic用位置控制的话，不需要integrate
+		if(this.type==BODYTYPE.KINEMATIC && this.kinematicUsePos){
+			return;
+		}
 
         const velo = this.velocity;
         const angularVelo = this.angularVelocity;

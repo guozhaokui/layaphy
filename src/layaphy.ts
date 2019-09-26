@@ -19,8 +19,8 @@ import { Mesh2Voxel } from "./tools/Mesh2Voxel";
 import { initDemo } from "./DemoUtils";
 import Quaternion from "./math/Quaternion";
 //import { Main } from "./testPlanetGravity";
-//import { Main } from "./testPush";
-import { Main } from "./testVoxel";
+import { Main } from "./testPush";
+//import { Main } from "./testVoxel";
 //let PhyWorld: typeof BtWorld | typeof CannonWorld;
 //let PhyBody: typeof BtBody | typeof CannonBody;
 

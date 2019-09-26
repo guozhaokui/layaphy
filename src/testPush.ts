@@ -107,9 +107,10 @@ function testConveyorbelt(){
 
 	let b = addBox( new Vec3(10,0.1,1), new Vec3(-2,-1,0), 1000, phymtl2);
 	b.phyBody.type=BODYTYPE.KINEMATIC;
-	//b.phyBody.velocity.set(-3,0,0);
+	//b.phyBody.velocity.set(1,0,0);
 	b.phyBody.allowSleep=false;
 	b.phyBody._name='ban';
+	b.phyBody.kinematicUsePos=true;
 	let tm=0;
 	b.phyBody.onStep=()=>{
 		let b1 = b.phyBody;
@@ -124,9 +125,9 @@ export function Main(sce:Scene3D, mtl:BlinnPhongMaterial,cam:MouseCtrl1){
 	mtl.renderMode=BlinnPhongMaterial.RENDERMODE_TRANSPARENT;
 	initPhy(sce);
 	
-	testPush();
+	//testPush();
 	//testLift();
-	//testConveyorbelt();
+	testConveyorbelt();
 
 	//b.phyBody.velocity=new Vec3(-1,0,0);
 }

@@ -128,11 +128,16 @@ export default class Narrowphase {
         return c;
     }
 
-    createFrictionEquationsFromContact(contactEquation: ContactEquation, outArray: FrictionEquation[]) {
-        const bodyA = contactEquation.bi;
-        const bodyB = contactEquation.bj;
-        const shapeA = contactEquation.si;
-        const shapeB = contactEquation.sj;
+	/**
+	 * 根据contact创建摩擦约束。每个contact会创建两个摩擦约束，在tangent的两个方向
+	 * @param contactEq 
+	 * @param outArray 
+	 */
+    createFrictionEquationsFromContact(contactEq: ContactEquation, outArray: FrictionEquation[]) {
+        const bodyA = contactEq.bi;
+        const bodyB = contactEq.bj;
+        const shapeA = contactEq.si;
+        const shapeB = contactEq.sj;
 
         const world = this.world;
         const cm = this.currentContactMaterial;
@@ -163,19 +168,19 @@ export default class Narrowphase {
             c1.maxForce = c2.maxForce = mug * reducedMass;
 
             // Copy over the relative vectors
-            c1.ri.copy(contactEquation.ri);
-            c1.rj.copy(contactEquation.rj);
-            c2.ri.copy(contactEquation.ri);
-            c2.rj.copy(contactEquation.rj);
+            c1.ri.copy(contactEq.ri);
+            c1.rj.copy(contactEq.rj);
+            c2.ri.copy(contactEq.ri);
+            c2.rj.copy(contactEq.rj);
 
             // Construct tangents
-            contactEquation.ni.tangents(c1.t, c2.t);
+            contactEq.ni.tangents(c1.t, c2.t);
 
             // Set spook params
             c1.setSpookParams(cm.frictionEquationStiffness, cm.frictionEquationRelaxation, world.dt);
             c2.setSpookParams(cm.frictionEquationStiffness, cm.frictionEquationRelaxation, world.dt);
 
-            c1.enabled = c2.enabled = contactEquation.enabled;
+            c1.enabled = c2.enabled = contactEq.enabled;
 
             outArray.push(c1, c2);
 
@@ -316,11 +321,6 @@ export default class Narrowphase {
                             retval = resolver.call(this, sj, si, xj, xi, qj, qi, bj, bi, si, sj, justTest);
                         }
 
-						if(retval){
-							// 唤醒sleep的对象
-							//bi.wakeUp();
-							//bj.wakeUp();
-						}
                         if (retval && justTest) {
                             // Register overlap
                             world.shapeOverlapKeeper.set(si.id, sj.id);

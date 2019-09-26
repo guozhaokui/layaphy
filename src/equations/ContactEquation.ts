@@ -107,7 +107,6 @@ export default class ContactEquation extends Equation {
         this.bi.position.vadd(this.ri, xi); // xi = bi.pos + this.ri
         this.bj.position.vadd(this.rj, xj); // xj = bj.pos + this.rj
 
-        // xi和xj难道不在一个点上么
         this.bi.getVelocityAtWorldPoint(xi, vi);
         this.bj.getVelocityAtWorldPoint(xj, vj);
 

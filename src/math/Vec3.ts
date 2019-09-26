@@ -226,6 +226,11 @@ export default class Vec3 {
         return target;
     }
 
+	/**
+	 * 计算这个向量的两个tangent
+	 * @param t1 
+	 * @param t2 
+	 */
     tangents(t1:Vec3, t2:Vec3) {
         const norm = this.length();
         if (norm > 0.0) {

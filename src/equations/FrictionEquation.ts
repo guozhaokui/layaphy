@@ -7,8 +7,8 @@ import Body from '../objects/Body.js';
  * @author schteppe
  */
 export default class FrictionEquation extends Equation {
-    ri = new Vec3();
-    rj = new Vec3();
+    ri = new Vec3();	//质心到碰撞点
+    rj = new Vec3();	//质心到碰撞点
     t = new Vec3();     //tangent
 
     /**

@@ -63,7 +63,7 @@ function testVoxelGround() {
 
 
 	//let ch1 = addBox(new Vec3(1, 2, 1), new Vec3(0, 1, 0), 1, phymtl1);
-	for(let i=0; i<12; i++){
+	for(let i=0; i<1; i++){
 		let b = addBox(new Vec3(1,1,1), new Vec3(rand(-10,10),rand(5,10),rand(-10,10)),1,phymtl2,true);
 		b.phyBody.allowSleep=false;
 	}
