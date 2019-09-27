@@ -119,6 +119,10 @@ export class PhyRender extends IPhyRender {
 		r.addLine(p1, p3, col1, col1);
 	}
 
+	addVec1(st:Vec3, dir:Vec3,scale:number,color:number){
+		this.addVec(st.x,st.y,st.z, dir.x*scale,dir.y*scale,dir.z*scale,color);
+	}
+
 	addPersistPoint(x: number|Vec3, y?: number, z?: number, name?: string) {
 		if((x as Vec3).x!=undefined){
 			this.persistPoint.push(x as Vec3);	
@@ -168,6 +172,9 @@ export class PhyRender extends IPhyRender {
 		this.addVec(px - hAxlen, py, pz, axlen, 0, 0, color);
 		this.addVec(px, py - hAxlen, pz, 0, axlen, 0, color);
 		this.addVec(px, py, pz - hAxlen, 0, 0, axlen, color);
+	}
+	addPoint1(p:Vec3,color:number):void{
+		this.addPoint(p.x,p.y,p.z,color);
 	}
 
 	drawLine(pts: Vec3[], color: number): void {

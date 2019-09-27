@@ -19,6 +19,7 @@ import Vec3Pool from '../utils/Vec3Pool.js';
 import World, { PhyColor } from './World.js';
 import Capsule from '../shapes/Capsule.js';
 import { GJKPairDetector } from '../collision/GJKEPA.js';
+import { PhyRender } from '../layawrap/PhyRender.js';
 
 //declare type anyShape=Box|Sphere|Capsule|Voxel|ConvexPolyhedron|Heightfield|Trimesh;
 interface checkFunc {
@@ -653,9 +654,43 @@ export default class Narrowphase {
         return false;
     }
 
+
+	bigSphereBox(si: Sphere, sj: Box, xi: Vec3, xj: Vec3, qi: Quaternion, qj: Quaternion, bi: Body, bj: Body, rsi: Shape, rsj: Shape, justTest: boolean): boolean {
+		let hitpos = sphereBox_ns;
+		let hitpos1 = sphereBox_ns1;
+		let ni = Narrowphase.nor1;
+		let deep = si.hitBox(xi,sj.halfExtents,xj,qj,hitpos,hitpos1,ni,justTest);
+		if(deep>=0){
+			//debug
+			/*
+			let phyr = this.world._phyRender;
+			phyr.addPoint1(hitpos,0xff);
+			phyr.addPoint1(hitpos1,0xff00);
+			phyr.addVec1(hitpos1,ni,10,0xffff00);
+			*/
+			//debug
+			if(justTest) return true;
+			let r = this.createContactEquation(bi,bj,si,sj,rsi,rsj);
+			ni.negate(r.ni);
+			hitpos.vsub(xi,r.ri);
+			hitpos1.vsub(xj,r.rj);
+
+            this.result.push(r);
+			this.createFrictionEquationsFromContact(r, this.frictionResult);
+			return true;
+		}
+		return false;
+	}
+
     sphereBox(si: Sphere, sj: Box, xi: Vec3, xj: Vec3, qi: Quaternion, qj: Quaternion, bi: Body, bj: Body, rsi: Shape, rsj: Shape, justTest: boolean): boolean {
         const v3pool = this.v3pool;
 
+		let half = sj.halfExtents;
+		let maxw = Math.max(half.x,half.y,half.z);
+
+		if(si.radius>4*maxw){
+			return this.bigSphereBox(si,sj,xi,xj,qi,qj,bi,bj,rsi,rsj,justTest);
+		}
         // we refer to the box as body j
         const sides = sphereBox_sides;
         xi.vsub(xj, box_to_sphere);

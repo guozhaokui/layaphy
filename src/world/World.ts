@@ -257,7 +257,7 @@ export default class World extends EventTarget {
 
     idToBodyMap:{[id:string]:Body} = {};
 
-    _phyRender:IPhyRender;
+    _phyRender:PhyRender;
 
     constructor(options?:any) {
         super();

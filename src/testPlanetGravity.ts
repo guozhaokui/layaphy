@@ -41,6 +41,7 @@ class gameBody extends MeshSprite3D{
 		//物理组件
 		var rigidBody = this.phybody = this.addComponent(CannonBody) as CannonBody;
 		var boxShape = new Box(new Vec3(wx / 2, wy / 2, wz / 2));
+		//var boxShape=new Sphere(2);
 		rigidBody.addShape(boxShape);
 		rigidBody.setMass(mass);
 		rigidBody.phyBody.preCollision=this.phystep.bind(this);
@@ -75,8 +76,8 @@ function initPhy(scene:Scene3D){
     let phymtl1 = new Material();
     let phymtl2 = new Material();
     let phymtl3 = new Material();
-    let cmtl1 = new ContactMaterial(phymtl1, phymtl2, 0, 0);
-    let cmtl2 = new ContactMaterial(phymtl1, phymtl3, 0, 1);
+    let cmtl1 = new ContactMaterial(phymtl1, phymtl2, 0.5, 0);
+    let cmtl2 = new ContactMaterial(phymtl1, phymtl3, 0.5, 1);
     phyworld.world.addContactMaterial(cmtl1).addContactMaterial(cmtl2);
 }
 
@@ -84,6 +85,7 @@ export function Main(sce:Scene3D, mtl:BlinnPhongMaterial,cam:MouseCtrl1){
 	cam.dist=200;
 	sce3d=sce;
 	mtl1=mtl;
+	//mtl.renderMode=BlinnPhongMaterial.RENDERMODE_TRANSPARENT;
 	initPhy(sce);
 	addSphere(0,50,0,0,0);
 
