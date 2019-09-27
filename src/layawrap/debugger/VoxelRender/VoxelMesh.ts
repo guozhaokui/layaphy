@@ -1,31 +1,44 @@
 import Vec3 from "../../../math/Vec3";
 
-function GreedyMesh(volume: ArrayLike<number>, dims: number[]) {
-	function f(i: i32, j: i32, k: i32) {
-		return volume[i + dims[0] * (j + dims[1] * k)];
+export function GreedyMesh(volume:{get:(x:number,y:number,z:number)=>number}|number[], dims: number[]) {
+	function _get(i: i32, j: i32, k: i32){
+		return (volume as number[])[i + dims[0] * (j + dims[1] * k)];
 	}
+	let get=(volume as any).get || _get;
 	//Sweep over 3-axes
 	var quads = [];
 	for (var d = 0; d < 3; ++d) {
 		var i, j, k, l, w, h
-			, u = (d + 1) % 3
+			, u = (d + 1) % 3	//x d=0,u=1,v=2   y:d=1,u=2,v=0  z:d=2,u=0,v=1
 			, v = (d + 2) % 3
 			, x = [0, 0, 0]
-			, q = [0, 0, 0]
-			, mask = new Int32Array(dims[u] * dims[v]);
-		q[d] = 1;
+			, xxq = [0, 0, 0];
+
+		/** 大小为当前扫描平面的分辨率 */
+		let mask = new Int32Array(dims[u] * dims[v]);
+			
+		xxq[d] = 1;
+
 		for (x[d] = -1; x[d] < dims[d];) {
 			//Compute mask
 			var n = 0;
-			for (x[v] = 0; x[v] < dims[v]; ++x[v])
+			for (x[v] = 0; x[v] < dims[v]; ++x[v]){
 				for (x[u] = 0; x[u] < dims[u]; ++x[u]) {
-					mask[n++] = (0 <= x[d] ? f(x[0], x[1], x[2]) : false) != (x[d] < dims[d] - 1 ? f(x[0] + q[0], x[1] + q[1], x[2] + q[2]) : false);
+					let v =
+						// 在有效范围内取 0<= <dims[]-1
+						// 在当前轴上，前进一步，看是不是一样
+						// get(x0,x1,x2)!=get(x0+axis.x, x1+axis.y, x2+axis.z)
+						(0 <= x[d] ? get(x[0], x[1], x[2]) : false) != 
+						(x[d] < dims[d] - 1 ? get(x[0] + xxq[0], x[1] + xxq[1], x[2] + xxq[2]) : false);
+
+					mask[n++] = v?1:0;
 				}
+			}
 			//Increment x[d]
 			++x[d];
 			//Generate mesh for mask using lexicographic ordering
 			n = 0;
-			for (j = 0; j < dims[v]; ++j)
+			for (j = 0; j < dims[v]; ++j){
 				for (i = 0; i < dims[u];) {
 					if (mask[n]) {
 						//Compute width
@@ -49,15 +62,15 @@ function GreedyMesh(volume: ArrayLike<number>, dims: number[]) {
 						var du = [0, 0, 0]; du[u] = w;
 						var dv = [0, 0, 0]; dv[v] = h;
 						quads.push([
-							[x[0], x[1], x[2]]
-							, [x[0] + du[0], x[1] + du[1], x[2] + du[2]]
-							, [x[0] + du[0] + dv[0], x[1] + du[1] + dv[1], x[2] + du[2] + dv[2]]
-							, [x[0] + dv[0], x[1] + dv[1], x[2] + dv[2]]
+							new Vec3(x[0], x[1], x[2])
+							, new Vec3(x[0] + du[0], x[1] + du[1], x[2] + du[2])
+							, new Vec3(x[0] + du[0] + dv[0], x[1] + du[1] + dv[1], x[2] + du[2] + dv[2])
+							, new Vec3(x[0] + dv[0], x[1] + dv[1], x[2] + dv[2])
 						]);
 						//Zero-out mask
 						for (l = 0; l < h; ++l)
 							for (k = 0; k < w; ++k) {
-								mask[n + k + l * dims[u]] = false;
+								mask[n + k + l * dims[u]] = 0;
 							}
 						//Increment counters and continue
 						i += w; n += w;
@@ -65,6 +78,7 @@ function GreedyMesh(volume: ArrayLike<number>, dims: number[]) {
 						++i; ++n;
 					}
 				}
+			}
 		}
 	}
 	return quads;
@@ -81,10 +95,10 @@ function CulledMesh(volume: number[], dims: number[]) {
 		dir[i][1][(i + 2) % 3] = 1;
 	}
 	//March over the volume
-	var quads = [] , x = [0, 0, 0] ;
+	var quads = [], x = [0, 0, 0];
 	var B = [[false, true],    //Incrementally update bounds (this is a bit ugly)
-			 [false, true], 
-			 [false, true]]
+	[false, true],
+	[false, true]]
 	var n = -dims[0] * dims[1];
 	for (B[2] = [false, true], x[2] = -1; x[2] < dims[2]; B[2] = [true, (++x[2] < dims[2] - 1)])
 		for (n -= dims[0], B[1] = [false, true], x[1] = -1; x[1] < dims[1]; B[1] = [true, (++x[1] < dims[1] - 1)])
@@ -113,14 +127,14 @@ function CulledMesh(volume: number[], dims: number[]) {
 	return quads;
 }
 
-function StupidMesh(volume: number[], dims: number[]) {
+function StupidMesh(volume: number[], dims: Vec3) {
 	//vert:number[3]
 	//quad : vert[4]
 	//quads: quad[]
-	var quads:number[][][] = [], xyz = [0, 0, 0], n = 0;
-	for (xyz[2] = 0; xyz[2] < dims[2]; ++xyz[2])
-		for (xyz[1] = 0; xyz[1] < dims[1]; ++xyz[1])
-			for (xyz[0] = 0; xyz[0] < dims[0]; ++xyz[0])
+	var quads: number[][][] = [], xyz = [0, 0, 0], n = 0;
+	for (xyz[2] = 0; xyz[2] < dims.z; ++xyz[2])
+		for (xyz[1] = 0; xyz[1] < dims.y; ++xyz[1])
+			for (xyz[0] = 0; xyz[0] < dims.x; ++xyz[0])
 				if (volume[n++]) {
 					for (var d = 0; d < 3; ++d) {
 						var t = [xyz[0], xyz[1], xyz[2]]

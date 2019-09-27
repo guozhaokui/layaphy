@@ -18,9 +18,10 @@ import { testCannon } from "./TestCannon";
 import { Mesh2Voxel } from "./tools/Mesh2Voxel";
 import { initDemo } from "./DemoUtils";
 import Quaternion from "./math/Quaternion";
-import { Main } from "./testPlanetGravity";
+//import { Main } from "./testPlanetGravity";
 //import { Main } from "./testPush";
-//import { Main } from "./testVoxel";
+import { Main } from "./testVoxel";
+import { GreedyMesh } from "./layawrap/debugger/VoxelRender/VoxelMesh";
 //let PhyWorld: typeof BtWorld | typeof CannonWorld;
 //let PhyBody: typeof BtBody | typeof CannonBody;
 
@@ -55,6 +56,10 @@ function QuatToEuler(q:Quaternion) {
 	return [f,t,p];
 }
 
+//TEST
+//let ret = GreedyMesh(new Array(8).fill(1),[2,2,2]);
+//debugger
+//TEST
 
 let scene: Scene3D;
 //let mtl1:BlinnPhongMaterial;

@@ -15,6 +15,8 @@ import CannonBody from "./layawrap/CannonBody";
 import Quaternion from "./math/Quaternion";
 import Plane from "./shapes/Plane";
 import { Sprite3D } from "laya/d3/core/Sprite3D";
+import { VoxelMaterial } from "./layawrap/debugger/VoxelRender/VoxelMtl";
+import { VoxelSprite } from "./layawrap/debugger/VoxelRender/VoxelSprite";
 
 /**
  * 测试盒子可以被推走，被抬起
@@ -98,18 +100,12 @@ function testVoxelGround() {
 	*/
 }
 
-
-
-/*
-显示voxel
-VoxelMaterial.initShader();
-let vox = new VoxelSprite();
-scene.addChild(vox);
-*/
-
 let m2v = new Mesh2Voxel();
 
 export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
+	//显示voxel
+	VoxelMaterial.initShader();
+
 	cam.dist = 20;
 	sce3d = sce;
 	mtl1 = mtl;
@@ -118,7 +114,11 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 
 	testVoxelGround();
 
-	m2v.loadObj('res/house/house1.obj', 0.6, (voxdata: SparseVoxData) => {
+	m2v.loadObj('res/house/house1.obj', 0.05, (voxdata: SparseVoxData) => {
+		let vox = new VoxelSprite({get:voxdata.get.bind(voxdata)},voxdata.dataszx,voxdata.dataszy,voxdata.dataszz);
+		//vox.createMesh();
+		sce.addChild(vox);
+	
 		let ret = hashSparseVox(voxdata);
 		let s = 0;
 		ret.forEach(v => {
@@ -127,7 +127,6 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 
 		//TEST
 		/*
-
 		voxdata.data.forEach(v => {
 			let x = v.x;
 			let y = v.y;
