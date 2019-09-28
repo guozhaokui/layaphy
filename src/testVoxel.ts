@@ -115,7 +115,9 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 	testVoxelGround();
 
 	m2v.loadObj('res/house/house1.obj', 0.05, (voxdata: SparseVoxData) => {
-		let vox = new VoxelSprite({get:voxdata.get.bind(voxdata)},voxdata.dataszx,voxdata.dataszy,voxdata.dataszz);
+		let vox = new VoxelSprite({get:voxdata.get.bind(voxdata)},voxdata.dataszx,voxdata.dataszy,voxdata.dataszz, 
+			voxdata.aabbmin as any as Vector3, 
+			voxdata.aabbmax as any as Vector3);
 		//vox.createMesh();
 		sce.addChild(vox);
 	

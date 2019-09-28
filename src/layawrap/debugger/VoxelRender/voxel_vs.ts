@@ -13,6 +13,9 @@ varying vec3 v_PositionWorld;
 #endif
 varying vec3 v_Normal;
 
+uniform vec3 u_CameraPos;
+varying vec3 v_ViewDir; 
+
 void main() 
 { 
     gl_Position = u_MvpMatrix * a_Position; 
