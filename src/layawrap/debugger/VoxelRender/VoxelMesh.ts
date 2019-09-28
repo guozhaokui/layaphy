@@ -1,6 +1,7 @@
 import Vec3 from "../../../math/Vec3";
 
 export function GreedyMesh(volume:{get:(x:number,y:number,z:number)=>number}|number[], dims: number[]) {
+	performance.mark('greedystart');
 	function _get(i: i32, j: i32, k: i32){
 		return (volume as number[])[i + dims[0] * (j + dims[1] * k)];
 	}
@@ -14,22 +15,26 @@ export function GreedyMesh(volume:{get:(x:number,y:number,z:number)=>number}|num
 			, x = [0, 0, 0]
 			, xxq = [0, 0, 0];
 
+		let ds = dims[d];
+		let vs = dims[v];
+		let us = dims[u];
+
 		/** 大小为当前扫描平面的分辨率 */
-		let mask = new Int32Array(dims[u] * dims[v]);
+		let mask = new Int32Array(us*vs);
 			
 		xxq[d] = 1;
 
-		for (x[d] = -1; x[d] < dims[d];) {
+		for (x[d] = -1; x[d] < ds;) {
 			//Compute mask
 			var n = 0;
-			for (x[v] = 0; x[v] < dims[v]; ++x[v]){
-				for (x[u] = 0; x[u] < dims[u]; ++x[u]) {
+			for (x[v] = 0; x[v] < vs; ++x[v]){
+				for (x[u] = 0; x[u] < us; ++x[u]) {
 					let v =
 						// 在有效范围内取 0<= <dims[]-1
 						// 在当前轴上，前进一步，看是不是一样
 						// get(x0,x1,x2)!=get(x0+axis.x, x1+axis.y, x2+axis.z)
 						(0 <= x[d] ? get(x[0], x[1], x[2]) : false) != 
-						(x[d] < dims[d] - 1 ? get(x[0] + xxq[0], x[1] + xxq[1], x[2] + xxq[2]) : false);
+						(x[d] < ds - 1 ? get(x[0] + xxq[0], x[1] + xxq[1], x[2] + xxq[2]) : false);
 
 					mask[n++] = v?1:0;
 				}
@@ -38,17 +43,17 @@ export function GreedyMesh(volume:{get:(x:number,y:number,z:number)=>number}|num
 			++x[d];
 			//Generate mesh for mask using lexicographic ordering
 			n = 0;
-			for (j = 0; j < dims[v]; ++j){
-				for (i = 0; i < dims[u];) {
+			for (j = 0; j < vs; ++j){
+				for (i = 0; i < us;) {
 					if (mask[n]) {
 						//Compute width
-						for (w = 1; mask[n + w] && i + w < dims[u]; ++w) {
+						for (w = 1; mask[n + w] && i + w < us; ++w) {
 						}
 						//Compute height (this is slightly awkward
 						var done = false;
-						for (h = 1; j + h < dims[v]; ++h) {
+						for (h = 1; j + h < vs; ++h) {
 							for (k = 0; k < w; ++k) {
-								if (!mask[n + k + h * dims[u]]) {
+								if (!mask[n + k + h * us]) {
 									done = true;
 									break;
 								}
@@ -61,16 +66,19 @@ export function GreedyMesh(volume:{get:(x:number,y:number,z:number)=>number}|num
 						x[u] = i; x[v] = j;
 						var du = [0, 0, 0]; du[u] = w;
 						var dv = [0, 0, 0]; dv[v] = h;
+						let x0=x[0],x1=x[1],x2=x[2];
+						let du0=du[0],du1=du[1],du2=du[2];
+						let dv0=dv[0],dv1=dv[1],dv2=dv[2];
 						quads.push([
-							new Vec3(x[0], x[1], x[2])
-							, new Vec3(x[0] + du[0], x[1] + du[1], x[2] + du[2])
-							, new Vec3(x[0] + du[0] + dv[0], x[1] + du[1] + dv[1], x[2] + du[2] + dv[2])
-							, new Vec3(x[0] + dv[0], x[1] + dv[1], x[2] + dv[2])
+							new Vec3(x0, x1, x2)
+							, new Vec3(x0 + du0, x1 + du1, x2 + du2)
+							, new Vec3(x0 + du0 + dv0, x1 + du1 + dv1, x2 + du2 + dv2)
+							, new Vec3(x0 + dv0, x1 + dv1, x2 + dv2)
 						]);
 						//Zero-out mask
 						for (l = 0; l < h; ++l)
 							for (k = 0; k < w; ++k) {
-								mask[n + k + l * dims[u]] = 0;
+								mask[n + k + l * us] = 0;
 							}
 						//Increment counters and continue
 						i += w; n += w;
@@ -81,6 +89,9 @@ export function GreedyMesh(volume:{get:(x:number,y:number,z:number)=>number}|num
 			}
 		}
 	}
+	performance.mark('greedyend');
+	performance.measure('greedytime', 'greedystart', 'greedyend');
+	console.log( 'greedy time:',performance.getEntriesByName('greedytime')[0].duration)
 	return quads;
 }
 

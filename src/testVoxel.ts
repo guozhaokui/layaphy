@@ -109,7 +109,7 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 	cam.dist = 20;
 	sce3d = sce;
 	mtl1 = mtl;
-	mtl.renderMode = BlinnPhongMaterial.RENDERMODE_TRANSPARENT;
+	//mtl.renderMode = BlinnPhongMaterial.RENDERMODE_TRANSPARENT;
 	initPhy(sce);
 
 	testVoxelGround();
