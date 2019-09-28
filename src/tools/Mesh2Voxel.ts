@@ -289,7 +289,7 @@ export class Mesh2Voxel {
             //ret1.push( );
         }
         console.timeEnd('求平均值-输出');
-		console.log('总格子数目：',this.gridXSize*this.gridYSize*this.gridZSize,' 有效格子=', gridnum, '每个格子重复度:', (repeatNum / gridnum));
+		console.log(`总格子数目[${this.gridXSize},${this.gridYSize},${this.gridZSize}]：`,this.gridXSize*this.gridYSize*this.gridZSize,' 有效格子=', gridnum, '每个格子重复度:', (repeatNum / gridnum));
 		// 这里必须清理ret， 否则会被上面的 trifiller.fill 的回调函数引用而无法释放
 		ret.length=0;
         return ret1;

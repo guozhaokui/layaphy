@@ -13,47 +13,55 @@ export function GreedyMesh(volume:{get:(x:number,y:number,z:number)=>number}|num
 			, u = (d + 1) % 3	//x d=0,u=1,v=2   y:d=1,u=2,v=0  z:d=2,u=0,v=1
 			, v = (d + 2) % 3
 			, x = [0, 0, 0]
-			, xxq = [0, 0, 0];
+			, q = [0, 0, 0];
 
 		let ds = dims[d];
 		let vs = dims[v];
 		let us = dims[u];
 
+		let normal=[0,0,0];
+		normal[d]=-1;
+
 		/** 大小为当前扫描平面的分辨率 */
 		let mask = new Int32Array(us*vs);
 			
-		xxq[d] = 1;
+		q[d] = 1;
 
 		for (x[d] = -1; x[d] < ds;) {
+			//normal[d]*=-1;
 			//Compute mask
 			var n = 0;
 			for (x[v] = 0; x[v] < vs; ++x[v]){
 				for (x[u] = 0; x[u] < us; ++x[u]) {
-					let v =
-						// 在有效范围内取 0<= <dims[]-1
-						// 在当前轴上，前进一步，看是不是一样
-						// get(x0,x1,x2)!=get(x0+axis.x, x1+axis.y, x2+axis.z)
-						(0 <= x[d] ? get(x[0], x[1], x[2]) : false) != 
-						(x[d] < ds - 1 ? get(x[0] + xxq[0], x[1] + xxq[1], x[2] + xxq[2]) : false);
-
-					mask[n++] = v?1:0;
+					// 在有效范围内取 0<= <dims[]-1
+					// 在当前轴上，前进一步，看是不是一样
+					// get(x0,x1,x2)!=get(x0+axis.x, x1+axis.y, x2+axis.z)
+					let pre = 0 <= x[d] ? get(x[0], x[1], x[2]) : false;
+					let cur = x[d] < ds - 1 ? get(x[0] + q[0], x[1] + q[1], x[2] + q[2]) : false;
+					let v = (pre!=cur)?1:0;
+					if(v && pre) v|=2;	//表示对面，用来区分法线
+					mask[n++] = v;
 				}
 			}
 			//Increment x[d]
 			++x[d];
 			//Generate mesh for mask using lexicographic ordering
+			// 根据mask生成mesh。
 			n = 0;
 			for (j = 0; j < vs; ++j){
 				for (i = 0; i < us;) {
-					if (mask[n]) {
+					let cmask=mask[n];
+					if (cmask) {
+						// 每次扫过一个连续的w和尽可能大的h来添加
 						//Compute width
-						for (w = 1; mask[n + w] && i + w < us; ++w) {
-						}
+						//查找mask，看有多少连续的，=>w 
+						for (w = 1; mask[n + w]==cmask && i + w < us; ++w) {}
 						//Compute height (this is slightly awkward
+						//计算h
 						var done = false;
 						for (h = 1; j + h < vs; ++h) {
 							for (k = 0; k < w; ++k) {
-								if (!mask[n + k + h * us]) {
+								if (mask[n + k + h * us]!=cmask) {
 									done = true;
 									break;
 								}
@@ -69,13 +77,19 @@ export function GreedyMesh(volume:{get:(x:number,y:number,z:number)=>number}|num
 						let x0=x[0],x1=x[1],x2=x[2];
 						let du0=du[0],du1=du[1],du2=du[2];
 						let dv0=dv[0],dv1=dv[1],dv2=dv[2];
+						let back = cmask&2;
+						let nx=normal[0];
+						let ny=normal[1];
+						let nz=normal[2];
 						quads.push([
 							new Vec3(x0, x1, x2)
 							, new Vec3(x0 + du0, x1 + du1, x2 + du2)
 							, new Vec3(x0 + du0 + dv0, x1 + du1 + dv1, x2 + du2 + dv2)
 							, new Vec3(x0 + dv0, x1 + dv1, x2 + dv2)
+							, new Vec3(back?-nx:nx,back?-ny:ny,back?-nz:nz)
 						]);
-						//Zero-out mask
+
+						// 已经分配过的mask要删掉，防止被再用
 						for (l = 0; l < h; ++l)
 							for (k = 0; k < w; ++k) {
 								mask[n + k + l * us] = 0;
@@ -83,7 +97,9 @@ export function GreedyMesh(volume:{get:(x:number,y:number,z:number)=>number}|num
 						//Increment counters and continue
 						i += w; n += w;
 					} else {
-						++i; ++n;
+						//mask为0，表示不是当前方向的边界,
+						++i;//i 的 for循环继续
+						++n;//下一个mask
 					}
 				}
 			}
@@ -91,7 +107,7 @@ export function GreedyMesh(volume:{get:(x:number,y:number,z:number)=>number}|num
 	}
 	performance.mark('greedyend');
 	performance.measure('greedytime', 'greedystart', 'greedyend');
-	console.log( 'greedy time:',performance.getEntriesByName('greedytime')[0].duration)
+	console.log( 'greedy time:',performance.getEntriesByName('greedytime')[0].duration, '四边形：',quads.length)
 	return quads;
 }
 
