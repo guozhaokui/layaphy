@@ -120,6 +120,14 @@ export default class Sphere extends Shape {
 	 * @param hitpos1 
 	 * @param hitNormal 把自己推开的方向，即对方的法线
 	 * @param justtest 
+	 * 
+	 * TODO 可以考虑用点到面的距离来实现，可能会简单一些
+	 * d:number[6]=signeddist(faces,P)
+	 * 外部距离:
+	 * 	+d:number[] = d 中>0的
+	 * dist = ||+d||  // 最多是三个平方和的开方
+	 * 内部距离：
+	 * 	最大的一个，或者abs后最小的一个
 	 */
 	hitBox(myPos: Vec3, boxHalf: Vec3, boxPos: Vec3, boxQuat: Quaternion, hitPos: Vec3, hitpos1: Vec3, hitNormal: Vec3, justtest: boolean): f32 {
 		// 转到盒子空间
@@ -352,4 +360,14 @@ export default class Sphere extends Shape {
 		//console.log('deep',deep)
 		return deep;
 	}	
+
+	hitVoxel(myPos: Vec3, voxel:any, voxPos: Vec3, voxQuat: Quaternion, hitPos: Vec3, hitpos1: Vec3, hitNormal: Vec3, justtest: boolean): f32 {
+		// 只需与外壳
+		/**
+		 * 与所有的格子比较，取正的最小距离，法线是当前距离的法线
+		 * 由于voxel可能是凹的，可能会有多个点
+		 */
+		return -1;
+	}
+
 }

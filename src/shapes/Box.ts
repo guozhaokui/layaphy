@@ -322,21 +322,14 @@ export default class Box extends Shape implements MinkowskiShape {
         target.x = 1.0 / 12.0 * mass * (2 * e.y * 2 * e.y + 2 * e.z * 2 * e.z);
         target.y = 1.0 / 12.0 * mass * (2 * e.x * 2 * e.x + 2 * e.z * 2 * e.z);
         target.z = 1.0 / 12.0 * mass * (2 * e.y * 2 * e.y + 2 * e.x * 2 * e.x);
-    }
+	}
+	
+
+	hitVoxel(myPos: Vec3, myQ:Quaternion, voxel:any, voxPos: Vec3, voxQuat: Quaternion, hitPos: Vec3, hitpos1: Vec3, hitNormal: Vec3, justtest: boolean): f32 {
+		return -1;
+	}
 }
 
 
 var worldCornerTempPos = new Vec3();
 //const worldCornerTempNeg = new Vec3();
-/*
-var worldCornersTemp = [
-    new Vec3(),
-    new Vec3(),
-    new Vec3(),
-    new Vec3(),
-    new Vec3(),
-    new Vec3(),
-    new Vec3(),
-    new Vec3()
-];
-*/

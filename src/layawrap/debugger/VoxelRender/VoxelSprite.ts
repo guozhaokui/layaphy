@@ -1,13 +1,10 @@
 import { MeshSprite3D } from "laya/d3/core/MeshSprite3D";
-import { PrimitiveMesh } from "laya/d3/resource/models/PrimitiveMesh";
-import { VertexDeclaration } from "laya/d3/graphics/VertexDeclaration";
 import { VertexMesh } from "laya/d3/graphics/Vertex/VertexMesh";
 import { Vector3 } from "laya/d3/math/Vector3";
-import { VoxelMaterial } from "./VoxelMtl";
-import { Bounds } from "laya/d3/core/Bounds";
-import { GreedyMesh } from "./VoxelMesh";
 import { Mesh } from "laya/d3/resource/models/Mesh";
-import Vec3 from "../../../math/Vec3";
+import { PrimitiveMesh } from "laya/d3/resource/models/PrimitiveMesh";
+import { GreedyMesh } from "./VoxelMesh";
+import { VoxelMaterial } from "./VoxelMtl";
 
 
 export class VoxelSprite extends MeshSprite3D{
