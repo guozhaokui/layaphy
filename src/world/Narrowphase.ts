@@ -1,3 +1,4 @@
+import { HitResult } from 'laya/d3/physics/HitResult';
 import AABB from '../collision/AABB.js';
 import Ray from '../collision/Ray.js';
 import ContactEquation from '../equations/ContactEquation.js';
@@ -12,7 +13,7 @@ import ConvexPolyhedron, { hitInfo } from '../shapes/ConvexPolyhedron.js';
 import Heightfield from '../shapes/Heightfield.js';
 import Particle from '../shapes/Particle.js';
 import Plane from '../shapes/Plane.js';
-import Shape, { SHAPETYPE } from '../shapes/Shape.js';
+import Shape, { SHAPETYPE, HitPointInfo } from '../shapes/Shape.js';
 import Sphere from '../shapes/Sphere.js';
 import Trimesh from '../shapes/Trimesh.js';
 import Vec3Pool from '../utils/Vec3Pool.js';
@@ -77,6 +78,7 @@ export default class Narrowphase {
         shapeChecks[SHAPETYPE.SPHERE | SHAPETYPE.PLANE] = this.spherePlane;
         shapeChecks[SHAPETYPE.SPHERE | SHAPETYPE.BOX] = this.sphereBox;
         shapeChecks[SHAPETYPE.SPHERE | SHAPETYPE.CONVEXPOLYHEDRON] = this.sphereConvex;
+        shapeChecks[SHAPETYPE.SPHERE | SHAPETYPE.VOXEL] this.shpereVoxel;
 		shapeChecks[SHAPETYPE.CAPSULE] = this.CapsuleCapsule;
 		shapeChecks[SHAPETYPE.CAPSULE| SHAPETYPE.PLANE ] = this.planeCapsule;
 		shapeChecks[SHAPETYPE.CAPSULE| SHAPETYPE.SPHERE] = this.sphereCapsule;
@@ -1113,7 +1115,26 @@ export default class Narrowphase {
             }
         }
         return found;
-	}
+    }
+    
+    shpereVoxel(sphere: Sphere, voxel: any,  pos1: Vec3, pos2: Vec3, q1: Quaternion, q2: Quaternion, body1: Body, body2: Body,  rsi: Shape, rsj: Shape, justTest: boolean): boolean {
+        let hitpoints:HitPointInfo[] = [];
+        let deep = sphere.hitVoxel(pos1,voxel,pos2,q2,hitpoints,justTest);
+        if(deep>=0){
+            if( justTest) return true;
+            let ni = Narrowphase.nor1;
+            hitpoints.forEach( hit=>{
+                let r = this.createContactEquation(body1,body2,sphere,voxel,rsi,rsj);
+                hit.normal.negate(ni);
+                r.ni.copy(ni);
+                hit.posi.vsub(pos1,r.ri);
+                hit.posj.vsub(pos2,r.rj);
+    
+                this.result.push(r);
+                this.createFrictionEquationsFromContact(r, this.frictionResult);
+            })
+        }
+    }
 	
 	CapsuleCapsule(cap1: Capsule, cap2: Capsule,  pos1: Vec3, pos2: Vec3, q1: Quaternion, q2: Quaternion, body1: Body, body2: Body,  rsi: Shape, rsj: Shape, justTest: boolean): boolean {
 		let ni = Narrowphase.nor1;

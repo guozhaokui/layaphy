@@ -1,7 +1,6 @@
-import Shape, { SHAPETYPE } from './Shape.js';
-import Vec3 from '../math/Vec3.js';
 import Quaternion from '../math/Quaternion.js';
-import { PhyRender } from '../layawrap/PhyRender.js';
+import Vec3 from '../math/Vec3.js';
+import Shape, { SHAPETYPE, HitPointInfo } from './Shape.js';
 
 var box_to_sphere=new Vec3();
 var hitbox_tmpVec1 = new Vec3();
@@ -361,12 +360,14 @@ export default class Sphere extends Shape {
 		return deep;
 	}	
 
-	hitVoxel(myPos: Vec3, voxel:any, voxPos: Vec3, voxQuat: Quaternion, hitPos: Vec3, hitpos1: Vec3, hitNormal: Vec3, justtest: boolean): f32 {
+	hitVoxel(myPos: Vec3, voxel:any, voxPos: Vec3, voxQuat: Quaternion, hitpoints:HitPointInfo[], justtest: boolean): f32 {
 		// 只需与外壳
 		/**
 		 * 与所有的格子比较，取正的最小距离，法线是当前距离的法线
 		 * 由于voxel可能是凹的，可能会有多个点
 		 */
+		//TEST
+		//TEST
 		return -1;
 	}
 

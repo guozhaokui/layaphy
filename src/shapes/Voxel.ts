@@ -4,7 +4,7 @@ import Shape, { SHAPETYPE } from "./Shape";
 import RaycastResult from "../collision/RaycastResult";
 import Mat3 from "../math/Mat3";
 import AABB from "../collision/AABB";
-import Box from "./Box";
+import Box, { quat_AABBExt_mult } from "./Box";
 
 function POT(v: i32): i32 {
 	let r: i32 = 1;
@@ -226,7 +226,25 @@ function getBit(v: i8, p: i32): boolean {
 	return (v & (1 << p)) != 0
 }
 
-class StaticVoxel {
+class StaticVoxel  extends Shape{
+	updateBoundingSphereRadius(): void {
+		throw new Error("Method not implemented.");
+	}
+
+	calculateWorldAABB(pos: Vec3, quat: Quaternion, min: Vec3, max: Vec3): void {
+		this.pos.copy(pos);
+		this.quat.copy(quat);
+		this.updateAABB();
+		min.copy(this.aabbmin);
+		max.copy(this.aabbmax);
+	}
+
+	volume(): number {
+		throw new Error("Method not implemented.");
+	}
+	onPreNarrowpase(stepId: number, pos: Vec3, quat: Quaternion): void {
+		throw new Error("Method not implemented.");
+	}
 	id = 0;
 	voxData: SparseVoxData;//|PhyVoxelData;
 	//data:Uint8Array;
@@ -239,6 +257,14 @@ class StaticVoxel {
 	aabbmax = new Vec3();
 	addToSceTick = -1;  // 
 	needUpdate = true;
+
+	constructor(dt: SparseVoxData, xs: i32, ys: i32, zs: i32, min:Vec3,max:Vec3){
+		super();
+		this.type = SHAPETYPE.VOXEL;
+		this.aabbmin.copy(min);
+		this.aabbmax.copy(max);		
+	}
+
 	updateAABB(): void {
 		if (!this.needUpdate)
 			return;
@@ -327,24 +353,7 @@ class StaticVoxel {
 	}
 }
 
-export class Voxel extends Shape {
-	voxData: PhyVoxelData;
-	//data:Uint8Array;
-	pos: Vec3;
-	quat: Quaternion;
-	mat: Mat3;   // 相当于记录了xyz的轴
-	scale: Vec3;
-    /**
-     * 
-     * @param dt 
-     * @param xs x总的宽度
-     * @param ys 
-     * @param zs 
-     */
-	constructor(dt: Uint8Array, xs: i32, ys: i32, zs: i32) {
-		super();
-		this.type = SHAPETYPE.VOXEL;
-	}
+export class Voxel extends StaticVoxel {
 
 	setData(dt: Uint8Array, xnum: i32, ynum: i32, znum: i32, xs: f32, ys: f32, zs: f32): void {
 		// 重新组织数据        
@@ -359,9 +368,7 @@ export class Voxel extends Shape {
 	updateBoundingSphereRadius(): void {
 		throw new Error("Method not implemented.");
 	}
-	calculateWorldAABB(pos: Vec3, quat: Quaternion, min: Vec3, max: Vec3): void {
-		throw new Error("Method not implemented.");
-	}
+	
 	volume(): number {
 		throw new Error("Method not implemented.");
 	}

@@ -24,6 +24,12 @@ function Path(target:any) {
     console.log("I am decorator.")
 }
 
+export class HitPointInfo{
+    posi=new Vec3();
+    posj=new Vec3();
+    normal=new Vec3();
+}
+
 /**
  * Base class for shapes
  */

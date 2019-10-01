@@ -20,7 +20,7 @@ export class MouseCtrl1 extends Script3D {
     protected lastMouseY: f32;
     protected isMouseDown: boolean;
     protected isRot = false;
-    protected camera: Camera;
+    camera: Camera;
     protected isWheel: i32;
     protected isMove: boolean;
 
