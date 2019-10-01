@@ -227,32 +227,14 @@ function getBit(v: i8, p: i32): boolean {
 }
 
 class StaticVoxel  extends Shape{
-	updateBoundingSphereRadius(): void {
-		throw new Error("Method not implemented.");
-	}
-
-	calculateWorldAABB(pos: Vec3, quat: Quaternion, min: Vec3, max: Vec3): void {
-		this.pos.copy(pos);
-		this.quat.copy(quat);
-		this.updateAABB();
-		min.copy(this.aabbmin);
-		max.copy(this.aabbmax);
-	}
-
-	volume(): number {
-		throw new Error("Method not implemented.");
-	}
-	onPreNarrowpase(stepId: number, pos: Vec3, quat: Quaternion): void {
-		throw new Error("Method not implemented.");
-	}
 	id = 0;
 	voxData: SparseVoxData;//|PhyVoxelData;
 	//data:Uint8Array;
 	quat: Quaternion;
-	pos: Vec3;
+	pos = new Vec3();
 	centroid: Vec3 = new Vec3();	// 在voxData坐标系下的质心 @TODO 转换
 	mat: Mat3;   // 相当于记录了xyz的轴
-	scale: Vec3;		// 注意这个动态改变的话会破坏刚体的假设。
+	scale = new Vec3(1,1,1);		// 注意这个动态改变的话会破坏刚体的假设。
 	aabbmin = new Vec3();
 	aabbmax = new Vec3();
 	addToSceTick = -1;  // 
@@ -275,10 +257,12 @@ class StaticVoxel  extends Shape{
 		let nmax = new Vec3();
 		Box.calculateWorldAABB1(this.pos, this.quat, this.scale, bmin, bmax, nmin, nmax);
 		// TODO 转成矩阵
+		/*
 		let mat = this.mat;
 		mat.identity();
 		mat.setRotationFromQuaternion(this.quat);
 		mat.scale(this.scale, mat);
+		*/
 		this.needUpdate = false;
 	}
 
@@ -351,6 +335,29 @@ class StaticVoxel  extends Shape{
 		let lod = Math.round(Math.log2(szmax));
 		return lod;
 	}
+
+	updateBoundingSphereRadius(): void {
+		let mx = Math.max(Math.abs(this.aabbmax.x), Math.abs(this.aabbmin.x));
+		let my = Math.max(Math.abs(this.aabbmax.y), Math.abs(this.aabbmin.y));
+		let mz = Math.max(Math.abs(this.aabbmax.z), Math.abs(this.aabbmin.z));
+		this.boundingSphereRadius = Math.sqrt(mx*mx+my*my+mz*mz);
+	}
+
+	calculateWorldAABB(pos: Vec3, quat: Quaternion, min: Vec3, max: Vec3): void {
+		this.pos=pos;
+		this.quat=quat;
+		this.updateAABB();
+		min.copy(this.aabbmin);
+		max.copy(this.aabbmax);
+	}
+
+	volume(): number {
+		throw new Error("Method not implemented.");
+	}
+	onPreNarrowpase(stepId: number, pos: Vec3, quat: Quaternion): void {
+		throw new Error("Method not implemented.");
+	}
+
 }
 
 export class Voxel extends StaticVoxel {
@@ -365,10 +372,6 @@ export class Voxel extends StaticVoxel {
 	fill() {
 	}
 
-	updateBoundingSphereRadius(): void {
-		throw new Error("Method not implemented.");
-	}
-	
 	volume(): number {
 		throw new Error("Method not implemented.");
 	}

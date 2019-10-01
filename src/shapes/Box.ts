@@ -1,8 +1,10 @@
-import Shape, { SHAPETYPE } from './Shape.js';
+import Shape, { SHAPETYPE, HitPointInfo } from './Shape.js';
 import Vec3 from '../math/Vec3.js';
 import ConvexPolyhedron from './ConvexPolyhedron.js';
 import Quaternion from '../math/Quaternion.js';
 import { MinkowskiShape } from './MinkowskiShape.js';
+import Transform from '../math/Transform.js';
+import Mat3 from '../math/Mat3.js';
 
 // v可以与target相同
 export function quat_AABBExt_mult(q:Quaternion, v:Vec3, target = new Vec3()) {
@@ -323,13 +325,18 @@ export default class Box extends Shape implements MinkowskiShape {
         target.y = 1.0 / 12.0 * mass * (2 * e.x * 2 * e.x + 2 * e.z * 2 * e.z);
         target.z = 1.0 / 12.0 * mass * (2 * e.y * 2 * e.y + 2 * e.x * 2 * e.x);
 	}
-	
 
-	hitVoxel(myPos: Vec3, myQ:Quaternion, voxel:any, voxPos: Vec3, voxQuat: Quaternion, hitPos: Vec3, hitpos1: Vec3, hitNormal: Vec3, justtest: boolean): f32 {
-		return -1;
+	hitVoxel(myPos: Vec3, myQ:Quaternion, voxel:any, voxPos: Vec3, voxQuat: Quaternion, hitpoints:HitPointInfo[], justtest: boolean): boolean {
+        // 把voxel转换到box空间
+        let rPos = hitVoxelTmpVec1;
+        let rMat = hitVoxelTmpMat;
+        Transform.posQToLocalMat(myPos,myQ,voxPos,voxQuat, rPos,rMat);  //TODO 这个还没有验证
+		return false;
 	}
 }
 
 
 var worldCornerTempPos = new Vec3();
 //const worldCornerTempNeg = new Vec3();
+var hitVoxelTmpVec1 = new Vec3();
+var hitVoxelTmpMat = new Mat3();

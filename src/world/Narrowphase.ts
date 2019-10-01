@@ -72,13 +72,14 @@ export default class Narrowphase {
         shapeChecks[SHAPETYPE.BOX] = this.boxBox;
         shapeChecks[SHAPETYPE.BOX | SHAPETYPE.CONVEXPOLYHEDRON] = this.boxConvex;
         shapeChecks[SHAPETYPE.BOX | SHAPETYPE.PARTICLE] = this.boxParticle;
+        shapeChecks[SHAPETYPE.BOX | SHAPETYPE.VOXEL] = this.boxVoxel;
         shapeChecks[SHAPETYPE.SPHERE] = this.sphereSphere;
         shapeChecks[SHAPETYPE.PLANE | SHAPETYPE.TRIMESH] = this.planeTrimesh;
         shapeChecks[SHAPETYPE.SPHERE | SHAPETYPE.TRIMESH] = this.sphereTrimesh;
         shapeChecks[SHAPETYPE.SPHERE | SHAPETYPE.PLANE] = this.spherePlane;
         shapeChecks[SHAPETYPE.SPHERE | SHAPETYPE.BOX] = this.sphereBox;
         shapeChecks[SHAPETYPE.SPHERE | SHAPETYPE.CONVEXPOLYHEDRON] = this.sphereConvex;
-        shapeChecks[SHAPETYPE.SPHERE | SHAPETYPE.VOXEL] this.shpereVoxel;
+        shapeChecks[SHAPETYPE.SPHERE | SHAPETYPE.VOXEL] = this.shpereVoxel;
 		shapeChecks[SHAPETYPE.CAPSULE] = this.CapsuleCapsule;
 		shapeChecks[SHAPETYPE.CAPSULE| SHAPETYPE.PLANE ] = this.planeCapsule;
 		shapeChecks[SHAPETYPE.CAPSULE| SHAPETYPE.SPHERE] = this.sphereCapsule;
@@ -1120,7 +1121,7 @@ export default class Narrowphase {
     shpereVoxel(sphere: Sphere, voxel: any,  pos1: Vec3, pos2: Vec3, q1: Quaternion, q2: Quaternion, body1: Body, body2: Body,  rsi: Shape, rsj: Shape, justTest: boolean): boolean {
         let hitpoints:HitPointInfo[] = [];
         let deep = sphere.hitVoxel(pos1,voxel,pos2,q2,hitpoints,justTest);
-        if(deep>=0){
+        if(deep>=0 ||hitpoints.length>0){
             if( justTest) return true;
             let ni = Narrowphase.nor1;
             hitpoints.forEach( hit=>{
@@ -1133,7 +1134,9 @@ export default class Narrowphase {
                 this.result.push(r);
                 this.createFrictionEquationsFromContact(r, this.frictionResult);
             })
+            return true;
         }
+        return false;
     }
 	
 	CapsuleCapsule(cap1: Capsule, cap2: Capsule,  pos1: Vec3, pos2: Vec3, q1: Quaternion, q2: Quaternion, body1: Body, body2: Body,  rsi: Shape, rsj: Shape, justTest: boolean): boolean {
@@ -1244,6 +1247,27 @@ export default class Narrowphase {
 		}
 		return false;
 	}
+
+    boxVoxel(box: Box, voxel: any,  pos1: Vec3, pos2: Vec3, q1: Quaternion, q2: Quaternion, body1: Body, body2: Body,  rsi: Shape, rsj: Shape, justTest: boolean): boolean {
+        let hitpoints:HitPointInfo[] = [];
+        let hit = box.hitVoxel(pos1, q1, voxel,pos2,q2,hitpoints,justTest);
+        if(hit){
+            if( justTest) return true;
+            let ni = Narrowphase.nor1;
+            hitpoints.forEach( hit=>{
+                let r = this.createContactEquation(body1,body2,box,voxel,rsi,rsj);
+                hit.normal.negate(ni);
+                r.ni.copy(ni);
+                hit.posi.vsub(pos1,r.ri);
+                hit.posj.vsub(pos2,r.rj);
+    
+                this.result.push(r);
+                this.createFrictionEquationsFromContact(r, this.frictionResult);
+            })
+            return true;
+        }
+        return false;
+    }
 
     planeBox(si: Plane, sj: Box, xi: Vec3, xj: Vec3, qi: Quaternion, qj: Quaternion, bi: Body, bj: Body, rsi: Shape, rsj: Shape, justTest: boolean): boolean {
         sj.convexPolyhedronRepresentation.material = sj.material;

@@ -7,6 +7,7 @@ import Quaternion from './Quaternion.js';
  * @constructor
  * @param array elements Array of nine elements. Optional.
  * @author schteppe / http://github.com/schteppe
+ * TODO  实现太啰嗦，有时间改一下
  */
 export default class Mat3 {
     /*
@@ -93,17 +94,41 @@ export default class Mat3 {
      * Matrix-scalar multiplication
      */
     smult(s:number) {
+        let e = this.elements;
         for (let i = 0; i < this.elements.length; i++) {
-            this.elements[i] *= s;
+            e[i] *= s;
         }
     }
 
     /**
      * Matrix multiplication
+     * 结果是 this*m ?
      * @param  m Matrix to multiply with from left side.
      * @return  The result.
      */
     mmult( m:Mat3, target:Mat3=new Mat3()) {
+        const r = target;
+        let re=r.elements ;
+        let ae = this.elements;
+        let be = m.elements;
+        let a0=ae[0],a1=ae[1],a2=ae[2],a3=ae[3],a4=ae[4],a5=ae[5],a6=ae[6],a7=ae[7],a8=ae[8];
+        let b0=be[0],b1=be[1],b2=be[2],b3=be[3],b4=be[4],b5=be[5],b6=be[6],b7=be[7],b8=be[8];
+
+        re[0] = b0*a0+b3*a1+b6*a2;// ae[0,1,2].be[0,3,6]
+        re[3] = b0*a3+b3*a4+b6*a5;
+        re[6] = b0*a6+b3*a7+b6*a8;
+        
+        re[1] = b1*a0+b4*a1+b7*a2;
+        re[4] = b1*a3+b4*a4+b7*a5;
+        re[7] = b1*a6+b4*a7+b7*a8;
+        
+        re[2] = b2*a0+b5*a1+b8*a2;
+        re[5] = b2*a3+b5*a4+b8*a5;
+        re[8] = b2*a6+b5*a7+b8*a8;
+
+        return r;
+
+/*
         const r = target ;
         let e = m.elements;
         for (let i = 0; i < 3; i++) {
@@ -116,6 +141,7 @@ export default class Mat3 {
             }
         }
         return r;
+*/
     }
 
     /**
@@ -235,8 +261,10 @@ export default class Mat3 {
      * @return  this
      */
     copy( source:Mat3) {
+        let a = this.elements;
+        let b = source.elements;
         for (let i = 0; i < source.elements.length; i++) {
-            this.elements[i] = source.elements[i];
+            a[i] = b[i];
         }
         return this;
     }
