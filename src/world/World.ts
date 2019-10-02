@@ -1,26 +1,25 @@
 
 /* global performance */
-import Vec3 from '../math/Vec3.js';
-import GSSolver from '../solver/GSSolver.js';
-import Narrowphase from './Narrowphase.js';
-import EventTarget from '../utils/EventTarget.js';
 import ArrayCollisionMatrix from '../collision/ArrayCollisionMatrix.js';
-import OverlapKeeper from '../collision/OverlapKeeper.js';
-import Material from '../material/Material.js';
-import ContactMaterial from '../material/ContactMaterial.js';
-import Body, { BODYTYPE, BODY_SLEEP_STATE } from '../objects/Body.js';
-import TupleDictionary from '../utils/TupleDictionary.js';
-import RaycastResult from '../collision/RaycastResult.js';
-import Ray from '../collision/Ray.js';
-import NaiveBroadphase from '../collision/NaiveBroadphase.js';
 import Broadphase from '../collision/Broadphase.js';
-import Solver from '../solver/Solver.js';
+import NaiveBroadphase from '../collision/NaiveBroadphase.js';
+import OverlapKeeper from '../collision/OverlapKeeper.js';
+import Ray from '../collision/Ray.js';
+import RaycastResult from '../collision/RaycastResult.js';
+import Constraint from '../constraints/Constraint.js';
 import ContactEquation from '../equations/ContactEquation.js';
 import FrictionEquation from '../equations/FrictionEquation.js';
-import Constraint from '../constraints/Constraint.js';
-import Shape from '../shapes/Shape.js';
 import { PhyRender } from '../layawrap/PhyRender.js';
-import GridBroadphase from '../collision/GridBroadphase.js';
+import ContactMaterial from '../material/ContactMaterial.js';
+import Material from '../material/Material.js';
+import Vec3 from '../math/Vec3.js';
+import Body, { BODYTYPE, BODY_SLEEP_STATE } from '../objects/Body.js';
+import Shape from '../shapes/Shape.js';
+import GSSolver from '../solver/GSSolver.js';
+import Solver from '../solver/Solver.js';
+import EventTarget from '../utils/EventTarget.js';
+import TupleDictionary from '../utils/TupleDictionary.js';
+import Narrowphase from './Narrowphase.js';
 
 class profileData{
     frametm:i32=0;     // 帧时间

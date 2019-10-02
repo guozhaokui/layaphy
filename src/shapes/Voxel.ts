@@ -235,16 +235,19 @@ class StaticVoxel  extends Shape{
 	centroid: Vec3 = new Vec3();	// 在voxData坐标系下的质心 @TODO 转换
 	mat: Mat3;   // 相当于记录了xyz的轴
 	scale = new Vec3(1,1,1);		// 注意这个动态改变的话会破坏刚体的假设。
-	aabbmin = new Vec3();
+	aabbmin = new Vec3();			// 当前的aabb
 	aabbmax = new Vec3();
 	addToSceTick = -1;  // 
 	needUpdate = true;
+	gridw=0;
 
-	constructor(dt: SparseVoxData, xs: i32, ys: i32, zs: i32, min:Vec3,max:Vec3){
+	constructor(dt: SparseVoxData){
 		super();
+		this.voxData=dt;
 		this.type = SHAPETYPE.VOXEL;
-		this.aabbmin.copy(min);
-		this.aabbmax.copy(max);		
+		this.aabbmin.copy(dt.aabbmin);
+		this.aabbmax.copy(dt.aabbmax);		
+		this.gridw = ((dt.aabbmax.x-dt.aabbmin.x)/dt.dataszx);
 	}
 
 	updateAABB(): void {

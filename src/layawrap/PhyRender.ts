@@ -16,6 +16,7 @@ import Plane from "../shapes/Plane";
 import Shape, { SHAPETYPE } from "../shapes/Shape";
 import World, { IPhyRender } from "../world/World";
 import { RenderTexture2D } from "laya/resource/RenderTexture2D";
+import { Voxel } from "../shapes/Voxel";
 
 let col1 = new Color();
 let p1 = new Vector3();
@@ -193,6 +194,24 @@ export class PhyRender extends IPhyRender {
 		}
 	}
 
+	addAABB(min:Vec3, max:Vec3, color:number){
+		this.addSeg(min.x,min.y,min.z, max.x, min.y, min.z, color);
+		this.addSeg(max.x, min.y, min.z, max.x, min.y, max.z, color);
+		this.addSeg(max.x, min.y, max.z, min.x, min.y, max.z, color);
+		this.addSeg(min.x, min.y, max.z, min.x, min.y, min.z, color);
+
+		this.addSeg(min.x,max.y,min.z, max.x, max.y, min.z, color);
+		this.addSeg(max.x, max.y, min.z, max.x, max.y, max.z, color);
+		this.addSeg(max.x, max.y, max.z, min.x, max.y, max.z, color);
+		this.addSeg(min.x, max.y, max.z, min.x, max.y, min.z, color);
+
+
+		this.addSeg(min.x,min.y,min.z, min.x,max.y,min.z, color);
+		this.addSeg(max.x, min.y, min.z, max.x, max.y, min.z, color);
+		this.addSeg(max.x, min.y, max.z, max.x, max.y, max.z, color);
+		this.addSeg(min.x, min.y, max.z, min.x, max.y, max.z, color);
+	}
+
 	stepStart(): void {
 		this.renders.forEach(r => {
 			r.clear();
@@ -282,6 +301,13 @@ export class PhyRender extends IPhyRender {
 			case SHAPETYPE.HEIGHTFIELD:
 				break;
 			case SHAPETYPE.TRIMESH:
+				break;
+			case SHAPETYPE.VOXEL:
+				{
+					let vox = shape as Voxel;
+					this.addAABB(vox.aabbmin, vox.aabbmin, 0xff0000);
+					//vox.boundingSphereRadius
+				}
 				break;
 		}
 	}

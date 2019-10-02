@@ -1,5 +1,5 @@
 import Vec3 from '../math/Vec3.js';
-import Body, { BODYTYPE } from '../objects/Body.js';
+import Body, { BODYTYPE, BODY_SLEEP_STATE } from '../objects/Body.js';
 import World from '../world/World.js';
 import AABB from './AABB.js';
 
@@ -46,8 +46,8 @@ export default abstract class Broadphase {
         }
 
         // Check types
-        if (((bodyA.type & BODYTYPE.STATIC) !== 0 || bodyA.sleepState === Body.SLEEPING) &&
-            ((bodyB.type & BODYTYPE.STATIC) !== 0 || bodyB.sleepState === Body.SLEEPING)) {
+        if (((bodyA.type & BODYTYPE.STATIC) !== 0 || bodyA.sleepState === BODY_SLEEP_STATE.SLEEPING) &&
+            ((bodyB.type & BODYTYPE.STATIC) !== 0 || bodyB.sleepState === BODY_SLEEP_STATE.SLEEPING)) {
             // Both bodies are static or sleeping. Skip.
             return false;
         }

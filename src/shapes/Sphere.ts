@@ -128,10 +128,9 @@ export default class Sphere extends Shape {
 	 * 内部距离：
 	 * 	最大的一个，或者abs后最小的一个
 	 */
-	hitBox(myPos: Vec3, boxHalf: Vec3, boxPos: Vec3, boxQuat: Quaternion, hitPos: Vec3, hitpos1: Vec3, hitNormal: Vec3, justtest: boolean): f32 {
+	static hitBox(myPos: Vec3, R:number, boxHalf: Vec3, boxPos: Vec3, boxQuat: Quaternion, hitPos: Vec3, hitpos1: Vec3, hitNormal: Vec3, justtest: boolean): f32 {
 		// 转到盒子空间
 		myPos.vsub(boxPos,box_to_sphere);
-		let R = this.radius;
 		let invQbox = boxInvQ;
 		boxQuat.conjugate(invQbox);// 求逆
 		invQbox.vmult(box_to_sphere,box_to_sphere);//把圆心转到box空间
@@ -249,6 +248,7 @@ export default class Sphere extends Shape {
 					}
 				}else if(z>=-wz&&z<=wz){
 					// box内部
+					// 取一个最接近表面的方向
 					//TODO 
 				}else{
 					// +z 面

@@ -47,7 +47,7 @@ function rand(a:number,b:number){
 }
 
 function testVoxelGround() {
-	//world.world.gravity.set(0, -11, 0);
+	world.world.gravity.set(0, -11, 0);
 	//plane
 	let p =addBox(new Vec3(100,100,100), new Vec3(0,-50,0),0,phymtl1);
 	/*
@@ -125,11 +125,11 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 			if (v) s++;
 		})
 
-		let phyvox = new Voxel(voxdata,voxdata.dataszx,voxdata.dataszy, voxdata.dataszz, voxdata.aabbmin, voxdata.aabbmax);
+		let phyvox = new Voxel(voxdata);
 		var phy = vox.addComponent(CannonBody) as CannonBody;
 		phy.addShape(phyvox);
+		phy.phyBody.position.set(0,130,0);
 		phy.setMass(1);
-		phy.phyBody.position.set(0,10,0);
 	
 
 		//TEST
@@ -149,7 +149,6 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 	});
 
     Laya.stage.on(Event.MOUSE_DOWN, null, (e:{stageX:number,stageY:number}) => {
-		return;
 		let worlde = cam.camera.transform.worldMatrix.elements;
 		let stpos = new Vec3(worlde[12],worlde[13],worlde[14]);
 		let dir = new Vec3(worlde[8],worlde[9],worlde[10]);

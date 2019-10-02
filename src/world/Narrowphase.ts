@@ -662,7 +662,7 @@ export default class Narrowphase {
 		let hitpos = sphereBox_ns;
 		let hitpos1 = sphereBox_ns1;
 		let ni = Narrowphase.nor1;
-		let deep = si.hitBox(xi,sj.halfExtents,xj,qj,hitpos,hitpos1,ni,justTest);
+		let deep = Sphere.hitBox(xi,si.radius, sj.halfExtents,xj,qj,hitpos,hitpos1,ni,justTest);
 		if(deep>=0){
 			//debug
 			/*
@@ -1256,7 +1256,7 @@ export default class Narrowphase {
             let ni = Narrowphase.nor1;
             hitpoints.forEach( hit=>{
                 let r = this.createContactEquation(body1,body2,box,voxel,rsi,rsj);
-                hit.normal.negate(ni);
+                //hit.normal.negate(ni);
                 r.ni.copy(ni);
                 hit.posi.vsub(pos1,r.ri);
                 hit.posj.vsub(pos2,r.rj);

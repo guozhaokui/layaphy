@@ -5,6 +5,8 @@ import Quaternion from '../math/Quaternion.js';
 import { MinkowskiShape } from './MinkowskiShape.js';
 import Transform from '../math/Transform.js';
 import Mat3 from '../math/Mat3.js';
+import { Voxel } from './Voxel.js';
+import Sphere from './Sphere.js';
 
 // v可以与target相同
 export function quat_AABBExt_mult(q:Quaternion, v:Vec3, target = new Vec3()) {
@@ -324,14 +326,76 @@ export default class Box extends Shape implements MinkowskiShape {
         target.x = 1.0 / 12.0 * mass * (2 * e.y * 2 * e.y + 2 * e.z * 2 * e.z);
         target.y = 1.0 / 12.0 * mass * (2 * e.x * 2 * e.x + 2 * e.z * 2 * e.z);
         target.z = 1.0 / 12.0 * mass * (2 * e.y * 2 * e.y + 2 * e.x * 2 * e.x);
-	}
+    }
+    
+    /**
+     * 球与本地空间的盒子的碰撞信息
+     * 这个与sphere.ts中的hitbox有点重复了
+     * @param pos 球的位置
+     * @param r     球的半径
+     * @param hitpos1   球的碰撞点 
+     * @param hitpos2   盒子的碰撞点
+     * @param hitNormal  碰撞法线，推开球的方向
+     */
+    static sphereHitBox(pos:Vec3, r:number, halfext:Vec3, hitpos:Vec3, hitpost2:Vec3, hitNormal:Vec3):f32{
+        let dir=0;
+        let pdist=[];
+        let szx = halfext.x;
+        let szy = halfext.y;
+        let szz = halfext.z;
+        let pxd = pos.x-szx;
+        let nxd = szx+szx;
+        let pyd = pos.y-szy;
+        let nyd = pos.y+szy;
+        let pzd = pos.z-szz;
+        let nzd = pos.z+szz;
+        return -1;
+    }
 
-	hitVoxel(myPos: Vec3, myQ:Quaternion, voxel:any, voxPos: Vec3, voxQuat: Quaternion, hitpoints:HitPointInfo[], justtest: boolean): boolean {
+	hitVoxel(myPos: Vec3, myQ:Quaternion, voxel:Voxel, voxPos: Vec3, voxQuat: Quaternion, hitpoints:HitPointInfo[], justtest: boolean): boolean {
         // 把voxel转换到box空间
         let rPos = hitVoxelTmpVec1;
         let rMat = hitVoxelTmpMat;
         Transform.posQToLocalMat(myPos,myQ,voxPos,voxQuat, rPos,rMat);  //TODO 这个还没有验证
-		return false;
+        // 先用最笨的方法验证流程
+        let voxdt = voxel.voxData.data;
+        let gridw = voxel.voxData.gridsz;
+        let r = gridw/2;
+        let min = voxel.voxData.aabbmin;    //原始包围盒
+        let max = voxel.voxData.aabbmax;
+        let tmpV = new Vec3();  //xyz格子坐标
+        let hitpos = new Vec3();
+        let hitpos1 = new Vec3();
+        let hitnorm = new Vec3();
+        let boxpos = new Vec3(0,0,0);
+        let boxQ = new Quaternion(0,0,0,1);
+        let hit = false;
+        
+        for( let i=0,sz=voxdt.length; i<sz; i++){
+            let dt = voxdt[i];
+            // 把xyz映射到box空间
+            tmpV.set(dt.x,dt.y,dt.z);
+            //TODO 应该在格子的中心
+            min.addScaledVector(gridw,tmpV,tmpV);
+            //tmpV现在是在vox空间内的一个点
+            //转换到box空间
+            rMat.vmult(tmpV,tmpV);
+            tmpV.vadd(rPos,tmpV);
+            //tmpV现在是box空间的点了，计算碰撞信息
+            let deep = Sphere.hitBox(tmpV, r, this.halfExtents,boxpos,boxQ,hitpos,hitpos1,hitnorm,justtest);
+            if(deep<0)
+                continue;
+            if(justtest)
+                return true;
+            //转换回世界空间
+            let hi = new HitPointInfo();
+            myQ.vmult(hitpos, hi.posi); myPos.vadd(hi.posi,hi.posi);
+            myQ.vmult(hitpos1,hi.posj); myPos.vadd(hi.posj,hi.posj);
+            myQ.vmult(hitnorm,hi.normal);
+            hitpoints.push(hi);
+            hit=true;
+        }
+		return hit;
 	}
 }
 
