@@ -53,14 +53,12 @@ export class Mesh2Voxel {
     onloadOk:()=>void;
     loadObj(url: string,gridsz:number, cb:(voxdata:SparseVoxData)=>void): void {
         Laya.loader.load(url, new Handler(this, (data:string)=>{
-            let ret = new SparseVoxData(this.voxelizeObjMesh(data,gridsz));
-            let posx=this.minx; let posy=this.miny; let posz=this.minz;
-            let gridSize=this.gridSize;
-            let datasx=this.gridXSize; let datasy=this.gridYSize; let datasz = this.gridZSize;
-            ret.aabbmin=new Vec3(posx,posy,posz);
-            ret.aabbmax = new Vec3(posx+gridSize*datasx, posy+gridSize*datasy, posz+gridSize*datasz);
-            ret.gridsz=gridSize;
-            ret.dataszx=datasx; ret.dataszy=datasy; ret.dataszz=datasz;
+            let dt = this.voxelizeObjMesh(data,gridsz);
+            let xn=this.gridXSize; let yn=this.gridYSize; let zn = this.gridZSize;
+            let min=new Vec3(this.minx,this.miny,this.minz);
+            let max=new Vec3(xn,yn,zn);
+            min.addScaledVector(this.gridSize,max,max);
+            let ret = new SparseVoxData(dt,xn,yn,zn,min,max);
             cb && cb(ret);
         }));
     }

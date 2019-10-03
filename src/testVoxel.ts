@@ -129,7 +129,7 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 
 	testVoxelGround();
 
-	createBoxVoxel(4,4,4, new Vec3(0,0,0), new Vec3(4,4,4));
+	createBoxVoxel(1, 1, 1, new Vec3(0, 0, 0), new Vec3(4, 4, 4));
 	/*
 	m2v.loadObj('res/house/house1.obj', 0.5, (voxdata: SparseVoxData) => {
 		let vox = new VoxelSprite({ get: voxdata.get.bind(voxdata) }, voxdata.dataszx, voxdata.dataszy, voxdata.dataszz,
@@ -163,6 +163,23 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 		let sp = addBox(new Vec3(0.5, 0.5, 0.5), stpos, 1, phymtl1);
 		let v = 20;
 		sp.setVel(-dir.x * v, -dir.y * v, -dir.z * v);
+	});
+
+	Laya.stage.on(Event.KEY_DOWN, null, (e: Event) => {
+		let key = String.fromCharCode(e.keyCode);
+		switch (key) {
+			case 'X':
+				alert('x');
+				break;
+			case 'Y':
+				alert('y');
+				break;
+			case 'Z':
+				alert('z');
+				break;
+			default:
+				debugger;
+		}
 	});
 
 	//testLift();
