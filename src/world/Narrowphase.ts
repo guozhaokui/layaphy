@@ -1255,6 +1255,14 @@ export default class Narrowphase {
             if( justTest) return true;
             let ni = Narrowphase.nor1;
             hitpoints.forEach( hit=>{
+                //DEBUG
+                let phyr = this.world._phyRender;
+                //phyr.addPersistPoint(hit.posi);
+                phyr.addPersistPoint(hit.posj);
+                phyr.addPersistVec(hit.normal, hit.posi);
+                body1.enable=false;
+                //DEBUG
+                    
                 let r = this.createContactEquation(body1,body2,box,voxel,rsi,rsj);
                 //hit.normal.negate(ni);
                 r.ni.copy(ni);

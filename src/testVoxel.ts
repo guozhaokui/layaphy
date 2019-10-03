@@ -15,6 +15,7 @@ import { Mesh2Voxel } from "./tools/Mesh2Voxel";
 import { Laya } from "Laya";
 import { Event } from "laya/events/Event";
 import CannonBody from "./layawrap/CannonBody";
+import { VoxBuildBox } from "./layawrap/debugger/VoxelBuilder";
 
 /**
  * 测试盒子可以被推走，被抬起
@@ -41,15 +42,15 @@ function initPhy(scene: Scene3D) {
 	phyworld.world.addContactMaterial(cmtl1).addContactMaterial(cmtl2);
 }
 
-function rand(a:number,b:number){
-	let d = b-a;
-	return Math.random()*d+a;
+function rand(a: number, b: number) {
+	let d = b - a;
+	return Math.random() * d + a;
 }
 
 function testVoxelGround() {
-	world.world.gravity.set(0, -11, 0);
+	//world.world.gravity.set(0, -11, 0);
 	//plane
-	let p =addBox(new Vec3(100,100,100), new Vec3(0,-50,0),0,phymtl1);
+	//let p =addBox(new Vec3(100,100,100), new Vec3(0,-50,0),0,phymtl1);
 	/*
 	let plane = new Sprite3D();
     let planephy = plane.addComponent(CannonBody) as CannonBody;
@@ -63,9 +64,9 @@ function testVoxelGround() {
 
 
 	//let ch1 = addBox(new Vec3(1, 2, 1), new Vec3(0, 1, 0), 1, phymtl1);
-	for(let i=0; i<0; i++){
-		let b = addBox(new Vec3(1,1,1), new Vec3(rand(-10,10),rand(5,10),rand(-10,10)),1,phymtl2,true);
-		b.phyBody.allowSleep=false;
+	for (let i = 0; i < 0; i++) {
+		let b = addBox(new Vec3(1, 1, 1), new Vec3(rand(-10, 10), rand(5, 10), rand(-10, 10)), 1, phymtl2, true);
+		b.phyBody.allowSleep = false;
 	}
 	//ch1.fixedRotation = true;
 	//ch1.phyBody._name = 'zhu'
@@ -98,6 +99,22 @@ function testVoxelGround() {
 	*/
 }
 
+function createBoxVoxel(xn: i32, yn: i32, zn: i32, min: Vec3, max: Vec3) {
+	let dt = VoxBuildBox(xn, yn, zn, false);
+	let voxdt = new SparseVoxData(dt, xn, yn, zn, min, max);
+	let vox = new VoxelSprite({ get: voxdt.get.bind(voxdt) }, voxdt.dataszx, voxdt.dataszy, voxdt.dataszz,
+		voxdt.aabbmin as any as Vector3,
+		voxdt.aabbmax as any as Vector3);
+	//vox.createMesh();
+	sce3d.addChild(vox);
+
+	let phyvox = new Voxel(voxdt);
+	var phy = vox.addComponent(CannonBody) as CannonBody;
+	phy.addShape(phyvox);
+	phy.phyBody.position.set(0, 0, 0);
+	phy.setMass(1);
+}
+
 let m2v = new Mesh2Voxel();
 
 export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
@@ -107,18 +124,20 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 	cam.dist = 20;
 	sce3d = sce;
 	mtl1 = mtl;
-	//mtl.renderMode = BlinnPhongMaterial.RENDERMODE_TRANSPARENT;
+	mtl.renderMode = BlinnPhongMaterial.RENDERMODE_TRANSPARENT;
 	initPhy(sce);
 
 	testVoxelGround();
 
+	createBoxVoxel(4,4,4, new Vec3(0,0,0), new Vec3(4,4,4));
+	/*
 	m2v.loadObj('res/house/house1.obj', 0.5, (voxdata: SparseVoxData) => {
-		let vox = new VoxelSprite({get:voxdata.get.bind(voxdata)},voxdata.dataszx,voxdata.dataszy,voxdata.dataszz, 
-			voxdata.aabbmin as any as Vector3, 
+		let vox = new VoxelSprite({ get: voxdata.get.bind(voxdata) }, voxdata.dataszx, voxdata.dataszy, voxdata.dataszz,
+			voxdata.aabbmin as any as Vector3,
 			voxdata.aabbmax as any as Vector3);
 		//vox.createMesh();
 		sce.addChild(vox);
-	
+
 		let ret = hashSparseVox(voxdata);
 		let s = 0;
 		ret.forEach(v => {
@@ -128,34 +147,22 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 		let phyvox = new Voxel(voxdata);
 		var phy = vox.addComponent(CannonBody) as CannonBody;
 		phy.addShape(phyvox);
-		phy.phyBody.position.set(0,130,0);
+		phy.phyBody.position.set(0, 0, 0);
 		phy.setMass(1);
-	
 
-		//TEST
-		/*
-		voxdata.data.forEach(v => {
-			let x = v.x;
-			let y = v.y;
-			let z = v.z;
-			if (v.color != 0) {
-				addBox(new Vec3(1, 1, 1), new Vec3(x, y, z), 1, phymtl1);
-			}
-		});
-		*/
-		//TEST
 		console.log('length=', ret.length, 'space=', ret.length - s);
-		//debugger;
 	});
+	*/
 
-    Laya.stage.on(Event.MOUSE_DOWN, null, (e:{stageX:number,stageY:number}) => {
+	Laya.stage.on(Event.MOUSE_DOWN, null, (e: { stageX: number, stageY: number }) => {
 		let worlde = cam.camera.transform.worldMatrix.elements;
-		let stpos = new Vec3(worlde[12],worlde[13],worlde[14]);
-		let dir = new Vec3(worlde[8],worlde[9],worlde[10]);
+		let stpos = new Vec3(worlde[12], worlde[13], worlde[14]);
+		let dir = new Vec3(worlde[8], worlde[9], worlde[10]);
 
-		let sp = addSphere(0.5,stpos.x,stpos.y,stpos.z);
+		//let sp = addSphere(0.5,stpos.x,stpos.y,stpos.z);
+		let sp = addBox(new Vec3(0.5, 0.5, 0.5), stpos, 1, phymtl1);
 		let v = 20;
-		sp.setVel(-dir.x*v,-dir.y*v,-dir.z*v);
+		sp.setVel(-dir.x * v, -dir.y * v, -dir.z * v);
 	});
 
 	//testLift();

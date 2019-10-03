@@ -1,8 +1,34 @@
 import { PhyVoxelData } from "../../shapes/Voxel";
+import { voxdata } from './../../shapes/Voxel';
 
-function BuildBox(vox:PhyVoxelData, xs:i32,ys:i32,zs:i32, x:i32, y:i32, z:i32, solid:boolean):PhyVoxelData{
+/**
+ * 创建一个box的体素数据
+ * @param xs 
+ * @param ys 
+ * @param zs 
+ * @param solid 
+ */
+export function VoxBuildBox(xs:i32,ys:i32,zs:i32, solid:boolean):voxdata[]{
 	//let dt = vox.vo
-	throw 'ni'
+	let dt:voxdata[] = []; 
+	let border=false;
+	for(let z=0; z<zs; z++){
+		border=(z==0||z==zs-1);
+		for(let y=0; y<ys; y++){
+			border=border||(y==0||y==ys-1);
+			for(let x=0; x<xs; x++){
+				border=border||(x==0||x==xs-1);
+				if(solid){
+					dt.push({x,y,z,color:0xffffffff})
+				}else{
+					if(border){
+						dt.push({x,y,z,color:0xffffffff});
+					}
+				}
+			}
+		}
+	}
+	return dt;
 }
 
 

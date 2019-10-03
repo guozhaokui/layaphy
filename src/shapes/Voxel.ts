@@ -78,14 +78,20 @@ export class SparseVoxData {
 	dataszy: i32;
 	dataszz: i32;
 	maxsz: i32;
-	aabbmin: Vec3;   // local坐标的包围盒。相对于本地原点
-	aabbmax: Vec3;
+	aabbmin=new Vec3();   // local坐标的包围盒。相对于本地原点
+	aabbmax=new Vec3();
 
 	//get 加速
 	hashdata:hashData[][];
 
-	constructor(dt: voxdata[]) {
+	constructor(dt: voxdata[],xn:i32,yn:i32,zn:i32, min:Vec3, max:Vec3) {
 		this.data = dt;
+		this.dataszx=xn;
+		this.dataszy=yn;
+		this.dataszz=zn;
+		this.aabbmin.copy(min);
+		this.aabbmax.copy(max);
+		this.gridsz = (max.x-min.x)/xn;
 		this.hashdata = SparseVoxData.hashSparseVox(this);
 	}
 
