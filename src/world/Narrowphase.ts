@@ -1126,8 +1126,8 @@ export default class Narrowphase {
             let ni = Narrowphase.nor1;
             hitpoints.forEach( hit=>{
                 let r = this.createContactEquation(body1,body2,sphere,voxel,rsi,rsj);
-                hit.normal.negate(ni);
-                r.ni.copy(ni);
+                //hit.normal.negate(ni);
+                r.ni.copy(hit.normal);
                 hit.posi.vsub(pos1,r.ri);
                 hit.posj.vsub(pos2,r.rj);
     
@@ -1256,16 +1256,15 @@ export default class Narrowphase {
             let ni = Narrowphase.nor1;
             hitpoints.forEach( hit=>{
                 //DEBUG
-                let phyr = this.world._phyRender;
+                //let phyr = this.world._phyRender;
                 //phyr.addPersistPoint(hit.posi);
-                phyr.addPersistPoint(hit.posj);
-                phyr.addPersistVec(hit.normal, hit.posi);
-                body1.enable=false;
+                //phyr.addPersistPoint(hit.posj);
+                //phyr.addPersistVec(hit.normal, hit.posi);
                 //DEBUG
                     
                 let r = this.createContactEquation(body1,body2,box,voxel,rsi,rsj);
-                //hit.normal.negate(ni);
-                r.ni.copy(ni);
+                //hit.normal.negate(r.ni);
+                r.ni.copy(hit.normal);  // 现在的法线是推开voxel的， 所以不用取反
                 hit.posi.vsub(pos1,r.ri);
                 hit.posj.vsub(pos2,r.rj);
     

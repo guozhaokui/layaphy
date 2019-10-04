@@ -352,6 +352,16 @@ export default class Box extends Shape implements MinkowskiShape {
         return -1;
     }
 
+    /**
+     * 
+     * @param myPos 
+     * @param myQ 
+     * @param voxel 
+     * @param voxPos 
+     * @param voxQuat 
+     * @param hitpoints  其中的法线是推开voxel的
+     * @param justtest 
+     */
 	hitVoxel(myPos: Vec3, myQ:Quaternion, voxel:Voxel, voxPos: Vec3, voxQuat: Quaternion, hitpoints:HitPointInfo[], justtest: boolean): boolean {
         // 把voxel转换到box空间
         let rPos = hitVoxelTmpVec1;
@@ -374,14 +384,14 @@ export default class Box extends Shape implements MinkowskiShape {
         for( let i=0,sz=voxdt.length; i<sz; i++){
             let dt = voxdt[i];
             // 把xyz映射到box空间
-            tmpV.set(dt.x,dt.y,dt.z);
-            //TODO 应该在格子的中心
-            min.addScaledVector(gridw,tmpV,tmpV);
+            tmpV.set(dt.x+0.5,dt.y+0.5,dt.z+0.5);// 在格子的中心
+            min.addScaledVector(gridw,tmpV,tmpV);// tmpV = min + (vox.xyz+0.5)*gridw
             //tmpV现在是在vox空间内的一个点
             //转换到box空间
             rMat.vmult(tmpV,tmpV);
             tmpV.vadd(rPos,tmpV);
             //tmpV现在是box空间的点了，计算碰撞信息
+            // 这里的法线是推开sphere的
             let deep = Sphere.hitBox(tmpV, r, this.halfExtents,boxpos,boxQ,hitpos,hitpos1,hitnorm,justtest);
             if(deep<0)
                 continue;

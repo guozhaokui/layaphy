@@ -1,21 +1,23 @@
+import { Laya } from "Laya";
 import { BlinnPhongMaterial } from "laya/d3/core/material/BlinnPhongMaterial";
 import { Scene3D } from "laya/d3/core/scene/Scene3D";
+import { Ray } from 'laya/d3/math/Ray';
+import { Vector2 } from 'laya/d3/math/Vector2';
 import { Vector3 } from "laya/d3/math/Vector3";
-import { addBox, addSphere } from "./DemoUtils";
+import { Event } from "laya/events/Event";
+import { addBox } from "./DemoUtils";
+import CannonBody from "./layawrap/CannonBody";
 import { CannonWorld } from "./layawrap/CannonWorld";
 import { MouseCtrl1 } from "./layawrap/ctrls/MouseCtrl1";
+import { VoxBuildBox } from "./layawrap/debugger/VoxelBuilder";
 import { VoxelMaterial } from "./layawrap/debugger/VoxelRender/VoxelMtl";
 import { VoxelSprite } from "./layawrap/debugger/VoxelRender/VoxelSprite";
 import { PhyRender } from "./layawrap/PhyRender";
 import ContactMaterial from "./material/ContactMaterial";
 import Material from "./material/Material";
 import Vec3 from "./math/Vec3";
-import { hashSparseVox, SparseVoxData, Voxel } from "./shapes/Voxel";
+import { SparseVoxData, Voxel, hashSparseVox } from "./shapes/Voxel";
 import { Mesh2Voxel } from "./tools/Mesh2Voxel";
-import { Laya } from "Laya";
-import { Event } from "laya/events/Event";
-import CannonBody from "./layawrap/CannonBody";
-import { VoxBuildBox } from "./layawrap/debugger/VoxelBuilder";
 
 /**
  * 测试盒子可以被推走，被抬起
@@ -50,7 +52,7 @@ function rand(a: number, b: number) {
 function testVoxelGround() {
 	//world.world.gravity.set(0, -11, 0);
 	//plane
-	//let p =addBox(new Vec3(100,100,100), new Vec3(0,-50,0),0,phymtl1);
+	let p =addBox(new Vec3(100,100,100), new Vec3(0,-50,0),0,phymtl1);
 	/*
 	let plane = new Sprite3D();
     let planephy = plane.addComponent(CannonBody) as CannonBody;
@@ -112,7 +114,7 @@ function createBoxVoxel(xn: i32, yn: i32, zn: i32, min: Vec3, max: Vec3) {
 	var phy = vox.addComponent(CannonBody) as CannonBody;
 	phy.addShape(phyvox);
 	phy.phyBody.position.set(0, 0, 0);
-	phy.setMass(1);
+	phy.setMass(110);
 }
 
 let m2v = new Mesh2Voxel();
@@ -129,7 +131,7 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 
 	testVoxelGround();
 
-	createBoxVoxel(1, 1, 1, new Vec3(0, 0, 0), new Vec3(4, 4, 4));
+	createBoxVoxel(8, 8, 8, new Vec3(0, 0, 0), new Vec3(4, 4, 4));
 	/*
 	m2v.loadObj('res/house/house1.obj', 0.5, (voxdata: SparseVoxData) => {
 		let vox = new VoxelSprite({ get: voxdata.get.bind(voxdata) }, voxdata.dataszx, voxdata.dataszy, voxdata.dataszz,
@@ -148,7 +150,7 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 		var phy = vox.addComponent(CannonBody) as CannonBody;
 		phy.addShape(phyvox);
 		phy.phyBody.position.set(0, 0, 0);
-		phy.setMass(1);
+		phy.setMass(0);
 
 		console.log('length=', ret.length, 'space=', ret.length - s);
 	});
@@ -159,26 +161,31 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 		let stpos = new Vec3(worlde[12], worlde[13], worlde[14]);
 		let dir = new Vec3(worlde[8], worlde[9], worlde[10]);
 
+		let ray = new Ray(new Vector3(), new Vector3());
+		cam.camera.viewportPointToRay(new Vector2(e.stageX,e.stageY), ray);
+		stpos.set(ray.origin.x, ray.origin.y, ray.origin.z);
+		dir.set(ray.direction.x,ray.direction.y,ray.direction.z);
+
 		//let sp = addSphere(0.5,stpos.x,stpos.y,stpos.z);
 		let sp = addBox(new Vec3(0.5, 0.5, 0.5), stpos, 1, phymtl1);
 		let v = 20;
-		sp.setVel(-dir.x * v, -dir.y * v, -dir.z * v);
+		setTimeout(() => {
+			sp.owner.destroy();
+		}, 13000); 
+		sp.setVel(dir.x * v, dir.y * v, dir.z * v);
 	});
 
 	Laya.stage.on(Event.KEY_DOWN, null, (e: Event) => {
 		let key = String.fromCharCode(e.keyCode);
 		switch (key) {
 			case 'X':
-				alert('x');
 				break;
 			case 'Y':
-				alert('y');
 				break;
 			case 'Z':
-				alert('z');
 				break;
 			default:
-				debugger;
+				break;
 		}
 	});
 

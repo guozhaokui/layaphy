@@ -283,6 +283,8 @@ export default class Body extends EventTarget {
 	/** 如果是kinematic对象，用速度控制还是用位置控制。 */
 	kinematicUsePos=false;
 
+    userData:any=null;  // 保存游戏逻辑对象
+
     constructor(mass: number = 1, shape: Shape|null = null, pos:Vec3|null=null, options?: BodyInitOptions) {
         super();
         this._mass = mass;

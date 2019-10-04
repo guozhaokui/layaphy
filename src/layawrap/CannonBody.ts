@@ -45,9 +45,10 @@ export default class CannonBody extends Component implements IPhyBody{
     }
     _onEnable(){
         //let sce = this.owner.scene as Scene3D;
+        this.phyBody.enable=true;
     }
     _onDisable(){
-
+        this.phyBody.enable=false;
     }
 
     // 添加到对象上的时候，自动创建物理对象 Body, 并添加到物理世界中
@@ -55,9 +56,10 @@ export default class CannonBody extends Component implements IPhyBody{
         let body = this.phyBody;
         if(!body){
             this.phyBody = body = new Body(1);
+            body.userData = this;
         }
 
-        CannonWorld.inst.bodies.push(this);//TODO 会多次添加么
+        //CannonWorld.inst.bodies.push(this);//TODO 会多次添加么
 
         let world = CannonWorld.inst.world
 		world.addBody(body);
@@ -111,7 +113,10 @@ export default class CannonBody extends Component implements IPhyBody{
     }
 
     _onDestroy(){
-
+        let w = this.phyBody.world;
+        if(w){
+            w.remove(this.phyBody);
+        }
     }
     _onAwake(){
 
@@ -132,6 +137,8 @@ export default class CannonBody extends Component implements IPhyBody{
 
     applyPose(){
         let body = this.phyBody;
+        if(this.destroyed)
+            return;
         if(body.isSleep())
             return;
         let sp = this.owner as Sprite3D;

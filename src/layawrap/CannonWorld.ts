@@ -1,13 +1,10 @@
-import { Laya } from "Laya";
 import { Script3D } from "laya/d3/component/Script3D";
-import NaiveBroadphase from "../collision/NaiveBroadphase";
 import World from "../world/World";
 import CannonBody from "./CannonBody";
 
 export class CannonWorld extends Script3D{
     world = new World();
     static inst:CannonWorld;
-    bodies:CannonBody[]=[];
 
     constructor(){
         super();
@@ -22,14 +19,15 @@ export class CannonWorld extends Script3D{
     }
 
     onUpdate(){
+        let world = this.world;
         //let dt = Laya.systemTimer.delta/1000;
-        this.world.step(1/60);//,dt);
+        world.step(1/60);//,dt);
 
         let i:i32=0;
-        let sz:i32=this.bodies.length;
+        let sz:i32=world.bodies.length;
         for( ;i<sz; i++){
-            let cb = this.bodies[i];
-            cb.applyPose();
+            let phy = world.bodies[i].userData as CannonBody;
+            phy.applyPose();
         }
         //console.log('update phy1');
     }
