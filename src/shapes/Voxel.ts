@@ -1,10 +1,10 @@
-import Vec3 from "../math/Vec3";
-import Quaternion from "../math/Quaternion";
-import Shape, { SHAPETYPE } from "./Shape";
+import AABB from "../collision/AABB";
 import RaycastResult from "../collision/RaycastResult";
 import Mat3 from "../math/Mat3";
-import AABB from "../collision/AABB";
-import Box, { quat_AABBExt_mult } from "./Box";
+import Quaternion from "../math/Quaternion";
+import Vec3 from "../math/Vec3";
+import Box from "./Box";
+import Shape, { SHAPETYPE } from "./Shape";
 
 function POT(v: i32): i32 {
 	let r: i32 = 1;
@@ -240,11 +240,43 @@ class VoxelBitData{
 	ys=0;
 	zs=0;
 	dt:Uint8Array;
-	constructor(xsize:i32,ysize:i32,zsize:i32){
+	/**
+	 * 由于不是POT
+	 * 可能会扩展bbx，例如 上一级x有6个格子,对应的xs=3, bbx=0~6， 每个格子宽度为1
+	 * 下一级的时候，xs=2，表示4个格子，比直接除2多出一个来，所以要扩展 上一级gridx*2 = 2 
+	 * 如果下一级没有扩展，则不变，例如 8->4->2->1
+	 */
+	max=new Vec3();	// 
+	min:Vec3;		// 这个只是引用
+
+	/**
+	 * 
+	 * @param xsize 
+	 * @param ysize 
+	 * @param zsize 
+	 * @param min  原始包围盒大小
+	 * @param max 
+	 */
+	constructor(xsize:i32,ysize:i32,zsize:i32, min:Vec3, max:Vec3){
 		this.xs = (xsize+1)>>1;
 		this.ys = (ysize+1)>>1;
 		this.zs = (zsize+1)>>1
 		this.dt = new Uint8Array(this.xs*this.ys*this.zs);
+		this.min=min;
+		this.max.copy(max);
+		// 是否扩展了bbx
+		if((xsize&1)==1){
+			let dx = (max.x-min.x)/xsize;
+			this.max.x+=2*dx;
+		}
+		if((ysize&1)==1){
+			let dy = (max.y-min.y)/ysize;
+			this.max.y+=2*dy;
+		}
+		if((zsize&1)==1){
+			let dz = (max.z-min.z)/zsize;
+			this.max.z+=2*dz;
+		}
 	}
 
 	//设置。这里的xyz可以是 this.xs的两倍
@@ -271,7 +303,7 @@ class VoxelBitData{
 		if(this.xs<=1&&this.ys<=1&&this.zs<=1)
 			return null;
 		let xs = this.xs,ys=this.ys,zs=this.zs;
-		let ret = new VoxelBitData(xs,ys,zs);//xs等已经是除以2的了
+		let ret = new VoxelBitData(xs,ys,zs,this.min, this.max);//xs等已经是除以2的了
 		//给父级设值
 		let dt = this.dt;
 		let i=0;
@@ -325,7 +357,7 @@ export class Voxel  extends Shape{
 		let lodlv = Math.log2(maxpot);
 		this.bitDataLod = new Array<VoxelBitData>(lodlv);
 		let clv = lodlv-1;
-		let cdt = this.bitDataLod[clv]= new VoxelBitData(xs,ys,zs);
+		let cdt = this.bitDataLod[clv]= new VoxelBitData(xs,ys,zs,this.aabbmin, this.aabbmax);
 		//设置末级数据
 		dt.data.forEach(v=>{
 			cdt.setBit(v.x,v.y,v.z);

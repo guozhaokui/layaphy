@@ -132,26 +132,47 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 	testVoxelGround();
 
 	//createBoxVoxel(8, 8, 8, new Vec3(0, 0, 0), new Vec3(4, 4, 4));
-	m2v.loadObj('res/house/house1.obj', 0.05, (voxdata: SparseVoxData) => {
-		let vox = new VoxelSprite({ get: voxdata.get.bind(voxdata) }, voxdata.dataszx, voxdata.dataszy, voxdata.dataszz,
-			voxdata.aabbmin as any as Vector3,
-			voxdata.aabbmax as any as Vector3);
+	m2v.loadObj('res/house/house1.obj', 0.1, (voxdata: SparseVoxData) => {
+		console.time('voxel');
+		let phyvox = new Voxel(voxdata);
+		console.timeEnd('voxel');
+
+		let dt = phyvox.bitDataLod[0];
+		let vox = new VoxelSprite(
+			//{ get: function(x,y,z){return dt.getBit(x,y,z);} }, voxdata.dataszx, voxdata.dataszy, voxdata.dataszz,
+			{ get: function(x,y,z){return dt.getBit(x,y,z);} }, dt.xs*2, dt.ys*2, dt.zs*2,
+			dt.min as any as Vector3,
+			dt.max as any as Vector3);
 		//vox.createMesh();
 		sce.addChild(vox);
+		vox.transform.localPosition.setValue(0,0,0);
 
+
+		for(let i=1; i<phyvox.bitDataLod.length; i++){
+			dt = phyvox.bitDataLod[i];
+			let vox1 = new VoxelSprite(
+				//{ get: function(x,y,z){return dt.getBit(x,y,z);} }, voxdata.dataszx, voxdata.dataszy, voxdata.dataszz,
+				{ get: function(x,y,z){return dt.getBit(x,y,z);} }, dt.xs*2, dt.ys*2, dt.zs*2,
+				dt.min as any as Vector3,
+				dt.max as any as Vector3);
+			//vox.createMesh();
+			sce.addChild(vox1);
+			vox1.transform.localPosition = new Vector3(14*i,0,0);
+		}
+
+		/*
 		let ret = hashSparseVox(voxdata);
 		let s = 0;
 		ret.forEach(v => {
 			if (v) s++;
 		})
-
-		let phyvox = new Voxel(voxdata);
+		console.log('length=', ret.length, 'space=', ret.length - s);
+		*/
 		var phy = vox.addComponent(CannonBody) as CannonBody;
 		phy.addShape(phyvox);
 		phy.phyBody.position.set(0, 0, 0);
 		phy.setMass(0);
 
-		console.log('length=', ret.length, 'space=', ret.length - s);
 	});
 
 	Laya.stage.on(Event.MOUSE_DOWN, null, (e: { stageX: number, stageY: number }) => {

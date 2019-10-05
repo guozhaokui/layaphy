@@ -25,7 +25,7 @@ export class VoxelSprite extends MeshSprite3D{
 
     static createMesh(data:any,xn:i32,yn:i32,zn:i32,min:Vector3, max:Vector3){
 		var vertDecl = VertexMesh.getVertexDeclaration("POSITION,NORMAL,UV");
-		let quad = GreedyMesh({get:data.get},[xn,yn,zn]);
+		let quad = GreedyMesh(data,[xn,yn,zn]);
 		let vertex:number[]=[];
 		let index:number[]=[];
 
