@@ -50,7 +50,7 @@ function rand(a: number, b: number) {
 }
 
 function testVoxelGround() {
-	//world.world.gravity.set(0, -11, 0);
+	world.world.gravity.set(0, -11, 0);
 	//plane
 	let p =addBox(new Vec3(100,100,100), new Vec3(0,-50,0),0,phymtl1);
 	/*
@@ -126,13 +126,13 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 	cam.dist = 20;
 	sce3d = sce;
 	mtl1 = mtl;
-	mtl.renderMode = BlinnPhongMaterial.RENDERMODE_TRANSPARENT;
+	//mtl.renderMode = BlinnPhongMaterial.RENDERMODE_TRANSPARENT;
 	initPhy(sce);
 
 	testVoxelGround();
 
 	//createBoxVoxel(8, 8, 8, new Vec3(0, 0, 0), new Vec3(4, 4, 4));
-	m2v.loadObj('res/house/house1.obj', 0.5, (voxdata: SparseVoxData) => {
+	m2v.loadObj('res/house/house1.obj', 0.05, (voxdata: SparseVoxData) => {
 		let vox = new VoxelSprite({ get: voxdata.get.bind(voxdata) }, voxdata.dataszx, voxdata.dataszy, voxdata.dataszz,
 			voxdata.aabbmin as any as Vector3,
 			voxdata.aabbmax as any as Vector3);
@@ -164,7 +164,7 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 		stpos.set(ray.origin.x, ray.origin.y, ray.origin.z);
 		dir.set(ray.direction.x,ray.direction.y,ray.direction.z);
 
-		let sp = addSphere(0.5,stpos.x,stpos.y,stpos.z);
+		let sp = addSphere(0.3,stpos.x,stpos.y,stpos.z);
 		//let sp = addBox(new Vec3(0.5, 0.5, 0.5), stpos, 1, phymtl1);
 		let v = 20;
 		setTimeout(() => {

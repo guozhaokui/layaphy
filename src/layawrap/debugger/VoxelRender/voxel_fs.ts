@@ -12,7 +12,7 @@ void main()
 { 
     vec2 scrcoord = mod(gl_FragCoord.xy-vec2(0.5),2.0);
     float d = dot(scrcoord,scrcoord);
-    if(d==0.0)discard;
+    //if(d==0.0)discard;
  	float l = dot(lightdir,v_Normal);
     gl_FragColor = vec4(l,l,l,.0);
 }

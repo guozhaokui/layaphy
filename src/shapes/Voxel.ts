@@ -232,10 +232,72 @@ function getBit(v: i8, p: i32): boolean {
 	return (v & (1 << p)) != 0
 }
 
-class StaticVoxel  extends Shape{
+/**
+ * 每一级的voxel数据
+ */
+class VoxelBitData{
+	xs=0;//uint8数据的xsize，是实际数据长度的一半
+	ys=0;
+	zs=0;
+	dt:Uint8Array;
+	constructor(xsize:i32,ysize:i32,zsize:i32){
+		this.xs = (xsize+1)>>1;
+		this.ys = (ysize+1)>>1;
+		this.zs = (zsize+1)>>1
+		this.dt = new Uint8Array(this.xs*this.ys*this.zs);
+	}
+
+	//设置。这里的xyz可以是 this.xs的两倍
+	setBit(x:i32,y:i32,z:i32){
+		//z,y,x
+		let xs = this.xs,ys=this.ys;
+		let pos = (z>>1)*(xs*ys)+(y>>1)*xs+(x>>1);
+		let bit = ((z&1)<<2)+((y&1)<<1)+(x&1);
+		this.dt[pos]|=(1<<bit);
+	}
+
+	getBit(x:i32,y:i32,z:i32){
+		//z,y,x
+		let xs = this.xs,ys=this.ys;
+		let pos = (z>>1)*(xs*ys)+(y>>1)*xs+(x>>1);
+		let bit = ((z&1)<<2)+((y&1)<<1)+(x&1);
+		return (this.dt[pos]&(1<<bit))!=0;
+	}
+
+	/**
+	 * 生成上一级数据，并且填充
+	 */
+	genParent():VoxelBitData|null{
+		if(this.xs<=1&&this.ys<=1&&this.zs<=1)
+			return null;
+		let xs = this.xs,ys=this.ys,zs=this.zs;
+		let ret = new VoxelBitData(xs,ys,zs);//xs等已经是除以2的了
+		//给父级设值
+		let dt = this.dt;
+		let i=0;
+		for(let z=0; z<zs; z++){
+			for(let y=0; y<ys; y++){
+				for(let x=0; x<xs; x++){
+					let v = dt[i++];
+					if(v){
+						ret.setBit(x,y,z);
+					}
+				}
+			}
+		}
+		return ret;
+	}
+}
+
+export class Voxel  extends Shape{
 	id = 0;
 	voxData: SparseVoxData;//|PhyVoxelData;
 	//data:Uint8Array;
+	//bitData:Uint8Array;
+	bitDataLod:VoxelBitData[];
+	dataxsize=0;
+	dataysize=0;
+	datazsize=0;
 	quat: Quaternion;
 	pos = new Vec3();
 	centroid: Vec3 = new Vec3();	// 在voxData坐标系下的质心 @TODO 转换
@@ -254,6 +316,28 @@ class StaticVoxel  extends Shape{
 		this.aabbmin.copy(dt.aabbmin);
 		this.aabbmax.copy(dt.aabbmax);		
 		this.gridw = ((dt.aabbmax.x-dt.aabbmin.x)/dt.dataszx);
+		// 如果不是方的，转成多个方的
+		let xs = this.dataxsize = dt.dataszx;
+		let ys = this.dataysize = dt.dataszy;
+		let zs = this.datazsize = dt.dataszz;
+		let maxsize = Math.max(xs,ys,zs);
+		let maxpot = POT(maxsize);
+		let lodlv = Math.log2(maxpot);
+		this.bitDataLod = new Array<VoxelBitData>(lodlv);
+		let clv = lodlv-1;
+		let cdt = this.bitDataLod[clv]= new VoxelBitData(xs,ys,zs);
+		//设置末级数据
+		dt.data.forEach(v=>{
+			cdt.setBit(v.x,v.y,v.z);
+		});
+
+		//设置各级数据
+		while(cdt){
+			cdt = cdt.genParent() as  VoxelBitData;
+			if(cdt){
+				this.bitDataLod[--clv]=cdt;
+			}
+		}
 	}
 
 	updateAABB(): void {
@@ -360,31 +444,20 @@ class StaticVoxel  extends Shape{
 		max.copy(this.aabbmax);
 	}
 
-	volume(): number {
-		throw new Error("Method not implemented.");
-	}
 	onPreNarrowpase(stepId: number, pos: Vec3, quat: Quaternion): void {
 		throw new Error("Method not implemented.");
 	}
-
-}
-
-export class Voxel extends StaticVoxel {
 
 	setData(dt: Uint8Array, xnum: i32, ynum: i32, znum: i32, xs: f32, ys: f32, zs: f32): void {
 		// 重新组织数据        
 		// 生成LOD数据
 	}
 
-	onPreNarrowpase(stepId: number, pos: Vec3, quat: Quaternion): void { }
 
 	fill() {
 	}
 
 	volume(): number {
-		throw new Error("Method not implemented.");
-	}
-	calculateLocalInertia(mass: number, target: Vec3): void {
 		throw new Error("Method not implemented.");
 	}
 
@@ -416,7 +489,7 @@ export class Voxel extends StaticVoxel {
 
 	rayCast(ori: Vec3, dir: Vec3): RaycastResult {
 		throw 'noimp';
-	}
+	}	
 }
 
 
@@ -440,7 +513,7 @@ class hashRegion {
      * 添加新的voxel。后加的会覆盖前面的。
      * 这个vox可能超越本区域大小，所以可能需要裁减
      */
-	addData(vox: StaticVoxel, min: Vec3, max: Vec3): void {
+	addData(vox: Voxel, min: Vec3, max: Vec3): void {
 		vox.pos;
 	}
 
@@ -453,7 +526,7 @@ class hashRegion {
      * @param mymin  当前区域的包围盒
      * @param mymax 
      */
-	addVox(vox: StaticVoxel, mymin: Vec3, mymax: Vec3): void {
+	addVox(vox: Voxel, mymin: Vec3, mymax: Vec3): void {
 		vox.updateAABB();
 		let min = vox.aabbmin;
 		let max = vox.aabbmax;
@@ -618,7 +691,7 @@ export class VoxelScene {
 
 	// 统一格子管理。每个场景可以不同，基本根据主角大小来定
 	gridsz: f32 = 0.5;   // 
-	staticVox: StaticVoxel[] = [];
+	staticVox: Voxel[] = [];
 	staticVoxAABB: AABB[];   // 每个对象添加到场景的时候对应的AABB
 	// dynamicVox:Voxel[]=[]; 动态格子暂时不做
 	lv1Grids: Uint16Array;   // 一级格子。0表示没有内容。
@@ -650,14 +723,14 @@ export class VoxelScene {
 
 	}
 
-	addStaticVoxel(vox: StaticVoxel, updateSce = true): void {
+	addStaticVoxel(vox: Voxel, updateSce = true): void {
 		this.staticVox.push(vox);
 		if (updateSce) {
 			this.updateStaticSceneInfo();
 		}
 	}
 
-	removeStaticVoxel(vox: StaticVoxel): void {
+	removeStaticVoxel(vox: Voxel): void {
 		// 根据格子中记录的voxel来恢复
 	}
 
