@@ -1120,14 +1120,13 @@ export default class Narrowphase {
     
     shpereVoxel(sphere: Sphere, voxel: any,  pos1: Vec3, pos2: Vec3, q1: Quaternion, q2: Quaternion, body1: Body, body2: Body,  rsi: Shape, rsj: Shape, justTest: boolean): boolean {
         let hitpoints:HitPointInfo[] = [];
-        let deep = sphere.hitVoxel(pos1,voxel,pos2,q2,hitpoints,justTest);
-        if(deep>=0 ||hitpoints.length>0){
+        let hit = sphere.hitVoxel(pos1,voxel,pos2,q2,hitpoints,justTest);
+        if(hit){
             if( justTest) return true;
-            let ni = Narrowphase.nor1;
             hitpoints.forEach( hit=>{
                 let r = this.createContactEquation(body1,body2,sphere,voxel,rsi,rsj);
-                //hit.normal.negate(ni);
-                r.ni.copy(hit.normal);
+                hit.normal.negate(r.ni);
+                //r.ni.copy(hit.normal);
                 hit.posi.vsub(pos1,r.ri);
                 hit.posj.vsub(pos2,r.rj);
     

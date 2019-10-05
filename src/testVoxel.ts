@@ -5,7 +5,7 @@ import { Ray } from 'laya/d3/math/Ray';
 import { Vector2 } from 'laya/d3/math/Vector2';
 import { Vector3 } from "laya/d3/math/Vector3";
 import { Event } from "laya/events/Event";
-import { addBox } from "./DemoUtils";
+import { addBox, addSphere } from "./DemoUtils";
 import CannonBody from "./layawrap/CannonBody";
 import { CannonWorld } from "./layawrap/CannonWorld";
 import { MouseCtrl1 } from "./layawrap/ctrls/MouseCtrl1";
@@ -131,8 +131,7 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 
 	testVoxelGround();
 
-	createBoxVoxel(8, 8, 8, new Vec3(0, 0, 0), new Vec3(4, 4, 4));
-	/*
+	//createBoxVoxel(8, 8, 8, new Vec3(0, 0, 0), new Vec3(4, 4, 4));
 	m2v.loadObj('res/house/house1.obj', 0.5, (voxdata: SparseVoxData) => {
 		let vox = new VoxelSprite({ get: voxdata.get.bind(voxdata) }, voxdata.dataszx, voxdata.dataszy, voxdata.dataszz,
 			voxdata.aabbmin as any as Vector3,
@@ -154,7 +153,6 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 
 		console.log('length=', ret.length, 'space=', ret.length - s);
 	});
-	*/
 
 	Laya.stage.on(Event.MOUSE_DOWN, null, (e: { stageX: number, stageY: number }) => {
 		let worlde = cam.camera.transform.worldMatrix.elements;
@@ -166,8 +164,8 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 		stpos.set(ray.origin.x, ray.origin.y, ray.origin.z);
 		dir.set(ray.direction.x,ray.direction.y,ray.direction.z);
 
-		//let sp = addSphere(0.5,stpos.x,stpos.y,stpos.z);
-		let sp = addBox(new Vec3(0.5, 0.5, 0.5), stpos, 1, phymtl1);
+		let sp = addSphere(0.5,stpos.x,stpos.y,stpos.z);
+		//let sp = addBox(new Vec3(0.5, 0.5, 0.5), stpos, 1, phymtl1);
 		let v = 20;
 		setTimeout(() => {
 			sp.owner.destroy();

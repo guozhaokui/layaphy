@@ -2,13 +2,13 @@ import Quaternion from '../math/Quaternion.js';
 import Vec3 from '../math/Vec3.js';
 import Shape, { SHAPETYPE, HitPointInfo } from './Shape.js';
 
-var box_to_sphere=new Vec3();
+var box_to_sphere = new Vec3();
 var hitbox_tmpVec1 = new Vec3();
-var boxInvQ=new Quaternion();
-var ptdist=new Vec3();
-var qtoax_x=new Vec3();
-var qtoax_y=new Vec3();
-var qtoax_z=new Vec3();
+var boxInvQ = new Quaternion();
+var ptdist = new Vec3();
+var qtoax_x = new Vec3();
+var qtoax_y = new Vec3();
+var qtoax_z = new Vec3();
 /**
  * Spherical shape
  * @class Sphere
@@ -22,7 +22,7 @@ export default class Sphere extends Shape {
 	radius = 1;
 	constructor(radius: number) {
 		super();
-		this.margin=radius;
+		this.margin = radius;
 		this.type = SHAPETYPE.SPHERE;
 		this.radius = radius !== undefined ? radius : 1.0;
 
@@ -128,28 +128,28 @@ export default class Sphere extends Shape {
 	 * 内部距离：
 	 * 	最大的一个，或者abs后最小的一个
 	 */
-	static hitBox(myPos: Vec3, R:number, boxHalf: Vec3, boxPos: Vec3, boxQuat: Quaternion, hitPos: Vec3, hitpos1: Vec3, hitNormal: Vec3, justtest: boolean): f32 {
+	static hitBox(myPos: Vec3, R: number, boxHalf: Vec3, boxPos: Vec3, boxQuat: Quaternion, hitPos: Vec3, hitpos1: Vec3, hitNormal: Vec3, justtest: boolean): f32 {
 		// 转到盒子空间
-		myPos.vsub(boxPos,box_to_sphere);
+		myPos.vsub(boxPos, box_to_sphere);
 		let invQbox = boxInvQ;
 		boxQuat.conjugate(invQbox);// 求逆
-		invQbox.vmult(box_to_sphere,box_to_sphere);//把圆心转到box空间
+		invQbox.vmult(box_to_sphere, box_to_sphere);//把圆心转到box空间
 		//判断球心在哪个区间
 		let half = boxHalf
-		let wx=half.x;
-		let wy=half.y;
-		let wz=half.z;
-		let x=box_to_sphere.x;
-		let y=box_to_sphere.y;
-		let z=box_to_sphere.z;
+		let wx = half.x;
+		let wy = half.y;
+		let wz = half.z;
+		let x = box_to_sphere.x;
+		let y = box_to_sphere.y;
+		let z = box_to_sphere.z;
 		let nearpt = hitbox_tmpVec1;
-		let setpt=false;
-		let deep=-1;
+		let setpt = false;
+		let deep = -1;
 		//debug
 		let ax = qtoax_x;
 		let ay = qtoax_y;
 		let az = qtoax_z;
-		boxQuat.vmultAxis(ax,ay,az);	//TODO 可以用四元数转mat3来做
+		boxQuat.vmultAxis(ax, ay, az);	//TODO 可以用四元数转mat3来做
 		/*
 		let phyr = PhyRender.inst;
 		phyr.addVec1(boxPos,ax,10,0xff0000);
@@ -157,218 +157,257 @@ export default class Sphere extends Shape {
 		phyr.addVec1(boxPos,az,10, 0x0000ff);
 		*/
 		//debug
-		if(x<-wx){// x 轴左侧
-			if(y<-wy){// y轴下侧
-				if(z<-wz){
+		if (x < -wx) {// x 轴左侧
+			if (y < -wy) {// y轴下侧
+				if (z < -wz) {
 					//min点 球心到min的距离<R则碰撞
-					nearpt.set(-wx,-wy,-wz);
-					setpt=true;
-				}else if(z>=-wz&&z<=wz){
+					nearpt.set(-wx, -wy, -wz);
+					setpt = true;
+				} else if (z >= -wz && z <= wz) {
 					//-x,-y,-z -> -x,-y, z 线段 。-z到z
-					nearpt.set(-wx,-wy,z);
-					setpt=true;
-				}else{
+					nearpt.set(-wx, -wy, z);
+					setpt = true;
+				} else {
 					// -x,-y, z点
-					nearpt.set(-wx,-wy,wz);
-					setpt=true;
+					nearpt.set(-wx, -wy, wz);
+					setpt = true;
 				}
-			}else if(y>=-wy&&y<=wy){ // y 中间
-				if(z<-wz){
+			} else if (y >= -wy && y <= wy) { // y 中间
+				if (z < -wz) {
 					//-x,-y,-z,   -x,y,-z 线段
-					nearpt.set(-wx,y,-wz);
-					setpt=true;
-				}else if(z>=-wz&&z<=wz){
+					nearpt.set(-wx, y, -wz);
+					setpt = true;
+				} else if (z >= -wz && z <= wz) {
 					// -x 面
-					deep = x+R+wx;
-					if(deep>0){
-						if(justtest) return 1;
-						hitNormal.set(-ax.x,-ax.y,-ax.z);
-						myPos.addScaledVector(-R,hitNormal,hitPos);
-						myPos.addScaledVector(-(R-deep),hitNormal,hitpos1);
+					deep = x + R + wx;
+					if (deep > 0) {
+						if (justtest) return 1;
+						hitNormal.set(-ax.x, -ax.y, -ax.z);
+						myPos.addScaledVector(-R, hitNormal, hitPos);
+						myPos.addScaledVector(-(R - deep), hitNormal, hitpos1);
 						return deep;
-					}else{
+					} else {
 						return -1;
 					}
-				}else{
+				} else {
 					// -x,-y,z -> -x,y,z 线段	-y -> y
-					nearpt.set(-wx,y,wz);
-					setpt=true;
+					nearpt.set(-wx, y, wz);
+					setpt = true;
 				}
-			}else{
-				if(z<-wz){
+			} else {
+				if (z < -wz) {
 					// -x,y,-z 点
-					nearpt.set(-wx,wy,-wz);
-					setpt=true;
-				}else if(z>=-wz&&z<=wz){
+					nearpt.set(-wx, wy, -wz);
+					setpt = true;
+				} else if (z >= -wz && z <= wz) {
 					//-x,y,-z -> -x,y,z 线段
-					nearpt.set(-wx,wy,z);
-					setpt=true;
-				}else{
+					nearpt.set(-wx, wy, z);
+					setpt = true;
+				} else {
 					//-x,y,z点
-					nearpt.set(-wx,wy,wz);
-					setpt=true;
+					nearpt.set(-wx, wy, wz);
+					setpt = true;
 				}
 			}
-		}else if(x>=-wx && x<=wx){
-			if(y<-wy){
-				if(z<-wz){
+		} else if (x >= -wx && x <= wx) {
+			if (y < -wy) {
+				if (z < -wz) {
 					//-x,-y,-z   x,-y,-z 线段
-					nearpt.set(x,-wy,-wz);
-					setpt=true;
-				}else if(z>=-wz&&z<=wz){
+					nearpt.set(x, -wy, -wz);
+					setpt = true;
+				} else if (z >= -wz && z <= wz) {
 					//-y面
-					deep = y+R+wy;
-					if(deep>0){
+					deep = y + R + wy;
+					if (deep > 0) {
 						//碰撞
-						if(justtest) return 1;
-						hitNormal.set(-ay.x,-ay.y,-ay.z);
-						myPos.addScaledVector(-R,hitNormal,hitPos);
-						myPos.addScaledVector(-(R-deep),hitNormal,hitpos1);
+						if (justtest) return 1;
+						hitNormal.set(-ay.x, -ay.y, -ay.z);
+						myPos.addScaledVector(-R, hitNormal, hitPos);
+						myPos.addScaledVector(-(R - deep), hitNormal, hitpos1);
 						return deep;
-					}else{
+					} else {
 						return -1;
 					}
-				}else{
+				} else {
 					// -x,-y,z -> x,-y,z 线段
-					nearpt.set(x,-wy,wz);
-					setpt=true;
+					nearpt.set(x, -wy, wz);
+					setpt = true;
 				}
-			}else if(y>=-wy&&y<=wy){
-				if(z<-wz){
+			} else if (y >= -wy && y <= wy) {
+				if (z < -wz) {
 					// -z 面
-					deep = z+R+wz;
-					if(deep>0){
-						if(justtest) return 1;
-						hitNormal.set(-az.x,-az.y,-az.z);
-						myPos.addScaledVector(-R,hitNormal,hitPos);
-						myPos.addScaledVector(-(R-deep),hitNormal,hitpos1);
+					deep = z + R + wz;
+					if (deep > 0) {
+						if (justtest) return 1;
+						hitNormal.set(-az.x, -az.y, -az.z);
+						myPos.addScaledVector(-R, hitNormal, hitPos);
+						myPos.addScaledVector(-(R - deep), hitNormal, hitpos1);
 						return deep;
-					}else{
+					} else {
 						return -1;
 					}
-				}else if(z>=-wz&&z<=wz){
+				} else if (z >= -wz && z <= wz) {
 					// box内部
 					// 取一个最接近表面的方向
 					//TODO 
-				}else{
+				} else {
 					// +z 面
-					deep = wz-(z-R);
-					if(deep>0){
-						if(justtest) return 1;
-						hitNormal.set(az.x,az.y,az.z);
-						myPos.addScaledVector(-R,hitNormal,hitPos);
-						myPos.addScaledVector(-(R-deep),hitNormal,hitpos1);
+					deep = wz - (z - R);
+					if (deep > 0) {
+						if (justtest) return 1;
+						hitNormal.set(az.x, az.y, az.z);
+						myPos.addScaledVector(-R, hitNormal, hitPos);
+						myPos.addScaledVector(-(R - deep), hitNormal, hitpos1);
 						return deep;
-					}else{
+					} else {
 						return -1;
 					}
 				}
-			}else{
-				if(z<-wz){
+			} else {
+				if (z < -wz) {
 					//-x,y,-z -> x,y,-z 线段
-					nearpt.set(x,wy,-wz);
-					setpt=true;
-				}else if(z>=-wz&&z<=wz){
+					nearpt.set(x, wy, -wz);
+					setpt = true;
+				} else if (z >= -wz && z <= wz) {
 					// +y 面
-					deep = wy-(y-R);
-					if(deep>0){
-						if(justtest) return 1;
-						hitNormal.set(ay.x,ay.y,ay.z);
-						myPos.addScaledVector(-R,hitNormal,hitPos);
-						myPos.addScaledVector(-(R-deep),hitNormal,hitpos1);
+					deep = wy - (y - R);
+					if (deep > 0) {
+						if (justtest) return 1;
+						hitNormal.set(ay.x, ay.y, ay.z);
+						myPos.addScaledVector(-R, hitNormal, hitPos);
+						myPos.addScaledVector(-(R - deep), hitNormal, hitpos1);
 						return deep;
-					}else{
+					} else {
 						return -1;
 					}
-				}else{
+				} else {
 					// -x,y,z -> x,y,z 线段
-					nearpt.set(x,wy,wz);
-					setpt=true;
+					nearpt.set(x, wy, wz);
+					setpt = true;
 				}
 			}
-		}else{
-			if(y<-wy){
-				if(z<-wz){
+		} else {
+			if (y < -wy) {
+				if (z < -wz) {
 					//x,-y,-z 点
-					setpt=true;
-					nearpt.set(wx,-wy,-wz);
-				}else if(z>=-wz&&z<=wz){
+					setpt = true;
+					nearpt.set(wx, -wy, -wz);
+				} else if (z >= -wz && z <= wz) {
 					//x,-y,-z -> x,-y,z 线段
-					nearpt.set(wx,-wy,z);
-					setpt=true;
-				}else{
+					nearpt.set(wx, -wy, z);
+					setpt = true;
+				} else {
 					// x,-y,z 点
-					nearpt.set(wx,-wy,wz);
-					setpt=true;
+					nearpt.set(wx, -wy, wz);
+					setpt = true;
 				}
-			}else if(y>=-wy&&y<=wy){
-				if(z<-wz){
+			} else if (y >= -wy && y <= wy) {
+				if (z < -wz) {
 					//x,-y,-z  ->  x,y,-z 线段
-					nearpt.set(wx,y,-wz);
-					setpt=true;
-				}else if(z>=-wz&&z<=wz){
+					nearpt.set(wx, y, -wz);
+					setpt = true;
+				} else if (z >= -wz && z <= wz) {
 					// +x 面
-					deep = wx-(x-R);
-					if(deep>0){
-						if(justtest) return 1;
-						hitNormal.set(ax.x,ax.y,ax.z);
-						myPos.addScaledVector(-R,hitNormal,hitPos);
-						myPos.addScaledVector(-(R-deep),hitNormal,hitpos1);
+					deep = wx - (x - R);
+					if (deep > 0) {
+						if (justtest) return 1;
+						hitNormal.set(ax.x, ax.y, ax.z);
+						myPos.addScaledVector(-R, hitNormal, hitPos);
+						myPos.addScaledVector(-(R - deep), hitNormal, hitpos1);
 						return deep;
-					}else{
+					} else {
 						return -1;
 					}
-				}else{
+				} else {
 					// x,-y,z  -> x,y,z 线段
-					nearpt.set(wx,y,wz);
-					setpt=true;
+					nearpt.set(wx, y, wz);
+					setpt = true;
 				}
-			}else{
-				if(z<-wz){
+			} else {
+				if (z < -wz) {
 					//x,y,-z 点
-					nearpt.set(wx,wy,-wz);
-					setpt=true;
-				}else if(z>=-wz&&z<=wz){
+					nearpt.set(wx, wy, -wz);
+					setpt = true;
+				} else if (z >= -wz && z <= wz) {
 					//x,y,-z  -> x,y,z 线段
-					nearpt.set(wx,wy,z);
-					setpt=true;
-				}else{
+					nearpt.set(wx, wy, z);
+					setpt = true;
+				} else {
 					//max点
-					nearpt.set(wx,wy,wz);
-					setpt=true;
+					nearpt.set(wx, wy, wz);
+					setpt = true;
 				}
 			}
 		}
 		// 把nearpt转回世界空间
-		if(!setpt)
+		if (!setpt)
 			return -1;
 		boxQuat.vmult(nearpt, nearpt);
-		nearpt.vadd(boxPos,nearpt);
+		nearpt.vadd(boxPos, nearpt);
 		// 计算距离和碰撞点
 		myPos.vsub(nearpt, ptdist);// ptdits 指向球心
 		let l2 = ptdist.lengthSquared();
-		if( l2>R*R){
+		if (l2 > R * R) {
 			return -1;
 		}
 		let l = Math.sqrt(l2);
-		deep = R-l;
-		let invl=1/l;
-		ptdist.scale(invl,hitNormal);
-		myPos.addScaledVector(-R, hitNormal,hitPos);
+		deep = R - l;
+		let invl = 1 / l;
+		ptdist.scale(invl, hitNormal);
+		myPos.addScaledVector(-R, hitNormal, hitPos);
 		hitpos1.copy(nearpt);
 		//console.log('deep',deep)
 		return deep;
-	}	
+	}
 
-	hitVoxel(myPos: Vec3, voxel:any, voxPos: Vec3, voxQuat: Quaternion, hitpoints:HitPointInfo[], justtest: boolean): f32 {
+	hitVoxel(myPos: Vec3, voxel: any, voxPos: Vec3, voxQuat: Quaternion, hitpoints: HitPointInfo[], justtest: boolean): boolean {
 		// 只需与外壳
 		/**
 		 * 与所有的格子比较，取正的最小距离，法线是当前距离的法线
 		 * 由于voxel可能是凹的，可能会有多个点
 		 */
-		//TEST
-		//TEST
-		return -1;
+		// 把voxel转换到sphere空间
+		let rPos = hitVoxelTmpVec1;
+		voxPos.vsub(myPos,rPos);
+
+		// 先用最笨的方法验证流程
+		let voxdt = voxel.voxData.data;
+		let gridw = voxel.voxData.gridsz;
+		let r = gridw / 2;
+		let min = voxel.voxData.aabbmin;    //原始包围盒
+		let max = voxel.voxData.aabbmax;
+		let tmpV = new Vec3();  //xyz格子坐标
+		let hitpos = new Vec3();
+		let hitpos1 = new Vec3();
+		let hitnorm = new Vec3();
+		let hit = false;
+
+		for (let i = 0, sz = voxdt.length; i < sz; i++) {
+			let dt = voxdt[i];
+			// 把xyz映射到box空间
+			tmpV.set(dt.x + 0.5, dt.y + 0.5, dt.z + 0.5);// 在格子的中心
+			min.addScaledVector(gridw, tmpV, tmpV);// tmpV = min + (vox.xyz+0.5)*gridw
+			//tmpV现在是在vox空间内的一个点
+			voxQuat.vmult(tmpV,tmpV);//TODO 直接用矩阵的方向
+			tmpV.vadd(voxPos,tmpV);
+			//tmpV现在是box空间的点了，计算碰撞信息
+			// 这里的法线是推开自己的
+			let deep = Sphere.SpherehitSphere(this.radius,myPos,r,tmpV,hitpos,hitnorm,hitpos1,justtest);
+			if (deep < 0)
+				continue;
+			if (justtest)
+				return true;
+			//转换回世界空间
+			let hi = new HitPointInfo();
+			hi.posi.copy(hitpos);
+			hi.posj.copy(hitpos1);
+			hi.normal.copy(hitnorm);
+			hitpoints.push(hi);
+			hit = true;
+		}
+		return hit;
 	}
 
 }
+
+var hitVoxelTmpVec1 = new Vec3();
