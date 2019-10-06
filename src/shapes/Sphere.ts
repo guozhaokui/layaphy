@@ -1,6 +1,7 @@
 import Quaternion from '../math/Quaternion.js';
 import Vec3 from '../math/Vec3.js';
 import Shape, { SHAPETYPE, HitPointInfo } from './Shape.js';
+import { Voxel } from './Voxel.js';
 
 var box_to_sphere = new Vec3();
 var hitbox_tmpVec1 = new Vec3();
@@ -360,7 +361,7 @@ export default class Sphere extends Shape {
 		return deep;
 	}
 
-	hitVoxel(myPos: Vec3, voxel: any, voxPos: Vec3, voxQuat: Quaternion, hitpoints: HitPointInfo[], justtest: boolean): boolean {
+	hitVoxel(myPos: Vec3, voxel: Voxel, voxPos: Vec3, voxQuat: Quaternion, hitpoints: HitPointInfo[], justtest: boolean): boolean {
 		// 只需与外壳
 		/**
 		 * 与所有的格子比较，取正的最小距离，法线是当前距离的法线
@@ -408,6 +409,31 @@ export default class Sphere extends Shape {
 		return hit;
 	}
 
+	hitVoxel1(myPos: Vec3, voxel: Voxel, voxPos: Vec3, voxQuat: Quaternion, hitpoints: HitPointInfo[], justtest: boolean): boolean {
+		let lodnum = voxel.bitDataLod.length;
+		// 根据自己的包围盒确定用那一层lod，lod主要是用来过滤空白的
+		let R = this.radius;
+		// 把球转换到voxel空间
+		let sphInVox = hitVoxelTmpVec1;
+		myPos.vsub(voxPos,sphInVox);
+		// 旋转相对位置
+		voxQuat.conjugate(hitvoxelInvQ);
+		hitvoxelInvQ.vmult(sphInVox,sphInVox);
+		// 计算球占用的范围
+		let sphminx = sphInVox.x-R;
+		let sphminy = sphInVox.y-R;
+		let sphminz = sphInVox.z-R;
+		let sphmaxx = sphInVox.x+R;
+		let sphmaxy = sphInVox.y+R;
+		let sphmaxz = sphInVox.z+R;
+
+		let localbbxmin = voxel.voxData.aabbmin;
+		let localbbxmax = voxel.voxData.aabbmax;
+		// 采用平面的方法，不要用点的方法
+		// 怎么把碰撞分散到多帧中
+	}
+
 }
 
 var hitVoxelTmpVec1 = new Vec3();
+var hitvoxelInvQ=new Quaternion();

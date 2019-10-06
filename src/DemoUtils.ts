@@ -10,6 +10,7 @@ import Sphere from "./shapes/Sphere";
 import { Scene3D } from "laya/d3/core/scene/Scene3D";
 import { BlinnPhongMaterial } from "laya/d3/core/material/BlinnPhongMaterial";
 import PhyMtl from "./material/Material";
+import ConvexPolyhedron from "./shapes/ConvexPolyhedron";
 
 var scene:Scene3D;
 var mtl:BlinnPhongMaterial;
@@ -82,4 +83,8 @@ export function addSphere(r: f32, x: f32, y: f32, z: f32): CannonBody {
     phy.addShape(new Sphere(r));
     phy.setMass(1);
     return phy;
+}
+
+export function addTetra(v0:Vec3, v1:Vec3, v2:Vec3, v3:Vec3){
+    new ConvexPolyhedron([v0,v1,v2,v3],[[0,1,2],[0,2,3],[0,3,1],[1,2,3]]);
 }

@@ -47,6 +47,9 @@ export default class ConeEquation extends Equation {
         const GiMf = this.computeGiMf();
 
         const B = - g * a - GW * b - h * GiMf;
+        // Gq = cos(ang)-dot(ni,nj) 么， 右边的值可以认为是角度差
+        // q是pos,即当前的位置和角度
+        //
 
         return B;
     }

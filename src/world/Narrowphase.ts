@@ -21,6 +21,7 @@ import World, { PhyColor } from './World.js';
 import Capsule from '../shapes/Capsule.js';
 import { GJKPairDetector } from '../collision/GJKEPA.js';
 import { PhyRender } from '../layawrap/PhyRender.js';
+import { Voxel } from '../shapes/Voxel.js';
 
 //declare type anyShape=Box|Sphere|Capsule|Voxel|ConvexPolyhedron|Heightfield|Trimesh;
 interface checkFunc {
@@ -79,7 +80,7 @@ export default class Narrowphase {
         shapeChecks[SHAPETYPE.SPHERE | SHAPETYPE.PLANE] = this.spherePlane;
         shapeChecks[SHAPETYPE.SPHERE | SHAPETYPE.BOX] = this.sphereBox;
         shapeChecks[SHAPETYPE.SPHERE | SHAPETYPE.CONVEXPOLYHEDRON] = this.sphereConvex;
-        shapeChecks[SHAPETYPE.SPHERE | SHAPETYPE.VOXEL] = this.shpereVoxel;
+        shapeChecks[SHAPETYPE.SPHERE | SHAPETYPE.VOXEL] = this.sphereVoxel;
 		shapeChecks[SHAPETYPE.CAPSULE] = this.CapsuleCapsule;
 		shapeChecks[SHAPETYPE.CAPSULE| SHAPETYPE.PLANE ] = this.planeCapsule;
 		shapeChecks[SHAPETYPE.CAPSULE| SHAPETYPE.SPHERE] = this.sphereCapsule;
@@ -1118,7 +1119,7 @@ export default class Narrowphase {
         return found;
     }
     
-    shpereVoxel(sphere: Sphere, voxel: any,  pos1: Vec3, pos2: Vec3, q1: Quaternion, q2: Quaternion, body1: Body, body2: Body,  rsi: Shape, rsj: Shape, justTest: boolean): boolean {
+    sphereVoxel(sphere: Sphere, voxel: Voxel,  pos1: Vec3, pos2: Vec3, q1: Quaternion, q2: Quaternion, body1: Body, body2: Body,  rsi: Shape, rsj: Shape, justTest: boolean): boolean {
         let hitpoints:HitPointInfo[] = [];
         let hit = sphere.hitVoxel(pos1,voxel,pos2,q2,hitpoints,justTest);
         if(hit){
@@ -1247,7 +1248,7 @@ export default class Narrowphase {
 		return false;
 	}
 
-    boxVoxel(box: Box, voxel: any,  pos1: Vec3, pos2: Vec3, q1: Quaternion, q2: Quaternion, body1: Body, body2: Body,  rsi: Shape, rsj: Shape, justTest: boolean): boolean {
+    boxVoxel(box: Box, voxel: Voxel,  pos1: Vec3, pos2: Vec3, q1: Quaternion, q2: Quaternion, body1: Body, body2: Body,  rsi: Shape, rsj: Shape, justTest: boolean): boolean {
         let hitpoints:HitPointInfo[] = [];
         let hit = box.hitVoxel(pos1, q1, voxel,pos2,q2,hitpoints,justTest);
         if(hit){

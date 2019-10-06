@@ -4,6 +4,7 @@ import Body from '../objects/Body.js';
 
 /**
  * Rotational constraint. Works to keep the local vectors orthogonal to each other in world space.
+ * 旋转约束。
  * @author schteppe
  */
 export default class RotationalEquation extends Equation {
@@ -16,7 +17,6 @@ export default class RotationalEquation extends Equation {
         this.minForce = -maxForce;
         this.axisA = axisA.clone() ;
         this.axisB = axisB.clone() ;
-        this.maxAngle = Math.PI / 2;
     }
 
     computeB(h:number) {

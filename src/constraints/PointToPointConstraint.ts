@@ -5,7 +5,7 @@ import Body from '../objects/Body.js';
 
 /**
  * Connects two bodies at given offset points.
- * 把A的pivotA与B的pivotB连到一起。限制xyz方向三个自由度
+ * 把A的pivotA与B的pivotB连到一起。限制xyz方向三个自由度,只允许旋转
  *
  * @example
  *     var bodyA = new Body({ mass: 1 });
