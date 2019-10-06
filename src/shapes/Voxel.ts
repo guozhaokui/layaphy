@@ -78,20 +78,20 @@ export class SparseVoxData {
 	dataszy: i32;
 	dataszz: i32;
 	maxsz: i32;
-	aabbmin=new Vec3();   // local坐标的包围盒。相对于本地原点
-	aabbmax=new Vec3();
+	aabbmin = new Vec3();   // local坐标的包围盒。相对于本地原点
+	aabbmax = new Vec3();
 
 	//get 加速
-	hashdata:hashData[][];
+	hashdata: hashData[][];
 
-	constructor(dt: voxdata[],xn:i32,yn:i32,zn:i32, min:Vec3, max:Vec3) {
+	constructor(dt: voxdata[], xn: i32, yn: i32, zn: i32, min: Vec3, max: Vec3) {
 		this.data = dt;
-		this.dataszx=xn;
-		this.dataszy=yn;
-		this.dataszz=zn;
+		this.dataszx = xn;
+		this.dataszy = yn;
+		this.dataszz = zn;
 		this.aabbmin.copy(min);
 		this.aabbmax.copy(max);
-		this.gridsz = (max.x-min.x)/xn;
+		this.gridsz = (max.x - min.x) / xn;
 		this.hashdata = SparseVoxData.hashSparseVox(this);
 	}
 
@@ -130,12 +130,12 @@ export class SparseVoxData {
 	get(x: i32, y: i32, z: i32): i32 {
 		let dt = this.hashdata;
 		let hashsz = this.hashdata.length;
-		let id = hashIGrid(x,y,z,hashsz)
+		let id = hashIGrid(x, y, z, hashsz)
 		let bin = dt[id];
-		if(bin){
-			for(let i=0,sz=bin.length; i<sz; i++){
+		if (bin) {
+			for (let i = 0, sz = bin.length; i < sz; i++) {
 				let cdt = bin[i];
-				if(cdt.x==x && cdt.y==y && cdt.z==z)
+				if (cdt.x == x && cdt.y == y && cdt.z == z)
 					return cdt.v;
 			}
 		}
@@ -235,84 +235,84 @@ function getBit(v: i8, p: i32): boolean {
 /**
  * 每一级的voxel数据
  */
-class VoxelBitData{
-	xs=0;//uint8数据的xsize，是实际数据长度的一半
-	ys=0;
-	zs=0;
-	dt:Uint8Array;
+class VoxelBitData {
+	xs = 0;//uint8数据的xsize，是实际数据长度的一半
+	ys = 0;
+	zs = 0;
+	dt: Uint8Array;
 	/**
 	 * 由于不是POT
 	 * 可能会扩展bbx，例如 上一级x有6个格子,对应的xs=3, bbx=0~6， 每个格子宽度为1
 	 * 下一级的时候，xs=2，表示4个格子，比直接除2多出一个来，所以要扩展 上一级gridx*2 = 2 
 	 * 如果下一级没有扩展，则不变，例如 8->4->2->1
 	 */
-	max=new Vec3();	// 
-	min:Vec3;		// 这个只是引用
+	max = new Vec3();	// 
+	min: Vec3;		// 这个只是引用
 
 	/**
-	 * 
+	 * xyzsize是数据个数，这里会用bit来保存，所以里面每个轴会除以2
 	 * @param xsize 
 	 * @param ysize 
 	 * @param zsize 
 	 * @param min  原始包围盒大小
 	 * @param max 
 	 */
-	constructor(xsize:i32,ysize:i32,zsize:i32, min:Vec3, max:Vec3){
-		this.xs = (xsize+1)>>1;
-		this.ys = (ysize+1)>>1;
-		this.zs = (zsize+1)>>1
-		this.dt = new Uint8Array(this.xs*this.ys*this.zs);
-		this.min=min;
+	constructor(xsize: i32, ysize: i32, zsize: i32, min: Vec3, max: Vec3) {
+		this.xs = (xsize + 1) >> 1;
+		this.ys = (ysize + 1) >> 1;
+		this.zs = (zsize + 1) >> 1
+		this.dt = new Uint8Array(this.xs * this.ys * this.zs);
+		this.min = min;
 		this.max.copy(max);
 		// 是否扩展了bbx
-		if((xsize&1)==1){
-			let dx = (max.x-min.x)/xsize;
-			this.max.x+=2*dx;
+		if ((xsize & 1) == 1) {
+			let dx = (max.x - min.x) / xsize;
+			this.max.x += dx;
 		}
-		if((ysize&1)==1){
-			let dy = (max.y-min.y)/ysize;
-			this.max.y+=2*dy;
+		if ((ysize & 1) == 1 ) {
+			let dy = (max.y - min.y) / ysize;
+			this.max.y += dy;
 		}
-		if((zsize&1)==1){
-			let dz = (max.z-min.z)/zsize;
-			this.max.z+=2*dz;
+		if ((zsize & 1) == 1) {
+			let dz = (max.z - min.z) / zsize;
+			this.max.z += dz;
 		}
 	}
 
 	//设置。这里的xyz可以是 this.xs的两倍
-	setBit(x:i32,y:i32,z:i32){
+	setBit(x: i32, y: i32, z: i32) {
 		//z,y,x
-		let xs = this.xs,ys=this.ys;
-		let pos = (z>>1)*(xs*ys)+(y>>1)*xs+(x>>1);
-		let bit = ((z&1)<<2)+((y&1)<<1)+(x&1);
-		this.dt[pos]|=(1<<bit);
+		let xs = this.xs, ys = this.ys;
+		let pos = (z >> 1) * (xs * ys) + (y >> 1) * xs + (x >> 1);
+		let bit = ((z & 1) << 2) + ((y & 1) << 1) + (x & 1);
+		this.dt[pos] |= (1 << bit);
 	}
 
-	getBit(x:i32,y:i32,z:i32){
+	getBit(x: i32, y: i32, z: i32) {
 		//z,y,x
-		let xs = this.xs,ys=this.ys;
-		let pos = (z>>1)*(xs*ys)+(y>>1)*xs+(x>>1);
-		let bit = ((z&1)<<2)+((y&1)<<1)+(x&1);
-		return (this.dt[pos]&(1<<bit))!=0;
+		let xs = this.xs, ys = this.ys;
+		let pos = (z >> 1) * (xs * ys) + (y >> 1) * xs + (x >> 1);
+		let bit = ((z & 1) << 2) + ((y & 1) << 1) + (x & 1);
+		return (this.dt[pos] & (1 << bit)) != 0;
 	}
 
 	/**
 	 * 生成上一级数据，并且填充
 	 */
-	genParent():VoxelBitData|null{
-		if(this.xs<=1&&this.ys<=1&&this.zs<=1)
+	genParent(): VoxelBitData | null {
+		if (this.xs <= 1 && this.ys <= 1 && this.zs <= 1)
 			return null;
-		let xs = this.xs,ys=this.ys,zs=this.zs;
-		let ret = new VoxelBitData(xs,ys,zs,this.min, this.max);//xs等已经是除以2的了
+		let xs = this.xs, ys = this.ys, zs = this.zs;
+		let ret = new VoxelBitData(xs, ys, zs, this.min, this.max);//xs等已经是除以2的了
 		//给父级设值
 		let dt = this.dt;
-		let i=0;
-		for(let z=0; z<zs; z++){
-			for(let y=0; y<ys; y++){
-				for(let x=0; x<xs; x++){
+		let i = 0;
+		for (let z = 0; z < zs; z++) {
+			for (let y = 0; y < ys; y++) {
+				for (let x = 0; x < xs; x++) {
 					let v = dt[i++];
-					if(v){
-						ret.setBit(x,y,z);
+					if (v) {
+						ret.setBit(x, y, z);
 					}
 				}
 			}
@@ -321,53 +321,53 @@ class VoxelBitData{
 	}
 }
 
-export class Voxel  extends Shape{
+export class Voxel extends Shape {
 	id = 0;
 	voxData: SparseVoxData;//|PhyVoxelData;
 	//data:Uint8Array;
 	//bitData:Uint8Array;
-	bitDataLod:VoxelBitData[];
-	dataxsize=0;
-	dataysize=0;
-	datazsize=0;
+	bitDataLod: VoxelBitData[];
+	dataxsize = 0;
+	dataysize = 0;
+	datazsize = 0;
 	quat: Quaternion;
 	pos = new Vec3();
 	centroid: Vec3 = new Vec3();	// 在voxData坐标系下的质心 @TODO 转换
 	mat: Mat3;   // 相当于记录了xyz的轴
-	scale = new Vec3(1,1,1);		// 注意这个动态改变的话会破坏刚体的假设。
+	scale = new Vec3(1, 1, 1);		// 注意这个动态改变的话会破坏刚体的假设。
 	aabbmin = new Vec3();			// 当前的aabb
 	aabbmax = new Vec3();
 	addToSceTick = -1;  // 
 	needUpdate = true;
-	gridw=0;
+	gridw = 0;
 
-	constructor(dt: SparseVoxData){
+	constructor(dt: SparseVoxData) {
 		super();
-		this.voxData=dt;
+		this.voxData = dt;
 		this.type = SHAPETYPE.VOXEL;
 		this.aabbmin.copy(dt.aabbmin);
-		this.aabbmax.copy(dt.aabbmax);		
-		this.gridw = ((dt.aabbmax.x-dt.aabbmin.x)/dt.dataszx);
+		this.aabbmax.copy(dt.aabbmax);
+		this.gridw = ((dt.aabbmax.x - dt.aabbmin.x) / dt.dataszx);
 		// 如果不是方的，转成多个方的
 		let xs = this.dataxsize = dt.dataszx;
 		let ys = this.dataysize = dt.dataszy;
 		let zs = this.datazsize = dt.dataszz;
-		let maxsize = Math.max(xs,ys,zs);
+		let maxsize = Math.max(xs, ys, zs);
 		let maxpot = POT(maxsize);
 		let lodlv = Math.log2(maxpot);
 		this.bitDataLod = new Array<VoxelBitData>(lodlv);
-		let clv = lodlv-1;
-		let cdt = this.bitDataLod[clv]= new VoxelBitData(xs,ys,zs,this.aabbmin, this.aabbmax);
+		let clv = lodlv - 1;
+		let cdt = this.bitDataLod[clv] = new VoxelBitData(xs, ys, zs, this.aabbmin, this.aabbmax);
 		//设置末级数据
-		dt.data.forEach(v=>{
-			cdt.setBit(v.x,v.y,v.z);
+		dt.data.forEach(v => {
+			cdt.setBit(v.x, v.y, v.z);
 		});
 
 		//设置各级数据
-		while(cdt){
-			cdt = cdt.genParent() as  VoxelBitData;
-			if(cdt){
-				this.bitDataLod[--clv]=cdt;
+		while (cdt) {
+			cdt = cdt.genParent() as VoxelBitData;
+			if (cdt) {
+				this.bitDataLod[--clv] = cdt;
 			}
 		}
 	}
@@ -465,12 +465,12 @@ export class Voxel  extends Shape{
 		let mx = Math.max(Math.abs(this.aabbmax.x), Math.abs(this.aabbmin.x));
 		let my = Math.max(Math.abs(this.aabbmax.y), Math.abs(this.aabbmin.y));
 		let mz = Math.max(Math.abs(this.aabbmax.z), Math.abs(this.aabbmin.z));
-		this.boundingSphereRadius = Math.sqrt(mx*mx+my*my+mz*mz);
+		this.boundingSphereRadius = Math.sqrt(mx * mx + my * my + mz * mz);
 	}
 
 	calculateWorldAABB(pos: Vec3, quat: Quaternion, min: Vec3, max: Vec3): void {
-		this.pos=pos;
-		this.quat=quat;
+		this.pos = pos;
+		this.quat = quat;
 		this.updateAABB();
 		min.copy(this.aabbmin);
 		max.copy(this.aabbmax);
@@ -521,7 +521,7 @@ export class Voxel  extends Shape{
 
 	rayCast(ori: Vec3, dir: Vec3): RaycastResult {
 		throw 'noimp';
-	}	
+	}
 }
 
 

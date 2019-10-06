@@ -157,7 +157,7 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 				dt.max as any as Vector3);
 			//vox.createMesh();
 			sce.addChild(vox1);
-			vox1.transform.localPosition = new Vector3(14*i,0,0);
+			//vox1.transform.localPosition = new Vector3(14*i,0,0);
 		}
 
 		/*
