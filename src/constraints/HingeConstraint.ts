@@ -12,8 +12,10 @@ import PointToPointConstraint from './PointToPointConstraint.js';
  * @param {Body} bodyA
  * @param {Body} bodyB
  * @param {object} [options]
- * @param {Vec3} [options.pivotA] A point defined locally in bodyA. This defines the offset of axisA.
+ * @param {Vec3} [options.pivotA] A point defined locally in bodyA. This defines the offset of axisA. 
+ *                                A的连接点，本地坐标
  * @param {Vec3} [options.axisA] An axis that bodyA can rotate around, defined locally in bodyA.
+ *                                A的连接轴，系统会保持AB的连接点重合，并且AB的连接轴重合
  * @param {Vec3} [options.pivotB]
  * @param {Vec3} [options.axisB]
  * @param {Number} [options.maxForce=1e6]

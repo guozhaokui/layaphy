@@ -701,6 +701,7 @@ export default class World extends EventTarget {
         if (doProfiling) { profile.broadphase = perfNow() - profilingStart; }   // 宽阶段的时间
 
         // Remove constrained pairs with collideConnected == false
+        // TODO 这个方式是不是不太效率啊
         var Nconstraints = constraints.length;
         for (i = 0; i !== Nconstraints; i++) {
             let c = constraints[i];

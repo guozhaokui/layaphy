@@ -1,3 +1,4 @@
+import { Camera } from 'laya/d3/core/Camera';
 import { Laya } from "Laya";
 import { BlinnPhongMaterial } from "laya/d3/core/material/BlinnPhongMaterial";
 import { Scene3D } from "laya/d3/core/scene/Scene3D";
@@ -15,6 +16,9 @@ import Material from "./material/Material";
 import Vec3 from "./math/Vec3";
 import ConeTwistConstraint from "./constraints/ConeTwistConstraint";
 import HingeConstraint from "./constraints/HingeConstraint";
+import DistanceConstraint from './constraints/DistanceConstraint';
+import PointToPointConstraint from './constraints/PointToPointConstraint';
+import Body from './objects/Body';
 
 /**
  * 测试盒子可以被推走，被抬起
@@ -24,6 +28,7 @@ import HingeConstraint from "./constraints/HingeConstraint";
 var sce3d: Scene3D;
 var mtl1: BlinnPhongMaterial;
 var world: CannonWorld;
+var camctr: MouseCtrl1;
 
 let phymtl1 = new Material();
 let phymtl2 = new Material();
@@ -49,7 +54,7 @@ function rand(a: number, b: number) {
 function testGround() {
 	world.world.gravity.set(0, -11, 0);
 	//plane
-	let p =addBox(new Vec3(100,100,100), new Vec3(0,-50,0),0,phymtl1);
+	let p = addBox(new Vec3(100, 100, 100), new Vec3(0, -50, 0), 0, phymtl1);
 	/*
 	let plane = new Sprite3D();
     let planephy = plane.addComponent(CannonBody) as CannonBody;
@@ -98,20 +103,95 @@ function testGround() {
 	*/
 }
 
-function createJoint(){
-	let upperArm = addBox(new Vec3(0.2,1,0.2),new Vec3(0,1,0),1,phymtl1);
-	let lowerArm = addBox(new Vec3(0.2,1,0.2),new Vec3(0,2,0),1,phymtl1); 
-	let c = new ConeTwistConstraint(upperArm.phyBody,lowerArm.phyBody,1e10,new Vec3(),new Vec3(), new Vec3(), new Vec3(),0,0,false);
-	let pivotA = new Vec3(0,0.5,0);
-	let pivotB = new Vec3(0, -0.5,0);
-	let AxisA = new Vec3(0,1,0);
-	let AxisB = new Vec3(0,1,0);
-	let c1 = new HingeConstraint(upperArm.phyBody, lowerArm.phyBody, 1e6, pivotA, pivotB,AxisA, AxisB);
-	world.world.addConstraint(c1);
+function deg2r(deg: number) {
+	return deg * Math.PI / 180;
 }
 
+class Leg {
+	upper: Body;
+	attachPoint = new Vec3(0.1, 0.5, 0.1);//相对upper的点
+	attachDir = new Vec3(0, -1, 0);//upper身上的细棍方向，插到body的槽上
+	constructor() {
+		let upperArm = addBox(new Vec3(0.2, 1, 0.2), new Vec3(0, 2, 0), 1, phymtl1);
+		let lowerArm = addBox(new Vec3(0.2, 1, 0.2), new Vec3(0, 1, 0), 1, phymtl1);
+		let pivotA = new Vec3(0, -0.5, 0);
+		let pivotB = new Vec3(0, 0.5, 0);
+		let AxisA = new Vec3(0, 0, 1);
+		let AxisB = new Vec3(0, 0, 1);
+		this.upper = upperArm.phyBody;
+		let c1 = new HingeConstraint(this.upper, lowerArm.phyBody, 1e6, pivotA, pivotB, AxisA, AxisB);
+		c1.collideConnected = false;
+		world.world.addConstraint(c1);
+		let muscle = new DistanceConstraint(upperArm.phyBody, lowerArm.phyBody, 0.9);
+		world.world.addConstraint(muscle);
+
+		setInterval(() => {
+			muscle.distance = 0.7 + 0.3 * Math.cos(Date.now() / 100);
+		}, 20);
+
+	}
+}
+
+class mainbody {
+	phybody: Body
+	legpoint: Vec3[] = [
+		new Vec3(0.3, 0.2, -0.3), new Vec3(1,0,0),	//point,dir。dir可以认为是插槽的方向
+		new Vec3(-0.3, 0.2, -0.3), new Vec3(-1,0,0),
+		new Vec3(0.3, 0.2, 0.3), new Vec3(1,0,0),
+		new Vec3(-0.3, 0.2, 0.3), new Vec3(-1,0,0)
+	];
+	constructor() {
+		let body = addBox(new Vec3(1, 0.4, 1), new Vec3(0, 3, 0), 2, phymtl1);
+		body.setMass(10);
+		this.phybody = body.phyBody;
+	}
+
+	addleg(id: int) {
+		let pt = this.legpoint[id * 2];
+		let dir = this.legpoint[id * 2 + 1];
+		dir.normalize();
+		let l = new Leg();
+		let leg1pt = new ConeTwistConstraint(this.phybody, l.upper, 1e10,
+			pt, l.attachPoint,
+			dir, l.attachDir,
+			deg2r(10), deg2r(10), false);
+		leg1pt.collideConnected = false;
+		world.world.addConstraint(leg1pt);
+
+	}
+
+}
+
+function createJoint() {
+	let b = new mainbody();
+	b.addleg(0);
+	b.addleg(1);
+	b.addleg(2);
+	b.addleg(3);
+}
+
+function mouseDownEmitObj(scrx: number, scry: number) {
+	let worlde = camctr.camera.transform.worldMatrix.elements;
+	let stpos = new Vec3(worlde[12], worlde[13], worlde[14]);
+	let dir = new Vec3(worlde[8], worlde[9], worlde[10]);
+
+	let ray = new Ray(new Vector3(), new Vector3());
+	camctr.camera.viewportPointToRay(new Vector2(scrx, scry), ray);
+	stpos.set(ray.origin.x, ray.origin.y, ray.origin.z);
+	dir.set(ray.direction.x, ray.direction.y, ray.direction.z);
+
+	let sp = addSphere(0.3, stpos.x, stpos.y, stpos.z);
+	//let sp = addBox(new Vec3(0.5, 0.5, 0.5), stpos, 1, phymtl1);
+	let v = 20;
+	setTimeout(() => {
+		sp.owner.destroy();
+	}, 13000);
+	sp.setVel(dir.x * v, dir.y * v, dir.z * v);
+
+}
 
 export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
+	camctr = cam;
 	cam.dist = 20;
 	sce3d = sce;
 	mtl1 = mtl;
@@ -122,22 +202,7 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 	createJoint();
 
 	Laya.stage.on(Event.MOUSE_DOWN, null, (e: { stageX: number, stageY: number }) => {
-		let worlde = cam.camera.transform.worldMatrix.elements;
-		let stpos = new Vec3(worlde[12], worlde[13], worlde[14]);
-		let dir = new Vec3(worlde[8], worlde[9], worlde[10]);
-
-		let ray = new Ray(new Vector3(), new Vector3());
-		cam.camera.viewportPointToRay(new Vector2(e.stageX,e.stageY), ray);
-		stpos.set(ray.origin.x, ray.origin.y, ray.origin.z);
-		dir.set(ray.direction.x,ray.direction.y,ray.direction.z);
-
-		let sp = addSphere(0.3,stpos.x,stpos.y,stpos.z);
-		//let sp = addBox(new Vec3(0.5, 0.5, 0.5), stpos, 1, phymtl1);
-		let v = 20;
-		setTimeout(() => {
-			sp.owner.destroy();
-		}, 13000); 
-		sp.setVel(dir.x * v, dir.y * v, dir.z * v);
+		mouseDownEmitObj(e.stageX, e.stageY);
 	});
 
 	Laya.stage.on(Event.KEY_DOWN, null, (e: Event) => {

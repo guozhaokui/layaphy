@@ -4,6 +4,7 @@ import Equation from './Equation.js';
 
 /**
  * Cone equation. Works to keep the given body world vectors aligned, or tilted within a given angle from each other.
+ * 限定两个轴之间的夹角，angle是弧度
  */
 export default class ConeEquation extends Equation {
     axisA:Vec3; //Local axis in A
