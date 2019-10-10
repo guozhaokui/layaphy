@@ -16,7 +16,7 @@ import { PhyRender } from "./layawrap/PhyRender";
 import ContactMaterial from "./material/ContactMaterial";
 import Material from "./material/Material";
 import Vec3 from "./math/Vec3";
-import { SparseVoxData, Voxel, hashSparseVox } from "./shapes/Voxel";
+import { SparseVoxData, Voxel } from "./shapes/Voxel";
 import { Mesh2Voxel } from "./tools/Mesh2Voxel";
 
 /**
@@ -101,8 +101,10 @@ function testVoxelGround() {
 	*/
 }
 
-function createBoxVoxel(xn: i32, yn: i32, zn: i32, min: Vec3, max: Vec3) {
+function createBoxVoxel(xn: i32, yn: i32, zn: i32, gridw:number ){
 	let dt = VoxBuildBox(xn, yn, zn, false);
+	let min = new Vec3(-xn*gridw/2,-yn*gridw/2,-zn*gridw/2);
+	let max = new Vec3(xn*gridw/2,yn*gridw/2,zn*gridw/2);
 	let voxdt = new SparseVoxData(dt, xn, yn, zn, min, max);
 	let vox = new VoxelSprite({ get: voxdt.get.bind(voxdt) }, voxdt.dataszx, voxdt.dataszy, voxdt.dataszz,
 		voxdt.aabbmin as any as Vector3,
@@ -114,7 +116,7 @@ function createBoxVoxel(xn: i32, yn: i32, zn: i32, min: Vec3, max: Vec3) {
 	var phy = vox.addComponent(CannonBody) as CannonBody;
 	phy.addShape(phyvox);
 	phy.phyBody.position.set(0, 0, 0);
-	phy.setMass(110);
+	phy.setMass(0);
 }
 
 let m2v = new Mesh2Voxel();
@@ -131,8 +133,9 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 
 	testVoxelGround();
 
-	//createBoxVoxel(8, 8, 8, new Vec3(0, 0, 0), new Vec3(4, 4, 4));
-	m2v.loadObj('res/house/house1.obj', 0.1, (voxdata: SparseVoxData) => {
+	createBoxVoxel(8, 8, 8, 0.5);//new Vec3(-2, 0, -2), new Vec3(2, 4, 2));
+	/*
+	m2v.loadObj('res/house/house1.obj', 0.08, (voxdata: SparseVoxData) => {
 		console.time('voxel');
 		let phyvox = new Voxel(voxdata);
 		console.timeEnd('voxel');
@@ -147,34 +150,23 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 		sce.addChild(vox);
 		vox.transform.localPosition.setValue(0,0,0);
 
-
-		for(let i=1; i<phyvox.bitDataLod.length; i++){
-			dt = phyvox.bitDataLod[i];
-			let vox1 = new VoxelSprite(
-				//{ get: function(x,y,z){return dt.getBit(x,y,z);} }, voxdata.dataszx, voxdata.dataszy, voxdata.dataszz,
-				{ get: function(x,y,z){return dt.getBit(x,y,z);} }, dt.xs*2, dt.ys*2, dt.zs*2,
-				dt.min as any as Vector3,
-				dt.max as any as Vector3);
-			//vox.createMesh();
-			sce.addChild(vox1);
-			//vox1.transform.localPosition = new Vector3(14*i,0,0);
-		}
-
-		/*
-		let ret = hashSparseVox(voxdata);
-		let s = 0;
-		ret.forEach(v => {
-			if (v) s++;
-		})
-		console.log('length=', ret.length, 'space=', ret.length - s);
-		*/
+		// for(let i=1; i<phyvox.bitDataLod.length; i++){
+		// 	dt = phyvox.bitDataLod[i];
+		// 	let vox1 = new VoxelSprite(
+		// 		//{ get: function(x,y,z){return dt.getBit(x,y,z);} }, voxdata.dataszx, voxdata.dataszy, voxdata.dataszz,
+		// 		{ get: function(x,y,z){return dt.getBit(x,y,z);} }, dt.xs*2, dt.ys*2, dt.zs*2,
+		// 		dt.min as any as Vector3,
+		// 		dt.max as any as Vector3);
+		// 	//vox.createMesh();
+		// 	sce.addChild(vox1);
+		// 	//vox1.transform.localPosition = new Vector3(14*i,0,0);
+		// }
 		var phy = vox.addComponent(CannonBody) as CannonBody;
 		phy.addShape(phyvox);
 		phy.phyBody.position.set(0, 0, 0);
 		phy.setMass(0);
-
 	});
-
+	*/
 	Laya.stage.on(Event.MOUSE_DOWN, null, (e: { stageX: number, stageY: number }) => {
 		let worlde = cam.camera.transform.worldMatrix.elements;
 		let stpos = new Vec3(worlde[12], worlde[13], worlde[14]);

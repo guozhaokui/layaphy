@@ -13,7 +13,7 @@ import ConvexPolyhedron, { hitInfo } from '../shapes/ConvexPolyhedron.js';
 import Heightfield from '../shapes/Heightfield.js';
 import Particle from '../shapes/Particle.js';
 import Plane from '../shapes/Plane.js';
-import Shape, { SHAPETYPE, HitPointInfo } from '../shapes/Shape.js';
+import Shape, { SHAPETYPE, HitPointInfo, HitPointInfoArray } from '../shapes/Shape.js';
 import Sphere from '../shapes/Sphere.js';
 import Trimesh from '../shapes/Trimesh.js';
 import Vec3Pool from '../utils/Vec3Pool.js';
@@ -29,6 +29,10 @@ interface checkFunc {
 }
 
 var shapeChecks: checkFunc[] = [];
+
+let sphereVoxel_hitPoints = new HitPointInfoArray();
+sphereVoxel_hitPoints.reserve(32);
+
 
 /**
  * Helper class for the World. Generates ContactEquations.
@@ -445,6 +449,20 @@ export default class Narrowphase {
         return false;
     }
 
+	/**
+	 * 球与mesh的碰撞
+	 * @param sphereShape 
+	 * @param trimeshShape 
+	 * @param spherePos 
+	 * @param trimeshPos 
+	 * @param sphereQuat 
+	 * @param trimeshQuat 
+	 * @param sphereBody 
+	 * @param trimeshBody 
+	 * @param rsi 
+	 * @param rsj 
+	 * @param justTest 
+	 */
     sphereTrimesh(sphereShape: Sphere, trimeshShape: Trimesh, spherePos: Vec3, trimeshPos: Vec3, sphereQuat: Quaternion, trimeshQuat: Quaternion,
         sphereBody: Body, trimeshBody: Body, rsi: Shape, rsj: Shape, justTest: boolean): boolean {
 
@@ -1118,7 +1136,8 @@ export default class Narrowphase {
         }
         return found;
     }
-    
+	
+	/*
     sphereVoxel(sphere: Sphere, voxel: Voxel,  pos1: Vec3, pos2: Vec3, q1: Quaternion, q2: Quaternion, body1: Body, body2: Body,  rsi: Shape, rsj: Shape, justTest: boolean): boolean {
         let hitpoints:HitPointInfo[] = [];
         let hit = sphere.hitVoxel(pos1,voxel,pos2,q2,hitpoints,justTest);
@@ -1138,6 +1157,35 @@ export default class Narrowphase {
         }
         return false;
     }
+	*/
+
+    sphereVoxel(sphere: Sphere, voxel: Voxel,  pos1: Vec3, pos2: Vec3, q1: Quaternion, q2: Quaternion, body1: Body, body2: Body,  rsi: Shape, rsj: Shape, justTest: boolean): boolean {
+		let hitpoints = sphereVoxel_hitPoints;
+        let hit = sphere.hitVoxel1(pos1,voxel,pos2,q2,hitpoints,justTest);
+        if(hit){
+			if( justTest) return true;
+			let hl = hitpoints.length;
+			let phyr = this.world.phyRender as PhyRender;
+			for(let i=0; i<hl; i++){
+				let hit = hitpoints.data[i];
+				let r = this.createContactEquation(body1,body2,sphere,voxel,rsi,rsj);
+				//debug
+				phyr.addPersistPoint(hit.posi);
+				phyr.addPersistVec(hit.normal, hit.posi)
+				//debug
+                hit.normal.negate(r.ni);
+                //r.ni.copy(hit.normal);
+                hit.posi.vsub(pos1,r.ri);
+                hit.posj.vsub(pos2,r.rj);
+    
+                this.result.push(r);
+                this.createFrictionEquationsFromContact(r, this.frictionResult);
+            }
+            return true;
+        }
+        return false;
+    }
+
 	
 	CapsuleCapsule(cap1: Capsule, cap2: Capsule,  pos1: Vec3, pos2: Vec3, q1: Quaternion, q2: Quaternion, body1: Body, body2: Body,  rsi: Shape, rsj: Shape, justTest: boolean): boolean {
 		let ni = Narrowphase.nor1;

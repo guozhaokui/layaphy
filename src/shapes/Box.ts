@@ -407,6 +407,10 @@ export default class Box extends Shape implements MinkowskiShape {
         }
 		return hit;
 	}
+
+	hitAAQuad(mypos:Vec3, myQ:Quaternion, minx:number,miny:number, maxx:number,maxy:number){
+
+	}
 }
 
 

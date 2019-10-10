@@ -289,6 +289,10 @@ class VoxelBitData {
 	}
 
 	getBit(x: i32, y: i32, z: i32) {
+		if(x>=this.xs*2||x<0||y>=this.ys*2||y<0||z>=this.zs*2||z<0){
+			//debugger;
+			console.error('getbit param error');
+		}
 		//z,y,x
 		let xs = this.xs, ys = this.ys;
 		let pos = (z >> 1) * (xs * ys) + (y >> 1) * xs + (x >> 1);
@@ -356,7 +360,8 @@ export class Voxel extends Shape {
 		let maxpot = POT(maxsize);
 		let lodlv = Math.log2(maxpot);
 		this.bitDataLod = new Array<VoxelBitData>(lodlv);
-		let clv = lodlv - 1;
+		//let clv = lodlv - 1;
+		let clv = 0;
 		let cdt = this.bitDataLod[clv] = new VoxelBitData(xs, ys, zs, this.aabbmin, this.aabbmax);
 		//设置末级数据
 		dt.data.forEach(v => {
@@ -367,7 +372,7 @@ export class Voxel extends Shape {
 		while (cdt) {
 			cdt = cdt.genParent() as VoxelBitData;
 			if (cdt) {
-				this.bitDataLod[--clv] = cdt;
+				this.bitDataLod[++clv] = cdt;
 			}
 		}
 	}
@@ -393,7 +398,8 @@ export class Voxel extends Shape {
 
 	// 不同的实现这个函数不同
 	getVox(x: i32, y: i32, z: i32) {
-
+		let dt = this.bitDataLod[0];
+		return dt.getBit(x,y,z);
 	}
 
 	calcCentroid(): void {
@@ -461,6 +467,11 @@ export class Voxel extends Shape {
 		return lod;
 	}
 
+	getLODByW(w:number){
+		let k = (w/this.gridw)|0;	// 0~1024对应0到10级
+		this.gridw
+	}
+
 	updateBoundingSphereRadius(): void {
 		let mx = Math.max(Math.abs(this.aabbmax.x), Math.abs(this.aabbmin.x));
 		let my = Math.max(Math.abs(this.aabbmax.y), Math.abs(this.aabbmin.y));
@@ -516,14 +527,34 @@ export class Voxel extends Shape {
 	}
 
 	hitCapsule() {
-
 	}
 
 	rayCast(ori: Vec3, dir: Vec3): RaycastResult {
 		throw 'noimp';
 	}
+
+	/**
+	 * 取出某一层的某个区域边信息，注意结果不允许保存 
+	 * @param dirid 哪个方向， 0表示yz平面  1表示xz平面 2表示xy平面
+	 * @param id  0表示0层的底
+	 */
+	getEdge(dirid:i32, id:i32, ustart:i32,vstart:i32, uend:i32, vend:i32):number[]{
+		let edge = getEdge_edge;
+		edge.length=0;
+
+		switch(dirid){
+			case 0://yz平面
+			break;
+			case 1://xz平面
+			break;
+			case 2://xy平面
+			break;
+		}
+		return edge;
+	}
 }
 
+var getEdge_edge:number[] = [];
 
 /**
  * 层次场景的最后一级。大小是16x16x16。

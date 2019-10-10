@@ -30,6 +30,39 @@ export class HitPointInfo{
     normal=new Vec3();
 }
 
+//为了重用提高效率
+export class HitPointInfoArray{
+	data:HitPointInfo[]=[];
+	private _length=0;
+
+	getnew():HitPointInfo{
+		if(this.data.length>this._length){
+			return this.data[this._length++];
+		}
+		let n = new HitPointInfo();
+		this.data.push(n);
+		this._length++;
+		return n;
+	}
+
+	set length(n:int){
+		this._length=n;
+	}
+	get length(){
+		return this._length;
+	}
+	reserve(n:int){
+		if(n>this.data.length){
+			for(let i=this.data.length; i<n; i++){
+				this.data.push(new HitPointInfo());
+			}
+		}else{
+			this.data.length=n;
+			if(this._length>n)this._length=n;
+		}
+	}
+}
+
 /**
  * Base class for shapes
  */

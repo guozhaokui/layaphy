@@ -243,11 +243,13 @@ export class PhyRender extends IPhyRender {
 			this.addVec(p.x, p.y, p.z, v.x, v.y, v.z, 0xff00);
 		}
 
+		/*
 		let p1 = new Sprite();
 		p1.graphics.drawRect(0, 0, 100, 100, 'gray', 'blue');
 		p1.graphics.fillText('Test', 0, 0, '20px Arial', 'green', 'left');
 		let ui1 = this.ui1;
 		ui1.buildTex(p1);
+		*/
 	}
 
 	stepEnd(): void {
