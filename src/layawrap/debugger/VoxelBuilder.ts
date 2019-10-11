@@ -45,9 +45,9 @@ function BuildFromMesh(gridsz:f32):PhyVoxelData{
 }
 
 function createTestData() {
-	var result = {};
+	var result:any = {};
 	
-	function makeVoxels(l, h, f) {
+	function makeVoxels(l:number[], h:number[], f:(i:int,j:int,k:int)=>void) {
 	  var d = [ h[0]-l[0], h[1]-l[1], h[2]-l[2] ]
 		, v = new Array(d[0]*d[1]*d[2])
 		, n = 0;

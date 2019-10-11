@@ -166,37 +166,37 @@ export class OBJLoader_Material {
     }
 
 
-    parse_s(values, options:any) {
+    parse_s(values:number[]|string[], options:any) {
         this.parse_ost(values, options.scale, 1);
     }
 
 
-    parse_t(values, options:any) {
+    parse_t(values:number[]|string[], options:any) {
         this.parse_ost(values, options.turbulence, 0);
     }
 
 
-    parse_texres(values, options:any) {
-        options.textureResolution = parseFloat(values[0]);
+    parse_texres(values:number[]|string[], options:any) {
+        options.textureResolution = parseFloat(values[0] as string);
     }
 
 
-    parse_clamp(values, options:any) {
+    parse_clamp(values:number[]|string[], options:any) {
         options.clamp = values[0] == "on";
     }
 
 
-    parse_bm(values, options:any) {
+    parse_bm(values:string[], options:any) {
         options.bumpMultiplier = parseFloat(values[0]);
     }
 
 
-    parse_imfchan(values, options:any) {
+    parse_imfchan(values:number[]|string[], options:any) {
         options.imfChan = values[0];
     }
 
 
-    parse_type(values, options:any) {
+    parse_type(values:number[]|string[], options:any) {
         options.reflectionType = values[0];
     }
 

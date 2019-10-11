@@ -73,7 +73,7 @@ export class PhyRender extends IPhyRender {
 	persistPoint: Vec3[] = [];
 	/** 持久显示的矢量。格式是 vec,pos,vec,pos, ... 直到clear */
 	persistVec: Vec3[] = [];
-	ui1: UIPlane = new UIPlane(null);
+	//ui1: UIPlane = new UIPlane(null);
 
 	static inst: PhyRender;
 	constructor(sce: Scene3D, world: World) {
@@ -91,7 +91,7 @@ export class PhyRender extends IPhyRender {
 		(window as any).showVec = this.addPersistVec.bind(this);
 		(window as any).clearPhy = this.clearPersist.bind(this);
 
-		sce.addChild(this.ui1);
+		//sce.addChild(this.ui1);
 	}
 
 	showPos(x: f32, y: f32, z: f32) {

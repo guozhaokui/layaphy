@@ -18,6 +18,7 @@ import Material from "./material/Material";
 import Vec3 from "./math/Vec3";
 import { SparseVoxData, Voxel } from "./shapes/Voxel";
 import { Mesh2Voxel } from "./tools/Mesh2Voxel";
+import PhyRay, { hitworldOptions, RayMode } from "./collision/Ray";
 
 /**
  * 测试盒子可以被推走，被抬起
@@ -33,6 +34,8 @@ let phymtl2 = new Material();
 let phymtl3 = new Material();
 let cmtl1 = new ContactMaterial(phymtl1, phymtl2, 1, 0);
 let cmtl2 = new ContactMaterial(phymtl1, phymtl3, 1, 0);
+
+let phyRay = new PhyRay();
 
 function initPhy(scene: Scene3D) {
 	let phyworld = world = scene.addComponent(CannonWorld) as CannonWorld;
@@ -133,9 +136,9 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 
 	testVoxelGround();
 
-	createBoxVoxel(8, 8, 8, 0.5);//new Vec3(-2, 0, -2), new Vec3(2, 4, 2));
-	/*
-	m2v.loadObj('res/house/house1.obj', 0.08, (voxdata: SparseVoxData) => {
+	//createBoxVoxel(8, 8, 8, 0.5);//new Vec3(-2, 0, -2), new Vec3(2, 4, 2));
+	
+	m2v.loadObj('res/house/house1.obj', 0.1, (voxdata: SparseVoxData) => {
 		console.time('voxel');
 		let phyvox = new Voxel(voxdata);
 		console.timeEnd('voxel');
@@ -143,7 +146,7 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 		let dt = phyvox.bitDataLod[0];
 		let vox = new VoxelSprite(
 			//{ get: function(x,y,z){return dt.getBit(x,y,z);} }, voxdata.dataszx, voxdata.dataszy, voxdata.dataszz,
-			{ get: function(x,y,z){return dt.getBit(x,y,z);} }, dt.xs*2, dt.ys*2, dt.zs*2,
+			{ get: function(x:int,y:int,z:int){return dt.getBit(x,y,z);} }, dt.xs*2, dt.ys*2, dt.zs*2,
 			dt.min as any as Vector3,
 			dt.max as any as Vector3);
 		//vox.createMesh();
@@ -163,10 +166,10 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 		// }
 		var phy = vox.addComponent(CannonBody) as CannonBody;
 		phy.addShape(phyvox);
-		phy.phyBody.position.set(0, 0, 0);
+		phy.phyBody.position.set(0, 2, 0);
 		phy.setMass(0);
 	});
-	*/
+	
 	Laya.stage.on(Event.MOUSE_DOWN, null, (e: { stageX: number, stageY: number }) => {
 		let worlde = cam.camera.transform.worldMatrix.elements;
 		let stpos = new Vec3(worlde[12], worlde[13], worlde[14]);
@@ -177,7 +180,7 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 		stpos.set(ray.origin.x, ray.origin.y, ray.origin.z);
 		dir.set(ray.direction.x,ray.direction.y,ray.direction.z);
 
-		let sp = addSphere(0.3,stpos.x,stpos.y,stpos.z);
+		let sp = addSphere(0.1,stpos.x,stpos.y,stpos.z);
 		//let sp = addBox(new Vec3(0.5, 0.5, 0.5), stpos, 1, phymtl1);
 		let v = 20;
 		setTimeout(() => {
@@ -196,6 +199,19 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 			case 'Z':
 				break;
 			default:
+				break;
+			case 'R'://ray
+			{
+				let ray = new Ray(new Vector3(), new Vector3());
+				cam.camera.viewportPointToRay(new Vector2(Laya.stage.mouseX, Laya.stage.mouseY), ray);
+				let len = 10000;
+				phyRay.from.set(ray.origin.x, ray.origin.y, ray.origin.z);
+				phyRay.to.set(ray.direction.x*len, ray.direction.y*len, ray.direction.z*len);
+				let options:hitworldOptions={mode:RayMode.CLOSEST};
+				if( phyRay.intersectWorld(world.world,options)){
+					debugger;
+				}
+			}
 				break;
 		}
 	});

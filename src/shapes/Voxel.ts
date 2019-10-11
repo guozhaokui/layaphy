@@ -5,6 +5,7 @@ import Quaternion from "../math/Quaternion";
 import Vec3 from "../math/Vec3";
 import Box from "./Box";
 import Shape, { SHAPETYPE } from "./Shape";
+import { PhyRender } from "../layawrap/PhyRender";
 
 function POT(v: i32): i32 {
 	let r: i32 = 1;
@@ -269,7 +270,7 @@ class VoxelBitData {
 			let dx = (max.x - min.x) / xsize;
 			this.max.x += dx;
 		}
-		if ((ysize & 1) == 1 ) {
+		if ((ysize & 1) == 1) {
 			let dy = (max.y - min.y) / ysize;
 			this.max.y += dy;
 		}
@@ -289,7 +290,7 @@ class VoxelBitData {
 	}
 
 	getBit(x: i32, y: i32, z: i32) {
-		if(x>=this.xs*2||x<0||y>=this.ys*2||y<0||z>=this.zs*2||z<0){
+		if (x >= this.xs * 2 || x < 0 || y >= this.ys * 2 || y < 0 || z >= this.zs * 2 || z < 0) {
 			//debugger;
 			console.error('getbit param error');
 		}
@@ -399,7 +400,7 @@ export class Voxel extends Shape {
 	// 不同的实现这个函数不同
 	getVox(x: i32, y: i32, z: i32) {
 		let dt = this.bitDataLod[0];
-		return dt.getBit(x,y,z);
+		return dt.getBit(x, y, z);
 	}
 
 	calcCentroid(): void {
@@ -456,7 +457,7 @@ export class Voxel extends Shape {
 		// 根据包围盒大小选择合适的lod等级
 		let szx = max.x - min.x; let szy = max.y - min.y; let szz = max.z - min.z;
 		let lod = this.getLOD(szx, szy, szz);
-
+		return false;
 	}
 
 	// 参数是local空间的盒子大小
@@ -467,8 +468,8 @@ export class Voxel extends Shape {
 		return lod;
 	}
 
-	getLODByW(w:number){
-		let k = (w/this.gridw)|0;	// 0~1024对应0到10级
+	getLODByW(w: number) {
+		let k = (w / this.gridw) | 0;	// 0~1024对应0到10级
 		this.gridw
 	}
 
@@ -538,23 +539,113 @@ export class Voxel extends Shape {
 	 * @param dirid 哪个方向， 0表示yz平面  1表示xz平面 2表示xy平面
 	 * @param id  0表示0层的底
 	 */
-	getEdge(dirid:i32, id:i32, ustart:i32,vstart:i32, uend:i32, vend:i32):number[]{
+	getEdge(dirid: i32, id: i32, ustart: i32, vstart: i32, uend: i32, vend: i32): number[] {
 		let edge = getEdge_edge;
-		edge.length=0;
+		edge.length = 0;
 
-		switch(dirid){
+		switch (dirid) {
 			case 0://yz平面
-			break;
+				break;
 			case 1://xz平面
-			break;
+				break;
 			case 2://xy平面
-			break;
+				break;
 		}
 		return edge;
 	}
+
+
+	//3dline
+	/**
+	 * 射线经过voxle的路径。原理是每次根据碰撞到每个分隔面的时间取最近的。
+	 * @param st  voxel空间的起点
+	 * @param ed  voxel空间的终点
+	 * @param visitor 返回true则继续
+	 */
+	rayTravel(st: Vec3, ed: Vec3, visitor: (x: int, y: int, z: int) => boolean) {
+		let w = this.gridw;
+		let min = this.bitDataLod[0].min;
+		let max = this.bitDataLod[0].max;
+
+		//先用包围盒裁剪
+		let nst = trav_tmpV1;
+		let ned = trav_tmpV2;
+
+		if (!Box.rayHitBox(st, ed, min, max, nst, ned))
+			return;
+
+		//debug
+		let phyr = PhyRender.inst;
+		phyr.addPersistPoint(nst);
+		phyr.addPersistPoint(ned);
+		//debug
+
+		//dir
+		let nx = ned.x - nst.x;
+		let ny = ned.y - nst.y;
+		let nz = ned.z - nst.z;
+		let len = nx * nx + ny * ny + nz * nz;
+		let dirx = nx / len;
+		let diry = ny / len;
+		let dirz = nz / len;
+
+		let x0 = ((nst.x - min.x) / w) | 0;	// 不可能<0所以可以直接 |0
+		let y0 = ((nst.y - min.y) / w) | 0;
+		let z0 = ((nst.z - min.z) / w) | 0;
+
+		let x1 = ((ned.x - min.x) / w) | 0;
+		let y1 = ((ned.y - min.y) / w) | 0;
+		let z1 = ((ned.z - min.z) / w) | 0;
+
+		//确定前进方向
+		let sx = x1 > x0 ? 1 : x1 < x0 ? -1 : 0;
+		let sy = y1 > y0 ? 1 : y1 < y0 ? -1 : 0;
+		let sz = z1 > z0 ? 1 : z1 < z0 ? -1 : 0;
+
+		// 从开始到结束的长度
+		let fdx = Math.abs(ned.x - nst.x);
+		let fdy = Math.abs(ned.y - nst.y);
+		let fdz = Math.abs(ned.z - nst.z);
+		let t = Math.sqrt(fdx * fdx + fdy * fdy + fdz * fdz);//其实也可以判断x,y,z但是由于不知道方向，所以把复杂的事情留到循环外面
+		// 每经过一个格子需要的时间
+		let xt = Math.abs(dirx) > 1e-6 ? w / dirx : 10000;
+		let yt = Math.abs(diry) > 1e-6 ? w / diry : 10000;
+		let zt = Math.abs(dirz) > 1e-6 ? w / dirz : 10000;
+
+		//由于起点不在0,0,0因此需要计算到下一个面的时间，第一次需要计算，以后直接加就行
+		let maxX = (1 - (nst.x % w) / w) * xt;
+		let maxY = (1 - (nst.y % w) / w) * yt;
+		let maxZ = (1 - (nst.z % w) / w) * zt;
+
+		let cx = x0;
+		let cy = y0;
+		let cz = z0;
+		let end = false;
+		while (!end) {
+			end = !visitor(cx, cy, cz);
+			if(end){
+				break;
+			}
+			//取穿过边界用的时间最少的方向，前进一格
+			//同时更新当前方向的边界
+			if (maxX <= maxY && maxX <= maxZ) {//x最小，表示最先遇到x面
+				cx += sx;
+				end = maxX > t;  //先判断end。否则加了delta之后可能还没有完成就end了
+				maxX += xt;
+			} else if (maxY <= maxX && maxY <= maxZ) {//y最小
+				cy += sy;
+				end = maxY > t;
+				maxY += yt;
+			} else {	// z最小
+				cz += sz;
+				end = maxZ > t;
+				maxZ += zt;
+			}
+		}
+	}
 }
 
-var getEdge_edge:number[] = [];
+var getEdge_edge: number[] = [];
 
 /**
  * 层次场景的最后一级。大小是16x16x16。
@@ -805,3 +896,6 @@ export class VoxelScene {
  * 占用同一个格子的多个静态模型不重复添加
  *
  */
+
+var trav_tmpV1 = new Vec3();
+var trav_tmpV2 = new Vec3();

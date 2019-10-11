@@ -1,6 +1,6 @@
 import Shape, { SHAPETYPE, HitPointInfo } from './Shape.js';
 import Vec3 from '../math/Vec3.js';
-import ConvexPolyhedron from './ConvexPolyhedron.js';
+import ConvexPolyhedron, { hitInfo } from './ConvexPolyhedron.js';
 import Quaternion from '../math/Quaternion.js';
 import { MinkowskiShape } from './MinkowskiShape.js';
 import Transform from '../math/Transform.js';
@@ -42,6 +42,18 @@ export function quat_AABBExt_mult(q:Quaternion, v:Vec3, target = new Vec3()) {
     return target;
 }    
 
+function _ptInBox(pt: Vec3, min: Vec3, max: Vec3) {
+	return (pt.x >= min.x && pt.y < max.x &&
+		pt.y >= min.y && pt.y < max.y &&
+		pt.z >= min.z && pt.z < max.z);
+}
+
+function _ptInQuad(x:number,y:number, minx:number, miny:number, maxx:number, maxy:number):boolean{
+	return (x>=minx && x<=maxx && y>=miny && y<=maxy);
+}
+
+var _segHitBox:number[]=new Array(4);
+var _segHitBoxNum=0;
 
 /**
  * A 3d box shape.
@@ -409,7 +421,137 @@ export default class Box extends Shape implements MinkowskiShape {
 	}
 
 	hitAAQuad(mypos:Vec3, myQ:Quaternion, minx:number,miny:number, maxx:number,maxy:number){
+	}
 
+	private static _rayHitBoxChkHitInfo(t:number,x:number,y:number,z:number,newst:Vec3, newed:Vec3):boolean{
+		// 只要找到两个有效交点就停止
+		let hitinfo = _segHitBox;
+
+		if(_segHitBoxNum==0 && t>=0&&t<=1){//第一个点
+			hitinfo[0]=t; hitinfo[1]=x; hitinfo[2]=y; hitinfo[3]=z;
+			_segHitBoxNum++;
+			return false;
+		}
+		// 在有效范围内，且与已有的不重合，则是第二个点
+		if(t>=0&&t<=1 && Math.abs(t-hitinfo[0])>1e-6){
+			if(t>hitinfo[0]){//时间更靠后
+				newst.set(hitinfo[1],hitinfo[2],hitinfo[3]);
+				newed.set(x,y,z);
+			}else{// 时间更靠前，颠倒st，ed
+				newst.set(x,y,z);
+				newed.set(hitinfo[1],hitinfo[2],hitinfo[3]);
+			}
+			return true;
+		}
+		return false;
+	}
+
+	// 计算线段和box的两个交点
+	// 返回false 则无碰撞
+	static rayHitBox(st: Vec3, ed: Vec3, min: Vec3, max: Vec3, newSt: Vec3, newEd: Vec3):boolean {
+		let hitinfo = _segHitBox;
+		_segHitBoxNum=0;
+		
+		// 计算与6个面的交点，然后判断每个交点是否在范围内
+		if (_ptInBox(st, min, max)) {//起点的判断
+			Box._rayHitBoxChkHitInfo(0,st.x,st.y,st.z,newSt,newEd);
+		}
+		if (_ptInBox(ed, min, max)) {//终点的判断
+			if(Box._rayHitBoxChkHitInfo(1,ed.x,ed.y,ed.z,newSt,newEd)){
+				return true;
+			}
+		}
+
+		let dirx = ed.x - st.x;
+		let diry = ed.y - st.y;
+		let dirz = ed.z - st.z;
+		let eps = 1e-10;
+
+		let t = 0;
+		let hitx = 0;
+		let hity = 0;
+		let hitz = 0;
+		// minx
+		// maxx
+		if (Math.abs(dirx) > eps) {
+			t = (min.x - st.x) / dirx;
+			if (t > 0 && t < 1) {
+				hity = st.y + diry * t;
+				hitz = st.z + dirz * t;
+				if(_ptInQuad(hity,hitz,min.y,min.z,max.y,max.z)){
+					if(Box._rayHitBoxChkHitInfo(t,min.x,hity,hitz,newSt,newEd)){
+						return true;
+					}
+				}
+			}
+
+			t = (max.x - st.x) / dirx;
+			if (t > 0 && t < 1) {
+				hity = st.y + diry * t;
+				hitz = st.z + dirz * t;
+				if(_ptInQuad(hity,hitz,min.y,min.z,max.y,max.z)){
+					if(Box._rayHitBoxChkHitInfo(t,max.x,hity,hitz,newSt,newEd)){
+						return true;
+					}
+				}
+			}
+		}
+
+		// miny
+		// maxy
+		if (Math.abs(diry) > eps) {
+			t = (min.y - st.y) / diry;
+			if(t>0&&t<1){
+				hitx=st.x+dirx*t;
+				hitz=st.z+dirz*t;
+				if(_ptInQuad(hitx,hitz,min.x,min.z,max.x,max.z)){
+					if(Box._rayHitBoxChkHitInfo(t,hitx,min.y,hitz,newSt,newEd)){
+						return true;
+					}
+				}
+			}
+			t = (max.y - st.y) / diry;
+			if(t>0&&t<1){
+				hitx=st.x+dirx*t;
+				hitz=st.z+dirz*t;
+				if(_ptInQuad(hitx,hitz,min.x,min.z,max.x,max.z)){
+					if(Box._rayHitBoxChkHitInfo(t,hitx,max.y,hitz,newSt,newEd)){
+						return true;
+					}
+				}
+			}
+		}
+		// minz
+		// maxz
+		if (Math.abs(dirz) > eps) {
+			t = (min.z - st.z) / dirz;
+			if(t>0&&t<1){
+				hitx=st.x+dirx*t;
+				hity=st.y+diry*t;
+				if(_ptInQuad(hitx,hity,min.x,min.y,max.x,max.y)){
+					if(Box._rayHitBoxChkHitInfo(t,hitx,hity,min.z,newSt,newEd)){
+						return true;
+					}
+				}
+			}
+			t = (max.z - st.z) / dirz;
+			if(t>0&&t<1){
+				hitx=st.x+dirx*t;
+				hity=st.y+diry*t;
+				if(_ptInQuad(hitx,hity,min.x,min.y,max.x,max.y)){
+					if(Box._rayHitBoxChkHitInfo(t,hitx,hity,max.z,newSt,newEd)){
+						return true;
+					}
+				}
+			}
+		}
+		// 可能没有碰撞，或者只有一个碰撞点
+		if(_segHitBoxNum==1){
+			newSt.set(hitinfo[1],hitinfo[2],hitinfo[3]);
+			newEd.set(newSt.x,newSt.y,newSt.z);
+			return true;
+		}
+		return false;
 	}
 }
 

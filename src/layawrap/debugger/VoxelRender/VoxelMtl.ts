@@ -69,12 +69,20 @@ export class VoxelMaterial extends BaseMaterial {
         var uniformMap: any = {
             'u_MvpMatrix': Shader3D.PERIOD_SPRITE,
             'u_WorldMat': Shader3D.PERIOD_SPRITE
-        }
+		}
+		var stateMap: any = {
+			's_Cull': Shader3D.RENDER_STATE_CULL,
+			's_Blend': Shader3D.RENDER_STATE_BLEND,
+			's_BlendSrc': Shader3D.RENDER_STATE_BLEND_SRC,
+			's_BlendDst': Shader3D.RENDER_STATE_BLEND_DST,
+			's_DepthTest': Shader3D.RENDER_STATE_DEPTH_TEST,
+			's_DepthWrite': Shader3D.RENDER_STATE_DEPTH_WRITE
+		}
 
         var shader = Shader3D.add("SelfMaterialShader");
         var subShader = new SubShader(attributeMap, uniformMap);
         shader.addSubShader(subShader);
-        var pass1 = subShader.addShaderPass(simpleVS, simpleFS);
+        var pass1 = subShader.addShaderPass(simpleVS, simpleFS,stateMap);
         pass1.renderState.cull = RenderState.CULL_NONE
     }
 
@@ -82,7 +90,7 @@ export class VoxelMaterial extends BaseMaterial {
         super();
         this.setShaderName("SelfMaterialShader");
         // 设置参数
-        this.renderMode = VoxelMaterial.RENDERMODE_TRANSPARENT
+        //this.renderMode = VoxelMaterial.RENDERMODE_TRANSPARENT
     }
 
 	/**
@@ -217,7 +225,4 @@ export class VoxelMaterial extends BaseMaterial {
     get depthTest(): number {
         return this._shaderValues.getInt(VoxelMaterial.DEPTH_TEST);
     }
-
-
-
 }

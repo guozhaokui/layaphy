@@ -4,6 +4,19 @@ import { Vector3 } from "laya/d3/math/Vector3";
 import { ColliderShape } from "laya/d3/physics/shape/ColliderShape";
 
 export class PhyCharactorCtrl extends Component implements ICharactorCtrl{
+	mass: number;
+	lineVel: Vector3;
+	angVel: Vector3;
+	noRotate: boolean;
+	collisionGroup: number;
+	canCollideWith: number;
+	addCenterForce(f: Vector3): void {
+		throw new Error("Method not implemented.");
+	}
+	addForce(f: Vector3, pos: Vector3): void {
+		throw new Error("Method not implemented.");
+	}
+	fixedRotation: boolean;
 	canJump: boolean;	gravity: Vector3;
 	enableGravity: boolean;
 	shape: ColliderShape;
@@ -41,4 +54,7 @@ export class PhyCharactorCtrl extends Component implements ICharactorCtrl{
 	move(step: Vector3): void {
 		throw new Error("Method not implemented.");
 	}
+	enablePhy(b: boolean): void {
+		throw new Error("Method not implemented.");
+	}	
 }

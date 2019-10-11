@@ -4,7 +4,7 @@ import ArrayCollisionMatrix from '../collision/ArrayCollisionMatrix.js';
 import Broadphase from '../collision/Broadphase.js';
 import NaiveBroadphase from '../collision/NaiveBroadphase.js';
 import OverlapKeeper from '../collision/OverlapKeeper.js';
-import Ray from '../collision/Ray.js';
+import Ray, { RayMode } from '../collision/Ray.js';
 import RaycastResult from '../collision/RaycastResult.js';
 import Constraint from '../constraints/Constraint.js';
 import ContactEquation from '../equations/ContactEquation.js';
@@ -274,7 +274,7 @@ export default class World extends EventTarget {
     }
 
     set phyRender(r:IPhyRender){
-        this._phyRender=r;
+        this._phyRender=r as PhyRender;
         (this.solver as GSSolver)._phyr=r as PhyRender;
     }
     get phyRender(){
@@ -467,7 +467,7 @@ export default class World extends EventTarget {
      * @return  True if any body was hit.
      */
     raycastAll(from:Vec3, to:Vec3, options:any, callback:(result:RaycastResult)=>void) :boolean{
-        options.mode = Ray.ALL;
+        options.mode = RayMode.ALL;
         options.from = from;
         options.to = to;
         options.callback = callback;
@@ -488,7 +488,7 @@ export default class World extends EventTarget {
      * @return {boolean} True if any body was hit.
      */
     raycastAny(from:Vec3, to:Vec3, options:any, result:RaycastResult):boolean {
-        options.mode = Ray.ANY;
+        options.mode = RayMode.ANY;
         options.from = from;
         options.to = to;
         options.result = result;
@@ -509,7 +509,7 @@ export default class World extends EventTarget {
      * @return  True if any body was hit.
      */
     raycastClosest(from:Vec3, to:Vec3, options:any, result:RaycastResult) {
-        options.mode = Ray.CLOSEST;
+        options.mode = RayMode.CLOSEST;
         options.from = from;
         options.to = to;
         options.result = result;

@@ -413,11 +413,10 @@ export default class Sphere extends Shape {
 	// hiti 球的碰撞点， hitj voxel的碰撞点
 	hitVoxel1(myPos: Vec3, voxel: Voxel, voxPos: Vec3, voxQuat: Quaternion, hitpoints: HitPointInfoArray, justtest: boolean): boolean {
 		//DEBUG
-		//myPos.x = -2.7391107533614116;
-		//myPos.y = 0.7659256782678245;
-		//myPos.z = 1.275891510408701;
+		//myPos.x = -0.47377423035846794;
+		//myPos.y = -0.028011225545816587;
+		//myPos.z = 3.8401824198470447;
 		//DEBUG
-
 		hitpoints.length = 0;
 
 		let R = this.radius;
@@ -488,102 +487,124 @@ export default class Sphere extends Shape {
 		if (cgridxvalid && cgridyvalid && cgridzvalid && voxel.getVox(cgridx, cgridy, cgridz)) {
 			if (justtest)
 				return true;
+			//console.log('球进入格子了')
 			// 如果球心已经撞到实心的格子中了，朝着6个方向寻找最近出点
 			// 如果边缘也是实心的话的处理
-			// x正方向
-			let mindist = voxmax.x - sphInVox.x;	// 先假设是到aabb的距离
+			let velInVox = hitVoxelTmpVel;
+			let sphvel = this.body.velocity;
+			invQ.vmult(sphvel, velInVox);
+			let NotCheckSphVel = false;
+
+			let mindist = 1e6;
 			let mindistid = 0;
-			for (i = cgridx + 1; i < voxszx; i++) {
-				if (!voxel.getVox(i, cgridy, cgridz)) {
-					mindist = gridw * i + voxmin.x - sphInVox.x;
-					break;
+			let dist1 = 0;
+
+			// x正方向
+			if (NotCheckSphVel || velInVox.x <= 0) {
+				dist1 = voxmax.x - sphInVox.x;	// 先假设是到aabb的距离
+				if (dist1 < mindist) {
+					mindist = dist1;
+					mindistid = 0;
+				}
+				for (i = cgridx + 1; i < voxszx; i++) {
+					if (!voxel.getVox(i, cgridy, cgridz)) {
+						mindist = gridw * i + voxmin.x - sphInVox.x;
+						break;
+					}
 				}
 			}
 
 			// x负方向
-			let dist1 = sphInVox.x - voxmin.x;
-			if (dist1 < mindist) {
-				mindist = dist1;
-				mindistid = 1;
-			}
-			for (i = cgridx - 1; i >= 0; i--) {
-				if (!voxel.getVox(i, cgridy, cgridz)) {
-					dist1 = sphInVox.x - (gridw * (i + 1) + voxmin.x);
-					if (dist1 < mindist) {
-						mindist = dist1;
-						mindistid = 1;
+			if (NotCheckSphVel || velInVox.x >= 0) {
+				dist1 = sphInVox.x - voxmin.x;
+				if (dist1 < mindist) {
+					mindist = dist1;
+					mindistid = 1;
+				}
+				for (i = cgridx - 1; i >= 0; i--) {
+					if (!voxel.getVox(i, cgridy, cgridz)) {
+						dist1 = sphInVox.x - (gridw * (i + 1) + voxmin.x);
+						if (dist1 < mindist) {
+							mindist = dist1;
+							mindistid = 1;
+						}
+						break;
 					}
-					break;
 				}
 			}
-
 			//y+
-			dist1 = voxmax.y - sphInVox.y;
-			if (dist1 < mindist) {
-				mindist = dist1;
-				mindistid = 2;
-			}
-			for (i = cgridy + 1; i < voxszy; i++) {
-				if (!voxel.getVox(cgridx, i, cgridz)) {
-					dist1 = i * gridw + voxmin.y - sphInVox.y;
-					if (dist1 < mindist) {
-						mindist = dist1;
-						mindistid = 2;
+			if (NotCheckSphVel || velInVox.y <= 0) {
+				dist1 = voxmax.y - sphInVox.y;
+				if (dist1 < mindist) {
+					mindist = dist1;
+					mindistid = 2;
+				}
+				for (i = cgridy + 1; i < voxszy; i++) {
+					if (!voxel.getVox(cgridx, i, cgridz)) {
+						dist1 = i * gridw + voxmin.y - sphInVox.y;
+						if (dist1 < mindist) {
+							mindist = dist1;
+							mindistid = 2;
+						}
 					}
 				}
 			}
-
 			//y-
-			dist1 = sphInVox.y - voxmin.y;
-			if (dist1 < mindist) {
-				mindist = dist1;
-				mindistid = 3;
-			}
-			for (i = cgridy - 1; i >= 0; i--) {
-				if (!voxel.getVox(cgridx, i, cgridy)) {
-					dist1 = sphInVox.y - ((i + 1) * gridw + voxmin.y);
-					if (dist1 < mindist) {
-						mindist = dist1;
-						mindistid = 3;
+			if (NotCheckSphVel || velInVox.y >= 0) {
+				dist1 = sphInVox.y - voxmin.y;
+				if (dist1 < mindist) {
+					mindist = dist1;
+					mindistid = 3;
+				}
+				for (i = cgridy - 1; i >= 0; i--) {
+					if (!voxel.getVox(cgridx, i, cgridy)) {
+						dist1 = sphInVox.y - ((i + 1) * gridw + voxmin.y);
+						if (dist1 < mindist) {
+							mindist = dist1;
+							mindistid = 3;
+						}
+						break;
 					}
-					break;
 				}
 			}
 
 			//z+
-			dist1 = voxmax.z - sphInVox.z;
-			if (dist1 < mindist) {
-				mindist = dist1;
-				mindistid = 4;
-			}
-			for (i = cgridz + 1; i < voxszz; i++) {
-				if (!voxel.getVox(cgridx, cgridy, i)) {
-					dist1 = i * gridw + voxmin.z - sphInVox.z;
-					if (dist1 < mindist) {
-						mindist = dist1;
-						mindistid = 4;
+			if (NotCheckSphVel || velInVox.z <= 0) {
+				dist1 = voxmax.z - sphInVox.z;
+				if (dist1 < mindist) {
+					mindist = dist1;
+					mindistid = 4;
+				}
+				for (i = cgridz + 1; i < voxszz; i++) {
+					if (!voxel.getVox(cgridx, cgridy, i)) {
+						dist1 = i * gridw + voxmin.z - sphInVox.z;
+						if (dist1 < mindist) {
+							mindist = dist1;
+							mindistid = 4;
+						}
+						break;
 					}
-					break;
 				}
 			}
 
 			//z-
-			dist1 = sphInVox.z - voxmin.z;
-			if (dist1 < mindist) {
-				mindist = dist1;
-				mindistid = 5;
-			}
-			for (i = cgridz - 1; i >= 0; i--) {
-				if (!voxel.getVox(cgridx, cgridy, i)) {
-					dist1 = sphInVox.z - ((i + 1) * gridw + voxmin.z);
-					if (dist1 < mindist) {
-						mindist = dist1;
-						mindistid = 5;
+			if (NotCheckSphVel || velInVox.z >= 0) {
+				dist1 = sphInVox.z - voxmin.z;
+				if (dist1 < mindist) {
+					mindist = dist1;
+					mindistid = 5;
+				}
+				for (i = cgridz - 1; i >= 0; i--) {
+					if (!voxel.getVox(cgridx, cgridy, i)) {
+						dist1 = sphInVox.z - ((i + 1) * gridw + voxmin.z);
+						if (dist1 < mindist) {
+							mindist = dist1;
+							mindistid = 5;
+						}
+						break;
 					}
-					break;
 				}
 			}
-
 			let hitinfo = hitpoints.getnew();
 			let posi = hitinfo.posi;
 			let posj = hitinfo.posj;
@@ -627,6 +648,7 @@ export default class Sphere extends Shape {
 			// 注意这时候包围盒检测已经通过了，所以不用再做包围盒相关检测
 			//maxx
 			// 判断x的话，必须yz都在有效范围内，否则不会相交
+			//console.log('spherepos:', myPos.x, myPos.y, myPos.z);
 			if (cgridyvalid && cgridzvalid) {
 				for (i = Math.max(cgridx + 1, gridminx); i <= gridmaxx; i++) {//cgridx必须 从有效点开始，但是又不能修改cgridx，因为下面要用，所以用max
 					if (voxel.getVox(i, cgridy, cgridz)) {
@@ -752,16 +774,17 @@ export default class Sphere extends Shape {
 		}
 
 		//debug
-		/*
 		if (hitpoints.length > 0) {
+			//console.log('hit num=', hitpoints.length);
+			/*
 			for (let i = 0; i < hitpoints.length; i++) {
 				let hi = hitpoints.data[i];
 				if (hi.posi.x < voxmin.x) {
 					debugger;
 				}
 			}
+			*/
 		}
-		*/
 		//debug
 
 		return hitpoints.length > 0;
@@ -777,65 +800,11 @@ export default class Sphere extends Shape {
 		// 计算包围盒包含的voxel之中的所有的平面（补全），顶点，边
 		// 某个方向如果碰撞点在平面下，则使用，多个平面取最深的
 	}
-
-	/**
-	 * 与一个有孔的格子组成的平面碰撞，假设平面是法线向上，在水平面上
-	 * @param mypos 
-	 * @param R 
-	 * @param grid 
-	 * @param xszie 
-	 * @param ysize 
-	 * @param xoff 		格子的原点所在位置
-	 * @param yoff 
-	 * @param gridw 	格子的宽度
-	 * @param hitpoints 
-	 * @param justtest 
-	 */
-	static hitGridPlane(mypos: Vec3, R: number, grid: number[], xszie: int, ysize: int, xoff: number, yoff: number, gridw: number, hitpoints: HitPointInfo[], justtest: boolean): boolean {
-
-		if (mypos.y > R)
-			return false;
-		let gridx = ((mypos.x - xoff) / gridw) | 0;
-		let gridy = ((mypos.y - yoff) / gridw) | 0;
-		if (gridx < 0) {
-			if (gridy < 0) {
-
-			} else if (gridy > ysize) {
-
-			} else {
-			}
-		} else if (gridx >= xszie) {
-			if (gridy < 0) {
-
-			} else if (gridy > ysize) {
-
-			} else {
-			}
-		} else {
-			if (gridy < 0) {
-
-			} else if (gridy > ysize) {
-
-			} else {
-				// 正常情况
-				if (grid[gridy * xszie + gridx]) {
-					//脚下有格子，最简单的情况
-				} else {
-					//从当前点往外扩散，遇到边则停止，不再相撞也停止
-				}
-			}
-		}
-
-		// 球与平面的切面的包围盒，找出最近的，计算
-		// 看看球的包围盒覆盖的范围，找出离球最近的边
-		// 边是共享的，因此要避免重复计算
-
-	}
-
 }
 
 var hitVoxelTmpVec1 = new Vec3();
 var hitVoxelTmpVec2 = new Vec3();
+var hitVoxelTmpVel = new Vec3();
 var hitvoxHitPos1 = new Vec3();
 var hitVoxHitPos2 = new Vec3();
 var hitVoxHitNorm = new Vec3();

@@ -59,7 +59,7 @@ class gameBody extends MeshSprite3D{
 		this.phybody.enablePhy(b);
 	}
 
-	setPos(x,y,z){
+	setPos(x:number,y:number,z:number){
 
 	}
 }

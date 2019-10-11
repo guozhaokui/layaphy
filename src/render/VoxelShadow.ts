@@ -374,7 +374,7 @@ export class VoxelShadow {
      * 直接计算，不需要存储的。
      * @param	outmesh
      */
-    updateLight1(outmesh: CubeMeshManager): void {
+    updateLight1(outmesh: any): void {
         var maxLitFaceID = this.lightInvLine.maxLitFaceID;
         var faceLight = this.lightInvLine.faceLight;
         let _this = this;
@@ -454,7 +454,7 @@ export class VoxelShadow {
      * GI
      * @param	outmesh
      */
-    updateLight2(outmesh: CubeMeshManager): void {
+    updateLight2(outmesh: any/*CubeMeshManager*/): void {
         //先把光照复原
         //voxelLight.fill(0);	// 先设成0
 
