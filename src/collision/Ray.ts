@@ -602,27 +602,17 @@ export default class Ray {
 	intersectVoxel(voxel: Voxel, quat: Quaternion, position: Vec3, body: Body, reportedShape: Shape) {
 		const from = this.from;
 		const to = this.to;
-		// 本地空间的包围盒
-		let voxmin = voxel.bitDataLod[0].min;
-		let voxmax = voxel.bitDataLod[0].max;
-
-		//TODO 如果能保证更新voxel的包围盒，应该先用世界包围盒做粗略判断
-
-		// from to转到voxel空间
-		let invQ = tmpQ;
-		quat.conjugate(invQ);
-		let fromLocal = tmpVec1;
-		let toLocal = tmpVec2;
-		invQ.vmult(from, fromLocal);
-		invQ.vmult(to, toLocal);
+		// 世界空间的包围盒
+		let voxmin = voxel.aabbmin;
+		let voxmax = voxel.aabbmax;
 
 		// 判断包围盒
-		let minx = fromLocal.x < toLocal.x ? fromLocal.x : toLocal.x;
-		let miny = fromLocal.y < toLocal.y ? fromLocal.y : toLocal.y;
-		let minz = fromLocal.z < toLocal.z ? fromLocal.z : toLocal.z;
-		let maxx = fromLocal.x > toLocal.x ? fromLocal.x : toLocal.x;
-		let maxy = fromLocal.y > toLocal.y ? fromLocal.y : toLocal.y;
-		let maxz = fromLocal.z > toLocal.z ? fromLocal.z : toLocal.z;
+		let minx = from.x < to.x ? from.x : to.x;
+		let miny = from.y < to.y ? from.y : to.y;
+		let minz = from.z < to.z ? from.z : to.z;
+		let maxx = from.x > to.x ? from.x : to.x;
+		let maxy = from.y > to.y ? from.y : to.y;
+		let maxz = from.z > to.z ? from.z : to.z;
 
 		if (maxx < voxmin.x ||
 			minx > voxmax.x ||
@@ -632,7 +622,19 @@ export default class Ray {
 			minz > voxmax.z
 		) return;
 
+		// from to转到voxel空间
+		let invQ = tmpQ;
+		quat.conjugate(invQ);
+		let fromLocal = tmpVec1;
+		let toLocal = tmpVec2;
+		invQ.vmult(from, fromLocal); fromLocal.vsub(position,fromLocal);
+		invQ.vmult(to, toLocal); toLocal.vsub(position,toLocal);
+
 		// 包围盒检查通过，下面检查voxel
+		//test
+		voxel.pos=position;	//position是临时的，因此只能使用前随时设置
+		voxel.quat=quat;
+		//test
 		voxel.rayTravel(fromLocal,toLocal,(x:int,y:int,z:int)=>{
 			return false;
 		});

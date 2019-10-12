@@ -166,7 +166,7 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 		// }
 		var phy = vox.addComponent(CannonBody) as CannonBody;
 		phy.addShape(phyvox);
-		phy.phyBody.position.set(0, 2, 0);
+		phy.phyBody.setPos(0, 2, 0);
 		phy.setMass(0);
 	});
 	
@@ -209,7 +209,7 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 				phyRay.to.set(ray.direction.x*len, ray.direction.y*len, ray.direction.z*len);
 				let options:hitworldOptions={mode:RayMode.CLOSEST};
 				if( phyRay.intersectWorld(world.world,options)){
-					debugger;
+					console.log('r',phyRay.result)
 				}
 			}
 				break;

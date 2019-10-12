@@ -247,8 +247,8 @@ class VoxelBitData {
 	 * 下一级的时候，xs=2，表示4个格子，比直接除2多出一个来，所以要扩展 上一级gridx*2 = 2 
 	 * 如果下一级没有扩展，则不变，例如 8->4->2->1
 	 */
-	max = new Vec3();	// 
-	min: Vec3;		// 这个只是引用
+	max = new Vec3();	// 注意这个只是原始包围盒，没有被变换
+	min = new Vec3();	//
 
 	/**
 	 * xyzsize是数据个数，这里会用bit来保存，所以里面每个轴会除以2
@@ -263,7 +263,7 @@ class VoxelBitData {
 		this.ys = (ysize + 1) >> 1;
 		this.zs = (zsize + 1) >> 1
 		this.dt = new Uint8Array(this.xs * this.ys * this.zs);
-		this.min = min;
+		this.min.copy(min);
 		this.max.copy(max);
 		// 是否扩展了bbx
 		if ((xsize & 1) == 1) {
@@ -336,14 +336,13 @@ export class Voxel extends Shape {
 	dataysize = 0;
 	datazsize = 0;
 	quat: Quaternion;
-	pos = new Vec3();
+	pos:Vec3 ;// 目前是一个临时引用，不可以跨函数
 	centroid: Vec3 = new Vec3();	// 在voxData坐标系下的质心 @TODO 转换
 	mat: Mat3;   // 相当于记录了xyz的轴
 	scale = new Vec3(1, 1, 1);		// 注意这个动态改变的话会破坏刚体的假设。
 	aabbmin = new Vec3();			// 当前的aabb
 	aabbmax = new Vec3();
 	addToSceTick = -1;  // 
-	needUpdate = true;
 	gridw = 0;
 
 	constructor(dt: SparseVoxData) {
@@ -379,14 +378,8 @@ export class Voxel extends Shape {
 	}
 
 	updateAABB(): void {
-		if (!this.needUpdate)
-			return;
-		let bmin = this.aabbmin;
-		let bmax = this.aabbmax;
 		// 变换vox的包围盒
-		let nmin = new Vec3();
-		let nmax = new Vec3();
-		Box.calculateWorldAABB1(this.pos, this.quat, this.scale, bmin, bmax, nmin, nmax);
+		Box.calculateWorldAABB1(this.pos, this.quat, this.scale, this.voxData.aabbmin, this.voxData.aabbmax, this.aabbmin, this.aabbmax);
 		// TODO 转成矩阵
 		/*
 		let mat = this.mat;
@@ -394,7 +387,6 @@ export class Voxel extends Shape {
 		mat.setRotationFromQuaternion(this.quat);
 		mat.scale(this.scale, mat);
 		*/
-		this.needUpdate = false;
 	}
 
 	// 不同的实现这个函数不同
@@ -555,6 +547,12 @@ export class Voxel extends Shape {
 	}
 
 
+	pointToWorld(pt:Vec3, out:Vec3):Vec3{
+		this.quat.vmult(pt,out);
+		out.vadd(this.pos,out);
+		return out;
+	}
+
 	//3dline
 	/**
 	 * 射线经过voxle的路径。原理是每次根据碰撞到每个分隔面的时间取最近的。
@@ -564,8 +562,8 @@ export class Voxel extends Shape {
 	 */
 	rayTravel(st: Vec3, ed: Vec3, visitor: (x: int, y: int, z: int) => boolean) {
 		let w = this.gridw;
-		let min = this.bitDataLod[0].min;
-		let max = this.bitDataLod[0].max;
+		let min = this.voxData.aabbmin;
+		let max = this.voxData.aabbmax;
 
 		//先用包围盒裁剪
 		let nst = trav_tmpV1;
@@ -576,8 +574,9 @@ export class Voxel extends Shape {
 
 		//debug
 		let phyr = PhyRender.inst;
-		phyr.addPersistPoint(nst);
-		phyr.addPersistPoint(ned);
+		let wpos = new Vec3();
+		phyr.addPersistPoint( this.pointToWorld(nst, wpos));
+		phyr.addPersistPoint( this.pointToWorld(ned,wpos));
 		//debug
 
 		//dir

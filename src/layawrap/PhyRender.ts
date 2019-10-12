@@ -126,7 +126,7 @@ export class PhyRender extends IPhyRender {
 
 	addPersistPoint(x: number|Vec3, y?: number, z?: number, name?: string) {
 		if((x as Vec3).x!=undefined){
-			this.persistPoint.push(x as Vec3);	
+			this.persistPoint.push( (x as Vec3).clone());	
 		}else
 			this.persistPoint.push(new Vec3(x as number, y, z));
 		return this.persistPoint.length - 1;
@@ -136,7 +136,7 @@ export class PhyRender extends IPhyRender {
 	}
 	addPersistVec(dx: number|Vec3, dy: number|Vec3, dz?: number, x: number = 0, y: number = 0, z: number = 0, name?: string) {
 		if((dx as Vec3).x!=undefined){
-			this.persistVec.push(dx as Vec3 ,dy as Vec3);	
+			this.persistVec.push( (dx as Vec3).clone() ,(dy as Vec3).clone());	
 		}else{
 			this.persistVec.push(new Vec3(dx as number, dy as number, dz), new Vec3(x, y, z));
 		}

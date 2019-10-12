@@ -84,7 +84,9 @@ export default class CannonBody extends Component implements IPhyBody{
 		this.phyBody.mass=m;
 		this.phyBody.updateMassProperties();
 	}
-	
+	setPos(x:number,y:number,z:number):void{
+		this.phyBody.setPos(x,y,z);
+	}
     addShape(s:Shape,off?:Vector3,offq?:Quaternion|phyQuat){
         let body = this.phyBody;
         if(off){

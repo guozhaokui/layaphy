@@ -350,6 +350,10 @@ export default class Body extends EventTarget {
         return this._mass;
     }
 
+	setPos(x:number, y:number, z:number):void{
+		this.position.set(x,y,z);
+		this.aabbNeedsUpdate=true;
+	}
     /**
      * Wake the body up.
      * @method wakeUp
