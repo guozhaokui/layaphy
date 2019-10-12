@@ -12,11 +12,12 @@ import { PhyRender } from "./layawrap/PhyRender";
 import ContactMaterial from "./material/ContactMaterial";
 import Material from "./material/Material";
 import Vec3 from "./math/Vec3";
-
-/**
- * 测试盒子可以被推走，被抬起
- * 测试缩放形状
- */
+import Heightfield from "./shapes/Heightfield";
+import { PhyMeshSprite } from "./layawrap/debugger/PhyMeshSprite";
+import { createTerrainMesh } from "./layawrap/debugger/PhyMesh";
+import CannonBody from "./layawrap/CannonBody";
+import Quaternion from "./math/Quaternion";
+import PhyRay, { hitworldOptions, RayMode } from "./collision/Ray";
 
 var sce3d: Scene3D;
 var mtl1: BlinnPhongMaterial;
@@ -28,14 +29,14 @@ let phymtl3 = new Material();
 let cmtl1 = new ContactMaterial(phymtl1, phymtl2, 1, 0);
 let cmtl2 = new ContactMaterial(phymtl1, phymtl3, 1, 0);
 
+let phyr:PhyRender;
+
 function initPhy(scene: Scene3D) {
 	let phyworld = world = scene.addComponent(CannonWorld) as CannonWorld;
-	// phyworld
 	phyworld.world.gravity.set(0, 0, 0);
-
 	(window as any).phyr = new PhyRender(scene, phyworld.world);
-
 	phyworld.world.addContactMaterial(cmtl1).addContactMaterial(cmtl2);
+	phyr=PhyRender.inst;
 }
 
 function rand(a: number, b: number) {
@@ -43,85 +44,54 @@ function rand(a: number, b: number) {
 	return Math.random() * d + a;
 }
 
-function testGround() {
-	world.world.gravity.set(0, -11, 0);
+function testGround(img: HTMLImageElement) {
 	//plane
-	let p =addBox(new Vec3(100,100,100), new Vec3(0,-50,0),0,phymtl1);
-	/*
-	let plane = new Sprite3D();
-    let planephy = plane.addComponent(CannonBody) as CannonBody;
-    planephy.setMaterial(phymtl1);
-    planephy.setName('plane');
-    let shapeq = new Quaternion();
-    shapeq.setFromAxisAngle(new Vec3(1, 0, 0), -Math.PI / 2);
-    planephy.addShape(new Plane(), new Vector3(), shapeq);  // laya的plane是向上(y)的，cannon的plane是向前（后？）的
-	planephy.setMass(0);
-	*/
+	//let p =addBox(new Vec3(100,100,100), new Vec3(0,-50,0),0,phymtl1);
+	let p = new Heightfield([[1]], null, null, 1);
+	p.setHeightsFromImage(img, new Vec3(100, 100, 20));
+	//转换data
+	let data: number[] = [];
+	p.minValue;
+	let w = p.data[0].length;
+	let h = p.data.length;
+	let k = 255 / 20;
+	p.data.forEach(xl => {
+		xl.forEach(v => {
+			data.push((v * k) | 0);
+		});
+	});
 
+	let min = new Vec3(0, 0, 0);
+	let max = new Vec3(100, 20, 100);
+	let m = createTerrainMesh(new Uint8Array(data), w, h, new Vec3(100, 20, 100), new Vec3(0, 0, 0));
+	let renderobj = new PhyMeshSprite(m, min as any as Vector3, max as any as Vector3);
+	sce3d.addChild(renderobj);
 
-	//let ch1 = addBox(new Vec3(1, 2, 1), new Vec3(0, 1, 0), 1, phymtl1);
-	for (let i = 0; i < 0; i++) {
-		let b = addBox(new Vec3(1, 1, 1), new Vec3(rand(-10, 10), rand(5, 10), rand(-10, 10)), 1, phymtl2, true);
-		b.phyBody.allowSleep = false;
-	}
-	//ch1.fixedRotation = true;
-	//ch1.phyBody._name = 'zhu'
-
-	/*
-	let push = addBox( new Vec3(1,1,1), new Vec3(2,1,0), 0);
-	push.phyBody.type=BODYTYPE.KINEMATIC;
-	*/
-
-	/*
-	let b = addBox(new Vec3(1, 0.1, 1), new Vec3(3, 0, 0), 0, phymtl2);
-	b.phyBody.type = BODYTYPE.KINEMATIC;
-	b.phyBody.allowSleep = false;
-	b.phyBody._name = 'ban';
-	let tm = 0;
-	b.phyBody.onStep = () => {
-		let b1 = b.phyBody;
-		b1.position.x = 2 + 10 * Math.sin(tm++ / 100);
-
-	}
-
-	let b2 = addBox(new Vec3(1, 0.1, 1), new Vec3(-3, 0, 0), 0, phymtl3);
-	b2.phyBody.type = BODYTYPE.KINEMATIC;
-	b2.phyBody.allowSleep = false;
-	b2.phyBody._name = 'ban';
-	b2.phyBody.onStep = () => {
-		let b1 = b2.phyBody;
-		b1.position.x = 2 + 10 * Math.sin(tm / 100) - 6;
-	}
-	*/
+	var phy = renderobj.addComponent(CannonBody) as CannonBody;
+	let shapeq = new Quaternion();
+	shapeq.setFromAxisAngle(new Vec3(1, 0, 0), -Math.PI / 2);	// 正的是顺时针
+	phy.addShape(p, new Vector3(0,0,0), shapeq);
+	//phy.phyBody.setPos(0, 2, 0);
+	phy.setMass(0);
 }
 
-
-
-export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
-	cam.dist = 20;
-	sce3d = sce;
-	mtl1 = mtl;
-	//mtl.renderMode = BlinnPhongMaterial.RENDERMODE_TRANSPARENT;
-	initPhy(sce);
-
-	testGround();
-
+function test(mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 	Laya.stage.on(Event.MOUSE_DOWN, null, (e: { stageX: number, stageY: number }) => {
 		let worlde = cam.camera.transform.worldMatrix.elements;
 		let stpos = new Vec3(worlde[12], worlde[13], worlde[14]);
 		let dir = new Vec3(worlde[8], worlde[9], worlde[10]);
 
 		let ray = new Ray(new Vector3(), new Vector3());
-		cam.camera.viewportPointToRay(new Vector2(e.stageX,e.stageY), ray);
+		cam.camera.viewportPointToRay(new Vector2(e.stageX, e.stageY), ray);
 		stpos.set(ray.origin.x, ray.origin.y, ray.origin.z);
-		dir.set(ray.direction.x,ray.direction.y,ray.direction.z);
+		dir.set(ray.direction.x, ray.direction.y, ray.direction.z);
 
-		let sp = addSphere(0.3,stpos.x,stpos.y,stpos.z);
+		let sp = addSphere(0.3, stpos.x, stpos.y, stpos.z);
 		//let sp = addBox(new Vec3(0.5, 0.5, 0.5), stpos, 1, phymtl1);
 		let v = 20;
 		setTimeout(() => {
 			sp.owner.destroy();
-		}, 13000); 
+		}, 13000);
 		sp.setVel(dir.x * v, dir.y * v, dir.z * v);
 	});
 
@@ -134,13 +104,39 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 				break;
 			case 'Z':
 				break;
+			case 'R':
+				{
+					let ray = new Ray(new Vector3(), new Vector3());
+					cam.camera.viewportPointToRay(new Vector2(Laya.stage.mouseX, Laya.stage.mouseY), ray);
+					let len = 10000;
+					let phyRay = new PhyRay();
+					phyRay.from.set(ray.origin.x, ray.origin.y, ray.origin.z);
+					phyRay.to.set(ray.direction.x * len, ray.direction.y * len, ray.direction.z * len);
+					let options: hitworldOptions = { mode: RayMode.CLOSEST };
+					if (phyRay.intersectWorld(world.world, options)) {
+						let hitpt = phyRay.result.hitPointWorld;
+						phyr.addPersistPoint( hitpt);
+						console.log('r', phyRay.result)
+					}
+				}
+
 			default:
 				break;
 		}
 	});
+}
 
-	//testLift();
-	//testConveyorbelt();
+export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
+	cam.dist = 20;
+	sce3d = sce;
+	mtl1 = mtl;
+	//mtl.renderMode = BlinnPhongMaterial.RENDERMODE_TRANSPARENT;
+	initPhy(sce);
 
-	//b.phyBody.velocity=new Vec3(-1,0,0);
+	let img = new Image();
+	img.src = './res/height1.jpg';
+	img.onload = (e) => {
+		testGround(img);
+		test(mtl, cam);
+	}
 }

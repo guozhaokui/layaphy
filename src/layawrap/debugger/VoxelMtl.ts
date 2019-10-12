@@ -2,12 +2,15 @@ import { BaseMaterial } from "laya/d3/core/material/BaseMaterial";
 import { RenderState } from "laya/d3/core/material/RenderState";
 import { VertexMesh } from "laya/d3/graphics/Vertex/VertexMesh";
 import { Shader3D } from "laya/d3/shader/Shader3D";
-import { ShaderDefine } from "laya/d3/shader/ShaderDefine";
+//import { ShaderDefine } from "laya/d3/shader/ShaderDefine";
 import { SubShader } from "laya/d3/shader/SubShader";
 import { BaseTexture } from "laya/resource/BaseTexture";
-import simpleFS from "./voxel_fs";
-import simpleVS from "./voxel_vs";
+import simpleFS from "./VoxelRender/voxel_fs";
+import simpleVS from "./VoxelRender/voxel_vs";
 
+interface ShaderDefine{};
+
+var  hasInited=false;
 
 export class VoxelMaterial extends BaseMaterial {
     static DIFFUSETEXTURE = Shader3D.propertyNameToID("u_texture");
@@ -87,6 +90,10 @@ export class VoxelMaterial extends BaseMaterial {
     }
 
     constructor() {
+		if(!hasInited){
+			VoxelMaterial.initShader();
+			hasInited=true;
+		}
         super();
         this.setShaderName("SelfMaterialShader");
         // 设置参数

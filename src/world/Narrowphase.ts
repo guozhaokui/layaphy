@@ -1586,7 +1586,6 @@ export default class Narrowphase {
         return hit;
     }
 
-
     convexHeightfield(
         convexShape: ConvexPolyhedron,
         hfShape: Heightfield,

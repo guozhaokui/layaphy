@@ -34,21 +34,13 @@ import AABB from '../collision/AABB.js';
  *     world.addBody(heightfieldBody);
  */
 export default class Heightfield extends Shape {
-    onPreNarrowpase(stepId: number,pos:Vec3,quat:Quaternion): void {}
     /**
      * An array of numbers, or height values, that are spread out along the x axis.
      */
-    data: f32[][];
+    data: f32[][];	// 二维数组
 
-    /**
-     * Max value of the data
-     */
-    maxValue: f32;
-
-    /**
-     * Max value of the data
-     */
-    minValue: f32;
+    minValue: f32;	// 最低值
+    maxValue: f32;	// 最高值
 
     /**
      * The width of each element
@@ -90,7 +82,11 @@ export default class Heightfield extends Shape {
      */
     update() {
         this._cachedPillars = {};
-    }
+	}
+	
+    onPreNarrowpase(stepId: number,pos:Vec3,quat:Quaternion): void {
+
+	}
 
     /**
      * Update the .minValue property
@@ -111,7 +107,6 @@ export default class Heightfield extends Shape {
 
     /**
      * Update the .maxValue property
-     * @method updateMaxValue
      */
     updateMaxValue() {
         const data = this.data;
@@ -174,12 +169,12 @@ export default class Heightfield extends Shape {
 
     /**
      * Get the index of a local position on the heightfield. The indexes indicate the rectangles, so if your terrain is made of N x N height data points, you will have rectangle indexes ranging from 0 to N-1.
+	 * 根据空间位置来确定对应的数据的位置
      * @param   result Two-element array
      * @param   clamp If the position should be clamped to the heightfield edge.
      * @return 
      */
     getIndexOfPosition(x:number, y:number, result:number[], clamp:bool) {
-
         // Get the index of the data points to test against
         const w = this.elementSize;
         const data = this.data;
@@ -262,10 +257,7 @@ export default class Heightfield extends Shape {
 
     /**
      * Get the height in the heightfield at a given position
-     * @param  {number} x
-     * @param  {number} y
-     * @param  {boolean} edgeClamp
-     * @return {number}
+	 * 获取xy位置的高度
      */
     getHeightAt(x:f32, y:f32, edgeClamp:bool) {
         const data = this.data;
@@ -373,8 +365,8 @@ export default class Heightfield extends Shape {
         let result = this.pillarConvex;
         let offsetResult = this.pillarOffset;
 
-        debugger;
         if (this.cacheEnabled) {
+			// 检查是否有缓存
             let data = this.getCachedConvexTrianglePillar(xi, yi, getUpperTriangle);
             if (data) {
                 this.pillarConvex = data.convex;
@@ -393,8 +385,8 @@ export default class Heightfield extends Shape {
         const elementSize = this.elementSize;
         const faces = result.faces;
 
-        // Reuse verts if possible
-        // 多面体有6个顶点
+		// Reuse verts if possible
+		// 多面体是一个三棱柱，有6个顶点，5个面
         result.vertices.length = 6;
         for (var i = 0; i < 6; i++) {
             if (!result.vertices[i]) {
@@ -403,7 +395,6 @@ export default class Heightfield extends Shape {
         }
 
         // Reuse faces if possible
-        // 多面体有5个面
         faces.length = 5;
         for (var i = 0; i < 5; i++) {
             if (!faces[i]) {
@@ -413,6 +404,7 @@ export default class Heightfield extends Shape {
 
         const verts = result.vertices;
 
+		// 四个点的最低点到整体最低点的中点
         const h = (Math.min(
             data[xi][yi],
             data[xi + 1][yi],
@@ -428,9 +420,15 @@ export default class Heightfield extends Shape {
                 h // vertical center
             );
 
-            // Top triangle verts
+			// Top triangle verts
+			// 0        1
+			//  *-----*
+			//  | . /  . 是offsetResult
+			//  | /
+			//  *  
+			// 2
             verts[0].set(
-                -0.25 * elementSize,
+                -0.25 * elementSize,	// 相对于offsetResult，所以是 -0.25,-0.25
                 -0.25 * elementSize,
                 data[xi][yi] - h
             );
@@ -449,7 +447,7 @@ export default class Heightfield extends Shape {
             verts[3].set(
                 -0.25 * elementSize,
                 -0.25 * elementSize,
-                -h - 1
+                -h - 1		// 本来是-h， -1是为了加厚么?
             );
             verts[4].set(
                 0.75 * elementSize,
@@ -567,6 +565,7 @@ export default class Heightfield extends Shape {
         result.computeEdges();
         result.updateBoundingSphereRadius();
 
+		// 加到缓存
         this.setCachedConvexTrianglePillar(xi, yi, getUpperTriangle, result, offsetResult);
     }
 
@@ -595,29 +594,31 @@ export default class Heightfield extends Shape {
 
     /**
      * Sets the height values from an image. Currently only supported in browser.
+	 * @param 
+	 * @param scale 地形的大小,z是高度。以后改成y是高度 TODO yz
      */
-    setHeightsFromImage(image:any, scale:Vec3) {
+    setHeightsFromImage(image:HTMLImageElement, scale:Vec3) {
         const canvas = document.createElement('canvas');
-        canvas.width = image.width;
-        canvas.height = image.height;
+        let w = canvas.width = image.width;
+        let h = canvas.height = image.height;
         const context = canvas.getContext('2d');
         if(!context){
             console.error('get context 2d error');
             return;
         }
         context.drawImage(image, 0, 0);
-        const imageData = context.getImageData(0, 0, image.width, image.height);
+        const imageData = context.getImageData(0, 0, w, h);
 
         const matrix = this.data;
         matrix.length = 0;
-        this.elementSize = Math.abs(scale.x) / imageData.width;
-        for (let i = 0; i < imageData.height; i++) {
+        this.elementSize = Math.abs(scale.x) / w;
+        for (let i = 0; i < h; i++) {
             const row = [];
-            for (let j = 0; j < imageData.width; j++) {
-                const a = imageData.data[(i * imageData.height + j) * 4];
-                const b = imageData.data[(i * imageData.height + j) * 4 + 1];
-                const c = imageData.data[(i * imageData.height + j) * 4 + 2];
-                const height = (a + b + c) / 4 / 255 * scale.z;
+            for (let j = 0; j < w; j++) {
+                const a = imageData.data[(i * h + j) * 4];
+                //const b = imageData.data[(i * h + j) * 4 + 1];
+                //const c = imageData.data[(i * h + j) * 4 + 2];
+                const height = a  / 255 * scale.z;
                 if (scale.x < 0) {
                     row.push(height);
                 } else {
@@ -636,7 +637,6 @@ export default class Heightfield extends Shape {
     }
 }
 
-
 var getHeightAt_idx:i32[] = [];
 var getHeightAt_weights = new Vec3();
 var getHeightAt_a = new Vec3();
@@ -649,7 +649,10 @@ var getNormalAt_c = new Vec3();
 var getNormalAt_e0 = new Vec3();
 var getNormalAt_e1 = new Vec3();
 
-// from https://en.wikipedia.org/wiki/Barycentric_coordinate_system
+/**
+ * from https://en.wikipedia.org/wiki/Barycentric_coordinate_system
+ * 计算二维三角形的重心坐标
+ */
 function barycentricWeights(x:f32, y:f32, ax:f32, ay:f32, bx:f32, by:f32, cx:f32, cy:f32, result:Vec3) {
     result.x = ((by - cy) * (x - cx) + (cx - bx) * (y - cy)) / ((by - cy) * (ax - cx) + (cx - bx) * (ay - cy));
     result.y = ((cy - ay) * (x - cx) + (ax - cx) * (y - cy)) / ((by - cy) * (ax - cx) + (cx - bx) * (ay - cy));

@@ -182,3 +182,4 @@ function StupidMesh(volume: number[], dims: Vec3) {
 				}
 	return quads;
 }
+

@@ -10,8 +10,8 @@ import CannonBody from "./layawrap/CannonBody";
 import { CannonWorld } from "./layawrap/CannonWorld";
 import { MouseCtrl1 } from "./layawrap/ctrls/MouseCtrl1";
 import { VoxBuildBox } from "./layawrap/debugger/VoxelBuilder";
-import { VoxelMaterial } from "./layawrap/debugger/VoxelRender/VoxelMtl";
-import { VoxelSprite } from "./layawrap/debugger/VoxelRender/VoxelSprite";
+import { VoxelMaterial } from "./layawrap/debugger/VoxelMtl";
+import { PhyMeshSprite } from "./layawrap/debugger/PhyMeshSprite";
 import { PhyRender } from "./layawrap/PhyRender";
 import ContactMaterial from "./material/ContactMaterial";
 import Material from "./material/Material";
@@ -19,6 +19,7 @@ import Vec3 from "./math/Vec3";
 import { SparseVoxData, Voxel } from "./shapes/Voxel";
 import { Mesh2Voxel } from "./tools/Mesh2Voxel";
 import PhyRay, { hitworldOptions, RayMode } from "./collision/Ray";
+import { createVoxMesh } from "./layawrap/debugger/PhyMesh";
 
 /**
  * 测试盒子可以被推走，被抬起
@@ -109,7 +110,7 @@ function createBoxVoxel(xn: i32, yn: i32, zn: i32, gridw:number ){
 	let min = new Vec3(-xn*gridw/2,-yn*gridw/2,-zn*gridw/2);
 	let max = new Vec3(xn*gridw/2,yn*gridw/2,zn*gridw/2);
 	let voxdt = new SparseVoxData(dt, xn, yn, zn, min, max);
-	let vox = new VoxelSprite({ get: voxdt.get.bind(voxdt) }, voxdt.dataszx, voxdt.dataszy, voxdt.dataszz,
+	let vox = new PhyMeshSprite({ get: voxdt.get.bind(voxdt) }, voxdt.dataszx, voxdt.dataszy, voxdt.dataszz,
 		voxdt.aabbmin as any as Vector3,
 		voxdt.aabbmax as any as Vector3);
 	//vox.createMesh();
@@ -144,11 +145,10 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 		console.timeEnd('voxel');
 
 		let dt = phyvox.bitDataLod[0];
-		let vox = new VoxelSprite(
-			//{ get: function(x,y,z){return dt.getBit(x,y,z);} }, voxdata.dataszx, voxdata.dataszy, voxdata.dataszz,
-			{ get: function(x:int,y:int,z:int){return dt.getBit(x,y,z);} }, dt.xs*2, dt.ys*2, dt.zs*2,
-			dt.min as any as Vector3,
-			dt.max as any as Vector3);
+		let min = dt.min as any as Vector3;
+		let max = dt.max as any as Vector3;
+		let mesh = createVoxMesh({ get: function(x:int,y:int,z:int){return dt.getBit(x,y,z);} }, dt.xs*2, dt.ys*2, dt.zs*2,min, max);// PrimitiveMesh.createQuad(10,10) ;//PrimitiveMesh.createBox(1,1,1);		
+		let vox = new PhyMeshSprite(mesh,min,max);
 		//vox.createMesh();
 		sce.addChild(vox);
 		vox.transform.localPosition.setValue(0,0,0);

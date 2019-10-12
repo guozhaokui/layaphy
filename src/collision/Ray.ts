@@ -284,23 +284,22 @@ export default class Ray {
 
 		// Get the index of the data points to test against
 		const index = intersectHeightfield_index;
-		let iMinX;
-		let iMinY;
-		let iMaxX;
-		let iMaxY;
 
+		let iMinY=0, iMinX=0;
+		let iMaxY;
 		// Set to max
-		iMinX = iMinY = 0;
-		iMaxX = iMaxY = shape.data.length - 1;
+		let iMaxX = iMaxY = shape.data.length - 1;
 
 		const aabb = new AABB();
 		localRay.getAABB(aabb);
 
+		// min所在的位置
 		shape.getIndexOfPosition(aabb.lowerBound.x, aabb.lowerBound.y, index, true);
-		iMinX = Math.max(iMinX, index[0]);
+		iMinX = Math.max(iMinX, index[0]);	//限制到>=0
 		iMinY = Math.max(iMinY, index[1]);
+		// max所在的位置
 		shape.getIndexOfPosition(aabb.upperBound.x, aabb.upperBound.y, index, true);
-		iMaxX = Math.min(iMaxX, index[0] + 1);
+		iMaxX = Math.min(iMaxX, index[0] + 1);// 限制一下
 		iMaxY = Math.min(iMaxY, index[1] + 1);
 
 		for (let i = iMinX; i < iMaxX; i++) {
@@ -310,11 +309,13 @@ export default class Ray {
 					return;
 				}
 
+				//当前数据块与射线的aabb检测
 				shape.getAabbAtIndex(i, j, aabb);
 				if (!aabb.overlapsRay(localRay)) {
 					continue;
 				}
 
+				// 下面与三角形检测
 				// Lower triangle
 				shape.getConvexTrianglePillar(i, j, false);
 				Transform.pointToWorldFrame(position, quat, shape.pillarOffset, worldPillarOffset);
