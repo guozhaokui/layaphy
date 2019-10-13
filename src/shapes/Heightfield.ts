@@ -94,8 +94,8 @@ export default class Heightfield extends Shape {
     updateMinValue() {
         const data = this.data;
         let minValue = data[0][0];
-        for (let i = 0; i !== data.length; i++) {
-            for (let j = 0; j !== data[i].length; j++) {
+        for (let i = 0,yl=data.length; i<yl; i++) {
+            for (let j = 0,xl=data[i].length; j < xl; j++) {
                 const v = data[i][j];
                 if (v < minValue) {
                     minValue = v;
@@ -200,6 +200,16 @@ export default class Heightfield extends Shape {
         return true;
     }
 
+    /**
+     * 返回x,y所在位置的三角形，返回三角形的三个点
+     * @param x 
+     * @param y 
+     * @param edgeClamp 
+     * @param a 
+     * @param b 
+     * @param c 
+     * 返回是否在上半三角形
+     */
     getTriangleAt(x:f32, y:f32, edgeClamp:bool, a:Vec3, b:Vec3, c:Vec3):bool {
         const idx = getHeightAt_idx;
         this.getIndexOfPosition(x, y, idx, edgeClamp);
@@ -213,8 +223,11 @@ export default class Heightfield extends Shape {
         }
 
         const elementSize = this.elementSize;
-        const lowerDist2 = (x / elementSize - xi) ** 2 + (y / elementSize - yi) ** 2;
-        const upperDist2 = (x / elementSize - (xi + 1)) ** 2 + (y / elementSize - (yi + 1)) ** 2;
+        // 落点到左上角的距离
+        const upperDist2 = (x / elementSize - xi) ** 2 + (y / elementSize - yi) ** 2;
+        // 落点到右下角的距离
+        const lowerDist2 = (x / elementSize - (xi + 1)) ** 2 + (y / elementSize - (yi + 1)) ** 2;
+
         const upper = lowerDist2 > upperDist2;
         this.getTriangle(xi, yi, upper, a, b, c);
         return upper;
@@ -245,13 +258,13 @@ export default class Heightfield extends Shape {
 
         result.lowerBound.set(
             xi * elementSize,
-            yi * elementSize,
-            data[yi][xi]
+            data[yi][xi],
+            yi * elementSize
         );
         result.upperBound.set(
             (xi + 1) * elementSize,
-            (yi + 1) * elementSize,
-            data[yi + 1][xi + 1]
+            data[yi + 1][xi + 1],
+            (yi + 1) * elementSize
         );
     }
 
@@ -279,7 +292,7 @@ export default class Heightfield extends Shape {
         const w = getHeightAt_weights;
 
         if (upper) {
-
+            //TODO 验证
             // Top triangle verts
             return data[yi + 1][xi + 1] * w.x + data[yi][xi + 1] * w.y + data[yi + 1][xi] * w.z;
 
@@ -317,48 +330,46 @@ export default class Heightfield extends Shape {
         const elementSize = this.elementSize;
 
         if (upper) {
-
             // Top triangle verts
             a.set(
-                (xi + 1) * elementSize,
-                (yi + 1) * elementSize,
-                data[yi + 1][xi + 1]
+                xi * elementSize,
+                data[yi][xi],
+                yi * elementSize
             );
             b.set(
-                xi * elementSize,
-                (yi + 1) * elementSize,
-                data[yi][xi + 1]
+                (xi + 1) * elementSize,
+                data[yi + 1][xi],
+                yi * elementSize
             );
             c.set(
-                (xi + 1) * elementSize,
-                yi * elementSize,
-                data[yi + 1][xi]
+                xi * elementSize,
+                data[yi][xi + 1],
+                (yi + 1) * elementSize
             );
 
         } else {
-
             // Top triangle verts
             a.set(
-                xi * elementSize,
-                yi * elementSize,
-                data[yi][xi]
+                (xi + 1) * elementSize,
+                data[yi + 1][xi + 1],
+                (yi + 1) * elementSize
             );
             b.set(
-                (xi + 1) * elementSize,
-                yi * elementSize,
-                data[yi + 1][xi]
+                xi * elementSize,
+                data[yi][xi + 1],
+                (yi + 1) * elementSize
             );
             c.set(
-                xi * elementSize,
-                (yi + 1) * elementSize,
-                data[yi][xi + 1]
+                (xi + 1) * elementSize,
+                data[yi + 1][xi],
+                yi * elementSize
             );
         }
     }
 
     /**
      * Get a triangle in the terrain in the form of a triangular convex shape.
-     * 把地形转成一个convex
+     * 把xy位置的地块转成一个convex，保存到 this.pllarConvex中
      * xi,yi定位到data中的索引
      */
     getConvexTrianglePillar(xi:i32, yi:i32, getUpperTriangle:boolean) {
@@ -416,8 +427,8 @@ export default class Heightfield extends Shape {
             // Center of the triangle pillar - all polygons are given relative to this one
             offsetResult.set(
                 (xi + 0.25) * elementSize, // sort of center of a triangle
-                (yi + 0.25) * elementSize,
-                h // vertical center
+                h, // vertical center
+                (yi + 0.25) * elementSize
             );
 
 			// Top triangle verts
@@ -429,144 +440,144 @@ export default class Heightfield extends Shape {
 			// 2
             verts[0].set(
                 -0.25 * elementSize,	// 相对于offsetResult，所以是 -0.25,-0.25
-                -0.25 * elementSize,
-                data[yi][xi] - h
+                data[yi][xi] - h,
+                -0.25 * elementSize
             );
             verts[1].set(
                 0.75 * elementSize,
-                -0.25 * elementSize,
-                data[yi][xi+1] - h        
+                data[yi][xi+1] - h,
+                -0.25 * elementSize
             );
             verts[2].set(
                 -0.25 * elementSize,
-                0.75 * elementSize,
-                data[yi+1][xi] - h
+                data[yi+1][xi] - h,
+                0.75 * elementSize
             );
 
             // bottom triangle verts
             verts[3].set(
                 -0.25 * elementSize,
-                -0.25 * elementSize,
-                -h - 1		// 本来是-h， -1是为了加厚么?
+                -h - 1,		// 本来是-h， -1是为了加厚么?
+                -0.25 * elementSize
             );
             verts[4].set(
                 0.75 * elementSize,
-                -0.25 * elementSize,
-                -h - 1
+                -h - 1,
+                -0.25 * elementSize
             );
             verts[5].set(
                 -0.25 * elementSize,
-                0.75 * elementSize,
-                -h - 1
+                -h - 1,
+                0.75 * elementSize
             );
 
             // top triangle
-            faces[0][0] = 0;
-            faces[0][1] = 1;
+            faces[0][0] = 1;
+            faces[0][1] = 0;
             faces[0][2] = 2;
 
             // bottom triangle
-            faces[1][0] = 5;
+            faces[1][0] = 3;
             faces[1][1] = 4;
-            faces[1][2] = 3;
+            faces[1][2] = 5;
 
             // -x facing quad
-            faces[2][0] = 0;
-            faces[2][1] = 2;
-            faces[2][2] = 5;
-            faces[2][3] = 3;
+            faces[2][0] = 2;
+            faces[2][1] = 0;
+            faces[2][2] = 3;
+            faces[2][3] = 5;
 
             // -y facing quad
-            faces[3][0] = 1;
-            faces[3][1] = 0;
-            faces[3][2] = 3;
-            faces[3][3] = 4;
+            faces[3][0] = 0;
+            faces[3][1] = 1;
+            faces[3][2] = 4;
+            faces[3][3] = 3;
 
             // +xy facing quad
-            faces[4][0] = 4;
-            faces[4][1] = 5;
-            faces[4][2] = 2;
-            faces[4][3] = 1;
+            faces[4][0] = 1;
+            faces[4][1] = 2;
+            faces[4][2] = 5;
+            faces[4][3] = 4;
 
 
         } else {
-			// 0        1
-			//  *-----*
-			//  |   / | 
-			//  | / . | 是offsetResult
+			//         2
+			//        *
+			//      / | 
+			//    / . | 是offsetResult
 			//  * --- *
-			//        0
+			//  1      0
             // Center of the triangle pillar - all polygons are given relative to this one
             offsetResult.set(
                 (xi + 0.75) * elementSize, // sort of center of a triangle
-                (yi + 0.75) * elementSize,
-                h // vertical center
+                h, // vertical center
+                (yi + 0.75) * elementSize
             );
 
             // Top triangle verts
             verts[0].set(
                 0.25 * elementSize,
-                0.25 * elementSize,
-                data[yi + 1][xi + 1] - h
+                data[yi + 1][xi + 1] - h,
+                0.25 * elementSize
             );
             verts[1].set(
                 -0.75 * elementSize,
-                0.25 * elementSize,
-                data[yi+1][xi] - h
+                data[yi+1][xi] - h,
+                0.25 * elementSize
             );
             verts[2].set(
                 0.25 * elementSize,
-                -0.75 * elementSize,
-                data[yi][xi+1] - h
+                data[yi][xi+1] - h,
+                -0.75 * elementSize
             );
 
             // bottom triangle verts
             verts[3].set(
                 0.25 * elementSize,
-                0.25 * elementSize,
-                - h - 1
+                - h - 1,
+                0.25 * elementSize
             );
             verts[4].set(
                 -0.75 * elementSize,
-                0.25 * elementSize,
-                - h - 1
+                - h - 1,
+                0.25 * elementSize
             );
             verts[5].set(
                 0.25 * elementSize,
-                -0.75 * elementSize,
-                - h - 1
+                - h - 1,
+                -0.75 * elementSize
             );
 
-            // Top triangle
+            // Top triangle  符合后面convex的要求，要CCW
             faces[0][0] = 0;
-            faces[0][1] = 1;
-            faces[0][2] = 2;
+            faces[0][1] = 2;
+            faces[0][2] = 1;
 
             // bottom triangle
-            faces[1][0] = 5;
+            faces[1][0] = 3;
             faces[1][1] = 4;
-            faces[1][2] = 3;
+            faces[1][2] = 5;
 
             // +x facing quad
-            faces[2][0] = 2;
-            faces[2][1] = 5;
-            faces[2][2] = 3;
-            faces[2][3] = 0;
+            faces[2][0] = 0;
+            faces[2][1] = 3;
+            faces[2][2] = 5;
+            faces[2][3] = 2;
 
-            // +y facing quad
-            faces[3][0] = 3;
-            faces[3][1] = 4;
-            faces[3][2] = 1;
-            faces[3][3] = 0;
+            // +z facing quad
+            faces[3][0] = 0;
+            faces[3][1] = 1;
+            faces[3][2] = 4;
+            faces[3][3] = 3;
 
-            // -xy facing quad
+            // -xz facing quad
             faces[4][0] = 1;
-            faces[4][1] = 4;
+            faces[4][1] = 2;
             faces[4][2] = 5;
-            faces[4][3] = 2;
+            faces[4][3] = 4;
         }
 
-        result.computeNormals();
+        result.computeNormals();    //TODO 只有一个面需要计算法线，其他都是已知的
         result.computeEdges();
         result.updateBoundingSphereRadius();
 

@@ -939,7 +939,11 @@ export default class Narrowphase {
             // World position of corner
             const worldCorner = sphereConvex_worldCorner;
             qj.vmult(v, worldCorner);
-            xj.vadd(worldCorner, worldCorner);
+            xj.vadd(worldCorner, worldCorner);  // v转换到是世界空间
+            //DEBUG
+            let phyr = this.world.phyRender as PhyRender;//
+            phyr.addPoint1(worldCorner,0xff0000);
+            //DEBUG
             const sphere_to_corner = sphereConvex_sphereToCorner;
             worldCorner.vsub(xi, sphere_to_corner);
             if (sphere_to_corner.lengthSquared() < R * R) {
@@ -1737,6 +1741,7 @@ export default class Narrowphase {
 
                 // Lower triangle
                 hfShape.getConvexTrianglePillar(i, j, false);
+                // 把convex的offset点转换到世界空间
                 Transform.pointToWorldFrame(hfPos, hfQuat, hfShape.pillarOffset, worldPillarOffset);
                 if (spherePos.distanceTo(worldPillarOffset) < hfShape.pillarConvex.boundingSphereRadius + sphereShape.boundingSphereRadius) {
                     intersecting = this.sphereConvex(sphereShape, hfShape.pillarConvex, spherePos, worldPillarOffset, sphereQuat, hfQuat, sphereBody, hfBody, sphereShape, hfShape, justTest);

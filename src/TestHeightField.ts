@@ -47,7 +47,11 @@ function rand(a: number, b: number) {
 function testGround(img: HTMLImageElement) {
 	//plane
 	//addBox(new Vec3(100,100,100), new Vec3(0,-50,0),0,phymtl1);
-	let p = new Heightfield([[1]], null, null, 1);
+	let p = new Heightfield([[1,1],[1,1]], null, null, 10);
+	let min = new Vec3();
+	let max = new Vec3();
+
+	/*
 	let scale = new Vec3(10,10,2);
 	let imgdt = p.setHeightsFromImage(img, scale) as ImageData;
 	//转换data
@@ -60,10 +64,10 @@ function testGround(img: HTMLImageElement) {
 			data.push(v);
 		}
 	}
-
-	let min = new Vec3(0, 0, 0);
-	let max = new Vec3(scale.x,scale.z,scale.y);
+	
 	let m = createTerrainMesh(new Uint8Array(data), w, h, new Vec3(scale.x,scale.z,scale.y), new Vec3(0, 0, 0));
+	*/
+	let m = createTerrainMesh(new Uint8Array([255,255,255,255]), 2, 2, new Vec3(10,1,10), new Vec3(0, 0, 0),min,max);
 	let renderobj = new PhyMeshSprite(m, min as any as Vector3, max as any as Vector3);
 	sce3d.addChild(renderobj);
 

@@ -128,19 +128,23 @@ export default class ConvexPolyhedron extends Shape {
         for (let i = 0; i < this.faces.length; i++) {
 
             // Check so all vertices exists for this face
+            /*
             for (var j = 0; j < this.faces[i].length; j++) {
                 if (!this.vertices[this.faces[i][j]]) {
                     throw new Error(`Vertex ${this.faces[i][j]} not found!`);
                 }
             }
-
+            */
             const n = this.faceNormals[i] || new Vec3();
             this.getFaceNormal(i, n);
-            n.negate(n);
+            n.negate(n);                //TODO 为什么要CCW然后这里取反了，直接规定CW不就行了
             this.faceNormals[i] = n;
             const vertex = this.vertices[this.faces[i][0]];
             if (n.dot(vertex) < 0) {
-                console.error(`.faceNormals[${i}] = Vec3(${n.toString()}) looks like it points into the shape? The vertices follow. Make sure they are ordered CCW around the normal, using the right hand rule.`);
+                console.error(
+                    `faceNormals[${i}] = Vec3(${n}) looks like it points into the shape? 
+                    The vertices follow. 
+                    Make sure they are ordered CCW around the normal, using the right hand rule.`);
                 for (var j = 0; j < this.faces[i].length; j++) {
                     console.warn(`.vertices[${this.faces[i][j]}] = Vec3(${this.vertices[this.faces[i][j]].toString()})`);
                 }

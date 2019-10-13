@@ -5,6 +5,18 @@ import { PrimitiveMesh } from "laya/d3/resource/models/PrimitiveMesh";
 import { Mesh } from "laya/d3/resource/models/Mesh";
 import Vec3 from "../../math/Vec3";
 
+function updateMin(min:Vec3, x:number,y:number, z:number){
+	min.x>x && (min.x=x);
+	min.y>y && (min.y=y);
+	min.z>z && (min.z=z);
+}
+
+function updateMax(max:Vec3, x:number,y:number, z:number){
+	max.x<x && (max.x=x);
+	max.y<y && (max.y=y);
+	max.z<z && (max.z=z);
+}
+
 /**
  * 
  * @param data 
@@ -60,13 +72,14 @@ export function createGridPlane(xslice: int, ysclie: int, w: number, h: number, 
  * @param scale 
  * @param pos 
  */
-export function createTerrainMesh(hdata: Uint8Array, w: int, h: int, scale: Vec3, pos: Vec3) {
+export function createTerrainMesh(hdata: Uint8Array, w: int, h: int, scale: Vec3, pos: Vec3, min:Vec3, max:Vec3) {
 	var vertDecl = VertexMesh.getVertexDeclaration("POSITION,NORMAL,UV");
 	let vertex: number[][] = [];//new Array(w*h*8);
 	//let quadNum = (w - 1) * (h - 1);
 	let index: number[] = [];//new Array(quadNum*6);
 	let gridw = scale.x / (w-1);
-
+	min.set(1e8,1e8,1e8);
+	max.set(-1e8,-1e8,-1e8);
 	// 先给顶点位置赋值
 	for (let y = 0; y < h; y++) {
 		for (let x = 0; x < w; x++) {
@@ -74,7 +87,9 @@ export function createTerrainMesh(hdata: Uint8Array, w: int, h: int, scale: Vec3
 			let vx = x * gridw+pos.x;
 			let vy = pos.y+v;
 			let vz = y * gridw+pos.z;
-			vertex.push([vx,vy,vz,0,0,0,0,0]);
+			vertex.push([vx,vy,vz,0,1,0,0,0]);
+			updateMin(min,vx,vy,vz);
+			updateMax(max,vx,vy,vz);	
 		}
 	}
 
