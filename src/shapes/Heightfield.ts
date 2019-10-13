@@ -127,7 +127,7 @@ export default class Heightfield extends Shape {
      */
     setHeightValueAtIndex(xi:number, yi:number, value:number) {
         const data = this.data;
-        data[xi][yi] = value;
+        data[yi][xi] = value;
 
         // Invalidate cache
         this.clearCachedConvexTrianglePillar(xi, yi, false);
@@ -188,12 +188,12 @@ export default class Heightfield extends Shape {
             // Clamp index to edges
             if (xi < 0) { xi = 0; }
             if (yi < 0) { yi = 0; }
-            if (xi >= data.length - 1) { xi = data.length - 1; }
-            if (yi >= data[0].length - 1) { yi = data[0].length - 1; }
+            if (yi >= data.length - 1) { yi = data.length - 1; }
+            if (xi >= data[0].length - 1) { xi = data[0].length - 1; }
         }
 
         // Bail out if we are out of the terrain
-        if (xi < 0 || yi < 0 || xi >= data.length - 1 || yi >= data[0].length - 1) {
+        if (xi < 0 || yi < 0 || yi >= data.length - 1 || xi >= data[0].length - 1) {
             return false;
         }
 
@@ -208,8 +208,8 @@ export default class Heightfield extends Shape {
 
         const data = this.data;
         if (edgeClamp) {
-            xi = Math.min(data.length - 2, Math.max(0, xi));
-            yi = Math.min(data[0].length - 2, Math.max(0, yi));
+            yi = Math.min(data.length - 2, Math.max(0, yi));
+            xi = Math.min(data[0].length - 2, Math.max(0, xi));
         }
 
         const elementSize = this.elementSize;
@@ -246,12 +246,12 @@ export default class Heightfield extends Shape {
         result.lowerBound.set(
             xi * elementSize,
             yi * elementSize,
-            data[xi][yi]
+            data[yi][xi]
         );
         result.upperBound.set(
             (xi + 1) * elementSize,
             (yi + 1) * elementSize,
-            data[xi + 1][yi + 1]
+            data[yi + 1][xi + 1]
         );
     }
 
@@ -270,8 +270,8 @@ export default class Heightfield extends Shape {
         let xi = idx[0];
         let yi = idx[1];
         if (edgeClamp) {
-            xi = Math.min(data.length - 2, Math.max(0, xi));
-            yi = Math.min(data[0].length - 2, Math.max(0, yi));
+            yi = Math.min(data.length - 2, Math.max(0, yi));
+            xi = Math.min(data[0].length - 2, Math.max(0, xi));
         }
         const upper = this.getTriangleAt(x, y, edgeClamp, a, b, c);
         barycentricWeights(x, y, a.x, a.y, b.x, b.y, c.x, c.y, getHeightAt_weights);
@@ -281,12 +281,12 @@ export default class Heightfield extends Shape {
         if (upper) {
 
             // Top triangle verts
-            return data[xi + 1][yi + 1] * w.x + data[xi][yi + 1] * w.y + data[xi + 1][yi] * w.z;
+            return data[yi + 1][xi + 1] * w.x + data[yi][xi + 1] * w.y + data[yi + 1][xi] * w.z;
 
         } else {
 
             // Top triangle verts
-            return data[xi][yi] * w.x + data[xi + 1][yi] * w.y + data[xi][yi + 1] * w.z;
+            return data[yi][xi] * w.x + data[yi + 1][xi] * w.y + data[yi][xi + 1] * w.z;
         }
     }
 
@@ -322,17 +322,17 @@ export default class Heightfield extends Shape {
             a.set(
                 (xi + 1) * elementSize,
                 (yi + 1) * elementSize,
-                data[xi + 1][yi + 1]
+                data[yi + 1][xi + 1]
             );
             b.set(
                 xi * elementSize,
                 (yi + 1) * elementSize,
-                data[xi][yi + 1]
+                data[yi][xi + 1]
             );
             c.set(
                 (xi + 1) * elementSize,
                 yi * elementSize,
-                data[xi + 1][yi]
+                data[yi + 1][xi]
             );
 
         } else {
@@ -341,17 +341,17 @@ export default class Heightfield extends Shape {
             a.set(
                 xi * elementSize,
                 yi * elementSize,
-                data[xi][yi]
+                data[yi][xi]
             );
             b.set(
                 (xi + 1) * elementSize,
                 yi * elementSize,
-                data[xi + 1][yi]
+                data[yi + 1][xi]
             );
             c.set(
                 xi * elementSize,
                 (yi + 1) * elementSize,
-                data[xi][yi + 1]
+                data[yi][xi + 1]
             );
         }
     }
@@ -406,13 +406,13 @@ export default class Heightfield extends Shape {
 
 		// 四个点的最低点到整体最低点的中点
         const h = (Math.min(
-            data[xi][yi],
-            data[xi + 1][yi],
-            data[xi][yi + 1],
-            data[xi + 1][yi + 1]
+            data[yi][xi],
+            data[yi + 1][xi],
+            data[yi][xi + 1],
+            data[yi + 1][xi + 1]
         ) - this.minValue) / 2 + this.minValue;
 
-        if (!getUpperTriangle) {
+        if (getUpperTriangle) {
             // Center of the triangle pillar - all polygons are given relative to this one
             offsetResult.set(
                 (xi + 0.25) * elementSize, // sort of center of a triangle
@@ -430,17 +430,17 @@ export default class Heightfield extends Shape {
             verts[0].set(
                 -0.25 * elementSize,	// 相对于offsetResult，所以是 -0.25,-0.25
                 -0.25 * elementSize,
-                data[xi][yi] - h
+                data[yi][xi] - h
             );
             verts[1].set(
                 0.75 * elementSize,
                 -0.25 * elementSize,
-                data[xi + 1][yi] - h
+                data[yi][xi+1] - h        
             );
             verts[2].set(
                 -0.25 * elementSize,
                 0.75 * elementSize,
-                data[xi][yi + 1] - h
+                data[yi+1][xi] - h
             );
 
             // bottom triangle verts
@@ -490,7 +490,12 @@ export default class Heightfield extends Shape {
 
 
         } else {
-
+			// 0        1
+			//  *-----*
+			//  |   / | 
+			//  | / . | 是offsetResult
+			//  * --- *
+			//        0
             // Center of the triangle pillar - all polygons are given relative to this one
             offsetResult.set(
                 (xi + 0.75) * elementSize, // sort of center of a triangle
@@ -502,17 +507,17 @@ export default class Heightfield extends Shape {
             verts[0].set(
                 0.25 * elementSize,
                 0.25 * elementSize,
-                data[xi + 1][yi + 1] - h
+                data[yi + 1][xi + 1] - h
             );
             verts[1].set(
                 -0.75 * elementSize,
                 0.25 * elementSize,
-                data[xi][yi + 1] - h
+                data[yi+1][xi] - h
             );
             verts[2].set(
                 0.25 * elementSize,
                 -0.75 * elementSize,
-                data[xi + 1][yi] - h
+                data[yi][xi+1] - h
             );
 
             // bottom triangle verts
@@ -589,7 +594,7 @@ export default class Heightfield extends Shape {
         const data = this.data;
 
         const s = this.elementSize;
-        this.boundingSphereRadius = new Vec3(data.length * s, data[0].length * s, Math.max(Math.abs(this.maxValue), Math.abs(this.minValue))).length();
+        this.boundingSphereRadius = new Vec3(data[0].length * s, data.length * s, Math.max(Math.abs(this.maxValue), Math.abs(this.minValue))).length();
     }
 
     /**
@@ -612,17 +617,18 @@ export default class Heightfield extends Shape {
         const matrix = this.data;
         matrix.length = 0;
         this.elementSize = Math.abs(scale.x) / w;
+        let hscale = scale.z/255;
         for (let i = 0; i < h; i++) {
             const row = [];
             for (let j = 0; j < w; j++) {
-                const a = imageData.data[(i * h + j) * 4];
+                const a = imageData.data[(i * w + j) * 4];
                 //const b = imageData.data[(i * h + j) * 4 + 1];
                 //const c = imageData.data[(i * h + j) * 4 + 2];
-                const height = a  / 255 * scale.z;
+                const height = a  *hscale;
                 if (scale.x < 0) {
-                    row.push(height);
-                } else {
                     row.unshift(height);
+                } else {
+                    row.push(height);
                 }
             }
             if (scale.y < 0) {
@@ -634,6 +640,8 @@ export default class Heightfield extends Shape {
         this.updateMaxValue();
         this.updateMinValue();
         this.update();
+        
+        return imageData;
     }
 }
 

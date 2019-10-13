@@ -46,30 +46,30 @@ function rand(a: number, b: number) {
 
 function testGround(img: HTMLImageElement) {
 	//plane
-	//let p =addBox(new Vec3(100,100,100), new Vec3(0,-50,0),0,phymtl1);
+	//addBox(new Vec3(100,100,100), new Vec3(0,-50,0),0,phymtl1);
 	let p = new Heightfield([[1]], null, null, 1);
-	p.setHeightsFromImage(img, new Vec3(100, 100, 20));
+	let scale = new Vec3(10,10,2);
+	let imgdt = p.setHeightsFromImage(img, scale) as ImageData;
 	//转换data
-	let data: number[] = [];
-	p.minValue;
-	let w = p.data[0].length;
-	let h = p.data.length;
-	let k = 255 / 20;
-	p.data.forEach(xl => {
-		xl.forEach(v => {
-			data.push((v * k) | 0);
-		});
-	});
+	let w = imgdt.width;
+	let h = imgdt.height;
+	let data:number[] = [];
+	for(let y=0; y<h; y++){
+		for(let x=0; x<w; x++){
+			let v = imgdt.data[(y*w+x)*4];
+			data.push(v);
+		}
+	}
 
 	let min = new Vec3(0, 0, 0);
-	let max = new Vec3(100, 20, 100);
-	let m = createTerrainMesh(new Uint8Array(data), w, h, new Vec3(100, 20, 100), new Vec3(0, 0, 0));
+	let max = new Vec3(scale.x,scale.z,scale.y);
+	let m = createTerrainMesh(new Uint8Array(data), w, h, new Vec3(scale.x,scale.z,scale.y), new Vec3(0, 0, 0));
 	let renderobj = new PhyMeshSprite(m, min as any as Vector3, max as any as Vector3);
 	sce3d.addChild(renderobj);
 
 	var phy = renderobj.addComponent(CannonBody) as CannonBody;
 	let shapeq = new Quaternion();
-	shapeq.setFromAxisAngle(new Vec3(1, 0, 0), -Math.PI / 2);	// 正的是顺时针
+	//shapeq.setFromAxisAngle(new Vec3(1, 0, 0), -Math.PI / 2);	// 正的是顺时针
 	phy.addShape(p, new Vector3(0,0,0), shapeq);
 	//phy.phyBody.setPos(0, 2, 0);
 	phy.setMass(0);
