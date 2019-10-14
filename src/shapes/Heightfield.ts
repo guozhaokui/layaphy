@@ -172,7 +172,7 @@ export default class Heightfield extends Shape {
 	 * 根据空间位置来确定对应的数据的位置
      * @param   result Two-element array
      * @param   clamp If the position should be clamped to the heightfield edge.
-     * @return 
+     * @return 如果不在范围内，则false
      */
     getIndexOfPosition(x:number, y:number, result:number[], clamp:bool) {
         // Get the index of the data points to test against
@@ -606,7 +606,54 @@ export default class Heightfield extends Shape {
 
         const s = this.elementSize;
         this.boundingSphereRadius = new Vec3(data[0].length * s, data.length * s, Math.max(Math.abs(this.maxValue), Math.abs(this.minValue))).length();
-    }
+	}
+	
+	/**
+	 * 与本地空间的一个球相撞，给角色控制器用的。因此只要一个等效的碰撞点和碰撞法线就行
+	 * @param pos 
+	 * @param R 
+	 * @param blockAng  多大角度会阻挡前进，按照与地面的夹角算。单位是弧度
+	 * @param stepHeight  开跨越多高的障碍
+	 * @param hitPos 
+	 * @param hitNorm 
+	 */
+	hitSphere1(pos:Vec3, R:number, blockAng:number, stepHeight:number, hitPos:Vec3, hitNorm:Vec3):boolean{
+		if(pos.y-R>this.maxValue)
+			return false;
+
+		let minx=pos.x-R;
+		let minz=pos.z-R;
+		let maxx=pos.x+R;
+		let maxz=pos.z+R;
+		let data = this.data;
+
+		if(maxx<0) return false;
+		if(maxz<0) return false;
+		let w = this.elementSize;
+		if(minx>data[0].length*w) return false;
+		if(minz>data.length*w) return false;
+
+		let maxdot = Math.cos(Math.PI/2-blockAng);	// 与{0,1,0}矢量的夹角,越大越陡
+		// if(normal.y>maxdot) face=|
+
+		let idx = getHeightAt_idx;
+		this.getIndexOfPosition(minx,minz,idx,true);
+		let minpx = idx[0];
+		let minpz = idx[1];
+		this.getIndexOfPosition(maxx,maxz,idx,true);
+		let maxpx = idx[0];
+		let maxpz = idx[1];
+
+		for( let z=minpz; z<=maxpz; z++){
+			for(let x=minpx; x<=maxpx; x++){
+				let h0=data[z][x];
+				let h1=data[z][x+1];
+				let h2=data[z+1][x];
+				let h3=data[z+1][x+1];
+			}
+		}
+		return true;
+	}
 
     /**
      * Sets the height values from an image. Currently only supported in browser.

@@ -256,7 +256,12 @@ export default class World extends EventTarget {
 
     idToBodyMap:{[id:string]:Body} = {};
 
-    _phyRender:PhyRender;
+	_phyRender:PhyRender;
+	
+	/**
+	 * 没有动态的，则不计算。只要有一次加过动态的，就算
+	 */
+	_noDynamic=true;	
 
     constructor(options?:any) {
         super();
@@ -416,8 +421,11 @@ export default class World extends EventTarget {
         }
         this.collisionMatrix.setNumObjects(this.bodies.length);
         this.addBodyEvent.body = body;
-        this.idToBodyMap[body.id] = body;
-        this.dispatchEvent(this.addBodyEvent);
+		this.idToBodyMap[body.id] = body;
+		if(body.type==BODYTYPE.DYNAMIC){
+			this._noDynamic=false;
+		}
+		this.dispatchEvent(this.addBodyEvent);
     }
 
     /**
@@ -603,6 +611,8 @@ export default class World extends EventTarget {
      *     world.step(1/60);
      */
     step(dt: number, timeSinceLastCalled: number = 0, maxSubSteps: number = 10) {
+		if(this._noDynamic)
+			return;
         if(this.phyRender){
             this.phyRender.stepStart();
         }

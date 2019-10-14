@@ -728,7 +728,10 @@ export default class Body extends EventTarget {
                 I.y > 0 && !fixed ? 1.0 / I.y : 0,
                 I.z > 0 && !fixed ? 1.0 / I.z : 0
             );
-            this.updateInertiaWorld(true);
+			this.updateInertiaWorld(true);
+			if(this.world && this.type==BODYTYPE.DYNAMIC){
+				this.world._noDynamic=false;
+			}
         }
     }
 
