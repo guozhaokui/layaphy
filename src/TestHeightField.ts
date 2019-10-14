@@ -33,7 +33,7 @@ let phyr:PhyRender;
 
 function initPhy(scene: Scene3D) {
 	let phyworld = world = scene.addComponent(CannonWorld) as CannonWorld;
-	phyworld.world.gravity.set(0, 0, 0);
+	phyworld.world.gravity.set(0, -10, 0);
 	(window as any).phyr = new PhyRender(scene, phyworld.world);
 	phyworld.world.addContactMaterial(cmtl1).addContactMaterial(cmtl2);
 	phyr=PhyRender.inst;
@@ -47,12 +47,15 @@ function rand(a: number, b: number) {
 function testGround(img: HTMLImageElement) {
 	//plane
 	//addBox(new Vec3(100,100,100), new Vec3(0,-50,0),0,phymtl1);
-	let p = new Heightfield([[1,1],[1,1]], null, null, 10);
 	let min = new Vec3();
 	let max = new Vec3();
 
+	let p = new Heightfield([[1,1],[1,1]], null, null, 10);
 	/*
-	let scale = new Vec3(10,10,2);
+	let m = createTerrainMesh(new Uint8Array([255,255,255,255]), 2, 2, new Vec3(10,1,10), new Vec3(0, 0, 0),min,max);
+	*/
+	
+	let scale = new Vec3(100,20,100);
 	let imgdt = p.setHeightsFromImage(img, scale) as ImageData;
 	//转换data
 	let w = imgdt.width;
@@ -65,9 +68,8 @@ function testGround(img: HTMLImageElement) {
 		}
 	}
 	
-	let m = createTerrainMesh(new Uint8Array(data), w, h, new Vec3(scale.x,scale.z,scale.y), new Vec3(0, 0, 0));
-	*/
-	let m = createTerrainMesh(new Uint8Array([255,255,255,255]), 2, 2, new Vec3(10,1,10), new Vec3(0, 0, 0),min,max);
+	let m = createTerrainMesh(new Uint8Array(data), w, h, scale, new Vec3(0, 0, 0),min,max);
+	
 	let renderobj = new PhyMeshSprite(m, min as any as Vector3, max as any as Vector3);
 	sce3d.addChild(renderobj);
 
@@ -90,8 +92,8 @@ function test(mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 		stpos.set(ray.origin.x, ray.origin.y, ray.origin.z);
 		dir.set(ray.direction.x, ray.direction.y, ray.direction.z);
 
-		let sp = addSphere(0.3, stpos.x, stpos.y, stpos.z);
-		//let sp = addBox(new Vec3(0.5, 0.5, 0.5), stpos, 1, phymtl1);
+		//let sp = addSphere(3, stpos.x, stpos.y, stpos.z);
+		let sp = addBox(new Vec3(0.5, 0.5, 0.5), stpos, 1, phymtl1);
 		let v = 20;
 		setTimeout(() => {
 			sp.owner.destroy();

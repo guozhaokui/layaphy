@@ -154,9 +154,9 @@ export default class Heightfield extends Shape {
         const data = this.data; // Set first value
 
         let max = this.minValue;
-        for (let i = iMinX; i <= iMaxX; i++) {
-            for (let j = iMinY; j <= iMaxY; j++) {
-                const height = data[i][j];
+		for (let j = iMinY; j <= iMaxY; j++) {
+			for (let i = iMinX; i <= iMaxX; i++) {
+                const height = data[j][i];
                 if (height > max) {
                     max = height;
                 }
@@ -628,7 +628,7 @@ export default class Heightfield extends Shape {
         const matrix = this.data;
         matrix.length = 0;
         this.elementSize = Math.abs(scale.x) / w;
-        let hscale = scale.z/255;
+        let hscale = scale.y/255;
         for (let i = 0; i < h; i++) {
             const row = [];
             for (let j = 0; j < w; j++) {

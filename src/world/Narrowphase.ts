@@ -941,8 +941,8 @@ export default class Narrowphase {
             qj.vmult(v, worldCorner);
             xj.vadd(worldCorner, worldCorner);  // v转换到是世界空间
             //DEBUG
-            let phyr = this.world.phyRender as PhyRender;//
-            phyr.addPoint1(worldCorner,0xff0000);
+            //let phyr = this.world.phyRender as PhyRender;//
+            //phyr.addPoint1(worldCorner,0xff0000);
             //DEBUG
             const sphere_to_corner = sphereConvex_sphereToCorner;
             worldCorner.vsub(xi, sphere_to_corner);
@@ -1617,40 +1617,38 @@ export default class Narrowphase {
         let iMinX = Math.floor((localConvexPos.x - radius) / w) - 1;
 
         let iMaxX = Math.ceil((localConvexPos.x + radius) / w) + 1;
-        let iMinY = Math.floor((localConvexPos.y - radius) / w) - 1;
-        let iMaxY = Math.ceil((localConvexPos.y + radius) / w) + 1;
+        let iMinZ = Math.floor((localConvexPos.z - radius) / w) - 1;
+        let iMaxZ = Math.ceil((localConvexPos.z + radius) / w) + 1;
 
         // Bail out if we are out of the terrain
-        if (iMaxX < 0 || iMaxY < 0 || iMinX > data.length || iMinY > data[0].length) {
+        if (iMaxX < 0 || iMaxZ < 0 || iMinX > data.length || iMinZ > data[0].length) {
             return false;
         }
 
         // Clamp index to edges
         if (iMinX < 0) { iMinX = 0; }
         if (iMaxX < 0) { iMaxX = 0; }
-        if (iMinY < 0) { iMinY = 0; }
-        if (iMaxY < 0) { iMaxY = 0; }
-        if (iMinX >= data.length) { iMinX = data.length - 1; }
-        if (iMaxX >= data.length) { iMaxX = data.length - 1; }
-        if (iMaxY >= data[0].length) { iMaxY = data[0].length - 1; }
-        if (iMinY >= data[0].length) { iMinY = data[0].length - 1; }
+        if (iMinZ < 0) { iMinZ = 0; }
+        if (iMaxZ < 0) { iMaxZ = 0; }
+        if (iMinX >= data[0].length) { iMinX = data[0].length - 1; }
+        if (iMaxX >= data[0].length) { iMaxX = data[0].length - 1; }
+        if (iMaxZ >= data.length) { iMaxZ = data.length - 1; }
+        if (iMinZ >= data.length) { iMinZ = data.length - 1; }
 
         const minMax: f32[] = [];
-        hfShape.getRectMinMax(iMinX, iMinY, iMaxX, iMaxY, minMax);
+        hfShape.getRectMinMax(iMinX, iMinZ, iMaxX, iMaxZ, minMax);
         const min = minMax[0];
         const max = minMax[1];
 
         // Bail out if we're cant touch the bounding height box
-        if (localConvexPos.z - radius > max || localConvexPos.z + radius < min) {
+        if (localConvexPos.y - radius > max || localConvexPos.y + radius < min) {
             return false;
         }
 
         let hit = false;
-        for (let i = iMinX; i < iMaxX; i++) {
-            for (let j = iMinY; j < iMaxY; j++) {
-
+		for (let j = iMinZ; j < iMaxZ; j++) {
+			for (let i = iMinX; i < iMaxX; i++) {
                 let intersecting = false;
-
                 // Lower triangle
                 hfShape.getConvexTrianglePillar(i, j, false);
                 Transform.pointToWorldFrame(hfPos, hfQuat, hfShape.pillarOffset, worldPillarOffset);
@@ -1689,6 +1687,7 @@ export default class Narrowphase {
         sphereBody: Body, hfBody: Body,
         rsi: Shape|null, rsj: Shape|null,
         justTest: boolean): boolean {
+
         const data = hfShape.data;
         const radius = sphereShape.radius;
         const w = hfShape.elementSize;
@@ -1696,49 +1695,47 @@ export default class Narrowphase {
 
         // Get sphere position to heightfield local!
         const localSpherePos = sphereHeightfield_tmp1;
-        Transform.pointToLocalFrame(hfPos, hfQuat, spherePos, localSpherePos);
+        Transform.pointToLocalFrame(hfPos, hfQuat, spherePos, localSpherePos);//sphere转换到hf空间
 
-        // Get the index of the data points to test against
+		// Get the index of the data points to test against
+		// sphere覆盖的范围
         let iMinX = Math.floor((localSpherePos.x - radius) / w) - 1;
-
         let iMaxX = Math.ceil((localSpherePos.x + radius) / w) + 1;
-        let iMinY = Math.floor((localSpherePos.y - radius) / w) - 1;
-        let iMaxY = Math.ceil((localSpherePos.y + radius) / w) + 1;
+        let iMinZ = Math.floor((localSpherePos.z - radius) / w) - 1;
+        let iMaxZ = Math.ceil((localSpherePos.z + radius) / w) + 1;
 
-        // Bail out if we are out of the terrain
-        if (iMaxX < 0 || iMaxY < 0 || iMinX > data.length || iMaxY > data[0].length) {
+		// Bail out if we are out of the terrain
+		// 投影本身在格子外面
+        if (iMaxX < 0 || iMaxZ < 0 || iMinX > data[0].length || iMaxZ > data.length) {
             return false;
         }
 
         // Clamp index to edges
         if (iMinX < 0) { iMinX = 0; }
         if (iMaxX < 0) { iMaxX = 0; }
-        if (iMinY < 0) { iMinY = 0; }
-        if (iMaxY < 0) { iMaxY = 0; }
-        if (iMinX >= data.length) { iMinX = data.length - 1; }
-        if (iMaxX >= data.length) { iMaxX = data.length - 1; }
-        if (iMaxY >= data[0].length) { iMaxY = data[0].length - 1; }
-        if (iMinY >= data[0].length) { iMinY = data[0].length - 1; }
+        if (iMinZ < 0) { iMinZ = 0; }
+        if (iMaxZ < 0) { iMaxZ = 0; }
+        if (iMinX >= data[0].length) { iMinX = data[0].length - 1; }
+        if (iMaxX >= data[0].length) { iMaxX = data[0].length - 1; }
+        if (iMaxZ >= data.length) { iMaxZ = data.length - 1; }
+        if (iMinZ >= data.length) { iMinZ = data.length - 1; }
 
         const minMax: f32[] = [];
-        hfShape.getRectMinMax(iMinX, iMinY, iMaxX, iMaxY, minMax);
+        hfShape.getRectMinMax(iMinX, iMinZ, iMaxX, iMaxZ, minMax);
         const min = minMax[0];
         const max = minMax[1];
 
         // Bail out if we're cant touch the bounding height box
-        if (localSpherePos.z - radius > max || localSpherePos.z + radius < min) {
+        if (localSpherePos.y - radius > max || localSpherePos.y + radius < min) {
             return false;
         }
 
         let hit = false;
         const result = this.result;
-        for (let i = iMinX; i < iMaxX; i++) {
-            for (let j = iMinY; j < iMaxY; j++) {
-
+		for (let j = iMinZ; j < iMaxZ; j++) {
+			for (let i = iMinX; i < iMaxX; i++) {
                 const numContactsBefore = result.length;
-
                 let intersecting = false;
-
                 // Lower triangle
                 hfShape.getConvexTrianglePillar(i, j, false);
                 // 把convex的offset点转换到世界空间

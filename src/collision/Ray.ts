@@ -285,25 +285,25 @@ export default class Ray {
 		// Get the index of the data points to test against
 		const index = intersectHeightfield_index;
 
-		let iMinY=0, iMinX=0;
-		let iMaxY;
+		let iMinZ=0, iMinX=0;
+		let iMaxZ;
 		// Set to max
-		let iMaxX = iMaxY = shape.data.length - 1;
+		let iMaxX = iMaxZ = shape.data.length - 1;
 
 		const aabb = new AABB();
 		localRay.getAABB(aabb);
 
 		// min所在的位置
-		shape.getIndexOfPosition(aabb.lowerBound.x, aabb.lowerBound.y, index, true);
+		shape.getIndexOfPosition(aabb.lowerBound.x, aabb.lowerBound.z, index, true);
 		iMinX = Math.max(iMinX, index[0]);	//限制到>=0
-		iMinY = Math.max(iMinY, index[1]);
+		iMinZ = Math.max(iMinZ, index[1]);
 		// max所在的位置
-		shape.getIndexOfPosition(aabb.upperBound.x, aabb.upperBound.y, index, true);
+		shape.getIndexOfPosition(aabb.upperBound.x, aabb.upperBound.z, index, true);
 		iMaxX = Math.min(iMaxX, index[0] + 1);// 限制一下
-		iMaxY = Math.min(iMaxY, index[1] + 1);
+		iMaxZ = Math.min(iMaxZ, index[1] + 1);
 
-		for (let i = iMinX; i < iMaxX; i++) {
-			for (let j = iMinY; j < iMaxY; j++) {
+		for (let j = iMinZ; j < iMaxZ; j++) {
+			for (let i = iMinX; i < iMaxX; i++) {
 
 				if (this.result._shouldStop) {
 					return;
