@@ -66,8 +66,7 @@ export class HitPointInfoArray{
 /**
  * Base class for shapes
  */
-@Path
-export default abstract class Shape {
+export default class Shape {
     static idCounter = 0;
     id = Shape.idCounter++;
     type = 0;
@@ -107,21 +106,21 @@ export default abstract class Shape {
     /**
      * Computes the bounding sphere radius. The result is stored in the property .boundingSphereRadius
      */
-    abstract updateBoundingSphereRadius():void;
+    updateBoundingSphereRadius():void{};
 
-    abstract calculateWorldAABB(pos: Vec3, quat: Quaternion, min: Vec3, max: Vec3):void;
+    calculateWorldAABB(pos: Vec3, quat: Quaternion, min: Vec3, max: Vec3):void{};
     /**
      * Get the volume of this shape
      */
-    abstract volume():number;
+    volume():number{return 0;};
 
     /**
      * Calculates the inertia in the local frame for this shape.
      * @see http://en.wikipedia.org/wiki/List_of_moments_of_inertia
      */
-    abstract calculateLocalInertia(mass: number, target: Vec3):void;
+    calculateLocalInertia(mass: number, target: Vec3):void{};
 
-    abstract onPreNarrowpase(stepId:i32,pos:Vec3, quat:Quaternion):void;
+    onPreNarrowpase(stepId:i32,pos:Vec3, quat:Quaternion):void{};
 }
 
 

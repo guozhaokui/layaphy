@@ -1,0 +1,1 @@
+uglifyjs -m -o ./build/layacannon.min.js ./build/layacannon.js
