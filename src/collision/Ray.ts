@@ -186,7 +186,7 @@ export default class Ray {
 		const from = this.from;
 		// Checking boundingSphere
 		const distance = distanceFromIntersection(from, this._direction, position);
-		if (distance > shape.boundingSphereRadius) {
+		if (distance > shape.boundSphR) {
 			return;
 		}
 

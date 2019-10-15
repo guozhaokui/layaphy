@@ -3,9 +3,9 @@ import RaycastResult from "../collision/RaycastResult";
 import Mat3 from "../math/Mat3";
 import Quaternion from "../math/Quaternion";
 import Vec3 from "../math/Vec3";
+import { getPhyRender } from "../world/World";
 import Box from "./Box";
 import Shape, { SHAPETYPE } from "./Shape";
-import { PhyRender } from "../layawrap/PhyRender";
 
 function POT(v: i32): i32 {
 	let r: i32 = 1;
@@ -465,11 +465,11 @@ export class Voxel extends Shape {
 		this.gridw
 	}
 
-	updateBoundingSphereRadius(): void {
+	updateBndSphR(): void {
 		let mx = Math.max(Math.abs(this.aabbmax.x), Math.abs(this.aabbmin.x));
 		let my = Math.max(Math.abs(this.aabbmax.y), Math.abs(this.aabbmin.y));
 		let mz = Math.max(Math.abs(this.aabbmax.z), Math.abs(this.aabbmin.z));
-		this.boundingSphereRadius = Math.sqrt(mx * mx + my * my + mz * mz);
+		this.boundSphR = Math.sqrt(mx * mx + my * my + mz * mz);
 	}
 
 	calculateWorldAABB(pos: Vec3, quat: Quaternion, min: Vec3, max: Vec3): void {
@@ -573,7 +573,7 @@ export class Voxel extends Shape {
 			return;
 
 		//debug
-		let phyr = PhyRender.inst;
+		let phyr =  getPhyRender();
 		let wpos = new Vec3();
 		phyr.addPersistPoint( this.pointToWorld(nst, wpos));
 		phyr.addPersistPoint( this.pointToWorld(ned,wpos));

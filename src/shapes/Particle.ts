@@ -22,8 +22,8 @@ export default class Particle extends Shape {
         return 0;
     }
 
-    updateBoundingSphereRadius() {
-        this.boundingSphereRadius = 0;
+    updateBndSphR() {
+        this.boundSphR = 0;
     }
 
     calculateWorldAABB(pos:Vec3, quat:Quaternion, min:Vec3, max:Vec3) {

@@ -65,7 +65,7 @@ export default class Trimesh extends Shape {
         this.updateEdges();
         this.updateNormals();
         this.updateAABB();
-        this.updateBoundingSphereRadius();
+        this.updateBndSphR();
         this.updateTree();
     }
 
@@ -140,7 +140,7 @@ export default class Trimesh extends Shape {
         }
         this.scale.copy(scale);
         this.updateAABB();
-        this.updateBoundingSphereRadius();
+        this.updateBndSphR();
     }
 
     /**
@@ -338,9 +338,9 @@ export default class Trimesh extends Shape {
 
     /**
      * Will update the .boundingSphereRadius property
-     * @method updateBoundingSphereRadius
+     * @method updateBndSphR
      */
-    updateBoundingSphereRadius() {
+    updateBndSphR() {
         // Assume points are distributed with local (0,0,0) as center
         let max2 = 0;
         const vertices = this.vertices;
@@ -352,7 +352,7 @@ export default class Trimesh extends Shape {
                 max2 = norm2;
             }
         }
-        this.boundingSphereRadius = Math.sqrt(max2);
+        this.boundSphR = Math.sqrt(max2);
     }
 
     /**
@@ -409,7 +409,7 @@ export default class Trimesh extends Shape {
      * Get approximate volume
      */
     volume() {
-        return 4.0 * Math.PI * this.boundingSphereRadius / 3.0;
+        return 4.0 * Math.PI * this.boundSphR / 3.0;
     }
 
     /**

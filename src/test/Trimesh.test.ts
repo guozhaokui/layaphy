@@ -127,8 +127,8 @@ test('computeLocalAABB', () => {
     console.warn('Trimesh::computeLocalAABB is todo');
 });
 
-test('updateBoundingSphereRadius', () => {
-    console.warn('Trimesh::updateBoundingSphereRadius is todo');
+test('updateBndSphR', () => {
+    console.warn('Trimesh::updateBndSphR is todo');
 });
 
 test('calculateWorldAABB', () => {

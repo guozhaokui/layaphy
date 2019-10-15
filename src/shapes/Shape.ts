@@ -6,7 +6,7 @@ import Vec3 from '../math/Vec3.js';
 import Body from '../objects/Body.js';
 import { MinkowskiShape } from './MinkowskiShape.js';
 
-export enum SHAPETYPE{
+export const enum SHAPETYPE{
     SPHERE= 1,
     PLANE= 2,
     BOX= 4,
@@ -74,7 +74,7 @@ export default class Shape {
     /**
      * The local bounding sphere radius of this shape.
      */
-    boundingSphereRadius = 0;
+    boundSphR = 0;
     //aabb:BoundBox
 
     /**
@@ -106,7 +106,7 @@ export default class Shape {
     /**
      * Computes the bounding sphere radius. The result is stored in the property .boundingSphereRadius
      */
-    updateBoundingSphereRadius():void{};
+    updateBndSphR():void{};
 
     calculateWorldAABB(pos: Vec3, quat: Quaternion, min: Vec3, max: Vec3):void{};
     /**

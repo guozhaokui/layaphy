@@ -80,7 +80,7 @@ export default class ConvexPolyhedron extends Shape {
         this.computeNormals();
         this.uniqueAxes = uniqueAxes ? uniqueAxes.slice() : null;
         this.computeEdges();
-        this.updateBoundingSphereRadius();
+        this.updateBndSphR();
     }
 
     /**
@@ -671,9 +671,9 @@ export default class ConvexPolyhedron extends Shape {
     }
 
     /**
-     * @method updateBoundingSphereRadius
+     * @method updateBndSphR
      */
-    updateBoundingSphereRadius() {
+    updateBndSphR() {
         // Assume points are distributed with local (0,0,0) as center
         let max2 = 0;
         const verts = this.vertices;
@@ -683,7 +683,7 @@ export default class ConvexPolyhedron extends Shape {
                 max2 = norm2;
             }
         }
-        this.boundingSphereRadius = Math.sqrt(max2);
+        this.boundSphR = Math.sqrt(max2);
     }
 
     calculateWorldAABB(pos:Vec3, quat:Quaternion, min:Vec3, max:Vec3):void {
@@ -728,7 +728,7 @@ export default class ConvexPolyhedron extends Shape {
      * @return {Number}
      */
     volume() {
-        return 4.0 * Math.PI * this.boundingSphereRadius / 3.0;
+        return 4.0 * Math.PI * this.boundSphR / 3.0;
     }
 
     /**

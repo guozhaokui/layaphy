@@ -13,7 +13,7 @@ export class Tetrahedron {
     v3 = new Vec3();
     invA:Mat3 = new Mat3();
     constructor(v0:Vec3,v1:Vec3,v2:Vec3,v3:Vec3){
-        let e = tmpMat3.elements;
+        let e = tmpMat3.ele;
         e[0]=v1.x-v0.x; e[1] = v2.x-v0.x; e[2] = v3.x-v0.x;
         e[3]=v1.y-v0.y; e[4] = v2.y-v0.y; e[5] = v3.y-v0.y;
         e[6]=v1.z-v0.z; e[7] = v2.z-v0.z; e[8] = v3.z-v0.z;

@@ -14,7 +14,7 @@ import { BODYTYPE } from "../objects/Body";
 import Capsule from "../shapes/Capsule";
 import Plane from "../shapes/Plane";
 import Shape, { SHAPETYPE } from "../shapes/Shape";
-import World, { IPhyRender } from "../world/World";
+import World, { IPhyRender, setPhyRender } from "../world/World";
 import { RenderTexture2D } from "laya/resource/RenderTexture2D";
 import { Voxel } from "../shapes/Voxel";
 
@@ -75,7 +75,7 @@ export class PhyRender extends IPhyRender {
 	persistVec: Vec3[] = [];
 	//ui1: UIPlane = new UIPlane(null);
 
-	static inst: PhyRender;
+	private static inst: PhyRender;
 	constructor(sce: Scene3D, world: World) {
 		super();
 		this.sce = sce;
@@ -85,6 +85,7 @@ export class PhyRender extends IPhyRender {
 		this.renders.push(r);
 		sce.addChild(r);
 		PhyRender.inst = this;
+		setPhyRender(this);
 		// 添加到window上，方便调试
 		(window as any).phyr = this;
 		(window as any).showPoint = this.addPersistPoint.bind(this);
@@ -92,6 +93,10 @@ export class PhyRender extends IPhyRender {
 		(window as any).clearPhy = this.clearPersist.bind(this);
 
 		//sce.addChild(this.ui1);
+	}
+
+	getInst(){
+		return PhyRender.inst;
 	}
 
 	showPos(x: f32, y: f32, z: f32) {

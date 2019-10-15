@@ -72,7 +72,7 @@ export default class Box extends Shape implements MinkowskiShape {
         this.type = SHAPETYPE.BOX;
         this.halfExtents = halfExtents;
         this.updateConvexPolyhedronRepresentation();
-        this.updateBoundingSphereRadius();
+        this.updateBndSphR();
 	}
 	
 	getSupportVertex(dir: Vec3, sup: Vec3): Vec3 {
@@ -168,8 +168,8 @@ export default class Box extends Shape implements MinkowskiShape {
         return 8.0 * this.halfExtents.x * this.halfExtents.y * this.halfExtents.z;
     }
 
-    updateBoundingSphereRadius() {
-        this.boundingSphereRadius = this.halfExtents.length();
+    updateBndSphR() {
+        this.boundSphR = this.halfExtents.length();
     }
 
     forEachWorldCorner(pos: Vec3, quat: Quaternion, callback: (x: number, y: number, z: number) => void) {

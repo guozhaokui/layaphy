@@ -504,9 +504,9 @@ export default class Body extends EventTarget {
 
         for (let i = 0; i !== N; i++) {
             const shape = shapes[i];
-            shape.updateBoundingSphereRadius();
+            shape.updateBndSphR();
             const offset = shapeOffsets[i].length();
-            const r = shape.boundingSphereRadius;
+            const r = shape.boundSphR;
             if (offset + r > radius) {
                 radius = offset + r;
             }
@@ -781,7 +781,7 @@ export default class Body extends EventTarget {
         velo.y += force.y * iMdt * linearFactor.y;
         velo.z += force.z * iMdt * linearFactor.z;
 
-        const e = invInertia.elements;
+        const e = invInertia.ele;
         const angularFactor = this.angularFactor;
         const tx = torque.x * angularFactor.x;
         const ty = torque.y * angularFactor.y;

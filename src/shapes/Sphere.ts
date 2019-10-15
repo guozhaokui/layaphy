@@ -31,7 +31,7 @@ export default class Sphere extends Shape {
 			throw new Error('The sphere radius cannot be negative.');
 		}
 
-		this.updateBoundingSphereRadius();
+		this.updateBndSphR();
 	}
 
 	calculateLocalInertia(mass: number, target = new Vec3()) {
@@ -46,8 +46,8 @@ export default class Sphere extends Shape {
 		return 4.0 * Math.PI * this.radius / 3.0;
 	}
 
-	updateBoundingSphereRadius() {
-		this.boundingSphereRadius = this.radius;
+	updateBndSphR() {
+		this.boundSphR = this.radius;
 	}
 
 	calculateWorldAABB(pos: Vec3, quat: Quaternion, min: Vec3, max: Vec3) {

@@ -396,7 +396,7 @@ export default class Capsule extends Shape implements MinkowskiShape{
 		}
 		//DEBUG
 		if (deep >= 0) {
-			let phyr = PhyRender.inst;
+			//let phyr = PhyRender.inst;
 			//phyr.addPoint(hitPos1.x, hitPos1.y, hitPos1.z, 0xffff00);
 		}
 		//DEBUG
@@ -462,8 +462,8 @@ export default class Capsule extends Shape implements MinkowskiShape{
 		target.z = 9 / 10 * mass * r2;
 	}
 
-	updateBoundingSphereRadius(): void {
-		this.boundingSphereRadius = this.radius + this.height / 2;
+	updateBndSphR(): void {
+		this.boundSphR = this.radius + this.height / 2;
 	}
 
 	calculateWorldAABB(pos: Vec3, quat: Quaternion, min: Vec3, max: Vec3): void {

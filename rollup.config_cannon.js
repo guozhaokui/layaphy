@@ -54,9 +54,6 @@ function myMultiInput(){
                     console.log('other pack:', importfile, id ,importer);
                     return 'Laya';
                 }else{
-					if(id.indexOf('NaiveBroadphase')>=0){
-						console.log('nnn ',id,importer,importfile)
-					}
 					return importfile;
 				}
               },            

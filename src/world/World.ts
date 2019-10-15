@@ -113,7 +113,7 @@ var endShapeContactEvent:ShapeContactEvent = {
     shapeB: null
 };
 
-export enum PhyColor{
+export const enum PhyColor{
     RED=0xffff0000,GREEN=0xff00ff00,BLUE=0xff0000ff,YELLOW=0xffffff00,PINK=0xffff7777,GRAY=0xff777777,WHITE=0xffffffff,
 }
 
@@ -121,16 +121,38 @@ export abstract class IPhyRender{
     abstract stepStart():void;
     abstract stepEnd():void;
     abstract internalStep():void;
-    abstract addSeg(stx:f32, sty:f32, stz:f32, dirx:f32, diry:f32, dirz:f32, color:i32):void;
+	abstract addSeg(stx:f32, sty:f32, stz:f32, dirx:f32, diry:f32, dirz:f32, color:i32):void;
+    abstract addPoint(px:f32, py:f32, pz:f32, color:i32):void;
+	/*
     _addSeg(st:Vec3, dir:Vec3,color:i32):void{
         this.addSeg(st.x,st.y,st.z,dir.x,dir.y,dir.z,color);
     }
-    abstract addPoint(px:f32, py:f32, pz:f32, color:i32):void;
     _addPoint(p:Vec3, color:i32):void{
         return this.addPoint(p.x,p.y,p.z,color);
-    }
+	}
+	*/
+	abstract addVec(stx: number, sty: number, stz: number, dirx: number, diry: number, dirz: number, color: number): void;
+	abstract addVec1(st:Vec3, dir:Vec3,scale:number,color:number):void;
+	abstract addPersistPoint(x: number|Vec3, y?: number, z?: number, name?: string):number;
+	abstract delPersistPoint(id: i32):void;
+	abstract addPersistVec(dx: number|Vec3, dy: number|Vec3, dz?: number, x?: number, y?: number, z?: number , name?: string) :number;
+	abstract delPersistVec(id: i32):void;
+	abstract clearPersist():void;
+	abstract addPoint1(p:Vec3,color:number):void;
+	abstract drawLine(pts: Vec3[], color: number): void
+	// 画笼子的竖线
+	abstract drawLine1(pts: Vec3[], h: Vec3, color: number): void ;
+	abstract addAABB(min:Vec3, max:Vec3, color:number):void;
 }
 
+var PhyrInst:IPhyRender;
+export function setPhyRender(r:IPhyRender){
+	PhyrInst=r;
+}
+
+export function getPhyRender(){
+	return PhyrInst;
+}
 
 /**
  * The physics world

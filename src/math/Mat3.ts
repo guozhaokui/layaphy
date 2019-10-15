@@ -15,11 +15,11 @@ export default class Mat3 {
     m21=0;m22=1;m23=0;
     m31=0;m32=0;m33=1;
     */
-    elements=[0,0,0, 0,0,0, 0,0,0]; // 为什么不初始化为I
+    ele=[0,0,0, 0,0,0, 0,0,0]; // 为什么不初始化为I
     constructor(elements?:number[]) {
         if (elements) {
             //this.m11=elements[0];
-            this.elements = elements;
+            this.ele = elements;
         } 
     }
 
@@ -30,7 +30,7 @@ export default class Mat3 {
      * @todo Create another function that immediately creates an identity matrix eg. eye()
      */
     identity() {
-        const e = this.elements;
+        const e = this.ele;
         e[0] = 1;
         e[1] = 0;
         e[2] = 0;
@@ -49,7 +49,7 @@ export default class Mat3 {
      * @method setZero
      */
     setZero() {
-        const e = this.elements;
+        const e = this.ele;
         e[0] = 0;
         e[1] = 0;
         e[2] = 0;
@@ -65,7 +65,7 @@ export default class Mat3 {
      * Sets the matrix diagonal elements from a Vec3
      */
     setTrace(vec3 :Vec3) {
-        const e = this.elements;
+        const e = this.ele;
         e[0] = vec3.x;
         e[4] = vec3.y;
         e[8] = vec3.z;
@@ -79,7 +79,7 @@ export default class Mat3 {
      * @param  target Optional, target to save the result in.
      */
     vmult(v:Vec3, target = new Vec3()):Vec3 {
-        const e = this.elements;
+        const e = this.ele;
         const x = v.x;
         const y = v.y;
         const z = v.z;
@@ -94,8 +94,8 @@ export default class Mat3 {
      * Matrix-scalar multiplication
      */
     smult(s:number) {
-        let e = this.elements;
-        for (let i = 0; i < this.elements.length; i++) {
+        let e = this.ele;
+        for (let i = 0; i < this.ele.length; i++) {
             e[i] *= s;
         }
     }
@@ -108,9 +108,9 @@ export default class Mat3 {
      */
     mmult( m:Mat3, target:Mat3=new Mat3()) {
         const r = target;
-        let re=r.elements ;
-        let ae = this.elements;
-        let be = m.elements;
+        let re=r.ele ;
+        let ae = this.ele;
+        let be = m.ele;
         let a0=ae[0],a1=ae[1],a2=ae[2],a3=ae[3],a4=ae[4],a5=ae[5],a6=ae[6],a7=ae[7],a8=ae[8];
         let b0=be[0],b1=be[1],b2=be[2],b3=be[3],b4=be[4],b5=be[5],b6=be[6],b7=be[7],b8=be[8];
 
@@ -152,8 +152,8 @@ export default class Mat3 {
      * @return  The result.
      */
     scale( v:Vec3, target = new Mat3()):Mat3 {
-        const e = this.elements;
-        const t = target.elements;
+        const e = this.ele;
+        const t = target.ele;
         for (let i = 0; i !== 3; i++) {
             t[3 * i + 0] = v.x * e[3 * i + 0];
             t[3 * i + 1] = v.y * e[3 * i + 1];
@@ -184,7 +184,7 @@ export default class Mat3 {
         let j;
         for (i = 0; i < 3; i++) {
             for (j = 0; j < 3; j++) {
-                eqns[i + nc * j] = this.elements[i + 3 * j];
+                eqns[i + nc * j] = this.ele[i + 3 * j];
             }
         }
         eqns[3 + 4 * 0] = b.x;
@@ -246,10 +246,10 @@ export default class Mat3 {
      */
     e(row:number, column:number, value?:number):f32|undefined {
         if (value === undefined) {
-            return this.elements[column + 3 * row];
+            return this.ele[column + 3 * row];
         } else {
             // Set value
-            this.elements[column + 3 * row] = value;
+            this.ele[column + 3 * row] = value;
         }
         return undefined;
     }
@@ -261,9 +261,9 @@ export default class Mat3 {
      * @return  this
      */
     copy( source:Mat3) {
-        let a = this.elements;
-        let b = source.elements;
-        for (let i = 0; i < source.elements.length; i++) {
+        let a = this.ele;
+        let b = source.ele;
+        for (let i = 0; i < source.ele.length; i++) {
             a[i] = b[i];
         }
         return this;
@@ -278,7 +278,7 @@ export default class Mat3 {
         let r = "";
         const sep = ",";
         for (let i = 0; i < 9; i++) {
-            r += this.elements[i] + sep;
+            r += this.ele[i] + sep;
         }
         return r;
     }
@@ -301,7 +301,7 @@ export default class Mat3 {
         let j;
         for (i = 0; i < 3; i++) {
             for (j = 0; j < 3; j++) {
-                eqns[i + nc * j] = this.elements[i + 3 * j];
+                eqns[i + nc * j] = this.ele[i + 3 * j];
             }
         }
         eqns[3 + 6 * 0] = 1;
@@ -405,7 +405,7 @@ export default class Mat3 {
         const wx = w * x2;
         const wy = w * y2;
         const wz = w * z2;
-        const e = this.elements;
+        const e = this.ele;
 
         e[0] = 1 - (yy + zz);
         e[1] = xy - wz;
@@ -429,8 +429,8 @@ export default class Mat3 {
      * @return  The target Mat3, or a new Mat3 if target was omitted.
      */
     transpose(target = new Mat3()) {
-        const Mt = target.elements;
-        const M = this.elements;
+        const Mt = target.ele;
+        const M = this.ele;
 
         Mt[1]=M[3]; Mt[3]=M[1]; Mt[2]=M[6]; Mt[6]=M[2]; Mt[5]=M[7];  Mt[7]=M[5]; Mt[0]=M[0]; Mt[4]=M[4]; Mt[8]=M[8];
         /*

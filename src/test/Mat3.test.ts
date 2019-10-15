@@ -212,7 +212,7 @@ test('transpose',()=>{
         4, 5, 6,
         7, 8, 9]);
     const Mt = M.transpose();
-    expect(Mt.elements).toEqual( [1, 4, 7,
+    expect(Mt.ele).toEqual( [1, 4, 7,
         2, 5, 8,
         3, 6, 9]);
 });
@@ -222,7 +222,7 @@ test('scale',()=>{
         1, 1, 1,
         1, 1, 1]);
     const Mt = M.scale(new Vec3(1, 2, 3));
-    expect(Mt.elements).toEqual( [1, 2, 3,
+    expect(Mt.ele).toEqual( [1, 2, 3,
         1, 2, 3,
         1, 2, 3]);
 });

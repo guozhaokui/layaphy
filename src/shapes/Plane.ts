@@ -10,7 +10,7 @@ export default class Plane extends Shape {
     worldNormal = new Vec3();
     worldNormalNeedsUpdate = true;
 
-    boundingSphereRadius = Number.MAX_VALUE;
+    boundSphR = Number.MAX_VALUE;
     constructor() {
         super();
         this.type = SHAPETYPE.PLANE;
@@ -50,8 +50,8 @@ export default class Plane extends Shape {
         if (tempNormal.z === -1) { min.z = pos.z; }
     }
 
-    updateBoundingSphereRadius() {
-        this.boundingSphereRadius = Number.MAX_VALUE;
+    updateBndSphR() {
+        this.boundSphR = Number.MAX_VALUE;
     }
 }
 

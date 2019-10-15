@@ -73,7 +73,7 @@ export default class Heightfield extends Shape {
         }else{
             this.minValue=maxValue;
         }
-        this.updateBoundingSphereRadius();
+        this.updateBndSphR();
         this._cachedPillars = {};
     }
 
@@ -579,7 +579,7 @@ export default class Heightfield extends Shape {
 
         result.computeNormals();    //TODO 只有一个面需要计算法线，其他都是已知的
         result.computeEdges();
-        result.updateBoundingSphereRadius();
+        result.updateBndSphR();
 
 		// 加到缓存
         this.setCachedConvexTrianglePillar(xi, yi, getUpperTriangle, result, offsetResult);
@@ -600,12 +600,12 @@ export default class Heightfield extends Shape {
         max.set(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
     }
 
-    updateBoundingSphereRadius() {
+    updateBndSphR() {
         // Use the bounding box of the min/max values
         const data = this.data;
 
         const s = this.elementSize;
-        this.boundingSphereRadius = new Vec3(data[0].length * s, data.length * s, Math.max(Math.abs(this.maxValue), Math.abs(this.minValue))).length();
+        this.boundSphR = new Vec3(data[0].length * s, data.length * s, Math.max(Math.abs(this.maxValue), Math.abs(this.minValue))).length();
 	}
 	
 	/**

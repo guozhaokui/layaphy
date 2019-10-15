@@ -1,5 +1,5 @@
-import { HitResult } from 'laya/d3/physics/HitResult';
 import AABB from '../collision/AABB.js';
+import { GJKPairDetector } from '../collision/GJKEPA.js';
 import Ray from '../collision/Ray.js';
 import ContactEquation from '../equations/ContactEquation.js';
 import FrictionEquation from '../equations/FrictionEquation.js';
@@ -9,19 +9,17 @@ import Transform from '../math/Transform.js';
 import Vec3 from '../math/Vec3.js';
 import Body, { BODYTYPE } from '../objects/Body.js';
 import Box from '../shapes/Box.js';
+import Capsule from '../shapes/Capsule.js';
 import ConvexPolyhedron, { hitInfo } from '../shapes/ConvexPolyhedron.js';
 import Heightfield from '../shapes/Heightfield.js';
 import Particle from '../shapes/Particle.js';
 import Plane from '../shapes/Plane.js';
-import Shape, { SHAPETYPE, HitPointInfo, HitPointInfoArray } from '../shapes/Shape.js';
+import Shape, { HitPointInfo, HitPointInfoArray, SHAPETYPE } from '../shapes/Shape.js';
 import Sphere from '../shapes/Sphere.js';
 import Trimesh from '../shapes/Trimesh.js';
-import Vec3Pool from '../utils/Vec3Pool.js';
-import World, { PhyColor } from './World.js';
-import Capsule from '../shapes/Capsule.js';
-import { GJKPairDetector } from '../collision/GJKEPA.js';
-import { PhyRender } from '../layawrap/PhyRender.js';
 import { Voxel } from '../shapes/Voxel.js';
+import Vec3Pool from '../utils/Vec3Pool.js';
+import World from './World.js';
 
 //declare type anyShape=Box|Sphere|Capsule|Voxel|ConvexPolyhedron|Heightfield|Trimesh;
 interface checkFunc {
@@ -310,7 +308,7 @@ export default class Narrowphase {
                     }
 
                     // 包围球判断
-                    if (xi.distanceTo(xj) > si.boundingSphereRadius + sj.boundingSphereRadius) {
+                    if (xi.distanceTo(xj) > si.boundSphR + sj.boundSphR) {
                         continue;
                     }
 
@@ -1250,7 +1248,7 @@ export default class Narrowphase {
             let planeHit = r.rj;	// 平面的碰撞点
             planeHit.copy(nearToPlane);	// r.rj = hitpos
             //DEBUG
-            this.world.phyRender._addPoint(nearToPlane, PhyColor.RED);
+            //this.world.phyRender._addPoint(nearToPlane, PhyColor.RED);
             //DEBUG
 			planeHit.addScaledVector(-deep,ni,planeHit);//ni朝向平面里面 = rj
 			planeHit.vsub(planeBody.position,planeHit);// 转到相对自己的位置
@@ -1305,7 +1303,7 @@ export default class Narrowphase {
         let hit = box.hitVoxel(pos1, q1, voxel,pos2,q2,hitpoints,justTest);
         if(hit){
             if( justTest) return true;
-            let ni = Narrowphase.nor1;
+            //let ni = Narrowphase.nor1;
             hitpoints.forEach( hit=>{
                 //DEBUG
                 //let phyr = this.world._phyRender;
@@ -1403,7 +1401,7 @@ export default class Narrowphase {
         rsi: Shape | null, rsj: Shape | null, justTest: boolean, faceListA: number[] | null = null, faceListB: number[] | null = null): boolean {
         const sepAxis = convexConvex_sepAxis;
 
-        if (xi.distanceTo(xj) > si.boundingSphereRadius + sj.boundingSphereRadius) {
+        if (xi.distanceTo(xj) > si.boundSphR + sj.boundSphR) {
             return false;
         }
 
@@ -1605,7 +1603,7 @@ export default class Narrowphase {
     ): boolean {
         const data = hfShape.data;
         const w = hfShape.elementSize;
-        const radius = convexShape.boundingSphereRadius;
+        const radius = convexShape.boundSphR;
         const worldPillarOffset = convexHeightfield_tmp2;
         const faceList = convexHeightfield_faceList;
 
@@ -1652,7 +1650,7 @@ export default class Narrowphase {
                 // Lower triangle
                 hfShape.getConvexTrianglePillar(i, j, false);
                 Transform.pointToWorldFrame(hfPos, hfQuat, hfShape.pillarOffset, worldPillarOffset);
-                if (convexPos.distanceTo(worldPillarOffset) < hfShape.pillarConvex.boundingSphereRadius + convexShape.boundingSphereRadius) {
+                if (convexPos.distanceTo(worldPillarOffset) < hfShape.pillarConvex.boundSphR + convexShape.boundSphR) {
                     intersecting = this.convexConvex(convexShape, hfShape.pillarConvex, convexPos, worldPillarOffset, convexQuat, hfQuat, convexBody, hfBody, null, null, justTest, faceList, null);
                 }
 
@@ -1664,7 +1662,7 @@ export default class Narrowphase {
                 // Upper triangle
                 hfShape.getConvexTrianglePillar(i, j, true);
                 Transform.pointToWorldFrame(hfPos, hfQuat, hfShape.pillarOffset, worldPillarOffset);
-                if (convexPos.distanceTo(worldPillarOffset) < hfShape.pillarConvex.boundingSphereRadius + convexShape.boundingSphereRadius) {
+                if (convexPos.distanceTo(worldPillarOffset) < hfShape.pillarConvex.boundSphR + convexShape.boundSphR) {
                     intersecting = this.convexConvex(convexShape, hfShape.pillarConvex, convexPos, worldPillarOffset, convexQuat, hfQuat, convexBody, hfBody, null, null, justTest, faceList, null);
                 }
 
@@ -1740,7 +1738,7 @@ export default class Narrowphase {
                 hfShape.getConvexTrianglePillar(i, j, false);
                 // 把convex的offset点转换到世界空间
                 Transform.pointToWorldFrame(hfPos, hfQuat, hfShape.pillarOffset, worldPillarOffset);
-                if (spherePos.distanceTo(worldPillarOffset) < hfShape.pillarConvex.boundingSphereRadius + sphereShape.boundingSphereRadius) {
+                if (spherePos.distanceTo(worldPillarOffset) < hfShape.pillarConvex.boundSphR + sphereShape.boundSphR) {
                     intersecting = this.sphereConvex(sphereShape, hfShape.pillarConvex, spherePos, worldPillarOffset, sphereQuat, hfQuat, sphereBody, hfBody, sphereShape, hfShape, justTest);
                 }
 
@@ -1752,7 +1750,7 @@ export default class Narrowphase {
                 // Upper triangle
                 hfShape.getConvexTrianglePillar(i, j, true);
                 Transform.pointToWorldFrame(hfPos, hfQuat, hfShape.pillarOffset, worldPillarOffset);
-                if (spherePos.distanceTo(worldPillarOffset) < hfShape.pillarConvex.boundingSphereRadius + sphereShape.boundingSphereRadius) {
+                if (spherePos.distanceTo(worldPillarOffset) < hfShape.pillarConvex.boundSphR + sphereShape.boundSphR) {
                     intersecting = this.sphereConvex(sphereShape, hfShape.pillarConvex, spherePos, worldPillarOffset, sphereQuat, hfQuat, sphereBody, hfBody, sphereShape, hfShape, justTest);
                 }
 
