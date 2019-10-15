@@ -1,4 +1,4 @@
-export default `
+export default`
 #ifdef FSHIGHPRECISION 
 precision highp float;
 #else

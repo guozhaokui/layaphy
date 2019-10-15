@@ -1,11 +1,11 @@
-import Vec3 from '../math/Vec3.js';
-import Body from './Body.js';
+import {Vec3} from '../math/Vec3.js';
+import {Body} from './Body.js';
 
 /**
  * Smoothed-particle hydrodynamics system
  * 光滑粒子流体系统
  */
-export default class SPHSystem {
+export class SPHSystem {
     particles: Body[] = [];
 
     /**

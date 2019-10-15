@@ -1,5 +1,5 @@
 import { GJK_sSV, GJK_sSimlex, GJK } from "./GJK";
-import Vec3 from "../math/Vec3";
+import {Vec3} from "../math/Vec3";
 
 declare type sSV = GJK_sSV;
 

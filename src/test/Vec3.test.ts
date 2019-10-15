@@ -1,4 +1,4 @@
-import Vec3 from "../math/Vec3";
+import {Vec3} from "../math/Vec3";
 
 test('creation',()=>{
     const v = new Vec3(1, 2, 3);

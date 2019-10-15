@@ -1,12 +1,12 @@
-import EventTarget from '../utils/EventTarget.js';
-import Shape from '../shapes/Shape.js';
-import Vec3 from '../math/Vec3.js';
-import Mat3 from '../math/Mat3.js';
-import Quaternion from '../math/Quaternion.js';
-import Material from '../material/Material.js';
-import AABB from '../collision/AABB.js';
-import Box from '../shapes/Box.js';
-import World from '../world/World.js';
+import {EventTarget} from '../utils/EventTarget.js';
+import {Shape} from '../shapes/Shape.js';
+import {Vec3} from '../math/Vec3.js';
+import {Mat3} from '../math/Mat3.js';
+import {Quaternion} from '../math/Quaternion.js';
+import {Material} from '../material/Material.js';
+import {AABB} from '../collision/AABB.js';
+import {Box} from '../shapes/Box.js';
+import {World} from '../world/World.js';
 
 export interface BodyInitOptions {
     position?: Vec3;
@@ -64,7 +64,7 @@ export const enum BODY_SLEEP_STATE{
  *     body.addShape(shape);
  *     world.addBody(body);
  */
-export default class Body extends EventTarget {
+export class Body extends EventTarget {
 
     /**
      * Dispatched after two bodies collide. This event is dispatched on each

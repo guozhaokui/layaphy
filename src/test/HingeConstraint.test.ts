@@ -1,6 +1,6 @@
-import Body from "../objects/Body";
-import Vec3 from "../math/Vec3";
-import HingeConstraint from "../constraints/HingeConstraint";
+import {Body} from "../objects/Body";
+import {Vec3} from "../math/Vec3";
+import {HingeConstraint} from "../constraints/HingeConstraint";
 
 test('construct', () => {
     const bodyA = new Body( 1);

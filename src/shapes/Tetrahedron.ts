@@ -1,5 +1,5 @@
-import Vec3 from "../math/Vec3";
-import Mat3 from "../math/Mat3";
+import {Vec3} from "../math/Vec3";
+import {Mat3} from "../math/Mat3";
 
 /**
  * 三维空间最简形

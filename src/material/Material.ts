@@ -3,7 +3,7 @@
  * Defines a physics material.
  * @author schteppe
  */
-export default class Material {
+export class Material {
     static idCounter = 0;
     id = Material.idCounter++;
 

@@ -3,7 +3,7 @@ import { GreedyMesh } from "./VoxelRender/VoxelMesh";
 import { Vector3 } from "laya/d3/math/Vector3";
 import { PrimitiveMesh } from "laya/d3/resource/models/PrimitiveMesh";
 import { Mesh } from "laya/d3/resource/models/Mesh";
-import Vec3 from "../../math/Vec3";
+import {Vec3} from "../../math/Vec3";
 
 function updateMin(min:Vec3, x:number,y:number, z:number){
 	min.x>x && (min.x=x);

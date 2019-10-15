@@ -1,6 +1,6 @@
-import Heightfield from "../shapes/Heightfield";
-import Vec3 from "../math/Vec3";
-import Quaternion from "../math/Quaternion";
+import {Heightfield} from "../shapes/Heightfield";
+import {Vec3} from "../math/Vec3";
+import {Quaternion} from "../math/Quaternion";
 
 test('calculateWorldAABB', () => {
     const hfShape = createHeightfield({

@@ -1,17 +1,17 @@
-import Vec3 from '../math/Vec3.js';
-import Quaternion from '../math/Quaternion.js';
-import Transform from '../math/Transform.js';
-import RaycastResult from './RaycastResult.js';
-import Shape, { SHAPETYPE } from '../shapes/Shape.js';
-import AABB from './AABB.js';
-import World from '../world/World.js';
-import Body from '../objects/Body.js';
-import ConvexPolyhedron from '../shapes/ConvexPolyhedron.js';
-import Box from '../shapes/Box.js';
-import Heightfield from '../shapes/Heightfield.js';
-import Trimesh from '../shapes/Trimesh.js';
-import Sphere from '../shapes/Sphere.js';
-import Plane from '../shapes/Plane.js';
+import {Vec3} from '../math/Vec3.js';
+import {Quaternion} from '../math/Quaternion.js';
+import {Transform} from '../math/Transform.js';
+import {RaycastResult} from './RaycastResult.js';
+import {Shape, SHAPETYPE } from '../shapes/Shape.js';
+import {AABB} from './AABB.js';
+import {World} from '../world/World.js';
+import {Body} from '../objects/Body.js';
+import {ConvexPolyhedron} from '../shapes/ConvexPolyhedron.js';
+import {Box} from '../shapes/Box.js';
+import {Heightfield} from '../shapes/Heightfield.js';
+import {Trimesh} from '../shapes/Trimesh.js';
+import {Sphere} from '../shapes/Sphere.js';
+import {Plane} from '../shapes/Plane.js';
 import { Voxel } from '../shapes/Voxel.js';
 
 var tmpVec1 = new Vec3();
@@ -38,7 +38,7 @@ export interface hitworldOptions{
 /**
  * A line in 3D space that intersects bodies and return points.
  */
-export default class Ray {
+export class Ray {
 	from = new Vec3();
 	to = new Vec3();
 	_direction = new Vec3();

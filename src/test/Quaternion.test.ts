@@ -1,5 +1,5 @@
-import Quaternion from "../math/Quaternion";
-import Vec3 from "../math/Vec3";
+import {Quaternion} from "../math/Quaternion";
+import {Vec3} from "../math/Vec3";
 
 test('creation', () => {
     const q = new Quaternion(1, 2, 3, 4);

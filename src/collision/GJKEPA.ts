@@ -1,6 +1,6 @@
 import { MinkowskiShape } from "../shapes/MinkowskiShape";
-import Transform from "../math/Transform";
-import Vec3 from "../math/Vec3";
+import {Transform} from "../math/Transform";
+import {Vec3} from "../math/Vec3";
 import { VoronoiSimplexSolver } from "./VoronoiSimplexSolver";
 import { sResults, Penetration, Distance, MinkowskiDiff } from "./GJKEPA2";
 import { PhyRender } from "../layawrap/PhyRender";

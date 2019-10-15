@@ -4,7 +4,7 @@ import { Handler } from "laya/utils/Handler";
 import { ColorQuantization_Mediancut } from "./ColorQuantization_Mediancut";
 import { OBJLoader_Material, OBJLoader_mesh } from "./ObjectFile";
 import { VoxTriangleFiller } from "./VoxTriangleFiller";
-import Vec3 from "../math/Vec3";
+import {Vec3} from "../math/Vec3";
 import { SparseVoxData } from "../shapes/Voxel";
 
 /**

@@ -1,9 +1,9 @@
-import World from "../world/World";
-import Body from "../objects/Body";
-import Plane from "../shapes/Plane";
-import Trimesh from "../shapes/Trimesh";
-import Vec3 from "../math/Vec3";
-import Quaternion from "../math/Quaternion";
+import {World} from "../world/World";
+import {Body} from "../objects/Body";
+import {Plane} from "../shapes/Plane";
+import {Trimesh} from "../shapes/Trimesh";
+import {Vec3} from "../math/Vec3";
+import {Quaternion} from "../math/Quaternion";
 
 test('updateNormals', () => {
     const mesh = Trimesh.createTorus();

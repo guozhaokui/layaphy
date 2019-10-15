@@ -1,25 +1,25 @@
-import AABB from '../collision/AABB.js';
+import { AABB } from '../collision/AABB.js';
 import { GJKPairDetector } from '../collision/GJKEPA.js';
-import Ray from '../collision/Ray.js';
-import ContactEquation from '../equations/ContactEquation.js';
-import FrictionEquation from '../equations/FrictionEquation.js';
-import ContactMaterial from '../material/ContactMaterial.js';
-import Quaternion from '../math/Quaternion.js';
-import Transform from '../math/Transform.js';
-import Vec3 from '../math/Vec3.js';
-import Body, { BODYTYPE } from '../objects/Body.js';
-import Box from '../shapes/Box.js';
-import Capsule from '../shapes/Capsule.js';
-import ConvexPolyhedron, { hitInfo } from '../shapes/ConvexPolyhedron.js';
-import Heightfield from '../shapes/Heightfield.js';
-import Particle from '../shapes/Particle.js';
-import Plane from '../shapes/Plane.js';
-import Shape, { HitPointInfo, HitPointInfoArray, SHAPETYPE } from '../shapes/Shape.js';
-import Sphere from '../shapes/Sphere.js';
-import Trimesh from '../shapes/Trimesh.js';
+import { Ray } from '../collision/Ray.js';
+import { ContactEquation } from '../equations/ContactEquation.js';
+import { FrictionEquation } from '../equations/FrictionEquation.js';
+import { ContactMaterial } from '../material/ContactMaterial.js';
+import { Quaternion } from '../math/Quaternion.js';
+import { Transform } from '../math/Transform.js';
+import { Vec3 } from '../math/Vec3.js';
+import { Body, BODYTYPE } from '../objects/Body.js';
+import { Box } from '../shapes/Box.js';
+import { Capsule } from '../shapes/Capsule.js';
+import { ConvexPolyhedron, hitInfo } from '../shapes/ConvexPolyhedron.js';
+import { Heightfield } from '../shapes/Heightfield.js';
+import { Particle } from '../shapes/Particle.js';
+import { Plane } from '../shapes/Plane.js';
+import { HitPointInfo, HitPointInfoArray, Shape, SHAPETYPE } from '../shapes/Shape.js';
+import { Sphere } from '../shapes/Sphere.js';
+import { Trimesh } from '../shapes/Trimesh.js';
 import { Voxel } from '../shapes/Voxel.js';
-import Vec3Pool from '../utils/Vec3Pool.js';
-import World from './World.js';
+import { Vec3Pool } from '../utils/Vec3Pool.js';
+import { World } from './World.js';
 
 //declare type anyShape=Box|Sphere|Capsule|Voxel|ConvexPolyhedron|Heightfield|Trimesh;
 interface checkFunc {
@@ -40,7 +40,7 @@ sphereVoxel_hitPoints.reserve(32);
  * @todo Contact reduction
  * @todo  should move methods to prototype
  */
-export default class Narrowphase {
+export class Narrowphase {
     /**
      * Internal storage of pooled contact points.
      */

@@ -1,6 +1,6 @@
-import Quaternion from "../math/Quaternion";
-import Vec3 from "../math/Vec3";
-import Capsule from "../shapes/Capsule";
+import {Quaternion} from "../math/Quaternion";
+import {Vec3} from "../math/Vec3";
+import {Capsule} from "../shapes/Capsule";
 
 test('construct',()=>{
     const cap =new Capsule(1,2);

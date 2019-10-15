@@ -1,6 +1,6 @@
-import Body from "../objects/Body";
-import Vec3 from "../math/Vec3";
-import Shape from "../shapes/Shape";
+import {Body} from "../objects/Body";
+import {Vec3} from "../math/Vec3";
+import {Shape} from "../shapes/Shape";
 
 class ManifoldPoint {
     // Whether this manifold point is persisting or not.

@@ -1,10 +1,10 @@
-import Broadphase from './Broadphase.js';
-import Vec3 from '../math/Vec3.js';
+import {Broadphase} from './Broadphase.js';
+import {Vec3} from '../math/Vec3.js';
 import { SHAPETYPE } from '../shapes/Shape.js';
-import World from '../world/World.js';
-import Body from '../objects/Body.js';
-import Sphere from '../shapes/Sphere.js';
-import Plane from '../shapes/Plane.js';
+import {World} from '../world/World.js';
+import {Body} from '../objects/Body.js';
+import {Sphere} from '../shapes/Sphere.js';
+import {Plane} from '../shapes/Plane.js';
 
 /**
  * 基于格子的宽阶段碰撞检测。
@@ -13,7 +13,7 @@ import Plane from '../shapes/Plane.js';
  * 注意 超出范围的会被忽略
  * 
  */
-export default class GridBroadphase1 extends Broadphase {
+export class GridBroadphase1 extends Broadphase {
     nx = 10;
     ny = 10;
     nz = 10;

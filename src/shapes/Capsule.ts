@@ -1,11 +1,10 @@
-import Shape, { SHAPETYPE } from "./Shape";
-import Vec3 from "../math/Vec3";
-import Quaternion from "../math/Quaternion";
-import { Voxel } from "./Voxel";
-import Sphere from "./Sphere";
-import { PhyRender } from "../layawrap/PhyRender";
-import Mat3 from "../math/Mat3";
+import { Mat3 } from "../math/Mat3";
+import { Quaternion } from "../math/Quaternion";
+import { Vec3 } from "../math/Vec3";
 import { MinkowskiShape } from "./MinkowskiShape";
+import { Shape, SHAPETYPE } from "./Shape";
+import { Sphere } from "./Sphere";
+import { Voxel } from "./Voxel";
 //import { quat_AABBExt_mult } from "./Box";
 
 //let aabbExt = new Vec3();
@@ -27,7 +26,7 @@ let A1 = new Vec3();
  * 缺省主轴是z轴
  * 测试的时候可以通过组合shape来模拟胶囊
  */
-export default class Capsule extends Shape implements MinkowskiShape{
+export class Capsule extends Shape implements MinkowskiShape{
 	radius: f32;
 	height: f32;		// 高度
 	noTrans = false;    // 站立的胶囊，可以简单处理

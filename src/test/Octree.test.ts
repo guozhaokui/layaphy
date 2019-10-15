@@ -1,6 +1,6 @@
 import { Octree } from "../utils/Octree";
-import AABB from "../collision/AABB";
-import Vec3 from "../math/Vec3";
+import {AABB} from "../collision/AABB";
+import {Vec3} from "../math/Vec3";
 
 test('construct',()=>{
     new Octree(new AABB());

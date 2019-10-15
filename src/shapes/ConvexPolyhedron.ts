@@ -1,7 +1,7 @@
-import Quaternion from '../math/Quaternion.js';
-import Transform from '../math/Transform.js';
-import Vec3 from '../math/Vec3.js';
-import Shape, { SHAPETYPE } from './Shape.js';
+import {Quaternion} from '../math/Quaternion.js';
+import {Transform} from '../math/Transform.js';
+import {Vec3} from '../math/Vec3.js';
+import {Shape,  SHAPETYPE } from './Shape.js';
 
 export class hitInfo{
     point:Vec3;
@@ -34,7 +34,7 @@ interface polygon extends Array<number>{
     connectedFaces?:i32[];       // 临接多边形
 }
 
-export default class ConvexPolyhedron extends Shape {
+export class ConvexPolyhedron extends Shape {
     /**
      * Array of Vec3
      */

@@ -1,11 +1,11 @@
-import Shape, { SHAPETYPE } from './Shape.js';
-import Vec3 from '../math/Vec3.js';
-import Quaternion from '../math/Quaternion.js';
+import {Shape, SHAPETYPE } from './Shape.js';
+import {Vec3} from '../math/Vec3.js';
+import {Quaternion} from '../math/Quaternion.js';
 
 /**
  * A plane, facing in the Z direction. The plane has its surface at z=0 and everything below z=0 is assumed to be solid plane. To make the plane face in some other direction than z, you must put it inside a Body and rotate that body. See the demos.
  */
-export default class Plane extends Shape {
+export class Plane extends Shape {
     // World oriented normal
     worldNormal = new Vec3();
     worldNormalNeedsUpdate = true;

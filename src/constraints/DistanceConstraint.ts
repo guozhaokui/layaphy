@@ -1,6 +1,6 @@
-import Constraint from './Constraint.js';
-import ContactEquation from '../equations/ContactEquation.js';
-import Body from '../objects/Body.js';
+import {Constraint} from './Constraint.js';
+import {ContactEquation} from '../equations/ContactEquation.js';
+import {Body} from '../objects/Body.js';
 
 /**
  * Constrains two bodies to be at a constant distance from each others center of mass.
@@ -9,7 +9,7 @@ import Body from '../objects/Body.js';
  * @param  [maxForce=1e6]
  * 用distance中点方作为碰撞点来实现
  */
-export default class DistanceConstraint extends Constraint {
+export class DistanceConstraint extends Constraint {
     distance = 0;
     distanceEquation: ContactEquation;
 
@@ -24,7 +24,7 @@ export default class DistanceConstraint extends Constraint {
             maxForce = 1e6;
         }
 
-        this.distance = distance;
+        this.distance = distance as number;
         const eq = this.distanceEquation = new ContactEquation(bodyA, bodyB);
         this.equations.push(eq);
 

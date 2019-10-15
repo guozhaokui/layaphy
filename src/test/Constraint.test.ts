@@ -1,6 +1,6 @@
-import Body from "../objects/Body";
-import Constraint from "../constraints/Constraint";
-import Equation from "../equations/Equation";
+import {Body} from "../objects/Body";
+import {Constraint} from "../constraints/Constraint";
+import {Equation} from "../equations/Equation";
 
 test('construct', () => {
     const bodyA = new Body();

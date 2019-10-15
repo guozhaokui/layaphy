@@ -1,6 +1,6 @@
 import { PhyRender } from './../layawrap/PhyRender';
-import Solver from './Solver.js';
-import World from '../world/World.js';
+import {Solver} from './Solver.js';
+import {World} from '../world/World.js';
 
 /**
  * Constraint equation Gauss-Seidel solver.
@@ -8,7 +8,7 @@ import World from '../world/World.js';
  * @author schteppe / https://github.com/schteppe
  * @see https://www8.cs.umu.se/kurser/5DV058/VT09/lectures/spooknotes.pdf
  */
-export default class GSSolver extends Solver {
+export class GSSolver extends Solver {
     /**
      * The number of solver iterations determines quality of the constraints in the world. The more iterations, the more correct simulation. More iterations need more computations though. If you have a large gravity force in your world, you will need more iterations.
      */

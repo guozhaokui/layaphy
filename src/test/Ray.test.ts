@@ -1,13 +1,13 @@
-import RaycastResult from "../collision/RaycastResult";
-import Vec3 from "../math/Vec3";
-import Box from "../shapes/Box";
-import Ray from "../collision/Ray";
-import Plane from "../shapes/Plane";
-import Body from "../objects/Body";
-import Heightfield from "../shapes/Heightfield";
-import Sphere from "../shapes/Sphere";
-import Trimesh from "../shapes/Trimesh";
-import Quaternion from "../math/Quaternion";
+import {RaycastResult} from "../collision/RaycastResult";
+import {Vec3} from "../math/Vec3";
+import {Box} from "../shapes/Box";
+import {Ray} from "../collision/Ray";
+import {Plane} from "../shapes/Plane";
+import {Body} from "../objects/Body";
+import {Heightfield} from "../shapes/Heightfield";
+import {Sphere} from "../shapes/Sphere";
+import {Trimesh} from "../shapes/Trimesh";
+import {Quaternion} from "../math/Quaternion";
 
 test('construct', ()=>{
     new Ray(new Vec3(), new Vec3(1, 0, 0));

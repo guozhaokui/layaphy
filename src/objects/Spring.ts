@@ -1,5 +1,5 @@
-import Vec3 from '../math/Vec3.js';
-import Body from './Body.js';
+import {Vec3} from '../math/Vec3.js';
+import {Body} from './Body.js';
 
 /**
  * A spring, connecting two bodies.
@@ -17,7 +17,7 @@ import Body from './Body.js';
  * @param {Vec3}  [options.localAnchorA] Where to hook the spring to body A, in local body coordinates.
  * @param {Vec3}  [options.localAnchorB]
  */
-export default class Spring {
+export class Spring {
     /**
      * Rest length of the spring.
      */

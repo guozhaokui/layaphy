@@ -1,12 +1,12 @@
-import Equation from './Equation.js';
-import Vec3 from '../math/Vec3.js';
-import Body from '../objects/Body.js';
+import {Equation} from './Equation.js';
+import {Vec3} from '../math/Vec3.js';
+import {Body} from '../objects/Body.js';
 
 /**
  * Constrains the slipping in a contact along a tangent
  * @author schteppe
  */
-export default class FrictionEquation extends Equation {
+export class FrictionEquation extends Equation {
     ri = new Vec3();	//质心到碰撞点
     rj = new Vec3();	//质心到碰撞点
     t = new Vec3();     //tangent

@@ -1,6 +1,6 @@
-import JacobianElement from '../math/JacobianElement.js';
-import Vec3 from '../math/Vec3.js';
-import Body from '../objects/Body.js';
+import {JacobianElement} from '../math/JacobianElement.js';
+import {Vec3} from '../math/Vec3.js';
+import {Body} from '../objects/Body.js';
 
 /**
  * Equation base class
@@ -8,7 +8,7 @@ import Body from '../objects/Body.js';
  * @param  minForce Minimum (read: negative max) force to be applied by the constraint.
  * @param  maxForce Maximum (read: positive max) force to be applied by the constraint.
  */
-export default class Equation {
+export class Equation {
     static ID:u32 = 0;
     id:u32 = Equation.ID++;
 

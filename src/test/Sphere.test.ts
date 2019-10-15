@@ -1,4 +1,4 @@
-import Sphere from "../shapes/Sphere";
+import {Sphere} from "../shapes/Sphere";
 
     test('throwOnWrongRadius',()=>{
 

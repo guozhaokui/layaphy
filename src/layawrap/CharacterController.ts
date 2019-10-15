@@ -1,4 +1,4 @@
-import Body from "../objects/Body";
+import {Body} from "../objects/Body";
 
 /**
  * 角色控制器类，这个不太符合物理，需要特殊处理

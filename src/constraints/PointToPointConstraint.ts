@@ -1,7 +1,7 @@
-import Constraint from './Constraint.js';
-import ContactEquation from '../equations/ContactEquation.js';
-import Vec3 from '../math/Vec3.js';
-import Body from '../objects/Body.js';
+import {Constraint} from './Constraint.js';
+import {ContactEquation} from '../equations/ContactEquation.js';
+import {Vec3} from '../math/Vec3.js';
+import {Body} from '../objects/Body.js';
 
 /**
  * Connects two bodies at given offset points.
@@ -21,7 +21,7 @@ import Body from '../objects/Body.js';
  *     var constraint = new PointToPointConstraint(bodyA, localPivotA, bodyB, localPivotB);
  *     world.addConstraint(constraint);
  */
-export default class PointToPointConstraint extends Constraint {
+export class PointToPointConstraint extends Constraint {
      // Pivot, defined locally in bodyA.
     pivotA: Vec3;
      // Pivot, defined locally in bodyB.

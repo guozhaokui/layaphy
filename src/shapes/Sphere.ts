@@ -1,6 +1,6 @@
-import Quaternion from '../math/Quaternion.js';
-import Vec3 from '../math/Vec3.js';
-import Shape, { SHAPETYPE, HitPointInfo, HitPointInfoArray } from './Shape.js';
+import {Quaternion} from '../math/Quaternion.js';
+import {Vec3} from '../math/Vec3.js';
+import {Shape, SHAPETYPE, HitPointInfo, HitPointInfoArray } from './Shape.js';
 import { Voxel } from './Voxel.js';
 
 var box_to_sphere = new Vec3();
@@ -18,7 +18,7 @@ var qtoax_z = new Vec3();
  * @param {Number} radius The radius of the sphere, a non-negative number.
  * @author schteppe / http://github.com/schteppe
  */
-export default class Sphere extends Shape {
+export class Sphere extends Shape {
 	onPreNarrowpase(stepId: number, pos: Vec3, quat: Quaternion): void { }
 	radius = 1;
 	constructor(radius: number) {

@@ -9,9 +9,9 @@ import { addBox, addSphere } from "./DemoUtils";
 import { CannonWorld } from "./layawrap/CannonWorld";
 import { MouseCtrl1 } from "./layawrap/ctrls/MouseCtrl1";
 import { PhyRender } from "./layawrap/PhyRender";
-import ContactMaterial from "./material/ContactMaterial";
-import Material from "./material/Material";
-import Vec3 from "./math/Vec3";
+import { ContactMaterial } from "./material/ContactMaterial";
+import { Material } from "./material/Material";
+import { Vec3 } from "./math/Vec3";
 
 /**
  * 测试盒子可以被推走，被抬起

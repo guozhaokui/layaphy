@@ -1,6 +1,6 @@
-import Quaternion from "../math/Quaternion";
-import Vec3 from "../math/Vec3";
-import Box from "../shapes/Box";
+import {Quaternion} from "../math/Quaternion";
+import {Vec3} from "../math/Vec3";
+import {Box} from "../shapes/Box";
 
 test('forEachWOrldCorner', () => {
     const box = new Box(new Vec3(1, 1, 1));

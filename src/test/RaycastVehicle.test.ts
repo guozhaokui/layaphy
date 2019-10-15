@@ -1,8 +1,8 @@
-import RaycastVehicle from "../objects/RaycastVehicle";
-import Body from "../objects/Body";
-import Vec3 from "../math/Vec3";
-import World from "../world/World";
-import Plane from "../shapes/Plane";
+import {RaycastVehicle} from "../objects/RaycastVehicle";
+import {Body} from "../objects/Body";
+import {Vec3} from "../math/Vec3";
+import {World} from "../world/World";
+import {Plane} from "../shapes/Plane";
 
 test('construct',()=>{
     new RaycastVehicle( new Body());

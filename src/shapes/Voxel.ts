@@ -1,11 +1,11 @@
-import AABB from "../collision/AABB";
-import RaycastResult from "../collision/RaycastResult";
-import Mat3 from "../math/Mat3";
-import Quaternion from "../math/Quaternion";
-import Vec3 from "../math/Vec3";
+import {AABB} from "../collision/AABB";
+import {RaycastResult} from "../collision/RaycastResult";
+import {Mat3} from "../math/Mat3";
+import {Quaternion} from "../math/Quaternion";
+import {Vec3} from "../math/Vec3";
 import { getPhyRender } from "../world/World";
-import Box from "./Box";
-import Shape, { SHAPETYPE } from "./Shape";
+import {Box} from "./Box";
+import {Shape, SHAPETYPE } from "./Shape";
 
 function POT(v: i32): i32 {
 	let r: i32 = 1;

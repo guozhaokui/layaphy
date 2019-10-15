@@ -1,13 +1,13 @@
-import Broadphase from './Broadphase.js';
-import AABB from './AABB.js';
-import World from '../world/World.js';
-import Body from '../objects/Body.js';
+import {Broadphase} from './Broadphase.js';
+import {AABB} from './AABB.js';
+import {World} from '../world/World.js';
+import {Body} from '../objects/Body.js';
 
 /**
  * sweep and prune 算法
  */
 
-export default class AxisSweepBroadphase extends Broadphase {
+export class AxisSweepBroadphase extends Broadphase {
     constructor() {
         super();
     }

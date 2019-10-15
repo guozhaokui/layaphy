@@ -1,13 +1,13 @@
-import Broadphase from './Broadphase.js';
-import Vec3 from '../math/Vec3.js';
+import {Broadphase} from './Broadphase.js';
+import {Vec3} from '../math/Vec3.js';
 import { SHAPETYPE } from '../shapes/Shape.js';
-import World from '../world/World.js';
-import Body from '../objects/Body.js';
-import Sphere from '../shapes/Sphere.js';
-import Plane from '../shapes/Plane.js';
+import {World} from '../world/World.js';
+import {Body} from '../objects/Body.js';
+import {Sphere} from '../shapes/Sphere.js';
+import {Plane} from '../shapes/Plane.js';
 
 
-export default class GridBroadphase extends Broadphase {
+export class GridBroadphase extends Broadphase {
     nx = 10;
     ny = 10;
     nz = 10;

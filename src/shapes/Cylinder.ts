@@ -1,5 +1,5 @@
-import Vec3 from '../math/Vec3.js';
-import ConvexPolyhedron from './ConvexPolyhedron.js';
+import {Vec3} from '../math/Vec3.js';
+import {ConvexPolyhedron} from './ConvexPolyhedron.js';
 
 /**
  * 现在是用一个convex来做圆柱
@@ -7,7 +7,7 @@ import ConvexPolyhedron from './ConvexPolyhedron.js';
  * @author schteppe / https://github.com/schteppe
  * @param {Number} numSegments The number of segments to build the cylinder out of
  */
-export default class Cylinder extends ConvexPolyhedron {
+export class Cylinder extends ConvexPolyhedron {
     constructor(radiusTop:number, radiusBottom:number, height:number, numSegments:number) {
         const N = numSegments;
         const verts:Vec3[] = [];

@@ -1,4 +1,4 @@
-import Material from './Material.js';
+import {Material} from './Material.js';
 
 /**
  * Defines what happens when two materials meet.
@@ -14,7 +14,7 @@ import Material from './Material.js';
  * @param {number} [options.frictionEquationStiffness=1e7]
  * @param {Number} [options.frictionEquationRelaxation=3]
  */
-export default class ContactMaterial extends Material {
+export class ContactMaterial extends Material {
     static idCounter = 0;
 
     /**

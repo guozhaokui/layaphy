@@ -1,8 +1,8 @@
-import Vec3 from './Vec3.js';
-import Quaternion from './Quaternion.js';
-import Mat3 from './Mat3.js';
+import {Vec3} from './Vec3.js';
+import {Quaternion} from './Quaternion.js';
+import {Mat3} from './Mat3.js';
 
-export default class Transform {
+export class Transform {
     position = new Vec3();
     quaternion = new Quaternion();
     constructor(options?: { position: Vec3, quaternion: Quaternion }) {

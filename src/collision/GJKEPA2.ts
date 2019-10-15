@@ -1,9 +1,8 @@
-import Transform from "../math/Transform";
-import Vec3 from "../math/Vec3";
-import Mat3 from "../math/Mat3";
-import { GJK, GJK_eStatus } from "./GJK";
-import { EPA, EPA_eStatus } from "./EPA";
+import {Transform} from "../math/Transform";
+import {Vec3} from "../math/Vec3";
 import { MinkowskiShape } from "../shapes/MinkowskiShape";
+import { EPA, EPA_eStatus } from "./EPA";
+import { GJK, GJK_eStatus } from "./GJK";
 
 const GJK_MIN_DISTANCE = 1e-12;
 

@@ -1,7 +1,7 @@
-import Vec3 from '../math/Vec3.js';
-import Transform from '../math/Transform.js';
-import RaycastResult from '../collision/RaycastResult.js';
-import Body from './Body.js';
+import {Vec3} from '../math/Vec3.js';
+import {Transform} from '../math/Transform.js';
+import {RaycastResult} from '../collision/RaycastResult.js';
+import {Body} from './Body.js';
 
 /**
  * @class WheelInfo
@@ -36,7 +36,7 @@ import Body from './Body.js';
  * @param {boolean} [options.useCustomSlidingRotationalSpeed=false]
  * @param {number} [options.customSlidingRotationalSpeed=-0.1]
  */
-export default class WheelInfo {
+export class WheelInfo {
 
     /**
      * Max travel distance of the suspension, in meters.

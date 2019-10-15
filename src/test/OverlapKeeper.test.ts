@@ -1,4 +1,4 @@
-import OverlapKeeper from "../collision/OverlapKeeper";
+import {OverlapKeeper} from "../collision/OverlapKeeper";
 
 test('construct', () => {
     new OverlapKeeper();

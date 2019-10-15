@@ -1,11 +1,11 @@
-import World from "../world/World";
-import Equation from "../equations/Equation";
+import {World} from "../world/World";
+import {Equation} from "../equations/Equation";
 
 /**
  * Constraint equation solver base class.
  * @author schteppe / https://github.com/schteppe
  */
-export default class Solver {
+export class Solver {
     //All equations to be solved
     equations:Equation[] = [];
     constructor() {

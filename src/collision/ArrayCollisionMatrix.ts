@@ -1,11 +1,11 @@
-import Body from "../objects/Body";
+import {Body} from "../objects/Body";
 
 /**
  * Collision "matrix". It's actually a triangular-shaped array of whether two bodies are touching this step, for reference next step
  * 记录两个对象在当前帧是否碰撞，是一个三角矩阵
  * TODO 如果对象多了这个占内存太多 n*(n-1)/2
  */
-export default class ArrayCollisionMatrix {
+export class ArrayCollisionMatrix {
     /**
      * The matrix storage
      */

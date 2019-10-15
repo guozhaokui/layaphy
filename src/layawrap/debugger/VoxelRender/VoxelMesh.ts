@@ -1,4 +1,4 @@
-import Vec3 from "../../../math/Vec3";
+import {Vec3} from "../../../math/Vec3";
 
 export function GreedyMesh(volume:{get:(x:number,y:number,z:number)=>number}|number[], dims: number[]) {
 	performance.mark('greedystart');

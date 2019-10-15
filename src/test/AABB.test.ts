@@ -1,6 +1,6 @@
-import AABB from "../collision/AABB";
-import Vec3 from "../math/Vec3";
-import Transform from "../math/Transform";
+import {AABB} from "../collision/AABB";
+import {Vec3} from "../math/Vec3";
+import {Transform} from "../math/Transform";
 
 test('construct', () => {
     new AABB();

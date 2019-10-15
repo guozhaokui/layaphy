@@ -4,7 +4,7 @@
  * @class Pool
  * @constructor
  */
-export default class Pool<T> {
+export class Pool<T> {
     /**
      * The pooled objects
      */

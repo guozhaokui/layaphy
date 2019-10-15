@@ -1,10 +1,10 @@
-import Capsule from "./shapes/Capsule";
-import Vec3 from "./math/Vec3";
+import {Capsule} from "./shapes/Capsule";
+import {Vec3} from "./math/Vec3";
 import { Quaternion as LayaQuat } from "laya/d3/math/Quaternion";
-import Quaternion from "./math/Quaternion";
+import {Quaternion} from "./math/Quaternion";
 import { Matrix4x4 } from "laya/d3/math/Matrix4x4";
 import { Vector3 } from "laya/d3/math/Vector3";
-import Mat3 from "./math/Mat3";
+import {Mat3} from "./math/Mat3";
 
 function test() {
     debugger;

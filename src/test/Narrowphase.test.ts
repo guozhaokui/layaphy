@@ -1,12 +1,12 @@
-import World from "../world/World";
-import Narrowphase from "../world/Narrowphase";
-import Sphere from "../shapes/Sphere";
-import Body from "../objects/Body";
-import ContactMaterial from "../material/ContactMaterial";
-import Vec3 from "../math/Vec3";
-import Quaternion from "../math/Quaternion";
-import Heightfield from "../shapes/Heightfield";
-import ContactEquation from "../equations/ContactEquation";
+import {World} from "../world/World";
+import {Narrowphase} from "../world/Narrowphase";
+import {Sphere} from "../shapes/Sphere";
+import {Body} from "../objects/Body";
+import {ContactMaterial} from "../material/ContactMaterial";
+import {Vec3} from "../math/Vec3";
+import {Quaternion} from "../math/Quaternion";
+import {Heightfield} from "../shapes/Heightfield";
+import {ContactEquation} from "../equations/ContactEquation";
 
 test('sphereSphere',()=>{
     const world = new World();

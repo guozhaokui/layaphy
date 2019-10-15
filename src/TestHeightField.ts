@@ -9,15 +9,16 @@ import { addBox, addSphere } from "./DemoUtils";
 import { CannonWorld } from "./layawrap/CannonWorld";
 import { MouseCtrl1 } from "./layawrap/ctrls/MouseCtrl1";
 import { PhyRender } from "./layawrap/PhyRender";
-import ContactMaterial from "./material/ContactMaterial";
-import Material from "./material/Material";
-import Vec3 from "./math/Vec3";
-import Heightfield from "./shapes/Heightfield";
+import {ContactMaterial} from "./material/ContactMaterial";
+import {Material} from "./material/Material";
+import {Vec3} from "./math/Vec3";
+import {Heightfield} from "./shapes/Heightfield";
 import { PhyMeshSprite } from "./layawrap/debugger/PhyMeshSprite";
 import { createTerrainMesh } from "./layawrap/debugger/PhyMesh";
-import CannonBody from "./layawrap/CannonBody";
-import Quaternion from "./math/Quaternion";
-import PhyRay, { hitworldOptions, RayMode } from "./collision/Ray";
+import {CannonBody} from "./layawrap/CannonBody";
+import {Quaternion} from "./math/Quaternion";
+import {Ray as PhyRay,hitworldOptions, RayMode } from "./collision/Ray";
+import { getPhyRender, IPhyRender } from "./world/World";
 
 var sce3d: Scene3D;
 var mtl1: BlinnPhongMaterial;
@@ -29,14 +30,14 @@ let phymtl3 = new Material();
 let cmtl1 = new ContactMaterial(phymtl1, phymtl2, 1, 0);
 let cmtl2 = new ContactMaterial(phymtl1, phymtl3, 1, 0);
 
-let phyr:PhyRender;
+let phyr:IPhyRender;
 
 function initPhy(scene: Scene3D) {
 	let phyworld = world = scene.addComponent(CannonWorld) as CannonWorld;
 	phyworld.world.gravity.set(0, -10, 0);
 	(window as any).phyr = new PhyRender(scene, phyworld.world);
 	phyworld.world.addContactMaterial(cmtl1).addContactMaterial(cmtl2);
-	phyr=PhyRender.inst;
+	phyr= getPhyRender();
 }
 
 function rand(a: number, b: number) {

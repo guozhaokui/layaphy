@@ -1,13 +1,13 @@
-import Vec3 from '../math/Vec3.js';
-import Equation from './Equation.js';
-import Body from '../objects/Body.js';
+import {Vec3} from '../math/Vec3.js';
+import {Equation} from './Equation.js';
+import {Body} from '../objects/Body.js';
 
 /**
  * Rotational constraint. Works to keep the local vectors orthogonal to each other in world space.
  * 旋转约束。
  * @author schteppe
  */
-export default class RotationalEquation extends Equation {
+export class RotationalEquation extends Equation {
     axisA: Vec3;
     axisB: Vec3;
     maxAngle = Math.PI / 2;

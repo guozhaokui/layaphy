@@ -6,7 +6,7 @@ export interface eventHandler {
  * @class EventTarget
  * @constructor
  */
-export default class EventTarget {
+export class EventTarget {
     _listeners: { [type: string]: eventHandler[] }|null = null;
     constructor() {
 

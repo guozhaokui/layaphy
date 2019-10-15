@@ -1,4 +1,4 @@
-import TupleDictionary from "../utils/TupleDictionary";
+import {TupleDictionary} from "../utils/TupleDictionary";
 
 test('set', ()=> {
     const t = new TupleDictionary();

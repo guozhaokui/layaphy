@@ -1,25 +1,25 @@
 
 /* global performance */
-import ArrayCollisionMatrix from '../collision/ArrayCollisionMatrix.js';
-import Broadphase from '../collision/Broadphase.js';
-import NaiveBroadphase from '../collision/NaiveBroadphase.js';
-import OverlapKeeper from '../collision/OverlapKeeper.js';
-import Ray, { RayMode } from '../collision/Ray.js';
-import RaycastResult from '../collision/RaycastResult.js';
-import Constraint from '../constraints/Constraint.js';
-import ContactEquation from '../equations/ContactEquation.js';
-import FrictionEquation from '../equations/FrictionEquation.js';
+import {ArrayCollisionMatrix} from '../collision/ArrayCollisionMatrix.js';
+import {Broadphase} from '../collision/Broadphase.js';
+import {NaiveBroadphase} from '../collision/NaiveBroadphase.js';
+import {OverlapKeeper} from '../collision/OverlapKeeper.js';
+import {Ray, RayMode } from '../collision/Ray.js';
+import {RaycastResult} from '../collision/RaycastResult.js';
+import {Constraint} from '../constraints/Constraint.js';
+import {ContactEquation} from '../equations/ContactEquation.js';
+import {FrictionEquation} from '../equations/FrictionEquation.js';
 import { PhyRender } from '../layawrap/PhyRender.js';
-import ContactMaterial from '../material/ContactMaterial.js';
-import Material from '../material/Material.js';
-import Vec3 from '../math/Vec3.js';
-import Body, { BODYTYPE, BODY_SLEEP_STATE } from '../objects/Body.js';
-import Shape from '../shapes/Shape.js';
-import GSSolver from '../solver/GSSolver.js';
-import Solver from '../solver/Solver.js';
-import EventTarget from '../utils/EventTarget.js';
-import TupleDictionary from '../utils/TupleDictionary.js';
-import Narrowphase from './Narrowphase.js';
+import {ContactMaterial} from '../material/ContactMaterial.js';
+import {Material} from '../material/Material.js';
+import {Vec3} from '../math/Vec3.js';
+import {Body, BODYTYPE, BODY_SLEEP_STATE } from '../objects/Body.js';
+import {Shape} from '../shapes/Shape.js';
+import {GSSolver} from '../solver/GSSolver.js';
+import {Solver} from '../solver/Solver.js';
+import {EventTarget} from '../utils/EventTarget.js';
+import {TupleDictionary} from '../utils/TupleDictionary.js';
+import {Narrowphase} from './Narrowphase.js';
 
 class profileData{
     frametm:i32=0;     // 帧时间
@@ -157,7 +157,7 @@ export function getPhyRender(){
 /**
  * The physics world
  */
-export default class World extends EventTarget {
+export class World extends EventTarget {
     /**
      * Currently / last used timestep. Is set to -1 if not available. This value is updated before each internal step, which means that it is "fresh" inside event callbacks.
      */

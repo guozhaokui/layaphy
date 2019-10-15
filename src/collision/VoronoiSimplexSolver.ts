@@ -1,4 +1,4 @@
-import Vec3 from "../math/Vec3";
+import {Vec3} from "../math/Vec3";
 
 const ORIGIN = new Vec3();
 /**

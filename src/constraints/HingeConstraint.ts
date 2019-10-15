@@ -1,8 +1,8 @@
-import RotationalEquation from '../equations/RotationalEquation.js';
-import RotationalMotorEquation from '../equations/RotationalMotorEquation.js';
-import Vec3 from '../math/Vec3.js';
-import Body from '../objects/Body.js';
-import PointToPointConstraint from './PointToPointConstraint.js';
+import {RotationalEquation} from '../equations/RotationalEquation.js';
+import {RotationalMotorEquation} from '../equations/RotationalMotorEquation.js';
+import {Vec3} from '../math/Vec3.js';
+import {Body} from '../objects/Body.js';
+import {PointToPointConstraint} from './PointToPointConstraint.js';
 
 /**
  * Hinge constraint. Think of it as a door hinge. It tries to keep the door in the correct place and with the correct orientation.
@@ -21,7 +21,7 @@ import PointToPointConstraint from './PointToPointConstraint.js';
  * @param {Number} [options.maxForce=1e6]
  * @extends PointToPointConstraint
  */
-export default class HingeConstraint extends PointToPointConstraint {
+export class HingeConstraint extends PointToPointConstraint {
     /**
      * Rotation axis, defined locally in bodyA.
      */

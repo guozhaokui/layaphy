@@ -1,10 +1,10 @@
-import Vec3 from './Vec3.js';
+import {Vec3} from './Vec3.js';
 
 /**
  * A Quaternion describes a rotation in 3D space. The Quaternion is mathematically defined as Q = x*i + y*j + z*k + w, where (i,j,k) are imaginary basis vectors. (x,y,z) can be seen as a vector related to the axis of rotation, while the real multiplier, w, is related to the amount of rotation.
  * @see http://en.wikipedia.org/wiki/Quaternion
  */
-export default class Quaternion {
+export class Quaternion {
 	x = 0;
 	y = 0;
 	z = 0;

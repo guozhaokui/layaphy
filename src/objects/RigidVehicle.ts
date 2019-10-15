@@ -1,14 +1,14 @@
-import HingeConstraint from '../constraints/HingeConstraint.js';
-import Vec3 from '../math/Vec3.js';
-import Box from '../shapes/Box.js';
-import Sphere from '../shapes/Sphere.js';
-import World from '../world/World.js';
-import Body from './Body.js';
+import {HingeConstraint} from '../constraints/HingeConstraint.js';
+import {Vec3} from '../math/Vec3.js';
+import {Box} from '../shapes/Box.js';
+import {Sphere} from '../shapes/Sphere.js';
+import {World} from '../world/World.js';
+import {Body} from './Body.js';
 
 /**
  * Simple vehicle helper class with spherical rigid body wheels.
  */
-export default class RigidVehicle {
+export class RigidVehicle {
     wheelBodies: Body[] = [];
     coordinateSystem: Vec3;
     chassisBody: Body;

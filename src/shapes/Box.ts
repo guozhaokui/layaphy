@@ -1,12 +1,12 @@
-import Shape, { SHAPETYPE, HitPointInfo } from './Shape.js';
-import Vec3 from '../math/Vec3.js';
-import ConvexPolyhedron, { hitInfo } from './ConvexPolyhedron.js';
-import Quaternion from '../math/Quaternion.js';
+import {Shape, SHAPETYPE, HitPointInfo } from './Shape.js';
+import {Vec3} from '../math/Vec3.js';
+import {ConvexPolyhedron,  hitInfo } from './ConvexPolyhedron.js';
+import {Quaternion} from '../math/Quaternion.js';
 import { MinkowskiShape } from './MinkowskiShape.js';
-import Transform from '../math/Transform.js';
-import Mat3 from '../math/Mat3.js';
+import {Transform} from '../math/Transform.js';
+import {Mat3} from '../math/Mat3.js';
 import { Voxel } from './Voxel.js';
-import Sphere from './Sphere.js';
+import {Sphere} from './Sphere.js';
 
 // v可以与target相同
 export function quat_AABBExt_mult(q:Quaternion, v:Vec3, target = new Vec3()) {
@@ -58,7 +58,7 @@ var _segHitBoxNum=0;
 /**
  * A 3d box shape.
  */
-export default class Box extends Shape implements MinkowskiShape {
+export class Box extends Shape implements MinkowskiShape {
     halfExtents: Vec3;
     /**
      * Used by the contact generator to make contacts with other convex polyhedra for example

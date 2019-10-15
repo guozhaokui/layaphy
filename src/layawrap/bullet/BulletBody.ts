@@ -3,7 +3,7 @@ import { Component } from "laya/components/Component";
 import { Matrix4x4 } from "laya/d3/math/Matrix4x4";
 import { Sprite3D } from "laya/d3/core/Sprite3D";
 import { BtWorld } from "./BulletWorld";
-import Material from "../../material/Material";
+import {Material} from "../../material/Material";
 
 export class BtBody extends Component{
     cptr:int;

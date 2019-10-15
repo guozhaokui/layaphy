@@ -1,9 +1,9 @@
-import Body from "../objects/Body";
+import {Body} from "../objects/Body";
 
 /**
  * Records what objects are colliding with each other
  */
-export default class ObjectCollisionMatrix {
+export class ObjectCollisionMatrix {
     /**
      * The matrix storage
      */

@@ -1,6 +1,6 @@
-import Body from "../objects/Body";
-import LockConstraint from "../constraints/LockConstraint";
-import Vec3 from "../math/Vec3";
+import {Body} from "../objects/Body";
+import {LockConstraint} from "../constraints/LockConstraint";
+import {Vec3} from "../math/Vec3";
 
 test('construct', () => {
     const bodyA = new Body(1, null, new Vec3(1, 0, 0));

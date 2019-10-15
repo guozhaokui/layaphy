@@ -1,8 +1,8 @@
-import Shape, { SHAPETYPE } from './Shape.js';
-import Vec3 from '../math/Vec3.js';
-import Quaternion from '../math/Quaternion.js';
-import Transform from '../math/Transform.js';
-import AABB from '../collision/AABB.js';
+import {Shape, SHAPETYPE } from './Shape.js';
+import {Vec3} from '../math/Vec3.js';
+import {Quaternion} from '../math/Quaternion.js';
+import {Transform} from '../math/Transform.js';
+import {AABB} from '../collision/AABB.js';
 import {Octree} from '../utils/Octree.js';
 
 /**
@@ -23,7 +23,7 @@ import {Octree} from '../utils/Octree.js';
  *     ];
  *     var trimeshShape = new Trimesh(vertices, indices);
  */
-export default class Trimesh extends Shape {
+export class Trimesh extends Shape {
     onPreNarrowpase(stepId: number,pos:Vec3,quat:Quaternion): void {}
     vertices: Float32Array;
     /**

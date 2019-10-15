@@ -1,7 +1,7 @@
-import Box from "../shapes/Box";
-import Vec3 from "../math/Vec3";
-import Quaternion from "../math/Quaternion";
-import ConvexPolyhedron, { hitInfo } from "../shapes/ConvexPolyhedron";
+import {Box} from "../shapes/Box";
+import {Vec3} from "../math/Vec3";
+import {Quaternion} from "../math/Quaternion";
+import {ConvexPolyhedron, hitInfo } from "../shapes/ConvexPolyhedron";
 
 function createBoxHull(size = 0.5) {
     const box = new Box(new Vec3(size, size, size));

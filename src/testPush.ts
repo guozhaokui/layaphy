@@ -1,14 +1,14 @@
 import { BlinnPhongMaterial } from "laya/d3/core/material/BlinnPhongMaterial";
 import { Scene3D } from "laya/d3/core/scene/Scene3D";
-import { CannonWorld } from "./layawrap/CannonWorld";
-import { PhyRender } from "./layawrap/PhyRender";
-import Material from "./material/Material";
-import ContactMaterial from "./material/ContactMaterial";
-import { MouseCtrl1 } from "./layawrap/ctrls/MouseCtrl1";
-import { addBox } from "./DemoUtils";
-import Vec3 from "./math/Vec3";
-import { BODYTYPE } from "./objects/Body";
 import { Vector3 } from "laya/d3/math/Vector3";
+import { addBox } from "./DemoUtils";
+import { CannonWorld } from "./layawrap/CannonWorld";
+import { MouseCtrl1 } from "./layawrap/ctrls/MouseCtrl1";
+import { PhyRender } from "./layawrap/PhyRender";
+import { ContactMaterial } from "./material/ContactMaterial";
+import { Material } from "./material/Material";
+import { Vec3 } from "./math/Vec3";
+import { BODYTYPE } from "./objects/Body";
 
 /**
  * 测试盒子可以被推走，被抬起

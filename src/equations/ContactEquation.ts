@@ -1,14 +1,14 @@
-import Equation from './Equation.js';
-import Vec3 from '../math/Vec3.js';
-import Body from '../objects/Body.js';
-import Shape from '../shapes/Shape.js';
+import {Equation} from './Equation.js';
+import {Vec3} from '../math/Vec3.js';
+import {Body} from '../objects/Body.js';
+import {Shape} from '../shapes/Shape.js';
 
 /**
  * Contact/non-penetration constraint equation
  * @author schteppe
  * TODO 复用
  */
-export default class ContactEquation extends Equation {
+export class ContactEquation extends Equation {
     // 补偿值。保持一定距离，
     restitution = 0.0; // "bounciness": u1 = -e*u0
 

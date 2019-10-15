@@ -1,5 +1,5 @@
-import Vec3 from './Vec3.js';
-import Quaternion from './Quaternion.js';
+import {Vec3} from './Vec3.js';
+import {Quaternion} from './Quaternion.js';
 
 /**
  * A 3x3 matrix.
@@ -9,7 +9,7 @@ import Quaternion from './Quaternion.js';
  * @author schteppe / http://github.com/schteppe
  * TODO  实现太啰嗦，有时间改一下
  */
-export default class Mat3 {
+export class Mat3 {
     /*
     m11=1;m12=0;m13=0;
     m21=0;m22=1;m23=0;

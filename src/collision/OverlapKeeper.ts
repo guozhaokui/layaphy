@@ -1,7 +1,7 @@
 /**
  * 避免重复添加碰撞信息
  */
-export default class OverlapKeeper {
+export class OverlapKeeper {
     current:number[] = [];
     previous:number[] = [];
     constructor() {

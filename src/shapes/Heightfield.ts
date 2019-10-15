@@ -1,8 +1,8 @@
-import Shape, { SHAPETYPE } from './Shape.js';
-import ConvexPolyhedron from './ConvexPolyhedron.js';
-import Vec3 from '../math/Vec3.js';
-import Quaternion from '../math/Quaternion.js';
-import AABB from '../collision/AABB.js';
+import {Shape,  SHAPETYPE } from './Shape.js';
+import {ConvexPolyhedron} from './ConvexPolyhedron.js';
+import {Vec3} from '../math/Vec3.js';
+import {Quaternion} from '../math/Quaternion.js';
+import {AABB} from '../collision/AABB.js';
 
 /**
  * Heightfield shape class. Height data is given as an array. These data points are spread out evenly with a given distance.
@@ -33,7 +33,7 @@ import AABB from '../collision/AABB.js';
  *     heightfieldBody.addShape(heightfieldShape);
  *     world.addBody(heightfieldBody);
  */
-export default class Heightfield extends Shape {
+export class Heightfield extends Shape {
     /**
      * An array of numbers, or height values, that are spread out along the x axis.
      */

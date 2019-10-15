@@ -1,13 +1,13 @@
 
-import World from '../world/World'
-import Body from '../objects/Body';
-import Vec3 from '../math/Vec3';
-import Box from '../shapes/Box';
-import RaycastResult from '../collision/RaycastResult';
-import Sphere from '../shapes/Sphere';
-import NaiveBroadphase from '../collision/NaiveBroadphase';
-import ArrayCollisionMatrix from '../collision/ArrayCollisionMatrix';
-import ObjectCollisionMatrix from '../collision/ObjectCollisionMatrix';
+import {World} from '../world/World'
+import {Body} from '../objects/Body';
+import {Vec3} from '../math/Vec3';
+import {Box} from '../shapes/Box';
+import {RaycastResult} from '../collision/RaycastResult';
+import {Sphere} from '../shapes/Sphere';
+import {NaiveBroadphase} from '../collision/NaiveBroadphase';
+import {ArrayCollisionMatrix} from '../collision/ArrayCollisionMatrix';
+import {ObjectCollisionMatrix} from '../collision/ObjectCollisionMatrix';
 
 test('clearForces', () => {
     const world = new World();

@@ -1,14 +1,14 @@
-import RotationalEquation from '../equations/RotationalEquation.js';
-import Vec3 from '../math/Vec3.js';
-import Body from '../objects/Body.js';
-import PointToPointConstraint from './PointToPointConstraint.js';
+import {RotationalEquation} from '../equations/RotationalEquation.js';
+import {Vec3} from '../math/Vec3.js';
+import {Body} from '../objects/Body.js';
+import {PointToPointConstraint} from './PointToPointConstraint.js';
 
 /**
  * Lock constraint. Will remove all degrees of freedom between the bodies.
  * 把A和B l固定到一起
  * @author schteppe
  */
-export default class LockConstraint extends PointToPointConstraint {
+export class LockConstraint extends PointToPointConstraint {
     xA:Vec3;
     xB:Vec3;
     yA:Vec3;

@@ -1,7 +1,7 @@
-import Vec3 from '../math/Vec3.js';
-import Body, { BODYTYPE, BODY_SLEEP_STATE } from '../objects/Body.js';
-import World from '../world/World.js';
-import AABB from './AABB.js';
+import {Vec3} from '../math/Vec3.js';
+import {Body,  BODYTYPE, BODY_SLEEP_STATE } from '../objects/Body.js';
+import {World} from '../world/World.js';
+import {AABB} from './AABB.js';
 
 /**
  * Base class for broadphase implementations
@@ -9,7 +9,7 @@ import AABB from './AABB.js';
  * @constructor
  * @author schteppe
  */
-export default abstract class Broadphase {
+export abstract class Broadphase {
     /**
     * The world to search for collisions in.
     */

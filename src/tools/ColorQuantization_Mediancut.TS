@@ -4,7 +4,7 @@ class VoxelColor {
     g = 0;
     b = 0;
     w = 0; 	// 这里表示重复次数
-    obj: Object | null = null;
+    obj: any | null = null;
 
     constructor(r: number, g: number, b: number, o: Object | null) {
         this.r = r;

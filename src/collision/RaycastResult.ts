@@ -1,11 +1,11 @@
-import Vec3 from '../math/Vec3.js';
-import Shape from '../shapes/Shape.js';
-import Body from '../objects/Body.js';
+import {Vec3} from '../math/Vec3.js';
+import {Shape} from '../shapes/Shape.js';
+import {Body} from '../objects/Body.js';
 
 /**
  * Storage for Ray casting data.
  */
-export default class RaycastResult {
+export class RaycastResult {
     rayFromWorld = new Vec3();
     rayToWorld = new Vec3();
     hitNormalWorld = new Vec3();

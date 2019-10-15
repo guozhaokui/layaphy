@@ -1,4 +1,4 @@
-import Vec3 from "../math/Vec3";
+import {Vec3} from "../math/Vec3";
 import { MinkowskiDiff } from "./GJKEPA2";
 
 const GJK_MIN_DISTANCE = 1e-12;

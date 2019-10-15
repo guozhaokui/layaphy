@@ -1,4 +1,4 @@
-export default `
+export default`
 #include "Lighting.glsl";
 attribute vec4 a_Position; 
 attribute vec3 a_Normal;

@@ -5,17 +5,17 @@ import { Ray } from 'laya/d3/math/Ray';
 import { Vector2 } from 'laya/d3/math/Vector2';
 import { Vector3 } from "laya/d3/math/Vector3";
 import { Event } from "laya/events/Event";
-import ConeTwistConstraint from "./constraints/ConeTwistConstraint";
-import DistanceConstraint from './constraints/DistanceConstraint';
-import HingeConstraint from "./constraints/HingeConstraint";
+import { ConeTwistConstraint } from "./constraints/ConeTwistConstraint";
+import { DistanceConstraint } from './constraints/DistanceConstraint';
+import { HingeConstraint } from "./constraints/HingeConstraint";
 import { addBox, addSphere } from "./DemoUtils";
 import { CannonWorld } from "./layawrap/CannonWorld";
 import { MouseCtrl1 } from "./layawrap/ctrls/MouseCtrl1";
 import { PhyRender } from "./layawrap/PhyRender";
-import ContactMaterial from "./material/ContactMaterial";
-import Material from "./material/Material";
-import Vec3 from "./math/Vec3";
-import Body from './objects/Body';
+import { ContactMaterial } from "./material/ContactMaterial";
+import { Material } from "./material/Material";
+import { Vec3 } from "./math/Vec3";
+import { Body } from './objects/Body';
 
 /**
  * 测试盒子可以被推走，被抬起

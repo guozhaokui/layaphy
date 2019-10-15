@@ -1,16 +1,16 @@
 import { MeshSprite3D } from "laya/d3/core/MeshSprite3D";
 import { PrimitiveMesh } from "laya/d3/resource/models/PrimitiveMesh";
-import CannonBody from "./layawrap/CannonBody";
-import Box from "./shapes/Box";
-import Vec3 from "./math/Vec3";
-import Quaternion from "./math/Quaternion";
-import Capsule from "./shapes/Capsule";
+import {CannonBody} from "./layawrap/CannonBody";
+import {Box} from "./shapes/Box";
+import {Vec3} from "./math/Vec3";
+import {Quaternion} from "./math/Quaternion";
+import {Capsule} from "./shapes/Capsule";
 import { Vector3 } from "laya/d3/math/Vector3";
-import Sphere from "./shapes/Sphere";
+import {Sphere} from "./shapes/Sphere";
 import { Scene3D } from "laya/d3/core/scene/Scene3D";
 import { BlinnPhongMaterial } from "laya/d3/core/material/BlinnPhongMaterial";
-import PhyMtl from "./material/Material";
-import ConvexPolyhedron from "./shapes/ConvexPolyhedron";
+import {Material as PhyMtl} from "./material/Material";
+import {ConvexPolyhedron} from "./shapes/ConvexPolyhedron";
 
 var scene:Scene3D;
 var mtl:BlinnPhongMaterial;

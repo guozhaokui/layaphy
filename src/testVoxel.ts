@@ -5,21 +5,21 @@ import { Ray } from 'laya/d3/math/Ray';
 import { Vector2 } from 'laya/d3/math/Vector2';
 import { Vector3 } from "laya/d3/math/Vector3";
 import { Event } from "laya/events/Event";
+import { hitworldOptions, Ray as PhyRay, RayMode } from "./collision/Ray";
 import { addBox, addSphere } from "./DemoUtils";
-import CannonBody from "./layawrap/CannonBody";
+import { CannonBody } from "./layawrap/CannonBody";
 import { CannonWorld } from "./layawrap/CannonWorld";
 import { MouseCtrl1 } from "./layawrap/ctrls/MouseCtrl1";
+import { createVoxMesh } from "./layawrap/debugger/PhyMesh";
+import { PhyMeshSprite } from "./layawrap/debugger/PhyMeshSprite";
 import { VoxBuildBox } from "./layawrap/debugger/VoxelBuilder";
 import { VoxelMaterial } from "./layawrap/debugger/VoxelMtl";
-import { PhyMeshSprite } from "./layawrap/debugger/PhyMeshSprite";
 import { PhyRender } from "./layawrap/PhyRender";
-import ContactMaterial from "./material/ContactMaterial";
-import Material from "./material/Material";
-import Vec3 from "./math/Vec3";
+import { ContactMaterial } from "./material/ContactMaterial";
+import { Material } from "./material/Material";
+import { Vec3 } from "./math/Vec3";
 import { SparseVoxData, Voxel } from "./shapes/Voxel";
 import { Mesh2Voxel } from "./tools/Mesh2Voxel";
-import PhyRay, { hitworldOptions, RayMode } from "./collision/Ray";
-import { createVoxMesh } from "./layawrap/debugger/PhyMesh";
 
 /**
  * 测试盒子可以被推走，被抬起
@@ -110,10 +110,13 @@ function createBoxVoxel(xn: i32, yn: i32, zn: i32, gridw:number ){
 	let min = new Vec3(-xn*gridw/2,-yn*gridw/2,-zn*gridw/2);
 	let max = new Vec3(xn*gridw/2,yn*gridw/2,zn*gridw/2);
 	let voxdt = new SparseVoxData(dt, xn, yn, zn, min, max);
-	let vox = new PhyMeshSprite({ get: voxdt.get.bind(voxdt) }, voxdt.dataszx, voxdt.dataszy, voxdt.dataszz,
+	let mesh = createVoxMesh({ get: voxdt.get.bind(voxdt) }, voxdt.dataszx, voxdt.dataszy, voxdt.dataszz,
 		voxdt.aabbmin as any as Vector3,
 		voxdt.aabbmax as any as Vector3);
-	//vox.createMesh();
+	let vox = new PhyMeshSprite(mesh,
+		voxdt.aabbmin as any as Vector3,
+		voxdt.aabbmax as any as Vector3);
+//vox.createMesh();
 	sce3d.addChild(vox);
 
 	let phyvox = new Voxel(voxdt);
@@ -137,7 +140,7 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 
 	testVoxelGround();
 
-	//createBoxVoxel(8, 8, 8, 0.5);//new Vec3(-2, 0, -2), new Vec3(2, 4, 2));
+	createBoxVoxel(8, 8, 8, 0.5);//new Vec3(-2, 0, -2), new Vec3(2, 4, 2));
 	
 	m2v.loadObj('res/house/house1.obj', 0.1, (voxdata: SparseVoxData) => {
 		console.time('voxel');

@@ -1,9 +1,9 @@
-import Body from "../objects/Body";
-import Vec3 from "../math/Vec3";
-import Sphere from "../shapes/Sphere";
-import Quaternion from "../math/Quaternion";
-import Box from "../shapes/Box";
-import AABB from "../collision/AABB";
+import {Body} from "../objects/Body";
+import {Vec3} from "../math/Vec3";
+import {Sphere} from "../shapes/Sphere";
+import {Quaternion} from "../math/Quaternion";
+import {Box} from "../shapes/Box";
+import {AABB} from "../collision/AABB";
 
 test('',()=>{
     const body = new Body(1);

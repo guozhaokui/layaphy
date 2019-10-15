@@ -1,7 +1,7 @@
-import Broadphase from './Broadphase.js';
-import World from '../world/World.js';
-import Body from '../objects/Body.js';
-import AABB from './AABB.js';
+import {Broadphase} from './Broadphase.js';
+import {World} from '../world/World.js';
+import {Body} from '../objects/Body.js';
+import {AABB} from './AABB.js';
 /**
  * Sweep and prune broadphase along one axis.
  *
@@ -10,7 +10,7 @@ import AABB from './AABB.js';
  * @param {World} [world]
  * @extends Broadphase
  */
-export default class SAPBroadphase extends Broadphase {
+export class SAPBroadphase extends Broadphase {
     /**
      * List of bodies currently in the broadphase.
      */

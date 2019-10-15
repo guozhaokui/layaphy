@@ -1,6 +1,6 @@
-import Mat3 from './Mat3.js';
+import {Mat3} from './Mat3.js';
 
-export default class Vec3 {
+export class Vec3 {
     static ZERO = new Vec3(0, 0, 0);
     static UNIT_X = new Vec3(1, 0, 0);
     static UNIT_Y = new Vec3(0, 1, 0);

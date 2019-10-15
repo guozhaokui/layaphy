@@ -1,8 +1,8 @@
-import ConeEquation from '../equations/ConeEquation.js';
-import RotationalEquation from '../equations/RotationalEquation.js';
-import Vec3 from '../math/Vec3.js';
-import PointToPointConstraint from './PointToPointConstraint.js';
-import Body from '../objects/Body.js';
+import {ConeEquation} from '../equations/ConeEquation.js';
+import {RotationalEquation} from '../equations/RotationalEquation.js';
+import {Vec3} from '../math/Vec3.js';
+import {PointToPointConstraint} from './PointToPointConstraint.js';
+import {Body} from '../objects/Body.js';
 
 /**
  * @class ConeTwistConstraint
@@ -18,7 +18,7 @@ import Body from '../objects/Body.js';
  * @param {Number} [options.maxForce=1e6]
  * @extends PointToPointConstraint
  */
-export default class ConeTwistConstraint extends PointToPointConstraint {
+export class ConeTwistConstraint extends PointToPointConstraint {
     coneEquation:ConeEquation;
     twistEquation:RotationalEquation;
     axisA:Vec3;

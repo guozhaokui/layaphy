@@ -1,9 +1,9 @@
 
 
-import Material from '../material/Material.js';
-import Quaternion from '../math/Quaternion.js';
-import Vec3 from '../math/Vec3.js';
-import Body from '../objects/Body.js';
+import {Material} from '../material/Material.js';
+import {Quaternion} from '../math/Quaternion.js';
+import {Vec3} from '../math/Vec3.js';
+import {Body} from '../objects/Body.js';
 import { MinkowskiShape } from './MinkowskiShape.js';
 
 export const enum SHAPETYPE{
@@ -66,7 +66,7 @@ export class HitPointInfoArray{
 /**
  * Base class for shapes
  */
-export default class Shape {
+export class Shape {
     static idCounter = 0;
     id = Shape.idCounter++;
     type = 0;

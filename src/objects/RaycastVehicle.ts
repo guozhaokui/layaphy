@@ -1,8 +1,8 @@
-import Quaternion from '../math/Quaternion.js';
-import Vec3 from '../math/Vec3.js';
-import World from '../world/World.js';
-import Body from './Body.js';
-import WheelInfo from './WheelInfo.js';
+import {Quaternion} from '../math/Quaternion.js';
+import {Vec3} from '../math/Vec3.js';
+import {World} from '../world/World.js';
+import {Body} from './Body.js';
+import {WheelInfo} from './WheelInfo.js';
 
 /**
  * Vehicle helper class that casts rays from the wheel positions towards the ground and applies forces.
@@ -14,7 +14,7 @@ import WheelInfo from './WheelInfo.js';
  * @param {integer} [options.indexLeftAxis]
  * @param {integer} [options.indexUpAxis]
  */
-export default class RaycastVehicle {
+export class RaycastVehicle {
     chassisBody:Body;
 
     /**

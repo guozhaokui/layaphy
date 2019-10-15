@@ -1,6 +1,6 @@
-import Body from "../objects/Body";
-import ContactEquation from "../equations/ContactEquation";
-import Vec3 from "../math/Vec3";
+import {Body} from "../objects/Body";
+import {ContactEquation} from "../equations/ContactEquation";
+import {Vec3} from "../math/Vec3";
 
 test('construct',()=>{
     const bodyA = new Body();

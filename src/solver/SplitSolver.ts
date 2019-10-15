@@ -1,7 +1,7 @@
-import Equation from '../equations/Equation.js';
-import Body, { BODYTYPE } from '../objects/Body.js';
-import World from '../world/World.js';
-import Solver from './Solver.js';
+import {Equation} from '../equations/Equation.js';
+import {Body, BODYTYPE } from '../objects/Body.js';
+import {World} from '../world/World.js';
+import {Solver} from './Solver.js';
 
 class _Node{
     body:Body|null;
@@ -14,7 +14,7 @@ class _Node{
  * Splits the equations into islands and solves them independently. Can improve performance.
  * @param {Solver} subsolver
  */
-export default class SplitSolver extends Solver {
+export class SplitSolver extends Solver {
     iterations = 10;
     tolerance = 1e-7;
     subsolver: SplitSolver;

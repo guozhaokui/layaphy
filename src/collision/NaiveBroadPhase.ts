@@ -1,13 +1,13 @@
-import Broadphase from './Broadphase.js';
-import AABB from './AABB.js';
-import World from '../world/World.js';
-import Body from '../objects/Body.js';
+import {Broadphase} from './Broadphase.js';
+import {AABB} from './AABB.js';
+import {World} from '../world/World.js';
+import {Body} from '../objects/Body.js';
 
 /**
  * Naive broadphase implementation, used in lack of better ones.
  * @description The naive broadphase looks at all possible pairs without restriction, therefore it has complexity N^2 (which is bad)
  */
-export default class NaiveBroadphase extends Broadphase {
+export class NaiveBroadphase extends Broadphase {
     constructor() {
         super();
     }

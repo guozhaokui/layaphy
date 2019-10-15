@@ -1,6 +1,6 @@
 import { Script3D } from "laya/d3/component/Script3D";
-import World from "../world/World";
-import CannonBody from "./CannonBody";
+import {World} from "../world/World";
+import {CannonBody} from "./CannonBody";
 
 export class CannonWorld extends Script3D{
     world = new World();

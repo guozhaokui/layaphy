@@ -1,7 +1,7 @@
-import AABB from '../collision/AABB.js';
-import Vec3 from '../math/Vec3.js';
-import Ray from '../collision/Ray.js';
-import Transform from '../math/Transform.js';
+import {AABB} from '../collision/AABB.js';
+import {Vec3} from '../math/Vec3.js';
+import {Ray} from '../collision/Ray.js';
+import {Transform} from '../math/Transform.js';
 
 /**
  * @class OctreeNode

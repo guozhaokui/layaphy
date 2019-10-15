@@ -2,15 +2,15 @@ import { Component } from "laya/components/Component";
 import { Sprite3D } from "laya/d3/core/Sprite3D";
 import { Quaternion } from "laya/d3/math/Quaternion";
 import { Vector3 } from "laya/d3/math/Vector3";
-import Material from "../material/Material";
-import phyQuat from "../math/Quaternion";
-import Vec3 from "../math/Vec3";
-import Body from "../objects/Body";
-import Shape from "../shapes/Shape";
+import {Material} from "../material/Material";
+import {Quaternion as phyQuat} from "../math/Quaternion";
+import {Vec3} from "../math/Vec3";
+import {Body} from "../objects/Body";
+import {Shape} from "../shapes/Shape";
 import { CannonWorld } from "./CannonWorld";
 import { IPhyBody } from "./PhyInterface";
 
-export default class CannonBody extends Component implements IPhyBody{
+export class CannonBody extends Component implements IPhyBody{
 	set fixedRotation(v: boolean){
 		let b = this.phyBody;
 		if(b.fixedRotation!=v){

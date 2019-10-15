@@ -1,11 +1,7 @@
-import { Component } from "laya/components/Component";
-import { Matrix3x3 } from "laya/d3/math/Matrix3x3";
+import { Ray } from "laya/d3/math/Ray";
 import { Vector3 } from "laya/d3/math/Vector3";
 import { HitResult } from "laya/d3/physics/HitResult";
-import { PhysicsComponent } from "laya/d3/physics/PhysicsComponent";
 import { ColliderShape } from "laya/d3/physics/shape/ColliderShape";
-import Shape from "../shapes/Shape";
-import { Ray } from "laya/d3/math/Ray";
 
 export interface IPhyWorld{
 	rayCastAll(ray: Ray, out: HitResult[], distance: number /*Int.MAX_VALUE*/, collisonGroup: number, collisionMask: number): boolean ;

@@ -1,12 +1,12 @@
-import Vec3 from '../math/Vec3.js';
-import Body from '../objects/Body.js';
-import Equation from './Equation.js';
+import {Vec3} from '../math/Vec3.js';
+import {Body} from '../objects/Body.js';
+import {Equation} from './Equation.js';
 
 /**
  * Rotational motor constraint. Tries to keep the relative angular velocity of the bodies to a given value.
  * @author schteppe
  */
-export default class RotationalMotorEquation extends Equation {
+export class RotationalMotorEquation extends Equation {
     /**
      * World oriented rotational axis
      */

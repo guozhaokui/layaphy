@@ -2,7 +2,7 @@
  * @class TupleDictionary
  * @constructor
  */
-export default class TupleDictionary<T> {
+export class TupleDictionary<T> {
     data:{keys:string[],[key:string]:any};
     constructor() {
         this.data = { keys: [] };

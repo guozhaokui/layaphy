@@ -1,12 +1,12 @@
-import Vec3 from '../math/Vec3.js';
-import Body from '../objects/Body.js';
-import Equation from './Equation.js';
+import {Vec3} from '../math/Vec3.js';
+import {Body} from '../objects/Body.js';
+import {Equation} from './Equation.js';
 
 /**
  * Cone equation. Works to keep the given body world vectors aligned, or tilted within a given angle from each other.
  * 限定两个轴之间的夹角，angle是弧度
  */
-export default class ConeEquation extends Equation {
+export class ConeEquation extends Equation {
     axisA:Vec3; //Local axis in A
     axisB:Vec3; //Local axis in B
     angle: f32 = 0;//The cone angle to keep

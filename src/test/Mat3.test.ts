@@ -1,6 +1,6 @@
-import Quaternion from "../math/Quaternion";
-import Mat3 from "../math/Mat3";
-import Vec3 from "../math/Vec3";
+import {Quaternion} from "../math/Quaternion";
+import {Mat3} from "../math/Mat3";
+import {Vec3} from "../math/Vec3";
 
 test('creation',()=>{
     const m = new Mat3();

@@ -1,11 +1,11 @@
-import Equation from '../equations/Equation.js';
-import Body from '../objects/Body.js';
+import {Equation} from '../equations/Equation.js';
+import {Body} from '../objects/Body.js';
 
 /**
  * Constraint base class
  * @author schteppe
  */
-export default class Constraint {
+export class Constraint {
     static idCounter = 0;
     /**
      * Equations to be solved in this constraint
