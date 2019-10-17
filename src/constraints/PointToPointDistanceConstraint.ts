@@ -4,7 +4,6 @@ import { Vec3 } from '../math/Vec3.js';
 
 let wp1 = new Vec3();
 let wp2 = new Vec3();
-let center = new Vec3();
 
 /**
  * 两个body的任意两点间的距离限制。

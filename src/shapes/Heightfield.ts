@@ -252,7 +252,7 @@ export class Heightfield extends Shape {
         const c = getNormalAt_c;
         const e0 = getNormalAt_e0;
         const e1 = getNormalAt_e1;
-        this.getTriangleAt(x, y, edgeClamp, a, b, c);
+        this.getTriangleAt(x, y, true, a, b, c);
         b.vsub(a, e0);
         c.vsub(a, e1);
         e0.cross(e1, result);
@@ -299,7 +299,7 @@ export class Heightfield extends Shape {
             xi = Math.min(data[0].length - 2, Math.max(0, xi));
         }
         const upper = this.getTriangleAt(x, y, edgeClamp, a, b, c);
-        barycentricWeights(x, y, a.x, a.y, b.x, b.y, c.x, c.y, getHeightAt_weights);
+        barycentricWeights(x, y, a.x, a.z, b.x, b.z, c.x, c.z, getHeightAt_weights);
 
         const w = getHeightAt_weights;
 
@@ -644,9 +644,9 @@ export class Heightfield extends Shape {
 	 * @param stopOnCliff
 	 * @param stepHeight 
 	 * @param hitPos 
-	 * @param hitNorm 
+	 * @param hitDeep 碰撞结果，需要回退的值
 	 */
-	hitSphereSimple(pos:Vec3, R:number, cliffAng:number, stopOnCliff:boolean, stepHeight:number, hitPos:Vec3, hitNorm:Vec3):int{
+	hitSmallSphere(pos:Vec3, R:number, cliffAng:number, stopOnCliff:boolean, stepHeight:number, hitPos:Vec3, hitDeep:Vec3):int{
         const w = this.elementSize;
 		const data = this.data;
 		if(pos.x<0) return 0;
@@ -682,8 +682,10 @@ export class Heightfield extends Shape {
 			return 2;
 		}
 
+		return 0;
 	}
-	
+
+
 	/**
 	 * 
 	 * @param data   0 1 2  ->x

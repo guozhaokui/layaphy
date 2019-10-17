@@ -19,16 +19,17 @@ import {CannonBody} from "./layawrap/CannonBody";
 import {Quaternion} from "./math/Quaternion";
 import {Ray as PhyRay,hitworldOptions, RayMode } from "./collision/Ray";
 import { getPhyRender, IPhyRender } from "./world/World";
+import { Body } from "./objects/Body";
 
 var sce3d: Scene3D;
 var mtl1: BlinnPhongMaterial;
 var world: CannonWorld;
-
+var terrain: Body;
 let phymtl1 = new Material();
 let phymtl2 = new Material();
 let phymtl3 = new Material();
-let cmtl1 = new ContactMaterial(phymtl1, phymtl2, 1, 0);
-let cmtl2 = new ContactMaterial(phymtl1, phymtl3, 1, 0);
+let cmtl1 = new ContactMaterial(phymtl1, phymtl2, 0, 0);
+let cmtl2 = new ContactMaterial(phymtl1, phymtl3, 0, 0);
 
 let phyr:IPhyRender;
 
@@ -80,6 +81,7 @@ function testGround(img: HTMLImageElement) {
 	phy.addShape(p, new Vector3(0,0,0), shapeq);
 	//phy.phyBody.setPos(0, 2, 0);
 	phy.setMass(0);
+	terrain = phy.phyBody;
 }
 
 function test(mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
@@ -122,7 +124,15 @@ function test(mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 					let options: hitworldOptions = { mode: RayMode.CLOSEST };
 					if (phyRay.intersectWorld(world.world, options)) {
 						let hitpt = phyRay.result.hitPointWorld;
-						phyr.addPersistPoint( hitpt);
+						//phyr.addPersistPoint( hitpt);
+
+						//TEST
+						let vec1 = new Vec3();
+						terrain.pointToLocalFrame(hitpt,vec1);
+						let h = (terrain.shapes[0] as Heightfield).getHeightAt(vec1.x,vec1.z,true);
+						phyr.addPersistPoint( new Vec3(vec1.x,h,vec1.z));
+						//TEST
+						
 						console.log('r', phyRay.result)
 					}
 				}
