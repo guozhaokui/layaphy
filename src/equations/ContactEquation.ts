@@ -5,6 +5,7 @@ import {Shape} from '../shapes/Shape.js';
 
 /**
  * Contact/non-penetration constraint equation
+ * 接触公式，目标是希望保持两个点保持接触，而不是分开，所以也可以用来做连接约束。
  * @author schteppe
  * TODO 复用
  */
@@ -26,7 +27,7 @@ export class ContactEquation extends Equation {
 
     /**
      * Contact normal, pointing out of body i.
-     * 碰撞法线，指向第一个对象外面。
+     * 碰撞法线，指向第一个对象外面。世界空间
      */
     ni = new Vec3();
 

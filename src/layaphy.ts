@@ -15,11 +15,13 @@ import { loadBullet } from "./layawrap/bullet/bulletLoader";
 import { MouseCtrl1 } from "./layawrap/ctrls/MouseCtrl1";
 import {Quaternion} from "./math/Quaternion";
 import { testBullet } from "./TestBullet";
+import { Main } from "./TestSpider";
+//import { Main } from "./TestInBrowser";
 //import { Main } from "./TestHeightField";
 //import { Main } from "./testJoint";
 //import { Main } from "./testPlanetGravity";
 //import { Main } from "./testPush";
-import { Main } from "./testVoxel";
+//import { Main } from "./testVoxel";
 //let PhyWorld: typeof BtWorld | typeof CannonWorld;
 //let PhyBody: typeof BtBody | typeof CannonBody;
 

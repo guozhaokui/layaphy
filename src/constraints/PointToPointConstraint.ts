@@ -6,6 +6,7 @@ import {Body} from '../objects/Body.js';
 /**
  * Connects two bodies at given offset points.
  * 把A的pivotA与B的pivotB连到一起。限制xyz方向三个自由度,只允许旋转
+ * 为什么不用distance=0来实现呢
  *
  * @example
  *     var bodyA = new Body({ mass: 1 });
@@ -37,7 +38,7 @@ export class PointToPointConstraint extends Constraint {
      * @param pivotB See pivotA.
      * @param maxForce The maximum force that should be applied to constrain the bodies.
      * 
-     * 创建了xyz三个 ContactEquation 来实现的
+     * 创建了xyz三个 ContactEquation 来实现的，保持三个方向的连接。
      */
     constructor(bodyA: Body, pivotA: Vec3, bodyB: Body, pivotB: Vec3, maxForce: number=1e6) {
         super(bodyA, bodyB,true);
@@ -68,7 +69,6 @@ export class PointToPointConstraint extends Constraint {
         // 把pivot看做碰撞点，把碰撞点转换到世界空间，赋给 ContactEquation 的 ri,rj
         this.bodyA.quaternion.vmult(this.pivotA, x.ri);  // x.ri = pivotA * A.quat
         this.bodyB.quaternion.vmult(this.pivotB, x.rj);  // x.rj = pivotB * B.quat
-            // 问题：这两个值不一样么
 
         y.ri.copy(x.ri);z.ri.copy(x.ri);    // y.ri=z.ri=x.ri
         y.rj.copy(x.rj);z.rj.copy(x.rj);    // y.rj=z.rj=x.rj

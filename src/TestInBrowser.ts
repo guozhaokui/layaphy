@@ -5,6 +5,13 @@ import {Quaternion} from "./math/Quaternion";
 import { Matrix4x4 } from "laya/d3/math/Matrix4x4";
 import { Vector3 } from "laya/d3/math/Vector3";
 import {Mat3} from "./math/Mat3";
+import { GSSolver } from "./solver/GSSolver";
+import { ContactEquation } from "./equations/ContactEquation";
+import { Body } from "./objects/Body";
+import { Sphere } from "./shapes/Sphere";
+import { World } from "./world/World";
+import { Box } from "./shapes/Box";
+import { Main } from "./TestJoint";
 
 function test() {
     debugger;
@@ -42,7 +49,35 @@ function testQuat(): void {
     v4.cross(v5, v6);
     console.log(v6);
 }
+
+function testGSSover(){
+	let world = new World();
+	let solver = new GSSolver();
+	let bodySph = new Body(1,new Sphere(1));
+	let body1 = new Body(0);
+	let box1 = new Box(new Vec3(100,1,100));
+	body1.addShape(box1);
+	let body2 = new Body(0);
+	world.addBody(bodySph);
+	world.addBody(body1);
+	world.addBody(body2);
+	let c1 = new ContactEquation(bodySph, body1);
+	let c2 = new ContactEquation(bodySph, body2);
+	c1.ri.set(1,0,0);// 球心到碰撞点
+	c1.rj.set(-1,0,0);// box中心到碰撞点
+	c1.ni.set(1,0,0); //球的法线
+	solver.addEquation(c1);
+
+	c1.ri.set(-1,0,0);// 球心到碰撞点
+	c1.rj.set(1,0,0);// box中心到碰撞点
+	c1.ni.set(-1,0,0); //球的法线
+	solver.addEquation(c2);
+	solver.solve(1/60,world);
+}
 //testQuat();
 //test();
-
 //TEST
+
+export function Main(){
+	testGSSover();
+}

@@ -246,6 +246,18 @@ export class Heightfield extends Shape {
         result.normalize();
     }
 
+    getNormal(x:int, y:int, result:Vec3) {
+        const a = getNormalAt_a;
+        const b = getNormalAt_b;
+        const c = getNormalAt_c;
+        const e0 = getNormalAt_e0;
+        const e1 = getNormalAt_e1;
+        this.getTriangleAt(x, y, edgeClamp, a, b, c);
+        b.vsub(a, e0);
+        c.vsub(a, e1);
+        e0.cross(e1, result);
+        result.normalize();
+    }	
     /**
      * Get an AABB of a square in the heightfield
      * @param  {number} xi
@@ -322,10 +334,22 @@ export class Heightfield extends Shape {
         delete this._cachedPillars[this.getCacheConvexTrianglePillarKey(xi, yi, getUpperTriangle)];
     }
 
+	// 返回d。注意这里的平面公式是 n.p=d,而不是 n.p+d=0
+	getPlane(xi:int,yi:int,upper:boolean,a:Vec3,b:Vec3,c:Vec3,norm:Vec3):number{
+		this.getTriangle(xi,yi,upper, a,b,c);
+		let e0 = getPlane_e0;
+		let e1 = getPlane_e1;
+        b.vsub(a, e0);
+        c.vsub(a, e1);
+        e0.cross(e1, norm);
+		norm.normalize();
+		//d 是平面任意一点与法线的点积 norm.p = d
+		return a.dot(norm);
+	}
     /**
      * Get a triangle from the heightfield
      */
-    getTriangle(xi:number, yi:number, upper:boolean, a:Vec3, b:Vec3, c:Vec3) {
+    getTriangle(xi:int, yi:int, upper:boolean, a:Vec3, b:Vec3, c:Vec3) {
         const data = this.data;
         const elementSize = this.elementSize;
 
@@ -607,7 +631,75 @@ export class Heightfield extends Shape {
         const s = this.elementSize;
         this.boundSphR = new Vec3(data[0].length * s, data.length * s, Math.max(Math.abs(this.maxValue), Math.abs(this.minValue))).length();
 	}
+
+	/**
+	 * 最简假设的情况。地形很大，球一定小于格子 
+	 * 在大于blockAng的情况下只能下滑
+	 * 返回 0 没有碰撞 1 碰撞了 2 碰撞了，但是不允许控制，处于下滑状态
+	 * 太陡的地方的处理：不能直接推出去，比如从一个缓坡走到悬崖
+	 * 按理说悬崖的处理应该是逻辑做的，需要判断整体的高度
+	 * @param pos 
+	 * @param R 
+	 * @param cliffAng 
+	 * @param stopOnCliff
+	 * @param stepHeight 
+	 * @param hitPos 
+	 * @param hitNorm 
+	 */
+	hitSphereSimple(pos:Vec3, R:number, cliffAng:number, stopOnCliff:boolean, stepHeight:number, hitPos:Vec3, hitNorm:Vec3):int{
+        const w = this.elementSize;
+		const data = this.data;
+		if(pos.x<0) return 0;
+		if(pos.x>w*data[0].length) return 0;
+		if(pos.z<0) return 0;
+		if(pos.z>w*data.length) return 0;
+
+		let maxdot = Math.cos(Math.PI/2-cliffAng);	// 与{0,1,0}矢量的夹角,越大越陡
+
+        let xi = Math.floor(pos.x / w);
+        let yi = Math.floor(pos.z / w);
+
+		let idx = getHeightAt_idx;
+		this.getIndexOfPosition(pos.x,pos.z,idx,true);
+        const a = getNormalAt_a;
+        const b = getNormalAt_b;
+		const c = getNormalAt_c;
+		let norm = sphereHitSimple_norm;
+		let d = this.getPlane(xi,yi,true,a,b,c,norm);
+		//球在这个平面的投影的区域
+		let d0 = sphereHitSimple_d0;
+		pos.vsub(a,d0);
+		let dist = d0.dot(norm);	// pos到平面的距离
+		pos.addScaledVector(-dist,norm,hitPos); // 投影到平面的点
+		// 判断是否在三角形内
+
+		this.getTriangle(xi,yi,true,a,b,c);
+		this.getTriangle(xi,yi,false,a,b,c);
+
+		// 
+		if(hitNorm.y>maxdot){
+			// 当前所在位置太陡了,只能下滑
+			return 2;
+		}
+
+	}
 	
+	/**
+	 * 
+	 * @param data   0 1 2  ->x
+	 *               3 4 5 
+	 *               6 7 8
+	 * 				 |
+	 * 				 z
+	 * @param vScale 
+	 * @param gridsize 
+	 * @param hitPos 
+	 * @param hitNorm 
+	 */
+	sphereHit3x3Terrain(data:number[],vScale:number,gridsize:number,hitPos:Vec3, hitNorm:Vec3):boolean{
+
+	}
+
 	/**
 	 * 与本地空间的一个球相撞，给角色控制器用的。因此只要一个等效的碰撞点和碰撞法线就行
 	 * @param pos 
@@ -633,9 +725,7 @@ export class Heightfield extends Shape {
 		if(minx>data[0].length*w) return false;
 		if(minz>data.length*w) return false;
 
-		let maxdot = Math.cos(Math.PI/2-blockAng);	// 与{0,1,0}矢量的夹角,越大越陡
-		// if(normal.y>maxdot) face=|
-
+		// 先根据覆盖范围合并数据
 		let idx = getHeightAt_idx;
 		this.getIndexOfPosition(minx,minz,idx,true);
 		let minpx = idx[0];
@@ -643,6 +733,13 @@ export class Heightfield extends Shape {
 		this.getIndexOfPosition(maxx,maxz,idx,true);
 		let maxpx = idx[0];
 		let maxpz = idx[1];
+
+		let gw = maxx-minx;
+		let gh = maxz-minz;
+
+		let maxdot = Math.cos(Math.PI/2-blockAng);	// 与{0,1,0}矢量的夹角,越大越陡
+		// if(normal.y>maxdot) face=|
+
 
 		for( let z=minpz; z<=maxpz; z++){
 			for(let x=minpx; x<=maxpx; x++){
@@ -715,6 +812,14 @@ var getNormalAt_c = new Vec3();
 var getNormalAt_e0 = new Vec3();
 var getNormalAt_e1 = new Vec3();
 
+var getPlane_a = new Vec3();
+var getPlane_b = new Vec3();
+var getPlane_c = new Vec3();
+var getPlane_e0 = new Vec3();
+var getPlane_e1 = new Vec3();
+
+var sphereHitSimple_norm = new Vec3();
+var sphereHitSimple_d0 = new Vec3();
 /**
  * from https://en.wikipedia.org/wiki/Barycentric_coordinate_system
  * 计算二维三角形的重心坐标

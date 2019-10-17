@@ -99,7 +99,8 @@ export class GSSolver extends Solver {
                     c.addToWlambda(deltalambda);
                 }
 
-                // If the total error is small enough - stop iterate
+				// If the total error is small enough - stop iterate
+				// 所有公式的deltalambda和小于一定值，就停止循环
                 if (deltalambdaTot * deltalambdaTot < tolSquared) {
                     break;
                 }
