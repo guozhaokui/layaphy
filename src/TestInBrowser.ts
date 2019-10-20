@@ -11,7 +11,6 @@ import { Body } from "./objects/Body";
 import { Sphere } from "./shapes/Sphere";
 import { World } from "./world/World";
 import { Box } from "./shapes/Box";
-import { Main } from "./TestJoint";
 
 function test() {
     debugger;

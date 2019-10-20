@@ -632,6 +632,65 @@ export class Heightfield extends Shape {
         this.boundSphR = new Vec3(data[0].length * s, data.length * s, Math.max(Math.abs(this.maxValue), Math.abs(this.minValue))).length();
 	}
 
+
+    /**
+     * 根据所在位置和球的半径，计算加厚以后的新的xi,yi处的点。用来进行球和地面的碰撞检测
+     * 周围四个点可能在一个平面，也可能再两个，三个，四个。。，假设最多4个
+     *  + ---------------> x
+     *  |      1
+     *  | 2  xi,yi  3
+     *  |      4
+     *  v
+     *  z
+     * @param xi 
+     * @param yi 
+     * @param p 
+     */
+    _getRPoint(xi:int,yi:int,p:Vec3):Vec3{
+        let equ:number[]=[];
+
+        let gw = this.elementSize;
+		let e0 = getPlane_e0;
+		let e1 = getPlane_e1;
+        let vec0 = _getRPoint_v0;
+
+        let data = this.data;
+        let w = data[0].length;
+        let h =data.length;
+        let norm = _getRPoint_norm;
+        let v0 = data[yi][xi];
+        vec0.set(xi*gw,v0,yi*gw);
+        if(xi==0){
+            if(yi==0){
+            }else if(yi>=h-1){
+    
+            }else{
+                
+            }
+        }else if(xi>=w-1){
+
+        }else{
+            if(yi==0){
+            }else if(yi>=h-1){
+    
+            }else{
+                let v1 = data[yi-1][xi];
+                let v2 = data[yi][xi-1];
+                let v3 = data[yi][xi+1];
+                let v4 = data[yi+1][xi];
+                e0.set(0,v1-v0,-gw);   //v1-v0;
+                e1.set(-gw,v2-v0,0);   //v2-v0;
+                e0.cross(e1,norm);
+                norm.normalize();
+                // 先根据v0,v1~v4 排序然后去掉重复的，能知道有几个有效点
+                let d = vec0.dot(norm);
+            }
+    
+        }
+
+        return p;
+    }
+
 	/**
 	 * 最简假设的情况。地形很大，球一定小于格子 
 	 * 在大于blockAng的情况下只能下滑
@@ -819,6 +878,12 @@ var getPlane_b = new Vec3();
 var getPlane_c = new Vec3();
 var getPlane_e0 = new Vec3();
 var getPlane_e1 = new Vec3();
+
+var _getRPoint_v0 = new Vec3();
+var _getRPoint_v1 = new Vec3();
+var _getRPoint_v3 = new Vec3();
+var _getRPoint_v4 = new Vec3();
+var _getRPoint_norm = new Vec3();
 
 var sphereHitSimple_norm = new Vec3();
 var sphereHitSimple_d0 = new Vec3();

@@ -1,3 +1,4 @@
+import { Mat3 } from './math/Mat3';
 import { Laya } from "Laya";
 import { BlinnPhongMaterial } from "laya/d3/core/material/BlinnPhongMaterial";
 import { Scene3D } from "laya/d3/core/scene/Scene3D";
@@ -143,7 +144,19 @@ function test(mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 	});
 }
 
+function testSolveMat(){
+	debugger;
+	let o = new Vec3();
+	Mat3.solve3x4(
+		[1,2,1,2,
+			3,8,1,12,
+			0,4,1,2
+		]
+		,o);
+}
+
 export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
+	testSolveMat();
 	cam.dist = 20;
 	sce3d = sce;
 	mtl1 = mtl;

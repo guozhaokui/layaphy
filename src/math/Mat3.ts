@@ -192,6 +192,7 @@ export class Mat3 {
         eqns[3 + 4 * 2] = b.z;
 
         // Compute right upper triangular version of the matrix - Gauss elimination
+        // 用高斯消元法计算上三角矩阵
         let n = 3;
 
         const k = n;
@@ -202,6 +203,7 @@ export class Mat3 {
             i = k - n;
             if (eqns[i + nc * i] === 0) {
                 // the pivot is null, swap lines
+                // 主元为0，交换行
                 for (j = i + 1; j < k; j++) {
                     if (eqns[i + nc * j] !== 0) {
                         np = kp;
@@ -225,7 +227,7 @@ export class Mat3 {
             }
         } while (--n);
 
-        // Get the solution
+        // Get the solution 反向回代
         target.z = eqns[2 * nc + 3] / eqns[2 * nc + 2];
         target.y = (eqns[1 * nc + 3] - eqns[1 * nc + 2] * target.z) / eqns[1 * nc + 1];
         target.x = (eqns[0 * nc + 3] - eqns[0 * nc + 2] * target.z - eqns[0 * nc + 1] * target.y) / eqns[0 * nc + 0];
@@ -235,6 +237,61 @@ export class Mat3 {
         }
 
         return target;
+    }
+
+    static solve3x4(eqns:number[], target = new Vec3()):boolean {
+        // Construct equations
+        let i=0;
+        let j=0;
+        const nr = 3; // num rows
+        const nc = 4; // num cols
+
+        // Compute right upper triangular version of the matrix - Gauss elimination
+        // 用高斯消元法计算上三角矩阵
+        let n = 3;
+
+        const k = n;
+        let np;
+        const kp = 4; // num rows
+        let p;
+        do {
+            i = k - n;
+            if (eqns[i + nc * i] === 0) {
+                // the pivot is null, swap lines
+                // 主元为0，交换行
+                for (j = i + 1; j < k; j++) {
+                    if (eqns[i + nc * j] !== 0) {
+                        np = kp;
+                        do {  // do ligne( i ) = ligne( i ) + ligne( k )
+                            p = kp - np;
+                            eqns[p + nc * i] += eqns[p + nc * j];
+                        } while (--np);
+                        break;
+                    }
+                }
+            }
+            if (eqns[i + nc * i] !== 0) {
+                for (j = i + 1; j < k; j++) {
+                    const multiplier:f32 = eqns[i + nc * j] / eqns[i + nc * i];
+                    np = kp;
+                    do {  // do ligne( k ) = ligne( k ) - multiplier * ligne( i )
+                        p = kp - np;
+                        eqns[p + nc * j] = p <= i ? 0 : eqns[p + nc * j] - eqns[p + nc * i] * multiplier;
+                    } while (--np);
+                }
+            }
+        } while (--n);
+
+        // Get the solution 反向回代
+        target.z = eqns[2 * nc + 3] / eqns[2 * nc + 2];
+        target.y = (eqns[1 * nc + 3] - eqns[1 * nc + 2] * target.z) / eqns[1 * nc + 1];
+        target.x = (eqns[0 * nc + 3] - eqns[0 * nc + 2] * target.z - eqns[0 * nc + 1] * target.y) / eqns[0 * nc + 0];
+
+        if (isNaN(target.x) || isNaN(target.y) || isNaN(target.z) || target.x === Infinity || target.y === Infinity || target.z === Infinity) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
