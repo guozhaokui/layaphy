@@ -633,6 +633,8 @@ export class Heightfield extends Shape {
 	}
 
 
+	static getRPoitnTNorm=new Vec3();
+	static getRPointTmpN = new Vec3();
     /**
      * 根据所在位置和球的半径，计算加厚以后的新的xi,yi处的点。用来进行球和地面的碰撞检测
      * 周围四个点可能在一个平面，也可能再两个，三个，四个。。，假设最多4个
@@ -642,12 +644,15 @@ export class Heightfield extends Shape {
      *  |      4
      *  v
      *  z
+	 * 所有的平面都沿着自己的法线增厚R，则新的交点一定在各个法线的合向量方向，沿着这个方向直到到达d的投影距离
      * @param xi 
      * @param yi 
      * @param p 
      */
-    _getRPoint(xi:int,yi:int,p:Vec3):Vec3{
-        let equ:number[]=[];
+    _getRPoint(R:number, xi:int,yi:int,p:Vec3):Vec3{
+		let tnorm = Heightfield.getRPoitnTNorm;	// 合法线
+		let norm1 = Heightfield.getRPointTmpN;
+		let setnorm1=false;
 
         let gw = this.elementSize;
 		let e0 = getPlane_e0;
@@ -658,36 +663,85 @@ export class Heightfield extends Shape {
         let w = data[0].length;
         let h =data.length;
         let norm = _getRPoint_norm;
-        let v0 = data[yi][xi];
-        vec0.set(xi*gw,v0,yi*gw);
-        if(xi==0){
-            if(yi==0){
-            }else if(yi>=h-1){
-    
-            }else{
-                
-            }
-        }else if(xi>=w-1){
+		let v0 = data[yi][xi];
+		let v1=0;
+		let v2=0;
+		let v3=0;
+		let v4=0;
+		
+		vec0.set(xi*gw,v0,yi*gw);
+		if(yi>0 && xi>0){
+			//v1,v0,v2
+			v1 = data[yi-1][xi];
+			v2 = data[yi][xi-1];
+			e0.set(0,v1-v0,-gw);   //v1-v0;
+			e1.set(-gw,v2-v0,0);   //v2-v0;
+			e0.cross(e1,norm);
+			norm.normalize();
+			norm1.copy(norm);
+			setnorm1=true;
+			tnorm.vadd(norm,tnorm);
+		}
+		if(yi>0 && xi<w-1){
+			//v3,v0,v1
+			v3 = data[yi][xi+1];
+			v1 = data[yi-1][xi];
+			e0.set(gw,v3-v0,0);
+			e1.set(0,v1-v0,-gw);
+			e0.cross(e1,norm);
+			norm.normalize();
+			if(!setnorm1){
+				norm1.copy(norm);
+				setnorm1=true;
+			}
+			tnorm.vadd(norm,tnorm);
+		}
+		if(yi<h-1&&xi<w-1){
+			//v4,v0,v3
+			v3 = data[yi][xi+1];
+			v4 = data[yi+1][xi];
+			e0.set(0,v4-v0,gw);
+			e1.set(gw,v3-v0,0);
+			e0.cross(e1,norm);
+			norm.normalize();
+			if(!setnorm1){
+				norm1.copy(norm);
+				setnorm1=true;
+			}
+			tnorm.vadd(norm,tnorm);
+		}
+		if(xi>0&&yi<h-1){
+			//v2,v0,v4
+			v2 = data[yi][xi-1];
+			v4 = data[yi+1][xi];
+			e0.set(-gw,v2-v0,0);
+			e1.set(0,v4-v0,gw);
+			e0.cross(e1,norm);
+			norm.normalize();
+			if(!setnorm1){
+				norm1.copy(norm);
+				setnorm1=true;
+			}
+			tnorm.vadd(norm,tnorm);
+		}
 
-        }else{
-            if(yi==0){
-            }else if(yi>=h-1){
-    
-            }else{
-                let v1 = data[yi-1][xi];
-                let v2 = data[yi][xi-1];
-                let v3 = data[yi][xi+1];
-                let v4 = data[yi+1][xi];
-                e0.set(0,v1-v0,-gw);   //v1-v0;
-                e1.set(-gw,v2-v0,0);   //v2-v0;
-                e0.cross(e1,norm);
-                norm.normalize();
-                // 先根据v0,v1~v4 排序然后去掉重复的，能知道有几个有效点
-                let d = vec0.dot(norm);
-            }
-    
-        }
+		// 计算总法线
+		tnorm.normalize();
+		// 沿着新的法线移动l就能到达交点 dot(tnorm,norm1)=R/l
+		// 随便一个平面的法线
+		if(setnorm1){
+			let d = norm1.dot(tnorm);
+			if(d>0){
+				let l = R/d;
+				p.copy(tnorm);
+				p.addScaledVector(l,p,p);
+			}else{
+				// 不可能。就算是尖也不会<0
+			}
 
+		}else{
+			console.error('error no norm1')
+		}
         return p;
     }
 

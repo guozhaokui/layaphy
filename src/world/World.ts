@@ -78,13 +78,13 @@ var
 var additions:i32[] = [];
 var removals:i32[] = [];
 
-interface ContactEvent{
+export interface ContactEvent{
     type:string;
     bodyA:Body|null;
     bodyB:Body|null;
 }
 
-interface ShapeContactEvent extends ContactEvent{
+export interface ShapeContactEvent extends ContactEvent{
     shapeA:Shape|null;
     shapeB:Shape|null;
 }
@@ -318,6 +318,7 @@ export class World extends EventTarget {
             this.bodyOverlapKeeper.getDiff(additions, removals);
         }
 
+		// body开始接触事件
         if (hasBeginContact) {
             for (var i = 0, l = additions.length; i < l; i += 2) {
                 beginContactEvent.bodyA = this.getBodyById(additions[i]);
@@ -327,6 +328,7 @@ export class World extends EventTarget {
             beginContactEvent.bodyA = beginContactEvent.bodyB = null;
         }
 
+		// body结束接触事件
         if (hasEndContact) {
             for (var i = 0, l = removals.length; i < l; i += 2) {
                 endContactEvent.bodyA = this.getBodyById(removals[i]);
@@ -345,6 +347,7 @@ export class World extends EventTarget {
             this.shapeOverlapKeeper.getDiff(additions, removals);
         }
 
+		// shape开始接触事件
         if (hasBeginShapeContact) {
             for (var i = 0, l = additions.length; i < l; i += 2) {
                 var shapeA = this.getShapeById(additions[i]);
@@ -358,6 +361,7 @@ export class World extends EventTarget {
             beginShapeContactEvent.bodyA = beginShapeContactEvent.bodyB = beginShapeContactEvent.shapeA = beginShapeContactEvent.shapeB = null;
         }
 
+		// shape结束接触事件
         if (hasEndShapeContact) {
             for (var i = 0, l = removals.length; i < l; i += 2) {
                 var shapeA = this.getShapeById(removals[i]);
@@ -905,7 +909,8 @@ export class World extends EventTarget {
 
             if (!this.collisionMatrixPrevious.get(bi, bj)) {
                 // First contact!
-                // We reuse the collideEvent object, otherwise we will end up creating new objects for each new contact, even if there's no event listener attached.
+				// We reuse the collideEvent object, otherwise we will end up creating new objects for each new contact, even if there's no event listener attached.
+				// 发送第一次碰撞的碰撞事件
                 World_step_collideEvent.body = bj;
                 World_step_collideEvent.contact = c;
                 bi.dispatchEvent(World_step_collideEvent);

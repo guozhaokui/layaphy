@@ -19,7 +19,7 @@ import { createTerrainMesh } from "./layawrap/debugger/PhyMesh";
 import {CannonBody} from "./layawrap/CannonBody";
 import {Quaternion} from "./math/Quaternion";
 import {Ray as PhyRay,hitworldOptions, RayMode } from "./collision/Ray";
-import { getPhyRender, IPhyRender } from "./world/World";
+import { getPhyRender, IPhyRender, ContactEvent } from "./world/World";
 import { Body } from "./objects/Body";
 
 var sce3d: Scene3D;
@@ -40,6 +40,15 @@ function initPhy(scene: Scene3D) {
 	(window as any).phyr = new PhyRender(scene, phyworld.world);
 	phyworld.world.addContactMaterial(cmtl1).addContactMaterial(cmtl2);
 	phyr= getPhyRender();
+
+	//event
+	let phyw = world.world;
+	phyw.addEventListener('beginContact',(e:ContactEvent)=>{
+		console.log('body contact', e.bodyA, e.bodyB);
+	})
+	phyw.addEventListener('endContact',(e:ContactEvent)=>{
+		console.log('body contact end', e.bodyA, e.bodyB);
+	})
 }
 
 function rand(a: number, b: number) {
@@ -83,6 +92,9 @@ function testGround(img: HTMLImageElement) {
 	//phy.phyBody.setPos(0, 2, 0);
 	phy.setMass(0);
 	terrain = phy.phyBody;
+	terrain.addEventListener('collide',()=>{
+		console.log('collide')
+	});
 }
 
 function test(mtl: BlinnPhongMaterial, cam: MouseCtrl1) {

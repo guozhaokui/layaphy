@@ -107,3 +107,13 @@ export class ContactManifold {
         this.numPoints--;
     }
 }
+
+export class ManifoldManager{
+	get(a:Body, b:Body):ContactManifold{
+		throw 'ni'
+	}
+	
+	foreach(){
+
+	}
+}
