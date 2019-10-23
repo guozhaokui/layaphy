@@ -97,6 +97,8 @@ function testLift(){
 function testConveyorbelt(){
 	//world.world.gravity.set(0,-10,0);
 
+	addBox(new Vec3(1,2,1), new Vec3(-1,1,0), 0, phymtl1);
+
 	let ch1 = addBox(new Vec3(1,2,1), new Vec3(0,1,0), 1, phymtl1);
 	ch1.fixedRotation=true;
 	ch1.phyBody._name='zhu'

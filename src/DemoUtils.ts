@@ -9,7 +9,7 @@ import { Vector3 } from "laya/d3/math/Vector3";
 import {Sphere} from "./shapes/Sphere";
 import { Scene3D } from "laya/d3/core/scene/Scene3D";
 import { BlinnPhongMaterial } from "laya/d3/core/material/BlinnPhongMaterial";
-import {Material as PhyMtl} from "./material/Material";
+import {Material as PhyMtl, Material} from "./material/Material";
 import {ConvexPolyhedron} from "./shapes/ConvexPolyhedron";
 
 var scene:Scene3D;
@@ -87,4 +87,27 @@ export function addSphere(r: f32, x: f32, y: f32, z: f32): CannonBody {
 
 export function addTetra(v0:Vec3, v1:Vec3, v2:Vec3, v3:Vec3){
     new ConvexPolyhedron([v0,v1,v2,v3],[[0,1,2],[0,2,3],[0,3,1],[1,2,3]]);
+}
+
+export interface PhyObj{
+	name:string;
+	dim:Vec3;
+	pos:Vec3;
+	quat:Quaternion;
+	mass:number;
+}
+export function loadSce(rsce:Scene3D, mtl:Material, sce:PhyObj[],zup2yup:boolean){
+	let transQ = new Quaternion();
+	transQ.setFromAxisAngle(new Vec3(1,0,0),-Math.PI/2);
+	let newpos=new Vec3();
+	sce.forEach(cbox=>{
+		if(zup2yup){
+			transQ.vmult(cbox.pos,newpos);
+			let b = addBox(cbox.dim,newpos,cbox.mass,mtl,false);
+			transQ.mult(cbox.quat,b.phyBody.quaternion);
+		}else{
+			let b = addBox(cbox.dim,cbox.pos,cbox.mass,mtl,false);
+			b.phyBody.quaternion.copy(cbox.quat);
+		}
+	});
 }
