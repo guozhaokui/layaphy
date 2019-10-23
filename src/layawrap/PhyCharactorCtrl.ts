@@ -2,20 +2,27 @@ import { Component } from "laya/components/Component";
 import { ICharactorCtrl } from "./PhyInterface";
 import { Vector3 } from "laya/d3/math/Vector3";
 import { ColliderShape } from "laya/d3/physics/shape/ColliderShape";
+import { Body } from "../objects/Body";
+import { Sphere } from "../shapes/Sphere";
+import { Material } from "../material/Material";
 
 export class PhyCharactorCtrl extends Component implements ICharactorCtrl{
-	mass: number;
+	private _mass: number;
+	get mass(){
+		return this._mass;
+	}
+	set mass(m:number){
+		//TODO
+	}
+	private _mtl =new Material();
 	lineVel: Vector3;
 	angVel: Vector3;
 	noRotate: boolean;
 	collisionGroup: number;
 	canCollideWith: number;
-	addCenterForce(f: Vector3): void {
-		throw new Error("Method not implemented.");
-	}
-	addForce(f: Vector3, pos: Vector3): void {
-		throw new Error("Method not implemented.");
-	}
+	phyForTrigger:Body|null=null;
+	/** 物理实体，有很大摩擦力，所以可以被传送带带走，可以被推走，可以下落 */
+	phyBody:Body = new Body(1,new Sphere(0.5));
 	fixedRotation: boolean;
 	canJump: boolean;	gravity: Vector3;
 	enableGravity: boolean;
@@ -33,6 +40,23 @@ export class PhyCharactorCtrl extends Component implements ICharactorCtrl{
 	onFall: () => void;
 	onBePushed: () => void;
 	onSlidingDown: () => void;
+	constructor(){
+		super();
+		this._initPhyBody();
+	}
+
+	private _initPhyBody(){
+		// 
+		let body = this.phyBody;
+		body.fixedRotation=true;
+	}
+
+	addCenterForce(f: Vector3): void {
+		throw new Error("Method not implemented.");
+	}
+	addForce(f: Vector3, pos: Vector3): void {
+		throw new Error("Method not implemented.");
+	}
 	setWalkDir(x: number, y: number, z: number): void {
 		throw new Error("Method not implemented.");
 	}

@@ -123,7 +123,7 @@ export class Narrowphase {
             this.world.dt
         );
 
-        const matA = si.material || bi.material;
+        const matA = si.material || bi.material;	// 优先使用shape的材质
         const matB = sj.material || bj.material;
         if (matA && matB && matA.restitution >= 0 && matB.restitution >= 0) {
             c.restitution = matA.restitution * matB.restitution;
@@ -151,18 +151,19 @@ export class Narrowphase {
 
         // If friction or restitution were specified in the material, use them
         let friction = cm.friction;
-        const matA = shapeA.material || bodyA.material;
-        const matB = shapeB.material || bodyB.material;
+        const matA = shapeA.material || bodyA.material;	// 优先使用shape的材质
+		const matB = shapeB.material || bodyB.material;
+		// 如果shape有材质，就用shape之间的参数，否则，直接使用cm的
         if (matA && matB && matA.friction >= 0 && matB.friction >= 0) {
             friction = matA.friction * matB.friction;
         }
 
         if (friction > 0) {
-
 			// Create 2 tangent equations
 			// TODO 这里要改成 a和b的受力在法线上的投影?
-			let maxf = Math.max(friction * world.gravity.lengthSquared(),bodyA.force.lengthSquared(), bodyB.force.lengthSquared());
-			const mug = Math.sqrt(maxf);
+			// 最大力受到摩擦系数的影响
+			let maxf = Math.max( world.gravity.lengthSquared(),bodyA.force.lengthSquared(), bodyB.force.lengthSquared());
+			const mug = friction * Math.sqrt(maxf);
             let reducedMass = (bodyA.invMass + bodyB.invMass);
             if (reducedMass > 0) {
                 reducedMass = 1 / reducedMass;
@@ -264,23 +265,22 @@ export class Narrowphase {
         for (let k = 0, N = p1.length; k !== N; k++) {
             // Get current collision bodies
             const bi = p1[k];
-            const bj = p2[k];
+			const bj = p2[k];
+			let typei = bi.type;
+			let typej = bj.type;
 
             // Get contact material
             let bodyContactMaterial = null;
             if (bi.material && bj.material) {
-                bodyContactMaterial = world.getContactMaterial(bi.material, bj.material) || null;
+                bodyContactMaterial = world.getContactMaterial(bi.material, bj.material);
             }
 
-            const justTest = (
-                (
-                    (bi.type & BODYTYPE.KINEMATIC) && (bj.type & BODYTYPE.STATIC)   // Kinematic vs static
-                ) || (
-                    (bi.type & BODYTYPE.STATIC) && (bj.type & BODYTYPE.KINEMATIC)   // static vs kinematix
-                ) || (
-                    (bi.type & BODYTYPE.KINEMATIC) && (bj.type & BODYTYPE.KINEMATIC)    // kinematic vs kinematic
-                )
-            );
+			const justTest =  
+					typei & BODYTYPE.TRIGGER || 
+					typej & BODYTYPE.TRIGGER ||
+                    ((typei & BODYTYPE.KINEMATIC) && (typej & BODYTYPE.STATIC))   ||   // Kinematic vs static
+                    ((typei & BODYTYPE.STATIC) && (typej & BODYTYPE.KINEMATIC))   ||   // static vs kinematix
+                    ((typei & BODYTYPE.KINEMATIC) && (typej & BODYTYPE.KINEMATIC));    // kinematic vs kinematic
 
             //TODO
             let stepNum=0;
@@ -315,9 +315,10 @@ export class Narrowphase {
                     // Get collision material
                     let shapeContactMaterial = null;
                     if (si.material && sj.material) {
-                        shapeContactMaterial = world.getContactMaterial(si.material, sj.material) || null;
+                        shapeContactMaterial = world.getContactMaterial(si.material, sj.material);
                     }
 
+					// 材质的优先级：按照shape取的添加到world中的材质对关系，按照body取的天骄到world中的材质关系，世界缺省材质
                     this.currentContactMaterial = shapeContactMaterial || bodyContactMaterial || world.defaultContactMaterial;
 
                     // Get contacts

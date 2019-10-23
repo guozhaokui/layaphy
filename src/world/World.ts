@@ -246,7 +246,9 @@ export class World extends EventTarget {
      */
     contactMaterialTable = new TupleDictionary<ContactMaterial>();
 
-    defaultMaterial = new Material("default");
+	defaultMaterial = new Material("default");
+	
+	tempMaterial = new ContactMaterial(null,null,0,0);	// 角色控制用，根据角色材质返回一个临时材质
 
     /**
      * This contact material is used if no suitable contactmaterial is found for a contact.
@@ -400,7 +402,19 @@ export class World extends EventTarget {
      * @return The contact material if it was found.
      */
     getContactMaterial(m1:Material, m2:Material) {
-        return this.contactMaterialTable.get(m1.id, m2.id); //this.contactmaterials[this.mats2cmat[i+j*this.materials.length]];
+		let ret= this.contactMaterialTable.get(m1.id, m2.id); //this.contactmaterials[this.mats2cmat[i+j*this.materials.length]];
+		if(!ret){
+			// 临时合并出一个
+			let useMtl:Material|null=null;
+			if(m1.friction==Material.infiniteFriction) useMtl=m1;
+			else if(m2.friction==Material.infiniteFriction) useMtl=m2;
+			if(useMtl){
+				this.tempMaterial.friction=1;
+				this.tempMaterial.restitution=useMtl.restitution
+				return this.tempMaterial;
+			}
+		}
+		return ret;
     }
 
     /**
@@ -923,6 +937,7 @@ export class World extends EventTarget {
             this.shapeOverlapKeeper.set(si.id, sj.id);
         }
 
+		// 通知所有的接触事件
         this.emitContactEvents();
 
         if (doProfiling) {

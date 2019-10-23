@@ -10,7 +10,7 @@ import {Shape} from '../shapes/Shape.js';
  * TODO 复用
  */
 export class ContactEquation extends Equation {
-    // 补偿值。保持一定距离，
+    /** 补偿值。保持一定距离 公式中的 e? */ 
     restitution = 0.0; // "bounciness": u1 = -e*u0
 
     /**

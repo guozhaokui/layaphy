@@ -44,7 +44,12 @@ export const enum BODYTYPE{
 	 * They can be moved manually, but normally a kinematic body is moved by setting its velocity.
 	 * A kinematic body behaves as if it has infinite mass. Kinematic bodies do not collide with other static or kinematic bodies.
      */
-    KINEMATIC = 4,
+	KINEMATIC = 4,
+	
+	/**
+	 * 触发器，任何类型的对象与触发器都只进行碰撞检测
+	 */
+	TRIGGER=8,	
 
 }
 
