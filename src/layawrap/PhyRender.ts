@@ -16,6 +16,8 @@ import {Plane} from "../shapes/Plane";
 import {Shape, SHAPETYPE } from "../shapes/Shape";
 import { Voxel } from "../shapes/Voxel";
 import {World, IPhyRender, setPhyRender } from "../world/World";
+import { Box } from "../shapes/Box";
+import { Sphere } from "../shapes/Sphere";
 
 let col1 = new Color();
 let p1 = new Vector3();
@@ -164,6 +166,11 @@ export class PhyRender extends IPhyRender {
 		r.addLine(p1, p2, col1, col1);
 	}
 
+	addSegV3(st: Vec3, ed: Vec3,color: number): void {
+		this.addSeg(st.x,st.y,st.z,ed.x,ed.y,ed.z,color);
+	}
+
+
 	/**
 	 * 显示一个点
 	 * @param px 
@@ -286,11 +293,47 @@ export class PhyRender extends IPhyRender {
 
 	}
 
+	static boxVert=[new Vec3(),new Vec3(), new Vec3(), new Vec3(),new Vec3(),new Vec3(),new Vec3(),new Vec3()];
+	transBox(halfExt:Vec3,pos:Vec3,quat:Quaternion){
+		let v= PhyRender.boxVert;
+		
+		v[0].set(-halfExt.x,-halfExt.y,halfExt.z);
+		v[1].set(-halfExt.x,-halfExt.y,-halfExt.z);
+		v[2].set(halfExt.x,-halfExt.y,-halfExt.z);
+		v[3].set(halfExt.x,-halfExt.y,halfExt.z);
+
+		v[4].set(-halfExt.x,halfExt.y,halfExt.z);
+		v[5].set(-halfExt.x,halfExt.y,-halfExt.z);
+		v[6].set(halfExt.x,halfExt.y,-halfExt.z);
+		v[7].set(halfExt.x,halfExt.y,halfExt.z);
+		
+		v.forEach( cv=>{
+			quat.vmult(cv,cv);
+			cv.vadd(pos,cv);
+		});
+		return v;
+	}
+	
 	showShape(shape: Shape, pos: Vec3, quat: Quaternion): void {
+		let color=0xff0000ff;
 		switch (shape.type) {
 			case SHAPETYPE.BOX:
+				{
+					let box = shape as Box;
+					let	vs=this.transBox(box.halfExtents,pos,quat);
+					this.addSegV3(vs[0],vs[1],color);this.addSegV3(vs[1],vs[2],color);this.addSegV3(vs[2],vs[3],color);this.addSegV3(vs[3],vs[0],color);
+					this.addSegV3(vs[4],vs[5],color);this.addSegV3(vs[5],vs[6],color);this.addSegV3(vs[6],vs[7],color);this.addSegV3(vs[7],vs[4],color);
+					this.addSegV3(vs[0],vs[4],color);this.addSegV3(vs[1],vs[5],color);this.addSegV3(vs[2],vs[6],color);this.addSegV3(vs[3],vs[7],color);
+				}
 				break;
 			case SHAPETYPE.SPHERE:
+				{
+					let sph = shape as Sphere;
+					let	vs=this.transBox(new Vec3(sph.radius,sph.radius,sph.radius),pos,quat);
+					this.addSegV3(vs[0],vs[1],color);this.addSegV3(vs[1],vs[2],color);this.addSegV3(vs[2],vs[3],color);this.addSegV3(vs[3],vs[0],color);
+					this.addSegV3(vs[4],vs[5],color);this.addSegV3(vs[5],vs[6],color);this.addSegV3(vs[6],vs[7],color);this.addSegV3(vs[7],vs[4],color);
+					this.addSegV3(vs[0],vs[4],color);this.addSegV3(vs[1],vs[5],color);this.addSegV3(vs[2],vs[6],color);this.addSegV3(vs[3],vs[7],color);
+				}
 				break;
 			case SHAPETYPE.PLANE:
 				this.createPlaneLine(shape as Plane, pos, quat);

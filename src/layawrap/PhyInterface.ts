@@ -44,6 +44,10 @@ export interface ICharactorCtrl extends IPhyBody{
 	maxSlope:number;
 	stepHeight:number;				// 不存在的高度，不至于被一个小石子垫高
 	state:int;
+	/** 当前朝向， +z为0 */
+	curDir:number;	
+	/** 当前速度的值 */
+	curVel:number;
 
 	/**
 	 * 发生碰撞了
