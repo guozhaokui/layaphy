@@ -1,6 +1,7 @@
 import { PhyRender } from './../layawrap/PhyRender';
 import {Solver} from './Solver.js';
 import {World} from '../world/World.js';
+import { BODYTYPE } from '../objects/Body';
 
 /**
  * Constraint equation Gauss-Seidel solver.
@@ -59,7 +60,7 @@ export class GSSolver extends Solver {
         // 在迭代期间 B和invCs是不变的，所以可以先计算出来
         for (var i = 0; i !== Neq; i++) {
             var c = equations[i];
-            lambda[i] = 0.0;
+            lambda[i] = 0.0;			// 初始λ为0
             Bs[i] = c.computeB(h);
             invCs[i] = 1.0 / c.computeC();
         }
@@ -67,9 +68,11 @@ export class GSSolver extends Solver {
         if (Neq !== 0) {
             // 把每个Body的vlambda和wlambda清零
             for (var i = 0; i !== Nbodies; i++) {
-                var b = bodies[i];
-                b.vlambda.set(0,0,0);
-                b.wlambda.set(0,0,0);
+				var b = bodies[i];
+				if(b.type==BODYTYPE.DYNAMIC){
+	                b.vlambda.set(0,0,0);
+					b.wlambda.set(0,0,0);
+				}
             }
 
             // Iterate over equations
@@ -112,7 +115,9 @@ export class GSSolver extends Solver {
              * 已经计算出λ了，下面计算新的速度
              */
             for (var i = 0; i !== Nbodies; i++) {
-                const b = bodies[i];
+				const b = bodies[i];
+				if( b.type != BODYTYPE.DYNAMIC) 
+					continue;
                 const v = b.velocity;
                 const w = b.angularVelocity;
 
@@ -124,7 +129,7 @@ export class GSSolver extends Solver {
                 b.wlambda.vmul(b.angularFactor, b.wlambda);
                 w.vadd(b.wlambda, w);
 
-                //phyr && phyr.addVec(b.position.x, b.position.y, b.position.z, b.vlambda.x*10, b.vlambda.y*10, b.vlambda.z*10, 0xffff);
+                phyr && phyr.addVec(b.position.x, b.position.y, b.position.z, b.vlambda.x*10, b.vlambda.y*10, b.vlambda.z*10, 0xffff);
             }
 
             // Set the .multiplier property of each equation

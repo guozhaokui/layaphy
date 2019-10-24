@@ -1,5 +1,6 @@
 /**
  * 避免重复添加碰撞信息
+ * 记录上次的碰撞信息，方便发送进入和分开事件
  */
 export class OverlapKeeper {
     current:number[] = [];
@@ -22,7 +23,7 @@ export class OverlapKeeper {
     /**
      * 记录i与j相交了，把key插入current中。按照从小到大排序
      */
-    set(i:number, j:number) {
+    set(i:number, j:number):int {
         // Insertion sort. This way the diff will have linear complexity.
         const key = this.getKey(i, j);
         const current = this.current;
@@ -31,12 +32,13 @@ export class OverlapKeeper {
             index++;
         }
         if (key === current[index]) {
-            return; // Pair was already added
+            return key; // Pair was already added
         }
         for (var j = current.length - 1; j >= index; j--) {
             current[j + 1] = current[j];
         }
-        current[index] = key;
+		current[index] = key;
+		return key;
     }
 
     /**

@@ -20,10 +20,6 @@ export const enum SHAPETYPE{
     VOXEL=1024,
 }
 
-function Path(target:any) {
-    console.log("I am decorator.")
-}
-
 export class HitPointInfo{
     posi=new Vec3();
     posj=new Vec3();

@@ -1,25 +1,23 @@
 
-/* global performance */
-import {ArrayCollisionMatrix} from '../collision/ArrayCollisionMatrix.js';
-import {Broadphase} from '../collision/Broadphase.js';
-import {NaiveBroadphase} from '../collision/NaiveBroadphase.js';
-import {OverlapKeeper} from '../collision/OverlapKeeper.js';
-import {Ray, RayMode } from '../collision/Ray.js';
-import {RaycastResult} from '../collision/RaycastResult.js';
-import {Constraint} from '../constraints/Constraint.js';
-import {ContactEquation} from '../equations/ContactEquation.js';
-import {FrictionEquation} from '../equations/FrictionEquation.js';
+import { Broadphase } from '../collision/Broadphase.js';
+import { NaiveBroadphase } from '../collision/NaiveBroadphase.js';
+import { OverlapKeeper } from '../collision/OverlapKeeper.js';
+import { Ray, RayMode } from '../collision/Ray.js';
+import { RaycastResult } from '../collision/RaycastResult.js';
+import { Constraint } from '../constraints/Constraint.js';
+import { ContactEquation } from '../equations/ContactEquation.js';
+import { FrictionEquation } from '../equations/FrictionEquation.js';
 import { PhyRender } from '../layawrap/PhyRender.js';
-import {ContactMaterial} from '../material/ContactMaterial.js';
-import {Material} from '../material/Material.js';
-import {Vec3} from '../math/Vec3.js';
-import {Body, BODYTYPE, BODY_SLEEP_STATE } from '../objects/Body.js';
-import {Shape} from '../shapes/Shape.js';
-import {GSSolver} from '../solver/GSSolver.js';
-import {Solver} from '../solver/Solver.js';
-import {EventTarget} from '../utils/EventTarget.js';
-import {TupleDictionary} from '../utils/TupleDictionary.js';
-import {Narrowphase} from './Narrowphase.js';
+import { ContactMaterial } from '../material/ContactMaterial.js';
+import { Material } from '../material/Material.js';
+import { Vec3 } from '../math/Vec3.js';
+import { Body, BODYTYPE, BODY_SLEEP_STATE } from '../objects/Body.js';
+import { Shape } from '../shapes/Shape.js';
+import { GSSolver } from '../solver/GSSolver.js';
+import { Solver } from '../solver/Solver.js';
+import { EventTarget } from '../utils/EventTarget.js';
+import { TupleDictionary } from '../utils/TupleDictionary.js';
+import { Narrowphase } from './Narrowphase.js';
 
 class profileData{
     frametm:i32=0;     // 帧时间
@@ -41,17 +39,33 @@ try{
 
 class PhyEvent{
     type:string;
-    body:Body|null;
-    constructor(name:string,body:Body|null){
+    constructor(name:string){
         this.type=name;
-        this.body=body;
     }
 }
 
-class PhyCollideEvent extends PhyEvent{
+export class AddBodyEvent extends PhyEvent{
+	body:Body|null;
+	constructor(body:Body|null){
+		super('addBody');
+		this.body=body;
+	}
+}
+
+export class RemoveBodyEvent extends PhyEvent{
+	body:Body|null;
+	constructor(body:Body|null){
+		super('removeBody');
+		this.body=body;
+	}
+}
+
+export class PhyCollideEvent extends PhyEvent{
+	otherBody:Body|null;
     contact:ContactEquation|null;
     constructor(name:string, body:Body|null, c:ContactEquation|null){
-        super(name,body);
+		super(name);
+		this.otherBody=body;
         this.contact=c;
     }
 }
@@ -68,7 +82,7 @@ var
      * Dispatched before the world steps forward in time.
      * @event preStep
      */
-    World_step_preStepEvent:PhyEvent = { type: "preStep" , body:null},
+    World_step_preStepEvent = new PhyEvent("preStep" ),
     World_step_collideEvent = new PhyCollideEvent( Body.COLLIDE_EVENT_NAME, null, null ),
     World_step_oldContacts:ContactEquation[] = [], // Pools for unused objects
     World_step_frictionEquationPool:FrictionEquation[] = [],
@@ -221,12 +235,14 @@ export class World extends EventTarget {
 
     narrowphase = new Narrowphase(this);
 
-    collisionMatrix = new ArrayCollisionMatrix();
+	/** 当前帧的collisionMatrix */
+    //collisionMatrix = new ArrayCollisionMatrix();
 
     /**
      * CollisionMatrix from the previous step.
+	 * 上一帧的collisionMatrix
      */
-    collisionMatrixPrevious = new ArrayCollisionMatrix();
+    //collisionMatrixPrevious = new ArrayCollisionMatrix();
 
     bodyOverlapKeeper = new OverlapKeeper();
     shapeOverlapKeeper = new OverlapKeeper();
@@ -270,13 +286,13 @@ export class World extends EventTarget {
     /**
      * Dispatched after a body has been added to the world.
      */
-    addBodyEvent = new PhyEvent("addBody",null);
+    addBodyEvent = new AddBodyEvent(null);
 
     /**
      * Dispatched after a body has been removed from the world.
      * @param  body The body that has been removed from the world.
      */
-    removeBodyEvent = new PhyEvent('removeBody', null); 
+    removeBodyEvent = new RemoveBodyEvent(null); 
 
     idToBodyMap:{[id:string]:Body} = {};
 
@@ -430,10 +446,10 @@ export class World extends EventTarget {
      * @method collisionMatrixTick
      */
     collisionMatrixTick() {
-        var temp = this.collisionMatrixPrevious;
-        this.collisionMatrixPrevious = this.collisionMatrix;
-        this.collisionMatrix = temp;
-        this.collisionMatrix.reset();
+        //var temp = this.collisionMatrixPrevious;
+        //this.collisionMatrixPrevious = this.collisionMatrix;
+        //this.collisionMatrix = temp;
+        //this.collisionMatrix.reset();
 
         this.bodyOverlapKeeper.tick();
         this.shapeOverlapKeeper.tick();
@@ -459,7 +475,7 @@ export class World extends EventTarget {
             body.initAngularVelocity.copy(body.angularVelocity);
             body.initQuaternion.copy(body.quaternion);
         }
-        this.collisionMatrix.setNumObjects(this.bodies.length);
+        //this.collisionMatrix.setNumObjects(this.bodies.length);
         this.addBodyEvent.body = body;
 		this.idToBodyMap[body.id] = body;
 		if(body.type==BODYTYPE.DYNAMIC){
@@ -583,7 +599,7 @@ export class World extends EventTarget {
                 bodies[i].index = i;
             }
 
-            this.collisionMatrix.setNumObjects(n);
+            //this.collisionMatrix.setNumObjects(n);
             this.removeBodyEvent.body = body;
             delete this.idToBodyMap[body.id];
             this.dispatchEvent(this.removeBodyEvent);
@@ -773,6 +789,7 @@ export class World extends EventTarget {
         var oldcontacts = World_step_oldContacts;
         var NoldContacts = contacts.length;
 
+		// 把上一帧的保存到 oldcontacts 中，用来回收对象
         for (i = 0; i !== NoldContacts; i++) {
             oldcontacts.push(contacts[i]);
         }
@@ -808,9 +825,7 @@ export class World extends EventTarget {
         }
 
         var ncontacts = contacts.length;
-        for (var k = 0; k !== ncontacts; k++) {
-
-            // Current contact
+        for (var k = 0; k < ncontacts; k++) {
             let c = contacts[k];
 
             // Get current collision indeces
@@ -919,23 +934,27 @@ export class World extends EventTarget {
             }
 
             // Now we know that i and j are in contact. Set collision matrix state
-            this.collisionMatrix.set(bi, bj, true);
+            //this.collisionMatrix.set(bi, bj, true);
 
-            if (!this.collisionMatrixPrevious.get(bi, bj)) {
+            //if (!this.collisionMatrixPrevious.get(bi, bj)) {
                 // First contact!
 				// We reuse the collideEvent object, otherwise we will end up creating new objects for each new contact, even if there's no event listener attached.
 				// 发送第一次碰撞的碰撞事件
+				// 这里用 collisionMatrix 是否与bodyOverlapKeeper重复了
+				/*
+				World_step_collideEvent.contact = c;
+				
                 World_step_collideEvent.body = bj;
-                World_step_collideEvent.contact = c;
                 bi.dispatchEvent(World_step_collideEvent);
 
                 World_step_collideEvent.body = bi;
-                bj.dispatchEvent(World_step_collideEvent);
-            }
+				bj.dispatchEvent(World_step_collideEvent);
+				*/
+            //}
 
             this.bodyOverlapKeeper.set(bi.id, bj.id);
             this.shapeOverlapKeeper.set(si.id, sj.id);
-        }
+        }//for each contacts
 
 		// 通知所有的接触事件
         this.emitContactEvents();
