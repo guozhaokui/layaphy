@@ -39,7 +39,7 @@ export class EventTarget {
      * @return {Boolean}
      */
     hasEventListener(type: string, listener: eventHandler) :boolean{
-        if (!this._listeners) { return false; }
+        if (!this._listeners)  return false; 
         const listeners = this._listeners;
         if (listeners[type] !== undefined && listeners[type].includes(listener)) {
             return true;

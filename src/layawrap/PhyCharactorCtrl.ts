@@ -7,6 +7,7 @@ import { Sphere } from "../shapes/Sphere";
 import { Material } from "../material/Material";
 import { Vec3 } from "../math/Vec3";
 import { CannonWorld } from "./CannonWorld";
+import { PhyCollideEvent } from "../world/World";
 
 export class PhyCharactorCtrl extends Component implements ICharactorCtrl{
 	private _mass: number;
@@ -69,6 +70,24 @@ export class PhyCharactorCtrl extends Component implements ICharactorCtrl{
 
         let world = CannonWorld.inst.world
 		world.addBody(body);
+
+		body.addEventListener(Body.EVENT_COLLIDE_ENTER, this.onCollide.bind(this));
+	}
+
+	onCollide(colEvt:PhyCollideEvent){
+		console.log('onclide',colEvt.otherBody);
+		let c = colEvt.contact;
+		let body = this.phyBody;
+		//TEMP
+		body.velocity.set(0,0,0);
+		body.angularVelocity.set(0,0,0);
+		if(c){
+			if(body==c.bi){
+			}
+			c.bi;
+			c.bj;
+			c.ni;
+		}
 	}
 
     applyPose(){

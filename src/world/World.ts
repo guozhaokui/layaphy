@@ -69,6 +69,10 @@ export class PhyCollideEvent extends PhyEvent{
         this.contact=c;
     }
 }
+
+var collideEnterEvt = new PhyCollideEvent(Body.EVENT_COLLIDE_ENTER,null,null);
+var collideExitEvt = new PhyCollideEvent(Body.EVENT_COLLIDE_EXIT,null,null);
+
 // Temp stuff
 var tmpRay = new Ray();
 
@@ -83,7 +87,7 @@ var
      * @event preStep
      */
     World_step_preStepEvent = new PhyEvent("preStep" ),
-    World_step_collideEvent = new PhyCollideEvent( Body.COLLIDE_EVENT_NAME, null, null ),
+    //World_step_collideEvent = new PhyCollideEvent( Body.COLLIDE_EVENT_NAME, null, null ),
     World_step_oldContacts:ContactEquation[] = [], // Pools for unused objects
     World_step_frictionEquationPool:FrictionEquation[] = [],
     World_step_p1:Body[] = [], // Reusable arrays for collision pairs
@@ -244,8 +248,8 @@ export class World extends EventTarget {
      */
     //collisionMatrixPrevious = new ArrayCollisionMatrix();
 
-    bodyOverlapKeeper = new OverlapKeeper();
-    shapeOverlapKeeper = new OverlapKeeper();
+    //bodyOverlapKeeper = new OverlapKeeper();
+    //shapeOverlapKeeper = new OverlapKeeper();
 
     /**
      * All added materials
@@ -303,6 +307,8 @@ export class World extends EventTarget {
 	 */
 	_noDynamic=true;	
 
+	_pause=false;
+
     constructor(options?:any) {
         super();
         options = options || {};
@@ -328,6 +334,7 @@ export class World extends EventTarget {
     /**
      * 接触事件
      */
+	/*
     emitContactEvents() {
         var hasBeginContact = this.hasAnyEventListener('beginContact');
         var hasEndContact = this.hasAnyEventListener('endContact');
@@ -394,7 +401,7 @@ export class World extends EventTarget {
         }
 
     }
-
+	*/
 
     /**
      * Sets all body forces in the world to zero.
@@ -451,8 +458,8 @@ export class World extends EventTarget {
         //this.collisionMatrix = temp;
         //this.collisionMatrix.reset();
 
-        this.bodyOverlapKeeper.tick();
-        this.shapeOverlapKeeper.tick();
+        //this.bodyOverlapKeeper.tick();
+        //this.shapeOverlapKeeper.tick();
     }
 
     /**
@@ -667,11 +674,14 @@ export class World extends EventTarget {
      *     world.step(1/60);
      */
     step(dt: number, timeSinceLastCalled: number = 0, maxSubSteps: number = 10) {
-		if(this._noDynamic)
-			return;
         if(this.phyRender){
             this.phyRender.stepStart();
         }
+		if(this._noDynamic)
+			return;
+		if(this._pause)
+			return;
+
         if (timeSinceLastCalled === 0) { // Fixed, simple stepping
             this.internalStep(dt);
             // Increment time
@@ -733,7 +743,9 @@ export class World extends EventTarget {
         // Add gravity to all objects
         for (i = 0; i !== N; i++) {
             var bi = bodies[i];
-			if ( bi.enable) { 
+			if ( bi.enable) {
+				bi.contact.newTick();
+
 				//temp
 				if(bi.preCollision){
 					bi.preCollision();
@@ -952,21 +964,43 @@ export class World extends EventTarget {
 				*/
             //}
 
-            this.bodyOverlapKeeper.set(bi.id, bj.id);
-            this.shapeOverlapKeeper.set(si.id, sj.id);
+			bi.contact.addContact(bi,c)
+			bj.contact.addContact(bj,c);
+            //this.bodyOverlapKeeper.set(bi.id, bj.id);
+            //this.shapeOverlapKeeper.set(si.id, sj.id);
         }//for each contacts
 
 		// 通知所有的接触事件
-        this.emitContactEvents();
+		//this.emitContactEvents();
 
         if (doProfiling) {
             profile.makeContactConstraints = perfNow() - profilingStart;
             profilingStart = perfNow();
         }
 
-        // Wake up bodies
+        // Wake up bodies,并且发送事件
         for (i = 0; i !== N; i++) {
-            var bi = bodies[i];
+			var bi = bodies[i];
+			if(bi.type!=BODYTYPE.STATIC){
+				// 发送事件
+				let cs = bi.contact;
+				cs.added.forEach(c=>{	// enter事件
+					let entEvt = collideEnterEvt;
+					entEvt.otherBody=c.bi==bi?c.bj:bi;
+					entEvt.contact=c;
+					bi.dispatchEvent(entEvt);
+				});
+
+				for(let ri=0; ri<cs.removedLen; ri++){// exit事件
+					let c = cs.removed[ri];
+					let exitEvt = collideExitEvt;
+					exitEvt.otherBody=c.bi==bi?c.bj:bi;
+					exitEvt.contact=c;
+					bi.dispatchEvent(exitEvt);
+				}
+			}
+			//if(bi.hasEventListener(Body.EVENT_COLLIDE_ENTER))
+			// 唤醒
             if (bi._wakeUpAfterNarrowphase) {
                 bi.wakeUp();
                 bi._wakeUpAfterNarrowphase = false;
@@ -1066,7 +1100,11 @@ export class World extends EventTarget {
         if(this.phyRender){
             this.phyRender.internalStep();
         }
-    }
+	}
+	
+	pause(b?:boolean){
+		this._pause=b==undefined?!this._pause:b;
+	}
 
 }
 

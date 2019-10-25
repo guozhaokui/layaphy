@@ -7,6 +7,7 @@ import {Material} from '../material/Material.js';
 import {AABB} from '../collision/AABB.js';
 import {Box} from '../shapes/Box.js';
 import {World} from '../world/World.js';
+import { ContactEquation } from '../equations/ContactEquation.js';
 
 export interface BodyInitOptions {
     position?: Vec3;
@@ -60,6 +61,62 @@ export const enum BODY_SLEEP_STATE{
 }
 
 /**
+ * 每个body保留一份所有的碰撞信息。不能按照碰撞对保存，因为可能a-b, b-a,c
+ */
+class ContactInfoMgr{
+	added:ContactEquation[]=[];
+	removed:ContactEquation[]=[];	// 一开始记录上次碰撞的，每发现一个碰撞就从这里删掉所有的相关的，最后剩下的就是表示exit的
+	removedLen=0;
+	allc:ContactEquation[]=[]; // 当前所有接触的
+	allcLen=0;
+	newTick(){
+		// 交换一下add和remove
+		let tmp = this.removed;
+		this.removed=this.added;
+		this.removedLen=this.added.length;
+
+		this.added=tmp;
+		this.added.length=0;
+
+		// 所有碰撞的清零
+		this.allcLen=0;
+	}
+
+	private removeOld(b:Body):boolean{
+		let sz = this.removedLen;
+		let find=false;
+		for(let i=0; i<sz; i++){
+			let v = this.removed[i];
+			if(v.bi==b || v.bj==b){
+				this.removed[i]=this.removed[this.removedLen-1];
+				this.removedLen--;
+				sz--;
+				i--;
+				find=true;
+			}
+		}
+		return find;
+	}
+
+	addContact(me:Body, c:ContactEquation){
+		//现在还有，所以需要从remove中删除
+		let lastC = this.removeOld( c.bi==me?c.bj:c.bi);	// 删除对方，所以要先判断自己是bi还是bj
+		if(!lastC){
+			// 上次没有，所以是新增加的
+			this.added.push(c);
+		}
+
+		// 添加全部碰撞信息
+		if(this.allcLen>=this.allc.length){
+			this.allc.push(c);
+		}else{
+			this.allc[this.allcLen]=c;
+		}
+		this.allcLen++;
+	}
+}
+
+/**
  * Base class for all body types.
  * @example
  *     var body = new Body({
@@ -78,7 +135,8 @@ export class Body extends EventTarget {
      * @param {Body} body The body that was involved in the collision.
      * @param {ContactEquation} contact The details of the collision.
      */
-    static COLLIDE_EVENT_NAME = "collide";
+	static EVENT_COLLIDE_ENTER = "collideEnter";
+	static EVENT_COLLIDE_EXIT = "collideExit";
 
     static idCounter = 0;
 
@@ -289,6 +347,8 @@ export class Body extends EventTarget {
 	kinematicUsePos=false;
 
     userData:any=null;  // 保存游戏逻辑对象
+
+	contact = new ContactInfoMgr();
 
     constructor(mass: number = 1, shape: Shape|null = null, pos:Vec3|null=null, options?: BodyInitOptions) {
         super();
