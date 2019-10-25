@@ -333,8 +333,8 @@ export class Narrowphase {
 
                         if (retval && justTest) {
                             // Register overlap
-                            world.shapeOverlapKeeper.set(si.id, sj.id);
-                            world.bodyOverlapKeeper.set(bi.id, bj.id);
+                            //world.shapeOverlapKeeper.set(si.id, sj.id);
+                            //world.bodyOverlapKeeper.set(bi.id, bj.id);
                         }
                     }
                 }

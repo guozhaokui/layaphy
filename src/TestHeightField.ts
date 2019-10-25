@@ -1,4 +1,3 @@
-import { Mat3 } from './math/Mat3';
 import { Laya } from "Laya";
 import { BlinnPhongMaterial } from "laya/d3/core/material/BlinnPhongMaterial";
 import { Scene3D } from "laya/d3/core/scene/Scene3D";
@@ -6,21 +5,22 @@ import { Ray } from 'laya/d3/math/Ray';
 import { Vector2 } from 'laya/d3/math/Vector2';
 import { Vector3 } from "laya/d3/math/Vector3";
 import { Event } from "laya/events/Event";
-import { addBox, addSphere } from "./DemoUtils";
+import { hitworldOptions, Ray as PhyRay, RayMode } from "./collision/Ray";
+import { addBox } from "./DemoUtils";
+import { CannonBody } from "./layawrap/CannonBody";
 import { CannonWorld } from "./layawrap/CannonWorld";
 import { MouseCtrl1 } from "./layawrap/ctrls/MouseCtrl1";
-import { PhyRender } from "./layawrap/PhyRender";
-import {ContactMaterial} from "./material/ContactMaterial";
-import {Material} from "./material/Material";
-import {Vec3} from "./math/Vec3";
-import {Heightfield} from "./shapes/Heightfield";
-import { PhyMeshSprite } from "./layawrap/debugger/PhyMeshSprite";
 import { createTerrainMesh } from "./layawrap/debugger/PhyMesh";
-import {CannonBody} from "./layawrap/CannonBody";
-import {Quaternion} from "./math/Quaternion";
-import {Ray as PhyRay,hitworldOptions, RayMode } from "./collision/Ray";
-import { getPhyRender, IPhyRender, ContactEvent } from "./world/World";
+import { PhyMeshSprite } from "./layawrap/debugger/PhyMeshSprite";
+import { PhyRender } from "./layawrap/PhyRender";
+import { ContactMaterial } from "./material/ContactMaterial";
+import { Material } from "./material/Material";
+import { Mat3 } from './math/Mat3';
+import { Quaternion } from "./math/Quaternion";
+import { Vec3 } from "./math/Vec3";
 import { Body } from "./objects/Body";
+import { Heightfield } from "./shapes/Heightfield";
+import { getPhyRender, IPhyRender } from "./world/World";
 
 var sce3d: Scene3D;
 var mtl1: BlinnPhongMaterial;
@@ -40,15 +40,6 @@ function initPhy(scene: Scene3D) {
 	(window as any).phyr = new PhyRender(scene, phyworld.world);
 	phyworld.world.addContactMaterial(cmtl1).addContactMaterial(cmtl2);
 	phyr= getPhyRender();
-
-	//event
-	let phyw = world.world;
-	phyw.addEventListener('beginContact',(e:ContactEvent)=>{
-		console.log('body contact', e.bodyA, e.bodyB);
-	})
-	phyw.addEventListener('endContact',(e:ContactEvent)=>{
-		console.log('body contact end', e.bodyA, e.bodyB);
-	})
 }
 
 function rand(a: number, b: number) {

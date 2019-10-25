@@ -82,23 +82,25 @@ export class PhyCharactorCtrl extends Component implements ICharactorCtrl{
 		//TEMP
 		body.velocity.set(0,0,0);
 		body.angularVelocity.set(0,0,0);
-		if(c){
-			if(body==c.bi){
-			}
-			c.bi;
-			c.bj;
-			c.ni;
-		}
 	}
 
 	onExitCollide(c:PhyCollideEvent){
 		let body = this.phyBody;
-		body.velocity.set(0,0,0);
-		console.log('exitcollide',c.otherBody);
+		let vel = body.velocity.length();
+		if(body.contact.allcLen>0 || vel<6){
+			//body.velocity.set(0,0,0);
+		}
+			
+		console.log('exitcollide',c.otherBody, body.velocity);
 	}
 
     applyPose(){
-
+		let v = this.phyBody.velocity;
+		let body = this.phyBody;
+		if( body.contact.allcLen>0){
+			//v.set(0,0,0);
+		}
+		console.log('vel:',v.x|0,v.y|0,v.z|0);
 	}
 
 	set curDir(v:number){
@@ -111,6 +113,11 @@ export class PhyCharactorCtrl extends Component implements ICharactorCtrl{
 
 	get curDir(){
 		return this._curDir;
+	}
+
+	set curVDir(v:Vec3){
+		let vl = this.curVel;
+		this._lineVel.setValue(v.x*vl,v.y*vl,v.z*vl);
 	}
 
 	get lineVel(){
@@ -151,9 +158,12 @@ export class PhyCharactorCtrl extends Component implements ICharactorCtrl{
 	setUpDir(up: Vector3): void {
 		throw new Error("Method not implemented.");
 	}
+
 	jump(dir: Vector3): void {
-		throw new Error("Method not implemented.");
+		//this.lineVel.setValue(dir.x,dir.y,dir.z);
+		this.phyBody.velocity.set(dir.x,dir.y,dir.z);
 	}
+
 	preStep(): void {
 		throw new Error("Method not implemented.");
 	}

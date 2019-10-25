@@ -15,7 +15,13 @@ import { PhyRender } from "./layawrap/PhyRender";
 import { ContactMaterial } from "./material/ContactMaterial";
 import { Material } from "./material/Material";
 import { Vec3 } from "./math/Vec3";
-import { ContactEvent, getPhyRender, IPhyRender } from "./world/World";
+import { getPhyRender, IPhyRender } from "./world/World";
+import { Heightfield } from "./shapes/Heightfield";
+import { createTerrainMesh } from "./layawrap/debugger/PhyMesh";
+import { PhyMeshSprite } from "./layawrap/debugger/PhyMeshSprite";
+import { CannonBody } from "./layawrap/CannonBody";
+import { Quaternion } from "./math/Quaternion";
+import { BODYTYPE } from "./objects/Body";
 
 var sce3d: Scene3D;
 var mtl1: BlinnPhongMaterial;
@@ -35,19 +41,10 @@ function initPhy(scene: Scene3D) {
 	(window as any).phyr = new PhyRender(scene, phyworld.world);
 	phyworld.world.addContactMaterial(cmtl1).addContactMaterial(cmtl2);
 	phyr= getPhyRender();
-
-	//event
-	let phyw = world.world;
-	phyw.addEventListener('beginContact',(e:ContactEvent)=>{
-		console.log('body contact', e.bodyA, e.bodyB);
-	})
-	phyw.addEventListener('endContact',(e:ContactEvent)=>{
-		console.log('body contact end', e.bodyA, e.bodyB);
-	})
-
 }
 
 var moving=0;
+var dir=new Vec3();
 function dokey(e: Event,down:boolean){
 	let key = String.fromCharCode(e.keyCode);
 	switch (key) {
@@ -60,36 +57,45 @@ function dokey(e: Event,down:boolean){
 		case 'R':
 			break;
 		case 'A':
-			ctrl.curDir=90;
+			dir.x=down?-1:0;
+			//ctrl.curDir=90;
 			if(down)moving|=1;
 			else moving&=(~1);
-			//ctrl.step(1/60);
 			break;
 		case 'S':
-			ctrl.curDir=0;
+			dir.z=down?1:0;
+			//ctrl.curDir=0;
 			//ctrl.step(1/60);
 			if(down)moving|=2;
 			else moving&=(~2);
 			break;
 		case 'D':
-			ctrl.curDir=-90;
+			dir.x=down?1:0;
+			//ctrl.curDir=-90;
 			if(down)moving|=4;
 			else moving&=(~4);
-			//ctrl.step(1/60);
 			break;
 		case 'W':
-			ctrl.curDir=180;
+			dir.z=down?-1:0;
+			//ctrl.curDir=180;
 			if(down)moving|=8;
 			else moving&=(~8);
-			//ctrl.step(1/60);
 			break;
 		case 'P':
 			if(down)
 				world.world.pause();
 			break;
+		case ' ':
+			if(down){
+				ctrl.jump(new Vector3(0,10,0))
+			}
+			break;
 		default:
 			break;
 	}
+
+	dir.normalize();
+	ctrl.curVDir = dir;
 
 }
 
@@ -127,6 +133,60 @@ function createCharCtrl(size:Vec3){
     return ctrl;
 }
 
+// 测试传送带
+function testConveyorbelt(){
+	let b = addBox( new Vec3(10,0.1,10), new Vec3(-59,0.3,0), 1000, phymtl2);
+	b.phyBody.type=BODYTYPE.KINEMATIC;
+	//b.phyBody.velocity.set(1,0,0);
+	b.phyBody.allowSleep=false;
+	b.phyBody._name='ban';
+	b.phyBody.kinematicUsePos=true;
+	let tm=0;
+	b.phyBody.preCollision=()=>{
+		let b1 = b.phyBody;
+		b1.position.x=-70+10*Math.sin(tm++/100);
+	}
+}
+
+
+function testGround(img: HTMLImageElement) {
+	//plane
+	//addBox(new Vec3(100,100,100), new Vec3(0,-50,0),0,phymtl1);
+	let min = new Vec3();
+	let max = new Vec3();
+
+	let p = new Heightfield([[1,1],[1,1]], null, null, 10);
+	/*
+	let m = createTerrainMesh(new Uint8Array([255,255,255,255]), 2, 2, new Vec3(10,1,10), new Vec3(0, 0, 0),min,max);
+	*/
+	
+	let scale = new Vec3(100,20,100);
+	let imgdt = p.setHeightsFromImage(img, scale) as ImageData;
+	//转换data
+	let w = imgdt.width;
+	let h = imgdt.height;
+	let data:number[] = [];
+	for(let y=0; y<h; y++){
+		for(let x=0; x<w; x++){
+			let v = imgdt.data[(y*w+x)*4];
+			data.push(v);
+		}
+	}
+	
+	let m = createTerrainMesh(new Uint8Array(data), w, h, scale, new Vec3(0, 0, 0),min,max);
+	
+	let renderobj = new PhyMeshSprite(m, min as any as Vector3, max as any as Vector3);
+	sce3d.addChild(renderobj);
+
+	var phy = renderobj.addComponent(CannonBody) as CannonBody;
+	let shapeq = new Quaternion();
+	//shapeq.setFromAxisAngle(new Vec3(1, 0, 0), -Math.PI / 2);	// 正的是顺时针
+	phy.addShape(p, new Vector3(0,0,0), shapeq);
+	//phy.phyBody.setPos(0, 2, 0);
+	phy.setMass(0);
+	let terrain = phy.phyBody;
+}
+
 export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 	cam.dist = 20;
 	sce3d = sce;
@@ -134,20 +194,30 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 	//mtl.renderMode = BlinnPhongMaterial.RENDERMODE_TRANSPARENT;
 	initPhy(sce);
 	let sceobj = 
-	[{"name": "Cube", "dim": {"x": 20.0, "y": 40.0, "z": 0.20000004768371582}, "pos": {"x": -9.5367431640625e-07, "y": 2.384185791015625e-07, "z": 2.384185791015625e-07}, "quat": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}, "mass": 0}, {"name": "Cube.001", "dim": {"x": 2.0, "y": 8.0, "z": 0.30000001192092896}, "pos": {"x": -10.583667755126953, "y": 1.719085931777954, "z": 0.19451212882995605}, "quat": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}, "mass": 0}, {"name": "Cube.003", "dim": {"x": 1.2832520008087158, "y": 44.06886672973633, "z": 18.270801544189453}, "pos": {"x": 10.349227905273438, "y": -0.4336942434310913, "z": 7.149570465087891}, "quat": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}, "mass": 0}, {"name": "Cube.002", "dim": {"x": 2.0, "y": 8.0, "z": 0.30000001192092896}, "pos": {"x": -12.58366584777832, "y": 1.719085931777954, "z": 0.49451208114624023}, "quat": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}, "mass": 0}, {"name": "Cube.004", "dim": {"x": 2.0, "y": 8.0, "z": 0.30000001192092896}, "pos": {"x": -14.58366584777832, "y": 1.719085931777954, "z": 0.7945119142532349}, "quat": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}, "mass": 0}, {"name": "Cube.005", "dim": {"x": 2.0, "y": 8.0, "z": 0.30000001192092896}, "pos": {"x": -16.583667755126953, "y": 1.719085931777954, "z": 1.0945121049880981}, "quat": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}, "mass": 0}, {"name": "Cube.006", "dim": {"x": 20.69036293029785, "y": 2.0, "z": 8.276045799255371}, "pos": {"x": 0.10714340209960938, "y": -21.061107635498047, "z": 3.2415902614593506}, "quat": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}, "mass": 0}, {"name": "Cube.007", "dim": {"x": 21.156166076660156, "y": 2.0, "z": 22.843353271484375}, "pos": {"x": 0.7932448387145996, "y": 28.999530792236328, "z": 5.831474304199219}, "quat": {"x": -0.4526829719543457, "y": -0.0, "z": 0.0, "w": 0.8916715383529663}, "mass": 0}, {"name": "Cube.008", "dim": {"x": 2.0, "y": 2.0, "z": 2.0}, "pos": {"x": 0.82879638671875, "y": 29.197895050048828, "z": 15.298372268676758}, "quat": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}, "mass": 0.0}, {"name": "Cube.009", "dim": {"x": 0.5103281736373901, "y": 15.272051811218262, "z": 7.38112735748291}, "pos": {"x": 2.218686819076538, "y": -5.52827787399292, "z": 3.0185797214508057}, "quat": {"x": 0.0, "y": 0.0, "z": 0.17481115460395813, "w": 0.9846019744873047}, "mass": 0}]
+	[{"name": "Cube", "dim": {"x": 20.0, "y": 40.0, "z": 0.20000004768371582}, "pos": {"x": -9.5367431640625e-07, "y": 2.384185791015625e-07, "z": 2.384185791015625e-07}, "quat": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}, "mass": 0}, {"name": "Cube.001", "dim": {"x": 2.0, "y": 8.0, "z": 0.30000001192092896}, "pos": {"x": -10.583667755126953, "y": 1.719085931777954, "z": 0.19451212882995605}, "quat": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}, "mass": 0}, {"name": "Cube.003", "dim": {"x": 1.2832520008087158, "y": 44.06886672973633, "z": 18.270801544189453}, "pos": {"x": 10.349227905273438, "y": -0.4336942434310913, "z": 7.149570465087891}, "quat": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}, "mass": 0}, {"name": "Cube.002", "dim": {"x": 2.0, "y": 8.0, "z": 0.30000001192092896}, "pos": {"x": -12.58366584777832, "y": 1.719085931777954, "z": 0.49451208114624023}, "quat": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}, "mass": 0}, {"name": "Cube.004", "dim": {"x": 2.0, "y": 8.0, "z": 0.30000001192092896}, "pos": {"x": -14.58366584777832, "y": 1.719085931777954, "z": 0.7945119142532349}, "quat": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}, "mass": 0}, {"name": "Cube.005", "dim": {"x": 2.0, "y": 8.0, "z": 0.30000001192092896}, "pos": {"x": -16.583667755126953, "y": 1.719085931777954, "z": 1.0945121049880981}, "quat": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}, "mass": 0}, {"name": "Cube.006", "dim": {"x": 20.69036293029785, "y": 2.0, "z": 8.276045799255371}, "pos": {"x": 0.10714340209960938, "y": -21.061107635498047, "z": 3.2415902614593506}, "quat": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}, "mass": 0}, {"name": "Cube.007", "dim": {"x": 21.156166076660156, "y": 2.0, "z": 22.843353271484375}, "pos": {"x": 0.7932448387145996, "y": 28.999530792236328, "z": 5.831474304199219}, "quat": {"x": -0.4526829719543457, "y": -0.0, "z": 0.0, "w": 0.8916715383529663}, "mass": 0}, {"name": "Cube.008", "dim": {"x": 2.0, "y": 2.0, "z": 2.0}, "pos": {"x": 0.82879638671875, "y": 29.197895050048828, "z": 15.298372268676758}, "quat": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}, "mass": 0}, {"name": "Cube.009", "dim": {"x": 0.5103281736373901, "y": 15.272051811218262, "z": 7.38112735748291}, "pos": {"x": 2.218686819076538, "y": -5.52827787399292, "z": 3.0185797214508057}, "quat": {"x": 0.0, "y": 0.0, "z": 0.17481115460395813, "w": 0.9846019744873047}, "mass": 0}, {"name": "Cube.010", "dim": {"x": 39.56965637207031, "y": 46.535789489746094, "z": 2.0}, "pos": {"x": -36.34748840332031, "y": -1.1900715827941895, "z": 0.12122726440429688}, "quat": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}, "mass": 0}, {"name": "Cube.011", "dim": {"x": 2.0, "y": 7.9040608406066895, "z": 2.0}, "pos": {"x": -29.992624282836914, "y": -8.7035551071167, "z": 4.685491561889648}, "quat": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}, "mass": 0}]
 	loadSce(sce,phymtl2,sceobj as PhyObj[],true)
 	test(mtl, cam);
 
 	//
-	ctrl = createCharCtrl(new Vec3(0.3,1.8,0.3));
-	ctrl.setPos(2,2,2);
+	window.ctrl = ctrl = createCharCtrl(new Vec3(0.3,1.8,0.3));
+	ctrl.setPos(-12,2,2);
 	ctrl.curDir=180;
 	ctrl.curVel=10;
 	ctrl.enableFriction(false);
 
 	Laya.timer.loop(1,null,()=>{
 		if(moving){
+			console.log('mov',moving);
 			ctrl.step(1/60);
 		}
 	})
+
+	testConveyorbelt();
+
+	let img = new Image();
+	img.src = './res/height1.jpg';
+	img.onload = (e) => {
+		testGround(img);
+		test(mtl, cam);
+	}	
 }
