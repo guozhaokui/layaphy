@@ -376,7 +376,7 @@ export class Sphere extends Shape {
 		let gridw = voxel.voxData.gridsz;
 		let r = gridw / 2;
 		let min = voxel.voxData.aabbmin;    //原始包围盒
-		let max = voxel.voxData.aabbmax;
+		//let max = voxel.voxData.aabbmax;
 		let tmpV = new Vec3();  //xyz格子坐标
 		let hitpos = new Vec3();
 		let hitpos1 = new Vec3();

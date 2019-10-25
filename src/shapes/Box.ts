@@ -1,12 +1,12 @@
-import {Shape, SHAPETYPE, HitPointInfo } from './Shape.js';
-import {Vec3} from '../math/Vec3.js';
-import {ConvexPolyhedron,  hitInfo } from './ConvexPolyhedron.js';
-import {Quaternion} from '../math/Quaternion.js';
+import { Mat3 } from '../math/Mat3.js';
+import { Quaternion } from '../math/Quaternion.js';
+import { Transform } from '../math/Transform.js';
+import { Vec3 } from '../math/Vec3.js';
+import { ConvexPolyhedron } from './ConvexPolyhedron.js';
 import { MinkowskiShape } from './MinkowskiShape.js';
-import {Transform} from '../math/Transform.js';
-import {Mat3} from '../math/Mat3.js';
+import { HitPointInfo, Shape, SHAPETYPE } from './Shape.js';
+import { Sphere } from './Sphere.js';
 import { Voxel } from './Voxel.js';
-import {Sphere} from './Sphere.js';
 
 // v可以与target相同
 export function quat_AABBExt_mult(q:Quaternion, v:Vec3, target = new Vec3()) {

@@ -1,7 +1,6 @@
 
 import { Broadphase } from '../collision/Broadphase.js';
 import { NaiveBroadphase } from '../collision/NaiveBroadphase.js';
-import { OverlapKeeper } from '../collision/OverlapKeeper.js';
 import { Ray, RayMode } from '../collision/Ray.js';
 import { RaycastResult } from '../collision/RaycastResult.js';
 import { Constraint } from '../constraints/Constraint.js';
@@ -18,6 +17,7 @@ import { Solver } from '../solver/Solver.js';
 import { EventTarget } from '../utils/EventTarget.js';
 import { TupleDictionary } from '../utils/TupleDictionary.js';
 import { Narrowphase } from './Narrowphase.js';
+import { ContactInfo } from '../collision/ContactManager.js';
 
 class profileData{
     frametm:i32=0;     // 帧时间
@@ -62,8 +62,8 @@ export class RemoveBodyEvent extends PhyEvent{
 
 export class PhyCollideEvent extends PhyEvent{
 	otherBody:Body|null;
-    contact:ContactEquation|null;
-    constructor(name:string, body:Body|null, c:ContactEquation|null){
+    contact:ContactInfo|null;
+    constructor(name:string, body:Body|null, c:ContactInfo|null){
 		super(name);
 		this.otherBody=body;
         this.contact=c;
@@ -744,7 +744,8 @@ export class World extends EventTarget {
         for (i = 0; i !== N; i++) {
             var bi = bodies[i];
 			if ( bi.enable) {
-				bi.contact.newTick();
+				if(bi.type!=BODYTYPE.STATIC)
+					bi.contact.newTick();
 
 				//temp
 				if(bi.preCollision){
@@ -964,8 +965,8 @@ export class World extends EventTarget {
 				*/
             //}
 
-			bi.contact.addContact(bi,c)
-			bj.contact.addContact(bj,c);
+			bi.type!=BODYTYPE.STATIC && bi.contact.addContact(bi,c)
+			bj.type!=BODYTYPE.STATIC && bj.contact.addContact(bj,c);
             //this.bodyOverlapKeeper.set(bi.id, bj.id);
             //this.shapeOverlapKeeper.set(si.id, sj.id);
         }//for each contacts
@@ -984,17 +985,18 @@ export class World extends EventTarget {
 			if(bi.type!=BODYTYPE.STATIC){
 				// 发送事件
 				let cs = bi.contact;
-				cs.added.forEach(c=>{	// enter事件
+				for( let ei=0; ei<cs.addlen; ei++){// enter事件
+					let c = cs.added[ei];
 					let entEvt = collideEnterEvt;
-					entEvt.otherBody=c.bi==bi?c.bj:bi;
+					entEvt.otherBody=c.body;
 					entEvt.contact=c;
 					bi.dispatchEvent(entEvt);
-				});
+				}
 
 				for(let ri=0; ri<cs.removedLen; ri++){// exit事件
 					let c = cs.removed[ri];
 					let exitEvt = collideExitEvt;
-					exitEvt.otherBody=c.bi==bi?c.bj:bi;
+					exitEvt.otherBody=c.body;
 					exitEvt.contact=c;
 					bi.dispatchEvent(exitEvt);
 				}

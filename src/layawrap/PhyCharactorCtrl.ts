@@ -72,10 +72,11 @@ export class PhyCharactorCtrl extends Component implements ICharactorCtrl{
 		world.addBody(body);
 
 		body.addEventListener(Body.EVENT_COLLIDE_ENTER, this.onCollide.bind(this));
+		body.addEventListener(Body.EVENT_COLLIDE_EXIT,this.onExitCollide.bind(this));
 	}
 
 	onCollide(colEvt:PhyCollideEvent){
-		console.log('onclide',colEvt.otherBody);
+		console.log('onclide',(colEvt.otherBody as Body).id);
 		let c = colEvt.contact;
 		let body = this.phyBody;
 		//TEMP
@@ -88,6 +89,12 @@ export class PhyCharactorCtrl extends Component implements ICharactorCtrl{
 			c.bj;
 			c.ni;
 		}
+	}
+
+	onExitCollide(c:PhyCollideEvent){
+		let body = this.phyBody;
+		body.velocity.set(0,0,0);
+		console.log('exitcollide',c.otherBody);
 	}
 
     applyPose(){
