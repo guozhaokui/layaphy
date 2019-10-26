@@ -11,6 +11,12 @@ import { Box } from "./shapes/Box";
 import { Capsule } from "./shapes/Capsule";
 import { ConvexPolyhedron } from "./shapes/ConvexPolyhedron";
 import { Sphere } from "./shapes/Sphere";
+import { Ray as PhyRay, hitworldOptions, RayMode } from "./collision/Ray";
+import { Ray } from "laya/d3/math/Ray";
+import { Camera } from "laya/d3/core/Camera";
+import { Vector2 } from "laya/d3/math/Vector2";
+import { Laya } from "Laya";
+import { World } from "./world/World";
 
 var scene:Scene3D;
 var mtl:BaseMaterial;
@@ -110,4 +116,19 @@ export function loadSce(rsce:Scene3D, mtl:Material, sce:PhyObj[],zup2yup:boolean
 			b.phyBody.quaternion.copy(cbox.quat);
 		}
 	});
+}
+
+export function raycast(world:World, cam:Camera, cb:(pt:Vec3, norm:Vec3)=>void){
+	let ray = new Ray(new Vector3(), new Vector3());
+	cam.viewportPointToRay(new Vector2(Laya.stage.mouseX, Laya.stage.mouseY), ray);
+	let len = 10000;
+	let phyRay = new PhyRay();
+	phyRay.from.set(ray.origin.x, ray.origin.y, ray.origin.z);
+	phyRay.to.set(ray.direction.x * len, ray.direction.y * len, ray.direction.z * len);
+	let options: hitworldOptions = { mode: RayMode.CLOSEST };
+	if (phyRay.intersectWorld(world, options)) {
+		let r = phyRay.result;
+		cb(r.hitPointWorld, r.hitNormalWorld);
+		//phyr.addPersistPoint( hitpt);
+	}	
 }

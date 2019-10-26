@@ -109,7 +109,7 @@ var directionLight = (<DirectionLight>scene.addChild(new DirectionLight()));
 directionLight.color = new Vector3(0.6, 0.6, 0.6);
 //设置平行光的方向
 var mat = directionLight.transform.worldMatrix;
-mat.setForward(new Vector3(-1.0, -1.0, -1.0));
+mat.setForward(new Vector3(-1.0, -1.0, 1.0));
 directionLight.transform.worldMatrix = mat;
 
 let plane = new MeshSprite3D(PrimitiveMesh.createPlane(100, 100, 10, 10));

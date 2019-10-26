@@ -7,7 +7,8 @@ import { Sphere } from "../shapes/Sphere";
 import { Material } from "../material/Material";
 import { Vec3 } from "../math/Vec3";
 import { CannonWorld } from "./CannonWorld";
-import { PhyCollideEvent } from "../world/World";
+import { PhyCollideEvent, World } from "../world/World";
+import { PhyRender } from "./PhyRender";
 
 export class PhyCharactorCtrl extends Component implements ICharactorCtrl{
 	private _mass: number;
@@ -101,10 +102,20 @@ export class PhyCharactorCtrl extends Component implements ICharactorCtrl{
     applyPose(){
 		let v = this.phyBody.velocity;
 		let body = this.phyBody;
-		if( body.contact.allcLen>0){
+		let contact = body.contact;
+		let phyr = (body.world as World).phyRender;
+
+		if( contact.allcLen>0){
 			//v.set(0,0,0);
+			for(let i=0; i<contact.allcLen; i++){
+				let c = contact.allc[i];
+				//console.log(c.hitnorm)
+				phyr.addVec1(body.position, c.hitnorm, 10,0xffff0000);
+			}
 		}
-		console.log('vel:',v.x|0,v.y|0,v.z|0);
+
+		//console.log('vel:',v.x|0,v.y|0,v.z|0);
+		
 	}
 
 	set curDir(v:number){

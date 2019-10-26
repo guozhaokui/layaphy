@@ -166,6 +166,7 @@ export abstract class IPhyRender{
 var PhyrInst:IPhyRender;
 export function setPhyRender(r:IPhyRender){
 	PhyrInst=r;
+	(window as any).phyr = r;
 }
 
 export function getPhyRender(){

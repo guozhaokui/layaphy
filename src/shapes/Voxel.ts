@@ -79,7 +79,8 @@ export class SparseVoxData {
 	dataszy: i32;
 	dataszz: i32;
 	maxsz: i32;
-	aabbmin = new Vec3();   // local坐标的包围盒。相对于本地原点
+	/** local坐标的包围盒。相对于本地原点 */
+	aabbmin = new Vec3(); 
 	aabbmax = new Vec3();
 
 	//get 加速
@@ -335,6 +336,7 @@ export class Voxel extends Shape {
 	dataxsize = 0;
 	dataysize = 0;
 	datazsize = 0;
+	cpos=new Vec3();	// 重心坐标的原点。quat是相对于这个的，如果静态对象可以简单设置为包围盒的中心
 	quat: Quaternion;
 	pos:Vec3 ;// 目前是一个临时引用，不可以跨函数
 	centroid: Vec3 = new Vec3();	// 在voxData坐标系下的质心 @TODO 转换
@@ -345,13 +347,17 @@ export class Voxel extends Shape {
 	addToSceTick = -1;  // 
 	gridw = 0;
 
-	constructor(dt: SparseVoxData) {
+	constructor(dt: SparseVoxData,scale:number) {
 		super();
 		this.voxData = dt;
 		this.type = SHAPETYPE.VOXEL;
-		this.aabbmin.copy(dt.aabbmin);
-		this.aabbmax.copy(dt.aabbmax);
-		this.gridw = ((dt.aabbmax.x - dt.aabbmin.x) / dt.dataszx);
+		let min = this.aabbmin;
+		let max = this.aabbmax;
+		dt.aabbmin.scale(scale,dt.aabbmin);
+		dt.aabbmax.scale(scale,dt.aabbmax);
+		min.copy(dt.aabbmin);
+		max.copy(dt.aabbmax);
+		this.gridw = ((max.x - min.x) / dt.dataszx);
 		// 如果不是方的，转成多个方的
 		let xs = this.dataxsize = dt.dataszx;
 		let ys = this.dataysize = dt.dataszy;
@@ -362,7 +368,7 @@ export class Voxel extends Shape {
 		this.bitDataLod = new Array<VoxelBitData>(lodlv);
 		//let clv = lodlv - 1;
 		let clv = 0;
-		let cdt = this.bitDataLod[clv] = new VoxelBitData(xs, ys, zs, this.aabbmin, this.aabbmax);
+		let cdt = this.bitDataLod[clv] = new VoxelBitData(xs, ys, zs, min,max);
 		//设置末级数据
 		dt.data.forEach(v => {
 			cdt.setBit(v.x, v.y, v.z);
@@ -553,6 +559,22 @@ export class Voxel extends Shape {
 		return out;
 	}
 
+	xyzToPos(x:int,y:int,z:int, pos:Vec3, Q:Quaternion, min:Vec3, max:Vec3){
+		let w = this.gridw;
+		let orimin = this.voxData.aabbmin;
+		let orimax = this.voxData.aabbmax;
+	
+		min.set(x*w,y*w,z*w);
+		min.vadd(orimin, min);
+		Q.vmult(min,min);
+		min.vadd(pos,min);
+
+		max.set(x*w+w,y*w+w,z*w+w);
+		max.vadd(orimin, max);
+		Q.vmult(max,max);
+		max.vadd(pos,max);
+	}
+
 	//3dline
 	/**
 	 * 射线经过voxle的路径。原理是每次根据碰撞到每个分隔面的时间取最近的。
@@ -560,7 +582,7 @@ export class Voxel extends Shape {
 	 * @param ed  voxel空间的终点
 	 * @param visitor 返回true则继续
 	 */
-	rayTravel(st: Vec3, ed: Vec3, visitor: (x: int, y: int, z: int) => boolean) {
+	rayTravel(st: Vec3, ed: Vec3, visitor: (x: int, y: int, z: int, has:boolean) => boolean) {
 		let w = this.gridw;
 		let min = this.voxData.aabbmin;
 		let max = this.voxData.aabbmax;
@@ -573,10 +595,10 @@ export class Voxel extends Shape {
 			return;
 
 		//debug
-		let phyr =  getPhyRender();
-		let wpos = new Vec3();
-		phyr.addPersistPoint( this.pointToWorld(nst, wpos));
-		phyr.addPersistPoint( this.pointToWorld(ned,wpos));
+		//let phyr =  getPhyRender();
+		//let wpos = new Vec3();
+		//phyr.addPersistPoint( this.pointToWorld(nst, wpos));
+		//phyr.addPersistPoint( this.pointToWorld(ned,wpos));
 		//debug
 
 		//dir
@@ -605,11 +627,16 @@ export class Voxel extends Shape {
 		let fdx = Math.abs(ned.x - nst.x);
 		let fdy = Math.abs(ned.y - nst.y);
 		let fdz = Math.abs(ned.z - nst.z);
-		let t = Math.sqrt(fdx * fdx + fdy * fdy + fdz * fdz);//其实也可以判断x,y,z但是由于不知道方向，所以把复杂的事情留到循环外面
+
+		let absdirx = Math.abs(dirx);
+		let absdiry = Math.abs(diry);
+		let absdirz = Math.abs(dirz);
+
+		let t = Math.sqrt((fdx * fdx + fdy * fdy + fdz * fdz)/(absdirx*absdirx+absdiry*absdiry+absdirz*absdirz));//其实也可以判断x,y,z但是由于不知道方向，所以把复杂的事情留到循环外面
 		// 每经过一个格子需要的时间
-		let xt = Math.abs(dirx) > 1e-6 ? w / dirx : 10000;
-		let yt = Math.abs(diry) > 1e-6 ? w / diry : 10000;
-		let zt = Math.abs(dirz) > 1e-6 ? w / dirz : 10000;
+		let xt = absdirx > 1e-6 ? w / absdirx : 10000;
+		let yt = absdiry > 1e-6 ? w / absdiry : 10000;
+		let zt = absdirz > 1e-6 ? w / absdirz : 10000;
 
 		//由于起点不在0,0,0因此需要计算到下一个面的时间，第一次需要计算，以后直接加就行
 		let maxX = (1 - (nst.x % w) / w) * xt;
@@ -620,8 +647,14 @@ export class Voxel extends Shape {
 		let cy = y0;
 		let cz = z0;
 		let end = false;
+		let data = this.bitDataLod[0];
 		while (!end) {
-			end = !visitor(cx, cy, cz);
+			if(data.getBit(cx,cy,cz))
+				end = !visitor(cx, cy, cz, true);
+			//
+			//let pt = new Vec3(cx*this.gridw+min.x,cy*this.gridw+min.y,cz*this.gridw+min.z);
+			//phyr.addPersistPoint( this.pointToWorld(pt,pt) )
+			//
 			if(end){
 				break;
 			}

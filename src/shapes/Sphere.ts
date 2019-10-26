@@ -420,8 +420,8 @@ export class Sphere extends Shape {
 		hitpoints.length = 0;
 
 		let R = this.radius;
-		let voxmin = voxel.aabbmin;
-		let voxmax = voxel.aabbmax;
+		let voxmin = voxel.voxData.aabbmin;// voxel.aabbmin;  要用原始aabb，因为计算相对
+		let voxmax = voxel.voxData.aabbmin;// voxel.aabbmax;
 
 		// 把球转换到voxel空间
 		/** 球在vox空间的坐标 */

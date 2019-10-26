@@ -4,7 +4,7 @@ import {Transform} from '../math/Transform.js';
 import {RaycastResult} from './RaycastResult.js';
 import {Shape, SHAPETYPE } from '../shapes/Shape.js';
 import {AABB} from './AABB.js';
-import {World} from '../world/World.js';
+import {World, getPhyRender} from '../world/World.js';
 import {Body} from '../objects/Body.js';
 import {ConvexPolyhedron} from '../shapes/ConvexPolyhedron.js';
 import {Box} from '../shapes/Box.js';
@@ -636,7 +636,17 @@ export class Ray {
 		voxel.pos=position;	//position是临时的，因此只能使用前随时设置
 		voxel.quat=quat;
 		//test
-		voxel.rayTravel(fromLocal,toLocal,(x:int,y:int,z:int)=>{
+		voxel.rayTravel(fromLocal,toLocal,(x:int,y:int,z:int,b:boolean)=>{
+			if(!b)
+				return true;
+			var pmin= new Vec3();
+			var pmax = new Vec3();
+			voxel.xyzToPos(x,y,z,position,quat,pmin,pmax);
+			//console.log('hit',x,y,z);
+			let phyr =  (window as any).phyr;// getPhyRender();
+			phyr.addPersistPoint( pmin );
+			phyr.addPersistPoint( pmax );
+	
 			return false;
 		});
 
