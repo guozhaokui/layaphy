@@ -109,7 +109,6 @@ function test(mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 		cam.camera.viewportPointToRay(new Vector2(e.stageX, e.stageY), ray);
 		stpos.set(ray.origin.x, ray.origin.y, ray.origin.z);
 		dir.set(ray.direction.x, ray.direction.y, ray.direction.z);
-
 		//let sp = addSphere(3, stpos.x, stpos.y, stpos.z);
 		let sp = addBox(new Vec3(0.5, 0.5, 0.5), stpos, 10, phymtl1);
 		//sp.fixedRotation=true;
@@ -184,6 +183,7 @@ function testGround(img: HTMLImageElement) {
 	phy.addShape(p, new Vector3(0,0,0), shapeq);
 	//phy.phyBody.setPos(0, 2, 0);
 	phy.setMass(0);
+	phy.setPos(-180,0.31,-60);
 	let terrain = phy.phyBody;
 }
 
@@ -199,7 +199,7 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 	test(mtl, cam);
 
 	//
-	window.ctrl = ctrl = createCharCtrl(new Vec3(0.3,1.8,0.3));
+	(window as any).ctrl = ctrl = createCharCtrl(new Vec3(0.3,1.8,0.3));
 	ctrl.setPos(-12,2,2);
 	ctrl.curDir=180;
 	ctrl.curVel=10;
@@ -218,6 +218,5 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 	img.src = './res/height1.jpg';
 	img.onload = (e) => {
 		testGround(img);
-		test(mtl, cam);
 	}	
 }

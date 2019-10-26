@@ -16,6 +16,9 @@ import { MouseCtrl1 } from "./layawrap/ctrls/MouseCtrl1";
 import {Quaternion} from "./math/Quaternion";
 import { testBullet } from "./TestBullet";
 import { Main } from "./TestCharCtrl";
+import { DefaultMaterial } from "./layawrap/debugger/DefaultMtl";
+import { loadEnvTexture, loadLUTTex } from "./layawrap/debugger/envTexMgr";
+import { Matrix4x4 } from "laya/d3/math/Matrix4x4";
 //import { Main } from "./testDomino";
 //import { Main } from "./TestSpider";
 //import { Main } from "./TestInBrowser";
@@ -68,10 +71,29 @@ let scene: Scene3D;
 Laya3D.init(1920, 1080);
 scene = Laya.stage.addChild(new Scene3D()) as Scene3D;
 let mtl2 = new BlinnPhongMaterial();
+let stdmtl = new DefaultMaterial();
+
 //加载纹理资源
-Texture2D.load("res/rocks.jpg", Handler.create(null, function (tex: Texture2D): void {
+Texture2D.load("res/gray.jpg", Handler.create(null, function (tex: Texture2D): void {
     mtl2.albedoTexture = tex;
 }));
+
+loadEnvTexture('res/env/default/env.mipmaps', (t)=>{
+	let texEnv=t;
+	let texLUT = loadLUTTex();
+	stdmtl.setEnvTexture(texEnv);
+	stdmtl.setLUTTexture(texLUT);
+	let envdiffdt = [0.28129690885543823,0,0,0,-0.3282267153263092,-0.1073296070098877,0,0,-0.29809144139289856,0.13647188246250153,-0.17396731674671173,0,-0.5436494946479797,0.18786616623401642,0.2717423141002655,0.5554966926574707,0.2510770261287689,0,0,0,-0.295642226934433,-0.08785344660282135,0,0,-0.2755483090877533,0.12092982232570648,-0.16322359442710876,0,-0.5187899470329285,0.1655164659023285,0.3213203251361847,0.5639563798904419,0.17064285278320312,0,0,0,-0.22071118652820587,-0.04934860020875931,0,0,-0.21280556917190552,0.08689119666814804,-0.12129425257444382,0,-0.40946751832962036,0.11174142360687256,0.36054936051368713,0.5101194381713867];
+	//u_roughness_metaless_hdrexp.set([0, 0, 1]);
+	let matr = new Matrix4x4();
+	let matg = new Matrix4x4();
+	let matb = new Matrix4x4();
+	matr.elements.set(envdiffdt.slice(0, 16));
+	matg.elements.set( envdiffdt.slice(16, 32));
+	matb.elements.set( envdiffdt.slice(32, 48));
+	stdmtl.setSPHValue(matr,matg,matb);
+})
+
 
 var camera = (<Camera>scene.addChild(new Camera(0, 1, 10000)));
 camera.transform.translate(new Vector3(0, 6, 19.5));
@@ -106,6 +128,7 @@ plane.meshRenderer.material = planeMtl;
 
 if(1){
 	initDemo(scene,mtl2);
+	//initDemo(scene,stdmtl);
 	//testCannon(scene,plane,mtl2);
 	Main(scene,mtl2,camctrl);
 	

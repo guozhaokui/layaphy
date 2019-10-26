@@ -33,7 +33,7 @@ export class PhyCharactorCtrl extends Component implements ICharactorCtrl{
 	canCollideWith: number;
 	phyForTrigger:Body|null=null;
 	/** 物理实体，有很大摩擦力，所以可以被传送带带走，可以被推走，可以下落 */
-	phyBody:Body = new Body(1,new Sphere(0.5));
+	phyBody:Body = new Body(1);
 	fixedRotation: boolean;
 	canJump: boolean;	gravity: Vector3;
 	enableGravity: boolean;
@@ -61,6 +61,10 @@ export class PhyCharactorCtrl extends Component implements ICharactorCtrl{
 	private _initPhyBody(){
 		// 
 		let body = this.phyBody;
+		body.addShape( new Sphere(0.5));
+		body.addShape( new Sphere(0.5),new Vec3(0,0.8,0));
+		body.addShape( new Sphere(0.5),new Vec3(0,1.6,0));
+		body.addShape( new Sphere(0.5),new Vec3(0,2.4,0));
 		body.userData=this;
 		body.position.set(0,10,0);
 		body.allowSleep=false;
