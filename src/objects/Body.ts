@@ -291,7 +291,8 @@ export class Body extends EventTarget {
 	/** 如果是kinematic对象，用速度控制还是用位置控制。 */
 	kinematicUsePos=false;
 
-    userData:any=null;  // 保存游戏逻辑对象
+	userData:any=null;  // 保存游戏逻辑对象
+	dbgData:any=null;
 
 	contact = new ContactInfoMgr();
 

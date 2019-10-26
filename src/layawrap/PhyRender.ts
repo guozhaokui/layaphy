@@ -27,13 +27,14 @@ let p3 = new Vector3();
 /**
  * 无交互界面，已经变成图片了
  */
-class UIPlane extends MeshSprite3D {
+export class UIPlane extends MeshSprite3D {
 	plane: MeshSprite3D;
 	mat: UnlitMaterial;
 	texture2D: RenderTexture2D;
-
+	s:Sprite|null;
 	constructor(s: Sprite | null) {
 		super(PrimitiveMesh.createPlane(1, 1));
+		this.s=s;
 		this.plane = this;
 		//this.plane.transform.rotate(new Vector3(90, 0, 0), true, true);
 		//scene.addChild(this.plane);
@@ -47,15 +48,24 @@ class UIPlane extends MeshSprite3D {
 		s&&this.buildTex(s);
 	}
 
-	buildTex(s: Sprite) {
-		let bound = s.getBounds();
+	buildTex(s?: Sprite) {
+		let sp = s||this.s;
+		if(!sp)
+			return;
 		let rt=this.texture2D;
-		if(!rt){
-			rt = this.texture2D = new RenderTexture2D(bound.width,bound.height);
+		if(sp.getRepaint() ||!rt){
+			let bound = sp.getBounds();
+			if(bound.width==0||bound.height==0)
+				return;
+
+			if(!rt || rt.width!=bound.width || rt.height!=bound.height ){
+				rt = this.texture2D = new RenderTexture2D(bound.width,bound.height);
+			}
+			sp.drawToTexture(bound.width+1, bound.height+1, 0, 0,rt);
+			(sp as any)._repaint = 0; //TODO 这个应该在引擎做
+			//给材质贴图
+			this.mat.albedoTexture = rt;// tex.bitmap as Texture2D;
 		}
-		s.drawToTexture(bound.width+1, bound.height+1, 0, 0,rt);
-		//给材质贴图
-		this.mat.albedoTexture = rt;// tex.bitmap as Texture2D;
 	}
 }
 /**
@@ -74,7 +84,7 @@ export class PhyRender extends IPhyRender {
 	persistPoint: Vec3[] = [];
 	/** 持久显示的矢量。格式是 vec,pos,vec,pos, ... 直到clear */
 	persistVec: Vec3[] = [];
-	//ui1: UIPlane = new UIPlane(null);
+	ui1: UIPlane = new UIPlane(new Sprite());
 
 	private static inst: PhyRender;
 	constructor(sce: Scene3D, world: World) {
@@ -93,7 +103,14 @@ export class PhyRender extends IPhyRender {
 		(window as any).showVec = this.addPersistVec.bind(this);
 		(window as any).clearPhy = this.clearPersist.bind(this);
 
-		//sce.addChild(this.ui1);
+		let p1 = this.ui1.s;
+		if(p1){
+			p1.graphics.drawRect(0, 0, 100, 100, 'gray', 'blue');
+			p1.graphics.fillText('Test', 0, 0, '20px Arial', 'green', 'left');
+			this.ui1.buildTex();
+		}
+
+		sce.addChild(this.ui1);
 	}
 
 	getInst(){
@@ -254,13 +271,8 @@ export class PhyRender extends IPhyRender {
 			this.addVec(p.x, p.y, p.z, v.x, v.y, v.z, 0xff00);
 		}
 
-		/*
-		let p1 = new Sprite();
-		p1.graphics.drawRect(0, 0, 100, 100, 'gray', 'blue');
-		p1.graphics.fillText('Test', 0, 0, '20px Arial', 'green', 'left');
 		let ui1 = this.ui1;
-		ui1.buildTex(p1);
-		*/
+		ui1.buildTex();
 	}
 
 	stepEnd(): void {
