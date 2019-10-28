@@ -26,8 +26,9 @@ export class CannonWorld extends Script3D{
         let i:i32=0;
         let sz:i32=world.bodies.length;
         for( ;i<sz; i++){
-            let phy = world.bodies[i].userData as CannonBody;
-            phy.applyPose();
+			let phy = world.bodies[i].userData as CannonBody;
+			if(phy)
+            	phy.applyPose();
         }
         //console.log('update phy1');
     }
