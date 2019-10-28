@@ -77,7 +77,7 @@ export class CannonBody extends Component implements IPhyBody{
 	}
 
     setName(n:string):void{
-        this.phyBody._name=n;
+        this.phyBody.name=n;
     }
 
     setMass(m:f32){

@@ -44,7 +44,7 @@ function testPush(){
 
 	let ch1 = addBox(new Vec3(1,2,1), new Vec3(0,0,0), 1, phymtl1);
 	ch1.fixedRotation=true;
-	ch1.phyBody._name='zhu'
+	ch1.phyBody.name='zhu'
 
 	/*
 	let push = addBox( new Vec3(1,1,1), new Vec3(2,1,0), 0);
@@ -54,7 +54,7 @@ function testPush(){
 	let b = addBox( new Vec3(1,0.1,1), new Vec3(3,0,0), 0, phymtl2);
 	b.phyBody.type=BODYTYPE.KINEMATIC;
 	b.phyBody.allowSleep=false;
-	b.phyBody._name='ban';
+	b.phyBody.name='ban';
 	let tm=0;
 	b.phyBody.preCollision=()=>{
 		let b1 = b.phyBody;
@@ -65,7 +65,7 @@ function testPush(){
 	let b2 = addBox( new Vec3(1,0.1,1), new Vec3(-3,0,0), 0, phymtl3);
 	b2.phyBody.type=BODYTYPE.KINEMATIC;
 	b2.phyBody.allowSleep=false;
-	b2.phyBody._name='ban';
+	b2.phyBody.name='ban';
 	b2.phyBody.preCollision=()=>{
 		let b1 = b2.phyBody;
 		b1.position.x=2+10*Math.sin(tm/100)-6;
@@ -79,12 +79,12 @@ function testLift(){
 	world.world.gravity.set(0,-30,0);
 	let ch1 = addBox(new Vec3(1,2,1), new Vec3(0,1,0), 1, phymtl1);
 	ch1.fixedRotation=true;
-	ch1.phyBody._name='zhu'
+	ch1.phyBody.name='zhu'
 
 	let b = addBox( new Vec3(2,0.1,2), new Vec3(0,0,0), 0, phymtl2);
 	b.phyBody.type=BODYTYPE.KINEMATIC;
 	b.phyBody.allowSleep=false;
-	b.phyBody._name='ban';
+	b.phyBody.name='ban';
 	let tm=0;
 	b.phyBody.preCollision=()=>{
 		let b1 = b.phyBody;
@@ -101,7 +101,7 @@ function testConveyorbelt(){
 
 	let ch1 = addBox(new Vec3(1,2,1), new Vec3(0,1,0), 1, phymtl1);
 	ch1.fixedRotation=true;
-	ch1.phyBody._name='zhu'
+	ch1.phyBody.name='zhu'
 	ch1.phyBody.preCollision=()=>{
 		ch1.addCenterForce(new Vector3(0,-10,0))
 	}
@@ -110,7 +110,7 @@ function testConveyorbelt(){
 	b.phyBody.type=BODYTYPE.KINEMATIC;
 	//b.phyBody.velocity.set(1,0,0);
 	b.phyBody.allowSleep=false;
-	b.phyBody._name='ban';
+	b.phyBody.name='ban';
 	b.phyBody.kinematicUsePos=true;
 	let tm=0;
 	b.phyBody.preCollision=()=>{

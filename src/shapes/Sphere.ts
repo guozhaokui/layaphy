@@ -487,11 +487,11 @@ export class Sphere extends Shape {
 		if (cgridxvalid && cgridyvalid && cgridzvalid && voxel.getVox(cgridx, cgridy, cgridz)) {
 			if (justtest)
 				return true;
-			//console.log('球进入格子了')
 			// 如果球心已经撞到实心的格子中了，朝着6个方向寻找最近出点
 			// 如果边缘也是实心的话的处理
 			let velInVox = hitVoxelTmpVel;
 			let sphvel = this.body.velocity;
+			//console.log('球进入格子了',sphvel.x,sphvel.y,sphvel.z)
 			invQ.vmult(sphvel, velInVox);
 			let NotCheckSphVel = false;
 
@@ -643,11 +643,11 @@ export class Sphere extends Shape {
 					break;
 			}
 
-		} else {
-			// 如果球心在外面，先进一步缩小范围
+		} else {// 如果球心在外面，先进一步缩小范围
 			// 注意这时候包围盒检测已经通过了，所以不用再做包围盒相关检测
 			//maxx
 			// 判断x的话，必须yz都在有效范围内，否则不会相交
+			//console.log('waimian')
 			//console.log('spherepos:', myPos.x, myPos.y, myPos.z);
 			if (cgridyvalid && cgridzvalid) {
 				for (i = Math.max(cgridx + 1, gridminx); i <= gridmaxx; i++) {//cgridx必须 从有效点开始，但是又不能修改cgridx，因为下面要用，所以用max

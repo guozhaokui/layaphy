@@ -844,11 +844,13 @@ export class World extends EventTarget {
 
             // Get current collision indeces
             let bi = c.bi,
-                bj = c.bj,
-                si = c.si,
-                sj = c.sj;
+				bj = c.bj;
+				
+            //let si = c.si,
+            //    sj = c.sj;
 
-            // Get collision properties
+			// Get collision properties
+			/*
             var cm:ContactMaterial;
             if (bi.material && bj.material) {
                 cm = this.getContactMaterial(bi.material, bj.material) || this.defaultContactMaterial;
@@ -871,7 +873,7 @@ export class World extends EventTarget {
                     c.restitution = bi.material.restitution * bj.material.restitution;
                 }
             }
-
+			*/
             // c.setSpookParams(
             //           cm.contactEquationStiffness,
             //           cm.contactEquationRelaxation,
@@ -880,7 +882,7 @@ export class World extends EventTarget {
 
             solver.addEquation(c);
 
-            if(mu>0){}
+            //if(mu>0){}
             // // Add friction constraint equation
             // if(mu > 0){
 

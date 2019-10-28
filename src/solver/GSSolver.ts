@@ -129,7 +129,7 @@ export class GSSolver extends Solver {
                 b.wlambda.vmul(b.angularFactor, b.wlambda);
                 w.vadd(b.wlambda, w);
 
-                phyr && phyr.addVec(b.position.x, b.position.y, b.position.z, b.vlambda.x*10, b.vlambda.y*10, b.vlambda.z*10, 0xffff);
+                phyr && phyr.addVec(b.position.x, b.position.y, b.position.z, b.vlambda.x, b.vlambda.y, b.vlambda.z, 0xffff);
             }
 
             // Set the .multiplier property of each equation
