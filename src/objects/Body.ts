@@ -296,6 +296,9 @@ export class Body extends EventTarget {
 
 	contact = new ContactInfoMgr();
 
+	/** 每个刚体自定义的重力，设置以后，不再受到全局重力影响 */
+	bodyGravity:Vec3|null=null; 
+
     constructor(mass: number = 1, shape: Shape|null = null, pos:Vec3|null=null, options?: BodyInitOptions) {
         super();
         this._mass = mass;

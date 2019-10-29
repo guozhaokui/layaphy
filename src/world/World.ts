@@ -761,9 +761,16 @@ export class World extends EventTarget {
 				//temp
 				if(bi.type===DYNAMIC){// static和kinematic的不响应受力的
 					var f = bi.force, m = bi._mass;
-					f.x += m * gx;
-					f.y += m * gy;
-					f.z += m * gz;
+					let bg = bi.bodyGravity;
+					if(bg){
+						f.x += m*bg.x;
+						f.y += m*bg.y;
+						f.z += m*bg.z;
+					}else{
+						f.x += m * gx;
+						f.y += m * gy;
+						f.z += m * gz;
+					}
 				}
             }
         }

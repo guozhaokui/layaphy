@@ -1,15 +1,14 @@
 import { Component } from "laya/components/Component";
-import { ICharactorCtrl } from "./PhyInterface";
 import { Vector3 } from "laya/d3/math/Vector3";
 import { ColliderShape } from "laya/d3/physics/shape/ColliderShape";
-import { Body } from "../objects/Body";
-import { Sphere } from "../shapes/Sphere";
 import { Material } from "../material/Material";
 import { Vec3 } from "../math/Vec3";
-import { CannonWorld } from "./CannonWorld";
-import { PhyCollideEvent, World } from "../world/World";
-import { PhyRender } from "./PhyRender";
+import { Body } from "../objects/Body";
 import { Spring } from "../objects/Spring";
+import { Sphere } from "../shapes/Sphere";
+import { PhyCollideEvent, World } from "../world/World";
+import { CannonWorld } from "./CannonWorld";
+import { ICharactorCtrl } from "./PhyInterface";
 
 export class PhyCharactorCtrl extends Component implements ICharactorCtrl{
 	private _mass: number;
@@ -37,14 +36,14 @@ export class PhyCharactorCtrl extends Component implements ICharactorCtrl{
 	phyForTrigger:Body|null=null;
 	/** 物理实体，有很大摩擦力，所以可以被传送带带走，可以被推走，可以下落 */
 	phyBody:Body = new Body(1);
-	phyBody1:Body = new Body(4);
-	spring = new Spring(this.phyBody,this.phyBody1,{
-			localAnchorA: new Vec3(),
-            localAnchorB: new Vec3(),
-            restLength : 2,
-            stiffness : 150,
-            damping : 1
-	});
+	//phyBody1:Body = new Body(4);
+	//spring = new Spring(this.phyBody,this.phyBody1,{
+	//		localAnchorA: new Vec3(),
+    //        localAnchorB: new Vec3(),
+    //        restLength : 2,
+    //        stiffness : 150,
+    //        damping : 1
+	//});
 	fixedRotation: boolean;
 	canJump: boolean;	gravity: Vector3;
 	enableGravity: boolean;
@@ -96,12 +95,14 @@ export class PhyCharactorCtrl extends Component implements ICharactorCtrl{
 		body.addEventListener(Body.EVENT_COLLIDE_ENTER, this.onCollide.bind(this));
 		body.addEventListener(Body.EVENT_COLLIDE_EXIT,this.onExitCollide.bind(this));
 
+		/*
 		let body1 = this.phyBody1;
 		body1.addShape(new Sphere(h));
 		body1.position.set(0,13,0);
 		body1.allowSleep=false;
 		body1.fixedRotation=true;
 		world.addBody(body1);
+		*/
 	}
 
 	/** 每帧调用 */
@@ -129,7 +130,7 @@ export class PhyCharactorCtrl extends Component implements ICharactorCtrl{
 			b.force.vadd(d,b.force);
 		}
 
-		this.spring.applyForce();
+		//this.spring.applyForce();
 	}
 
 	onCollide(colEvt:PhyCollideEvent){
@@ -169,9 +170,9 @@ export class PhyCharactorCtrl extends Component implements ICharactorCtrl{
 
 		//console.log('vel:',v.x|0,v.y|0,v.z|0);
 		
-		let body1 = this.phyBody1;
-		body1.position.x=body.position.x;
-		body1.position.z=body.position.z;
+		//let body1 = this.phyBody1;
+		//body1.position.x=body.position.x;
+		//body1.position.z=body.position.z;
 	}
 
 	set curDir(v:number){
@@ -228,7 +229,7 @@ export class PhyCharactorCtrl extends Component implements ICharactorCtrl{
 		this.pos.set(x,y,z);
 		this.targetPos.set(x,y,z);
 		this.phyBody.position.set(x,y+this.stepHeight,z);
-		this.phyBody1.position.set(x,y+this.stepHeight+2,z)
+		//this.phyBody1.position.set(x,y+this.stepHeight+2,z)
 	}
 	setUpDir(up: Vector3): void {
 		throw new Error("Method not implemented.");
