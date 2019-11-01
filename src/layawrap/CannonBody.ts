@@ -39,7 +39,8 @@ export class CannonBody extends Component implements IPhyBody{
 	collisionGroup: number;
 	canCollideWith: number;
 	_enablePhy=false;
-    phyBody:Body;
+	phyBody:Body;
+	private _ROOff:Vector3|null;	// 渲染原点的位置。相对于物理原点
     constructor(){
         super();
     }
@@ -84,16 +85,46 @@ export class CannonBody extends Component implements IPhyBody{
 		this.phyBody.mass=m;
 		this.phyBody.updateMassProperties();
 	}
+
 	setPos(x:number,y:number,z:number):void{
 		this.phyBody.setPos(x,y,z);
 	}
+
+	/** 位置是基于渲染模型的 */
+	setRPos(x:number,y:number,z:number):void{
+		let body = this.phyBody;
+        let sp = this.owner as Sprite3D;
+        let trans = sp.transform;
+        //let pos = trans.localPosition;
+		let q = trans.localRotation;
+		
+		let off = this._ROOff;
+		if(off){
+			Vector3.transformQuat(off,q,tmpV1);
+			body.position.set(x-tmpV1.x, y-tmpV1.y, z-tmpV1.z);
+		}else{
+			body.position.set(x,y,z);
+		}
+		body.angularVelocity.set(0,0,0);
+		body.velocity.set(0,0,0);
+	}
+
     addShape(s:Shape,off?:Vector3,offq?:Quaternion|phyQuat){
         let body = this.phyBody;
         if(off){
             tempVec3.set(off.x,off.y,off.z);
         }
         body.addShape(s,tempVec3, offq as phyQuat);
-    }
+	}
+	
+	setROff(x:number,y:number,z:number){
+		if(!this._ROOff){
+			this._ROOff=new Vector3(x,y,z);
+		}else{
+			this._ROOff.setValue(x,y,z);
+		}
+	}
+
     setShape(){
         
     }
@@ -155,5 +186,6 @@ export class CannonBody extends Component implements IPhyBody{
 }
 
 var tempVec3=new Vec3();
+var tmpV1 = new Vector3();
 //var tempQuat=new phyQuat();
 

@@ -373,7 +373,9 @@ export class Sphere extends Shape {
 
 		// 先用最笨的方法验证流程
 		let voxdt = voxel.voxData.data;
-		let gridw = voxel.voxData.gridsz;
+		if(!voxdt)
+			return false;
+		let gridw = voxel.gridw;//.voxData.gridsz;
 		let r = gridw / 2;
 		let min = voxel.voxData.aabbmin;    //原始包围盒
 		//let max = voxel.voxData.aabbmax;

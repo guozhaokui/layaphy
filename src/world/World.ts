@@ -93,8 +93,8 @@ var
     World_step_p1:Body[] = [], // Reusable arrays for collision pairs
     World_step_p2:Body[] = [];
 
-var additions:i32[] = [];
-var removals:i32[] = [];
+//var additions:i32[] = [];
+//var removals:i32[] = [];
 
 export interface ContactEvent{
     type:string;
@@ -106,6 +106,7 @@ export interface ShapeContactEvent extends ContactEvent{
     shapeA:Shape|null;
     shapeB:Shape|null;
 }
+/*
 var beginContactEvent:ContactEvent = {
     type: 'beginContact',
     bodyA: null,
@@ -130,7 +131,7 @@ var endShapeContactEvent:ShapeContactEvent = {
     shapeA: null,
     shapeB: null
 };
-
+*/
 export const enum PhyColor{
     RED=0xffff0000,GREEN=0xff00ff00,BLUE=0xff0000ff,YELLOW=0xffffff00,PINK=0xffff7777,GRAY=0xff777777,WHITE=0xffffffff,
 }
@@ -596,8 +597,8 @@ export class World extends EventTarget {
      */
     remove(body: Body) {
         body.world = null;
-        var n = this.bodies.length - 1,
-            bodies = this.bodies,
+        //var n = this.bodies.length - 1,
+        var    bodies = this.bodies,
             idx = bodies.indexOf(body);
         if (idx !== -1) {
             bodies.splice(idx, 1); // Todo: should use a garbage free method
@@ -989,36 +990,16 @@ export class World extends EventTarget {
             profilingStart = perfNow();
         }
 
-        // Wake up bodies,并且发送事件
+        // Wake up bodies
         for (i = 0; i !== N; i++) {
 			var bi = bodies[i];
-			if(bi.type!=BODYTYPE.STATIC){
-				// 发送事件
-				let cs = bi.contact;
-				for( let ei=0; ei<cs.addlen; ei++){// enter事件
-					let c = cs.added[ei];
-					let entEvt = collideEnterEvt;
-					entEvt.otherBody=c.body;
-					entEvt.contact=c;
-					bi.dispatchEvent(entEvt);
-				}
-
-				for(let ri=0; ri<cs.removedLen; ri++){// exit事件
-					let c = cs.removed[ri];
-					let exitEvt = collideExitEvt;
-					exitEvt.otherBody=c.body;
-					exitEvt.contact=c;
-					bi.dispatchEvent(exitEvt);
-				}
-			}
-			//if(bi.hasEventListener(Body.EVENT_COLLIDE_ENTER))
 			// 唤醒
             if (bi._wakeUpAfterNarrowphase) {
                 bi.wakeUp();
                 bi._wakeUpAfterNarrowphase = false;
             }
-        }
-
+		}
+		
         // Add user-added constraints
         var Nconstraints = constraints.length;
         for (i = 0; i !== Nconstraints; i++) {
@@ -1109,6 +1090,31 @@ export class World extends EventTarget {
             }
         }
 
+		// 发送事件,这期间会通知逻辑，可能会导致body删除，因此要放到最后，并用备份数组
+		let tbodies = bodies.concat();
+        for (i = 0; i !== N; i++) {
+			var bi = tbodies[i];
+			if(bi.type!=BODYTYPE.STATIC){//TRIGGER怎么办
+				// 发送事件
+				let cs = bi.contact;
+				for( let ei=0; ei<cs.addlen; ei++){// enter事件
+					let c = cs.added[ei];
+					let entEvt = collideEnterEvt;
+					entEvt.otherBody=c.body;
+					entEvt.contact=c;
+					bi.dispatchEvent(entEvt);
+				}
+
+				for(let ri=0; ri<cs.removedLen; ri++){// exit事件
+					let c = cs.removed[ri];
+					let exitEvt = collideExitEvt;
+					exitEvt.otherBody=c.body;
+					exitEvt.contact=c;
+					bi.dispatchEvent(exitEvt);
+				}
+			}
+		}
+		
         if(this.phyRender){
             this.phyRender.internalStep();
         }

@@ -350,6 +350,7 @@ export class Box extends Shape implements MinkowskiShape {
      * @param hitNormal  碰撞法线，推开球的方向
      */
     static sphereHitBox(pos:Vec3, r:number, halfext:Vec3, hitpos:Vec3, hitpost2:Vec3, hitNormal:Vec3):f32{
+		/*
         let dir=0;
         let pdist=[];
         let szx = halfext.x;
@@ -360,7 +361,8 @@ export class Box extends Shape implements MinkowskiShape {
         let pyd = pos.y-szy;
         let nyd = pos.y+szy;
         let pzd = pos.z-szz;
-        let nzd = pos.z+szz;
+		let nzd = pos.z+szz;
+		*/
         return -1;
     }
 
@@ -380,11 +382,13 @@ export class Box extends Shape implements MinkowskiShape {
         let rMat = hitVoxelTmpMat;
         Transform.posQToLocalMat(myPos,myQ,voxPos,voxQuat, rPos,rMat);  //TODO 这个还没有验证
         // 先用最笨的方法验证流程
-        let voxdt = voxel.voxData.data;
-        let gridw = voxel.voxData.gridsz;
+		let voxdt = voxel.voxData.data;
+		if(!voxdt)
+			return false;
+        let gridw = voxel.gridw;//.voxData.gridsz;
         let r = gridw/2;
         let min = voxel.voxData.aabbmin;    //原始包围盒
-        let max = voxel.voxData.aabbmax;
+        //let max = voxel.voxData.aabbmax;
         let tmpV = new Vec3();  //xyz格子坐标
         let hitpos = new Vec3();
         let hitpos1 = new Vec3();

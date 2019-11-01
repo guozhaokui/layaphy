@@ -327,9 +327,52 @@ class VoxelBitData {
 	}
 }
 
+interface CubeModule{
+	centerVec:Vec3;
+	cubePoint:Vec3;
+	current:Vec3;
+	dCollisionPoint:Vec3;
+	dMax:Vec3;
+	//dStart:Vec3; private
+	max:Vec3;
+	min:Vec3;
+	temporaryMax:Vec3;
+	temporaryMni:Vec3;
+	_data:Uint8Array;//  按照bit紧密排列的数据，并没有做任何对齐
+	// 原点在格子的位置，所以bbxmin = {-dx,-dy,-dz}
+	_dx:int;
+	_dy:int;
+	_dz:int;
+	_isYHave:boolean;
+	//数据的大小。_lx*_ly*lz/8=_data.length
+	_lx:int;			
+	_ly:int;
+	_lz:int;
+
+	/** xyz是否有数据 */
+	find(x:int,y:int,z:int):int;
+}
+
+interface IOrigVoxData{
+	/** 只有SparseVoxeData 有 */
+	data:any[]|null;
+	dataszx:int;
+	dataszy:int;
+	dataszz:int;
+
+	/** 遍历，只有sparseVoxelData有 */
+	travAll?(f:(x:int,y:int,z:int,v:int)=>void):void;
+
+	/** 原始包围盒 */
+	aabbmin:Vec3;
+	aabbmax:Vec3;
+
+	fillVoxBitData(dt:VoxelBitData):void;
+}
+
 export class Voxel extends Shape {
 	id = 0;
-	voxData: SparseVoxData;//|PhyVoxelData;
+	voxData: IOrigVoxData;//|PhyVoxelData;
 	//data:Uint8Array;
 	//bitData:Uint8Array;
 	bitDataLod: VoxelBitData[];
@@ -347,21 +390,95 @@ export class Voxel extends Shape {
 	addToSceTick = -1;  // 
 	gridw = 0;
 
-	constructor(dt: SparseVoxData,scale:number) {
+	constructor(dt: SparseVoxData|CubeModule,scale:number=1) {
 		super();
-		this.voxData = dt;
 		this.type = SHAPETYPE.VOXEL;
+
+		if(dt instanceof SparseVoxData){
+			this.initFromSparseVoxData(dt,scale);
+		}else{
+			this.initFromCubeModule(dt,scale)
+		}
+	}
+
+	private initFromSparseVoxData(sparsedt:SparseVoxData,scale:number){
+		var dt = this.voxData ={
+			data:sparsedt.data,
+			aabbmin:sparsedt.aabbmin,
+			aabbmax:sparsedt.aabbmax,
+			travAll:sparsedt.travAll,
+			dataszx:sparsedt.dataszx,
+			dataszy:sparsedt.dataszy,
+			dataszz:sparsedt.dataszz,
+			fillVoxBitData:(dt:VoxelBitData)=>{
+				sparsedt.data.forEach(v => {
+					dt.setBit(v.x, v.y, v.z);
+				});
+			}
+		}; 
+		this.initFromVData(dt,scale);
+	}
+
+	/** 从layame的格子信息中构造。注意可能有效率问题 */
+	private initFromCubeModule(cubedt:CubeModule, scale:number){
+		var dt = this.voxData ={
+			data:null,
+			aabbmin:new Vec3(-cubedt._dx,-cubedt._dy,-cubedt._dz),
+			aabbmax:new Vec3(cubedt._lx-cubedt._dx,cubedt._ly-cubedt._dy,cubedt._lz-cubedt._dz),
+			//travAll:null,
+			dataszx:cubedt._lx,
+			dataszy:cubedt._ly,
+			dataszz:cubedt._lz,
+			fillVoxBitData:(dt:VoxelBitData)=>{
+				let bufdt = cubedt._data;
+				let xlen = cubedt._lx;
+				let ylen = cubedt._ly;
+				let zlen = cubedt._lz;
+				let xzlen = xlen*zlen;
+				let dtlen = xzlen*ylen;
+				let cpos =0;
+				let num = Math.min( (dtlen>>3)+1, bufdt.length);
+				for(let i=0; i<num; i++){
+					if(bufdt[i]==0){
+						cpos+=8;
+						continue;
+					}
+					let v = bufdt[i];
+					for(let bi=0; bi<8 && cpos<dtlen; bi++){
+						cpos++;
+						let cy = (cpos/xzlen)|0;
+						let left = (cpos%xzlen);
+						let cz = (left/xlen)|0;
+						let cx = left%xlen;
+						if(v&(1<<bi)){
+							dt.setBit(cx,cy,cz);
+						}
+					}
+				}
+			}
+		}; 
+		this.initFromVData(dt,scale);
+	}
+
+	/**
+	 * 根据定义的中间接口构造
+	 * @param dt 
+	 * @param scale 
+	 */
+	private initFromVData(dt:IOrigVoxData,scale:number){
 		let min = this.aabbmin;
 		let max = this.aabbmax;
 		dt.aabbmin.scale(scale,dt.aabbmin);
 		dt.aabbmax.scale(scale,dt.aabbmax);
 		min.copy(dt.aabbmin);
 		max.copy(dt.aabbmax);
+
 		this.gridw = ((max.x - min.x) / dt.dataszx);
-		// 如果不是方的，转成多个方的
+
 		let xs = this.dataxsize = dt.dataszx;
 		let ys = this.dataysize = dt.dataszy;
 		let zs = this.datazsize = dt.dataszz;
+
 		let maxsize = Math.max(xs, ys, zs);
 		let maxpot = POT(maxsize);
 		let lodlv = Math.log2(maxpot);
@@ -370,9 +487,7 @@ export class Voxel extends Shape {
 		let clv = 0;
 		let cdt = this.bitDataLod[clv] = new VoxelBitData(xs, ys, zs, min,max);
 		//设置末级数据
-		dt.data.forEach(v => {
-			cdt.setBit(v.x, v.y, v.z);
-		});
+		dt.fillVoxBitData(cdt);
 
 		//设置各级数据
 		while (cdt) {
@@ -381,6 +496,7 @@ export class Voxel extends Shape {
 				this.bitDataLod[++clv] = cdt;
 			}
 		}
+
 	}
 
 	updateAABB(): void {
@@ -402,48 +518,57 @@ export class Voxel extends Shape {
 	}
 
 	calcCentroid(): void {
+		console.error( 'not need');
 		let sx = 0;
 		let sy = 0;
 		let sz = 0;
-		let i = 0;
-		this.voxData.travAll((x, y, z, v) => {
-			if (v) {
-				sx += x;
-				sy += y;
-				sz += z;
-				i++;
-			}
-		});
-		sx /= i; // 是浮点数
-		sy /= i;
-		sz /= i;
-		let c = this.centroid;
-		c.x = sx; c.y = sy; c.z = sz;
+		if( this.voxData.travAll){
+			let i = 0;
+			this.voxData.travAll((x, y, z, v) => {
+				if (v) {
+					sx += x;
+					sy += y;
+					sz += z;
+					i++;
+				}
+			});
+			sx /= i; // 是浮点数
+			sy /= i;
+			sz /= i;
+			let c = this.centroid;
+			c.x = sx; c.y = sy; c.z = sz;
+		}else{
+
+		}
 	}
 
 	// 计算相对于质心的转动惯量。
 	calculateLocalInertia(mass: number, target: Vec3): void {
+		console.error( 'not need');
 		let c = this.centroid;
 		target.x = 0;
 		target.y = 0;
 		target.z = 0;
-		let grid = this.voxData.gridsz;
+		let grid = this.gridw;//.voxData.gridsz;
 		let sx = grid * this.scale.x;
 		let sy = grid * this.scale.y;
 		let sz = grid * this.scale.z;
-		this.voxData.travAll((x, y, z, v) => {
-			if (v) {
-				let dx = x - c.x;	// 没有考虑实际缩放，最后集中处理
-				let dy = y - c.y;
-				let dz = z - c.z;
-				let dx2 = dx * dx;
-				let dy2 = dy * dy;
-				let dz2 = dz * dz;
-				target.x += dy2 + dz2;
-				target.y += dx2 + dz2;
-				target.z += dx2 + dy2;
-			}
-		});
+		if(this.voxData.travAll){
+			this.voxData.travAll((x, y, z, v) => {
+				if (v) {
+					let dx = x - c.x;	// 没有考虑实际缩放，最后集中处理
+					let dy = y - c.y;
+					let dz = z - c.z;
+					let dx2 = dx * dx;
+					let dy2 = dy * dy;
+					let dz2 = dz * dz;
+					target.x += dy2 + dz2;
+					target.y += dx2 + dz2;
+					target.z += dx2 + dy2;
+				}
+			});
+		}
+
 		target.x *= (sx * sx * mass);	 // 根据缩放和格子大小转换为实际距离。上面是平方，所以这也是
 		target.y *= (sy * sy * mass);
 		target.z *= (sz * sz * mass);

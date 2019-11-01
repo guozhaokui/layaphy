@@ -243,7 +243,7 @@ export class Mat3 {
         // Construct equations
         let i=0;
         let j=0;
-        const nr = 3; // num rows
+        //const nr = 3; // num rows
         const nc = 4; // num cols
 
         // Compute right upper triangular version of the matrix - Gauss elimination

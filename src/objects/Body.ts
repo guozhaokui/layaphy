@@ -1,14 +1,13 @@
-import {EventTarget} from '../utils/EventTarget.js';
-import {Shape} from '../shapes/Shape.js';
-import {Vec3} from '../math/Vec3.js';
-import {Mat3} from '../math/Mat3.js';
-import {Quaternion} from '../math/Quaternion.js';
-import {Material} from '../material/Material.js';
-import {AABB} from '../collision/AABB.js';
-import {Box} from '../shapes/Box.js';
-import {World} from '../world/World.js';
-import { ContactEquation } from '../equations/ContactEquation.js';
+import { AABB } from '../collision/AABB.js';
 import { ContactInfoMgr } from '../collision/ContactManager.js';
+import { Material } from '../material/Material.js';
+import { Mat3 } from '../math/Mat3.js';
+import { Quaternion } from '../math/Quaternion.js';
+import { Vec3 } from '../math/Vec3.js';
+import { Box } from '../shapes/Box.js';
+import { Shape } from '../shapes/Shape.js';
+import { EventTarget } from '../utils/EventTarget.js';
+import { World } from '../world/World.js';
 
 export interface BodyInitOptions {
     position?: Vec3;
@@ -50,6 +49,7 @@ export const enum BODYTYPE{
 	
 	/**
 	 * 触发器，任何类型的对象与触发器都只进行碰撞检测
+	 * TODO 以后改成bit位表示？
 	 */
 	TRIGGER=8,	
 
@@ -693,6 +693,8 @@ export class Body extends EventTarget {
      * 更新对象的转动惯量相关值
      */
     updateMassProperties() {
+		if(this.type & BODYTYPE.TRIGGER)
+			return;
         this.type = (this._mass <= 0.0 ? BODYTYPE.STATIC : BODYTYPE.DYNAMIC);
         this.invMass = this._mass > 0 ? 1.0 / this._mass : 0;
 

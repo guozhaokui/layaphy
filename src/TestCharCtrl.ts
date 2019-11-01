@@ -24,6 +24,8 @@ import { Quaternion } from "./math/Quaternion";
 import { BODYTYPE } from "./objects/Body";
 import { Mesh2Voxel } from "./tools/Mesh2Voxel";
 import { SparseVoxData, Voxel } from "./shapes/Voxel";
+import { vox_diban } from "./diban.vox";
+import { vox_shu } from "./shu.vox";
 
 var sce3d: Scene3D;
 var mtl1: BlinnPhongMaterial;
@@ -226,6 +228,36 @@ function loadVoxel(file:string, pos?:Vec3,q?:Quaternion) {
 	});
 }
 
+function loadJSONCubeModuleObj(obj:any,pos?:Vec3,q?:Quaternion){
+	let dtArr:number[] = [];
+	Object.assign(dtArr,obj._data);//{"0":0,"1":0}
+	obj._data = new Uint8Array(dtArr)
+
+	let phyvox = new Voxel(obj,1);
+
+	let dt = phyvox.bitDataLod[0];
+	let min = dt.min as any as Vector3;
+	let max = dt.max as any as Vector3;
+	let mesh = createVoxMesh(
+		{ get: function (x: int, y: int, z: int) { return dt.getBit(x, y, z); } }, 
+		dt.xs * 2, dt.ys * 2, dt.zs * 2, min, max);// PrimitiveMesh.createQuad(10,10) ;//PrimitiveMesh.createBox(1,1,1);		
+	let vox = new PhyMeshSprite(mesh, min, max);
+	//vox.createMesh();
+	sce3d.addChild(vox);
+	vox.transform.localPosition.setValue(0, 0, 0);
+	var phy = vox.addComponent(CannonBody) as CannonBody;
+	phy.addShape(phyvox);
+	if(pos){
+		phy.phyBody.setPos(pos.x,pos.y,pos.z);
+	}
+	
+	if(q){
+		phy.phyBody.quaternion.copy(q);
+	}
+
+	phy.setMass(0);
+}
+
 export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, camctrl: MouseCtrl1) {
 	cam=camctrl;
 	cam.dist = 20;
@@ -243,6 +275,9 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, camctrl: MouseCtrl1)
 
 	loadVoxel('res/house/house1.obj',new Vec3(-37, 1, 45), q1);
 	loadVoxel('res/house/wall.obj',new Vec3(-37, 1, 0));
+
+	loadJSONCubeModuleObj(vox_diban, new Vec3(-37,0,100));
+	loadJSONCubeModuleObj(vox_shu, new Vec3(-37,0,100));
 	//
 	(window as any).ctrl = ctrl = createCharCtrl(new Vec3(0.3, 1.8, 0.3));
 	ctrl.setPos(-2, 2, 2);
