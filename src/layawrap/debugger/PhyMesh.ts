@@ -18,11 +18,11 @@ function updateMax(max:Vec3, x:number,y:number, z:number){
 }
 
 /**
- * 
- * @param data 
- * @param xn 
- * @param yn 
- * @param zn 
+ * 遍历xn,yn,zn取到vox数据，然后合并成四边形
+ * @param data vox数据，只要能提供一个get(x,y,z):bool的函数就行
+ * @param xn  vox数据的x大小，
+ * @param yn  vox数据的y大小
+ * @param zn  vox数据的z大小
  * @param min 外部提供的包围盒
  * @param max 
  */

@@ -628,10 +628,11 @@ export class Ray {
 		quat.conjugate(invQ);
 		let fromLocal = tmpVec1;
 		let toLocal = tmpVec2;
-		//invQ.vmult(from, fromLocal); fromLocal.vsub(position,fromLocal);
-		//invQ.vmult(to, toLocal); toLocal.vsub(position,toLocal);
 		from.vsub(position,fromLocal); invQ.vmult(fromLocal,fromLocal);
 		to.vsub(position,toLocal); invQ.vmult(toLocal,toLocal);
+
+		const intersectionPoint = Ray_intersectSphere_intersectionPoint;
+		const normal = Ray_intersectSphere_normal;
 
 		// 包围盒检查通过，下面检查voxel
 		//test
@@ -645,15 +646,13 @@ export class Ray {
 			var pmax = new Vec3();
 			voxel.xyzToPos(x,y,z,position,quat,pmin,pmax);
 			//console.log('hit',x,y,z);
-			let phyr =  (window as any).phyr;// getPhyRender();
-			phyr.addPersistPoint( pmin );
-			phyr.addPersistPoint( pmax );
-	
+			//let phyr =  (window as any).phyr;// getPhyRender();
+			//phyr.addPersistPoint( pmin );
+			//phyr.addPersistPoint( pmax );
+			intersectionPoint.copy(pmax);	//TODO 先粗略的加一个，碰撞点
 			return false;
 		});
 
-		const intersectionPoint = Ray_intersectSphere_intersectionPoint;
-		const normal = Ray_intersectSphere_normal;
 
 		// 转回世界空间
 

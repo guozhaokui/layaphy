@@ -295,7 +295,18 @@ class VoxelBitData {
 			//debugger;
 			console.error('getbit param error');
 		}
-		//z,y,x
+		//bit:z,y,x, 所以是
+		//      Y
+		//      |     010 011
+		//   110 111  000 001  
+		//   100 101 ________ X
+		//   /
+		// Z		
+		// 注意转成二进制查看的话，要倒着看，例如  00110011 表示两层，下层水平面是4个实，上层是4个空
+		//                                     <-------
+		//      0 0
+		//  0 0 1 1
+		//  1 1
 		let xs = this.xs, ys = this.ys;
 		let pos = (z >> 1) * (xs * ys) + (y >> 1) * xs + (x >> 1);
 		let bit = ((z & 1) << 2) + ((y & 1) << 1) + (x & 1);
@@ -445,7 +456,6 @@ export class Voxel extends Shape {
 					}
 					let v = bufdt[i];
 					for(let bi=0; bi<8 && cpos<dtlen; bi++){
-						cpos++;
 						let cy = (cpos/xzlen)|0;
 						let left = (cpos%xzlen);
 						let cz = (left/xlen)|0;
@@ -453,8 +463,11 @@ export class Voxel extends Shape {
 						if(v&(1<<bi)){
 							dt.setBit(cx,cy,cz);
 						}
+						cpos++;
 					}
 				}
+				//@ts-ignore
+				bufdt =null;
 			}
 		}; 
 		this.initFromVData(dt,scale);
@@ -684,6 +697,16 @@ export class Voxel extends Shape {
 		return out;
 	}
 
+	/**
+	 * 把格子坐标xyz，根据pos和Q转换成世界坐标min,max
+	 * @param x 
+	 * @param y 
+	 * @param z 
+	 * @param pos 
+	 * @param Q 
+	 * @param min 
+	 * @param max 
+	 */
 	xyzToPos(x:int,y:int,z:int, pos:Vec3, Q:Quaternion, min:Vec3, max:Vec3){
 		let w = this.gridw;
 		let orimin = this.voxData.aabbmin;

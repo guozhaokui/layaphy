@@ -62,7 +62,7 @@ function dokey(e: Event, down: boolean) {
 			break;
 		case 'R':{
 			raycast(world.world,cam.camera,(pt:Vec3, norm:Vec3)=>{
-				//phyr.addPersistPoint( pt);
+				phyr.addPersistPoint( pt);
 			});
 		}
 			break;
