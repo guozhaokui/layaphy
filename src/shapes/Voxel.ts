@@ -735,13 +735,26 @@ export class Voxel extends Shape {
 		let diry = ny / len;
 		let dirz = nz / len;
 
+		// 起点格子
 		let x0 = ((nst.x - min.x) / w) | 0;	// 不可能<0所以可以直接 |0
 		let y0 = ((nst.y - min.y) / w) | 0;
 		let z0 = ((nst.z - min.z) / w) | 0;
 
+		// 终点格子
 		let x1 = ((ned.x - min.x) / w) | 0;
 		let y1 = ((ned.y - min.y) / w) | 0;
 		let z1 = ((ned.z - min.z) / w) | 0;
+
+		// 由于点可能在边缘，因此有可能正好超出，做一下保护
+		let maxx = this.dataxsize-1;
+		let maxy = this.dataysize-1;
+		let maxz = this.datazsize-1;
+		if(x0>maxx) x0=maxx;
+		if(x1>maxx) x1=maxx;
+		if(y0>maxy) y0=maxy;
+		if(y1>maxy) y1=maxy;
+		if(z0>maxz) z0=maxz;
+		if(z1>maxz) z1=maxz;
 
 		//确定前进方向
 		let sx = x1 > x0 ? 1 : x1 < x0 ? -1 : 0;
@@ -786,16 +799,16 @@ export class Voxel extends Shape {
 			//取穿过边界用的时间最少的方向，前进一格
 			//同时更新当前方向的边界
 			if (maxX <= maxY && maxX <= maxZ) {//x最小，表示最先遇到x面
+				end = maxX > t || cx==x1;  //先判断end。否则加了delta之后可能还没有完成就end了
 				cx += sx;
-				end = maxX > t;  //先判断end。否则加了delta之后可能还没有完成就end了
 				maxX += xt;
 			} else if (maxY <= maxX && maxY <= maxZ) {//y最小
+				end = maxY > t || cy==y1;
 				cy += sy;
-				end = maxY > t;
 				maxY += yt;
 			} else {	// z最小
+				end = maxZ > t || cz==z1;
 				cz += sz;
-				end = maxZ > t;
 				maxZ += zt;
 			}
 		}

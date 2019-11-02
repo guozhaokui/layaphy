@@ -53,6 +53,7 @@ function _ptInQuad(x:number,y:number, minx:number, miny:number, maxx:number, max
 }
 
 var _segHitBox:number[]=new Array(4);
+/** 射线与box检测的当前的碰撞点的个数。 */
 var _segHitBoxNum=0;
 
 /**
@@ -427,6 +428,15 @@ export class Box extends Shape implements MinkowskiShape {
 	hitAAQuad(mypos:Vec3, myQ:Quaternion, minx:number,miny:number, maxx:number,maxy:number){
 	}
 
+	/**
+	 * 收集射线检测的结果，排除重复点，一旦到达两个碰撞点就给newst和newed赋值，并返回true
+	 * @param t 碰撞点的时间
+	 * @param x 碰撞点的位置
+	 * @param y 
+	 * @param z 
+	 * @param newst 
+	 * @param newed 
+	 */
 	private static _rayHitBoxChkHitInfo(t:number,x:number,y:number,z:number,newst:Vec3, newed:Vec3):boolean{
 		// 只要找到两个有效交点就停止
 		let hitinfo = _segHitBox;
@@ -450,8 +460,16 @@ export class Box extends Shape implements MinkowskiShape {
 		return false;
 	}
 
-	// 计算线段和box的两个交点
-	// 返回false 则无碰撞
+	/**
+	 * 计算线段和box的两个交点。如果起点或者终点在内部，则直接使用。  
+	 * 返回false 则无碰撞
+	 * @param st 
+	 * @param ed 
+	 * @param min 
+	 * @param max 
+	 * @param newSt 
+	 * @param newEd 
+	 */
 	static rayHitBox(st: Vec3, ed: Vec3, min: Vec3, max: Vec3, newSt: Vec3, newEd: Vec3):boolean {
 		let hitinfo = _segHitBox;
 		_segHitBoxNum=0;

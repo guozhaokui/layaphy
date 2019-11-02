@@ -628,8 +628,10 @@ export class Ray {
 		quat.conjugate(invQ);
 		let fromLocal = tmpVec1;
 		let toLocal = tmpVec2;
-		invQ.vmult(from, fromLocal); fromLocal.vsub(position,fromLocal);
-		invQ.vmult(to, toLocal); toLocal.vsub(position,toLocal);
+		//invQ.vmult(from, fromLocal); fromLocal.vsub(position,fromLocal);
+		//invQ.vmult(to, toLocal); toLocal.vsub(position,toLocal);
+		from.vsub(position,fromLocal); invQ.vmult(fromLocal,fromLocal);
+		to.vsub(position,toLocal); invQ.vmult(toLocal,toLocal);
 
 		// 包围盒检查通过，下面检查voxel
 		//test
