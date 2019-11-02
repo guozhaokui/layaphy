@@ -289,9 +289,20 @@ export class PhyRender extends IPhyRender {
 			b.type & BODYTYPE.KINEMATIC;
 			b.sleepState;
 			shapes.forEach((s, si) => {
-				b.quaternion.mult(b.shapeOrientations[si], wq); // 计算世界坐标系的朝向
-				b.quaternion.vmult(b.shapeOffsets[si], wpos);    // 把shape的偏移用四元数变换一下
-				wpos.vadd(b.position, wpos);    // 世界空间的位置
+				let shapeq = b.shapeOrientations[si];
+				if(shapeq){
+					b.quaternion.mult(shapeq, wq); // 计算世界坐标系的朝向
+				}else{
+					wq.copy(b.quaternion);
+				}
+
+				let shapeoff = b.shapeOffsets[si];
+				if(shapeoff){
+					b.quaternion.vmult(shapeoff, wpos);    // 把shape的偏移用四元数变换一下
+					wpos.vadd(b.position, wpos);    // 世界空间的位置
+				}else{
+					wpos.copy( b.position);
+				}
 				this.showShape(s, wpos, wq);
 			});
 

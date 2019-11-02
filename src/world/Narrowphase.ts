@@ -286,19 +286,45 @@ export class Narrowphase {
             let stepNum=0;
 
             for (let i = 0; i < bi.shapes.length; i++) {
-                bi.quaternion.mult(bi.shapeOrientations[i], qi);
-                bi.quaternion.vmult(bi.shapeOffsets[i], xi);
-                xi.vadd(bi.position, xi);
-                const si = bi.shapes[i];
+				const si = bi.shapes[i];
+
+				if(!si.enable) continue;
+
+				let shapeoffi = bi.shapeOffsets[i];
+				let shapeqi = bi.shapeOrientations[i];
+				if(shapeqi){
+					bi.quaternion.mult(shapeqi, qi);
+				}else{
+					qi.copy(bi.quaternion);
+				}
+				if(shapeoffi){
+                	bi.quaternion.vmult(shapeoffi, xi);
+					xi.vadd(bi.position, xi);
+				}else{
+					xi.copy(bi.position);
+				}
+
                 if(si.hasPreNarrowPhase)
                     si.onPreNarrowpase(stepNum,xi,qi);
 
                 for (let j = 0; j < bj.shapes.length; j++) {
-                    // Compute world transform of shapes
-                    bj.quaternion.mult(bj.shapeOrientations[j], qj);
-                    bj.quaternion.vmult(bj.shapeOffsets[j], xj);
-                    xj.vadd(bj.position, xj);
-                    const sj = bj.shapes[j];
+					const sj = bj.shapes[j];
+					if(!sj.enable)
+						continue;
+					// Compute world transform of shapes
+					let shapeoffj = bj.shapeOffsets[j];
+					let shapeqj = bj.shapeOrientations[j];
+					if(shapeqj){
+						bj.quaternion.mult(shapeqj, qj);
+					}else{
+						qj.copy(bj.quaternion);
+					}
+					if(shapeoffj){
+                    	bj.quaternion.vmult(shapeoffj, xj);
+						xj.vadd(bj.position, xj);
+					}else{
+						xj.copy(bj.position);
+					}
                     if(sj.hasPreNarrowPhase)
                         sj.onPreNarrowpase(stepNum,xj,qj);
 

@@ -89,6 +89,7 @@ export class Shape {
 
 	minkowski:MinkowskiShape|null=null;
 	margin=0.04;	// 缺省的margin，如果形状过小或者有其他特殊特点，可以在子类里面设置
+	enable=true;
     constructor(options?: { type: number, collisionResponse: boolean, collisionFilterGroup: number, collisionFilterMask: number, material: Material }) {
         if(options){
             this.type = options.type || 0;

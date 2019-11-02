@@ -238,12 +238,12 @@ export class Body extends EventTarget {
     /**
      * Position of each Shape in the body, given in local Body space.
      */
-    shapeOffsets: Vec3[] = [];
+    shapeOffsets: (Vec3|null)[] = [];
 
     /**
      * Orientation of each Shape, given in local Body space.
      */
-    shapeOrientations:Quaternion[] = [];
+    shapeOrientations:(Quaternion|null)[] = [];
 
     inertia = new Vec3();
 
@@ -474,13 +474,15 @@ export class Body extends EventTarget {
      * @return The body object, for chainability.
      */
     addShape(shape: Shape, _offset?: Vec3, _orientation?: Quaternion) {
-        const offset = new Vec3();
-        const orientation = new Quaternion();
+        let offset:Vec3|null=null;
+        let orientation:Quaternion|null=null;// = new Quaternion();
 
         if (_offset) {
-            offset.copy(_offset);
+			offset =new Vec3();
+			offset.copy(_offset);
         }
         if (_orientation) {
+			orientation = new Quaternion();
             orientation.copy(_orientation);
         }
 
@@ -518,8 +520,12 @@ export class Body extends EventTarget {
 
         for (let i = 0; i !== N; i++) {
             const shape = shapes[i];
-            shape.updateBndSphR();
-            const offset = shapeOffsets[i].length();
+			shape.updateBndSphR();
+			let offset = 0;
+			let off = shapeOffsets[i];
+			if(off){
+				offset = off.length();
+			}
             const r = shape.boundSphR;
             if (offset + r > radius) {
                 radius = offset + r;
@@ -547,12 +553,23 @@ export class Body extends EventTarget {
         for (let i = 0; i !== N; i++) {
             const shape = shapes[i];
 
-            // Get shape world position
-            bodyQuat.vmult(shapeOffsets[i], offset);
-            offset.vadd(this.position, offset);
+			// Get shape world position
+			var shapeoff = shapeOffsets[i];
+			var shapeQ = shapeOrientations[i];
 
-            // Get shape world quaternion
-            shapeOrientations[i].mult(bodyQuat, orientation);
+			if(shapeoff){
+            	bodyQuat.vmult(shapeoff, offset);
+				offset.vadd(this.position, offset);
+			}else{
+				offset.copy(this.position);
+			}
+
+			// Get shape world quaternion
+			if( shapeQ){
+				shapeQ.mult(bodyQuat,orientation);
+			}else{
+				orientation.copy(bodyQuat);
+			}
 
             // Get shape AABB
             shape.calculateWorldAABB(offset, orientation, shapeAABB.lowerBound, shapeAABB.upperBound);

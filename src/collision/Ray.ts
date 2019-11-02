@@ -129,20 +129,31 @@ export class Ray {
 			return;
 		}
 
-		const xi = intersectBody_xi;
-		const qi = intersectBody_qi;
+		let xi = intersectBody_xi;
+		let qi = intersectBody_qi;
 
 		for (let i = 0, N = body.shapes.length; i < N; i++) {
 			const shape = body.shapes[i];
-
+			if(!shape.enable)
+				continue;
 			if (checkCollisionResponse && !shape.collisionResponse) {
 				continue; // Skip
 			}
 
-			body.quaternion.mult(body.shapeOrientations[i], qi);
-			body.quaternion.vmult(body.shapeOffsets[i], xi);
-			xi.vadd(body.position, xi);
+			let shapeq = body.shapeOrientations[i];
+			if(shapeq)
+				body.quaternion.mult(shapeq, qi);
+			else 
+				qi.copy(body.quaternion);
 
+			let shapeoff = body.shapeOffsets[i];
+			if(shapeoff){
+				body.quaternion.vmult(shapeoff, xi);
+				xi.vadd(body.position, xi);
+			}
+			else
+				xi.copy( body.position);
+				
 			this.intersectShape(
 				shape,
 				qi,
