@@ -73,10 +73,38 @@ function testGSSover(){
 	solver.addEquation(c2);
 	solver.solve(1/60,world);
 }
+
+function testGSSover1(){
+	let world = new World();
+	let solver = new GSSolver();
+	let bodySph = new Body(1,new Sphere(0.3));
+	bodySph.addShape( new Sphere(0.3));
+	bodySph.position.set(2.0916726666364083, 2.9696529691107263, -0.8227107766723314);
+
+	let bodyBox = new Body(0);
+	bodyBox.addShape(new Box(new Vec3(10,10,10)));
+	bodyBox.position.set(0,0,0);
+
+	world.addBody(bodySph);
+	world.addBody(bodyBox);
+
+	let c1 = new ContactEquation(bodySph, bodyBox);
+	c1.ni.set(0,-1,0);
+
+	c1.ri.set(0, -0.3, 0);// 球心到碰撞点
+	c1.rj.set(2.0916726666364083, 5, -0.8227107766723314);// box中心到碰撞点
+	solver.addEquation(c1);
+
+	let dt = 1/60;
+	solver.solve(dt,world);
+
+	bodySph.integrate(dt,true,false);
+
+}
 //testQuat();
 //test();
 //TEST
 
 export function Main(){
-	testGSSover();
+	testGSSover1();
 }

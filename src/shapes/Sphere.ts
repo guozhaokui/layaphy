@@ -10,6 +10,13 @@ var ptdist = new Vec3();
 var qtoax_x = new Vec3();
 var qtoax_y = new Vec3();
 var qtoax_z = new Vec3();
+
+var boxFaceNorml=[new Vec3(1,0,0),  new Vec3(-1,0,0), 
+	new Vec3(0,1,0),  new Vec3(0,-1,0),
+	new Vec3(0,0,1),  new Vec3(0,0,-1)];
+var boxFaceDist = [0,0,0,0,0,0];
+var extsubpos=new Vec3();
+
 /**
  * Spherical shape
  * @class Sphere
@@ -116,9 +123,9 @@ export class Sphere extends Shape {
 	 * @param boxHalf 
 	 * @param boxPos 
 	 * @param boxQuat 
-	 * @param hitPos 
-	 * @param hitpos1 
-	 * @param hitNormal 把自己推开的方向，即对方的法线
+	 * @param hitPos 	球的碰撞点
+	 * @param hitpos1 	box的 碰撞点
+	 * @param hitNormal 把球推开的方向，即box的法线
 	 * @param justtest 
 	 * 
 	 * TODO 可以考虑用点到面的距离来实现，可能会简单一些
@@ -145,6 +152,7 @@ export class Sphere extends Shape {
 		let z = box_to_sphere.z;
 		let nearpt = hitbox_tmpVec1;
 		let setpt = false;
+		/** 碰撞深度，即推开这个距离就能解除碰撞 */
 		let deep = -1;
 		//debug
 		let ax = qtoax_x;
@@ -249,8 +257,24 @@ export class Sphere extends Shape {
 					}
 				} else if (z >= -wz && z <= wz) {
 					// box内部
-					// 取一个最接近表面的方向
-					//TODO 
+					let minidist = 100000;
+					let miniface=-1;
+					for(let fi=0; fi<6; fi++){
+						box_to_sphere.vsub(half, extsubpos);
+						let dist = boxFaceDist[fi] = Math.abs( extsubpos.dot(boxFaceNorml[fi]));// dot(ext,norm) - dot(mypos,norm)
+						if(minidist>dist){
+							minidist=dist;
+							miniface=fi;
+						}
+					}
+					if(miniface>=0&&miniface<6){
+						deep = minidist+R;
+						hitNormal.copy(boxFaceNorml[miniface]);
+						myPos.addScaledVector(-R,hitNormal,hitPos);
+						myPos.addScaledVector(minidist,hitNormal,hitpos1);
+					}
+					return deep;
+					// kkk
 				} else {
 					// +z 面
 					deep = wz - (z - R);

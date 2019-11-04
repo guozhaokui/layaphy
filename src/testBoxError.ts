@@ -23,8 +23,8 @@ var world: CannonWorld;
 let phymtl1 = new Material();
 let phymtl2 = new Material();
 let phymtl3 = new Material();
-let cmtl1 = new ContactMaterial(phymtl1, phymtl2, 0.001, .2);
-let cmtl2 = new ContactMaterial(phymtl1, phymtl3, 0, 0);
+let cmtl1 = new ContactMaterial(phymtl1, phymtl2, 0.001, 1);
+let cmtl2 = new ContactMaterial(phymtl1, phymtl3, 0, 1);
 let cam:MouseCtrl1;
 
 let phyr: IPhyRender;
@@ -33,7 +33,7 @@ let m2v = new Mesh2Voxel();
 
 function initPhy(scene: Scene3D) {
 	let phyworld = world = scene.addComponent(CannonWorld) as CannonWorld;
-	phyworld.world.gravity.set(0, -10, 0);
+	phyworld.world.gravity.set(0, 0, 0);
 	(window as any).phyr = new PhyRender(scene, phyworld.world);
 	phyworld.world.addContactMaterial(cmtl1).addContactMaterial(cmtl2);
 	phyr = getPhyRender();
@@ -51,8 +51,9 @@ function test(mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 		cam.camera.viewportPointToRay(new Vector2(e.stageX, e.stageY), ray);
 		stpos.set(ray.origin.x, ray.origin.y, ray.origin.z);
 		dir.set(ray.direction.x, ray.direction.y, ray.direction.z);
-		//let sp = addSphere(.3, stpos.x, stpos.y, stpos.z);
-		let sp = addBox(new Vec3(0.5, 0.5, 0.5), stpos, 10, phymtl1);
+		let sp = addSphere(.3, stpos.x, stpos.y, stpos.z);
+		sp.phyBody.material= phymtl1;
+		//let sp = addBox(new Vec3(0.5, 0.5, 0.5), stpos, 10, phymtl1);
 		//sp.fixedRotation=true;
 		let v = 20;
 		setTimeout(() => {
@@ -63,21 +64,6 @@ function test(mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 }
 
 
-// 测试传送带
-function testConveyorbelt() {
-	let b = addBox(new Vec3(10, 0.1, 10), new Vec3(-59, 0.3, 0), 1000, phymtl2);
-	b.phyBody.type = BODYTYPE.KINEMATIC;
-	//b.phyBody.velocity.set(1,0,0);
-	b.phyBody.allowSleep = false;
-	b.phyBody.name = 'ban';
-	b.phyBody.kinematicUsePos = true;
-	let tm = 0;
-	b.phyBody.preCollision = () => {
-		let b1 = b.phyBody;
-		b1.position.x = -70 + 10 * Math.sin(tm++ / 100);
-	}
-}
-
 // 球在box上会自己移动
 function error1(){
 
@@ -85,10 +71,11 @@ function error1(){
 
 // 球在box上会跳
 function error2(){
-	let b = addBox(new Vec3(30, 10.1, 10), new Vec3(-10, 0.3, 0), 0, phymtl2);
+	let b = addBox(new Vec3(10, 10, 10), new Vec3(), 0, phymtl2);
 	b.phyBody.allowSleep = false;
 	b.phyBody.name = 'ban';
 
+	return;
 	let s = addSphere(0.3,-10,10,0);
 	s.phyBody.allowSleep=false;
 	s.phyBody.material = phymtl1;
@@ -99,7 +86,7 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, camctrl: MouseCtrl1)
 	cam.dist = 20;
 	sce3d = sce;
 	mtl1 = mtl;
-	//mtl.renderMode = BlinnPhongMaterial.RENDERMODE_TRANSPARENT;
+	mtl.renderMode = BlinnPhongMaterial.RENDERMODE_TRANSPARENT;
 	initPhy(sce);
 	test(mtl, cam);
 	error2();

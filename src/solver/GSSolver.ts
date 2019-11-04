@@ -61,7 +61,9 @@ export class GSSolver extends Solver {
         for (var i = 0; i !== Neq; i++) {
             var c = equations[i];
             lambda[i] = 0.0;			// 初始λ为0
-            Bs[i] = c.computeB(h);
+			Bs[i] = c.computeB(h);
+			// C就是 λ系数，  C λ = B,
+			// C = G.iM.Gt + Σ
             invCs[i] = 1.0 / c.computeC();
         }
 
@@ -75,17 +77,20 @@ export class GSSolver extends Solver {
 				}
             }
 
-            // Iterate over equations
+            // 下面开始迭代计算 Iterate over equations
             for (iter = 0; iter !== maxIter; iter++) {
-                // Accumulate the total error for each iteration.
+                // 总误差先设成0。 Accumulate the total error for each iteration.
                 deltalambdaTot = 0.0;
                 for (let j = 0; j !== Neq; j++) {
                     var c = equations[j];
                     // Compute iteration
                     B = Bs[j];
-                    invC = invCs[j];
-                    lambdaj = lambda[j];
-                    GWlambda = c.computeGWlambda();
+					invC = invCs[j];
+					// lambdaj 第一次是0
+					lambdaj = lambda[j];
+					// G*W
+					GWlambda = c.computeGWlambda();
+					// 计算这个公式的 λ
                     deltalambda = invC * (B - GWlambda - c.eps * lambdaj);
 
                     // Clamp if we are not within the min/max interval
