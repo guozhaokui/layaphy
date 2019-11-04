@@ -216,15 +216,14 @@ export class Body extends EventTarget {
      * World space orientation of the body.
      */
     quaternion = new Quaternion();
-
     initQuaternion = new Quaternion();
-
     previousQuaternion = new Quaternion();
-
     /**
      * Interpolated orientation of the body.
      */
-    interpolatedQuaternion = new Quaternion();
+	interpolatedQuaternion = new Quaternion();
+	
+	private _scale:Vec3|null=null;	// 可能有缩放。 只是保存用来缩放新添加的shape的。不在其他地方使用
 
     /**
      * Angular velocity of the body, in world space. Think of the angular velocity as a vector, which the body rotates around. The length of this vector determines how fast (in radians per second) the body rotates.
@@ -368,6 +367,26 @@ export class Body extends EventTarget {
 		this.position.set(x,y,z);
 		this.aabbNeedsUpdate=true;
 	}
+
+	setScale(x:number,y:number, z:number):void{
+		let shapes = this.shapes;
+		let sn = shapes.length;
+		for(let i=0; i<sn; i++){
+			shapes[i].setScale(x,y,z);
+		}
+
+		if(x==1&&y==1&&z==1){
+			this._scale=null;
+			return;
+		}
+			
+		if(!this._scale){
+			this._scale = new Vec3(x,y,z);
+		}else{
+			this._scale.set(x,y,z);
+		}
+	}
+
     /**
      * Wake the body up.
      * @method wakeUp
@@ -471,6 +490,7 @@ export class Body extends EventTarget {
 
     /**
      * Add a shape to the body with a local offset and orientation.
+	 * 注意，这个shape目前不要共享，因为1. 如果有缩放，这个shape会被修改，2.。。
      * @return The body object, for chainability.
      */
     addShape(shape: Shape, _offset?: Vec3, _orientation?: Quaternion) {
@@ -486,6 +506,10 @@ export class Body extends EventTarget {
             orientation.copy(_orientation);
         }
 
+		let scale = this._scale;
+		if(scale){
+			shape.setScale(scale.x, scale.y,scale.z);
+		}
         this.shapes.push(shape);
         this.shapeOffsets.push(offset);
         this.shapeOrientations.push(orientation);

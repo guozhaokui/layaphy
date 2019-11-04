@@ -41,7 +41,8 @@ export function addBox( size:Vec3, pos:Vec3, mass:number, phyMtl:PhyMtl, randr=f
 		transform.rotationEuler = rotationEuler;
 	}
 
-    var rigidBody = box.addComponent(CannonBody) as CannonBody;
+	var rigidBody = box.addComponent(CannonBody) as CannonBody;
+	//rigidBody.phyBody.setScale(3,1,1);
     var boxShape = new Box(new Vec3(size.x / 2, size.y / 2, size.z / 2));
     rigidBody.addShape(boxShape);
 	rigidBody.setMass(mass);

@@ -84,6 +84,7 @@ export class PhyCharactorCtrl extends Component implements ICharactorCtrl{
 		body.position.set(0,10,0);
 		body.allowSleep=false;
 		body.fixedRotation=true;
+		body.material=this._mtl;
 		//body.linearDamping=0.1;
 		body.updateMassProperties();
 

@@ -117,7 +117,9 @@ export class Shape {
      */
     calculateLocalInertia(mass: number, target: Vec3):void{};
 
-    onPreNarrowpase(stepId:i32,pos:Vec3, quat:Quaternion):void{};
+	onPreNarrowpase(stepId:i32,pos:Vec3, quat:Quaternion):void{};
+	
+	setScale(x:number,y:number,z:number, recalcMassProp:boolean=false){}
 }
 
 

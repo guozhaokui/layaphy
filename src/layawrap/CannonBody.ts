@@ -110,11 +110,16 @@ export class CannonBody extends Component implements IPhyBody{
 	}
 
     addShape(s:Shape,off?:Vector3,offq?:Quaternion|phyQuat){
-        let body = this.phyBody;
-        if(off){
-            tempVec3.set(off.x,off.y,off.z);
-        }
-        body.addShape(s,tempVec3, offq as phyQuat);
+		let body = this.phyBody;
+		let voff:Vec3|undefined =undefined;
+		if(off){
+			voff = new Vec3(off.x,off.y,off.z);
+		}
+		let vq:phyQuat|undefined=undefined;
+		if(offq){
+			vq = new phyQuat(offq.x,offq.y,offq.z,offq.w);
+		}
+        body.addShape(s,voff,vq);
 	}
 	
 	setROff(x:number,y:number,z:number){

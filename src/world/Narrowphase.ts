@@ -1189,6 +1189,11 @@ export class Narrowphase {
 	*/
 
     sphereVoxel(sphere: Sphere, voxel: Voxel,  pos1: Vec3, pos2: Vec3, q1: Quaternion, q2: Quaternion, body1: Body, body2: Body,  rsi: Shape, rsj: Shape, justTest: boolean): boolean {
+		//TEMP voxel的AABB的更新先在这里做，以后记得优化
+		voxel.pos=pos2;
+		voxel.quat = q2;
+		voxel.updateAABB();
+		//TEMP
 		let hitpoints = sphereVoxel_hitPoints;
         let hit = sphere.hitVoxel1(pos1,voxel,pos2,q2,hitpoints,justTest);
         if(hit){

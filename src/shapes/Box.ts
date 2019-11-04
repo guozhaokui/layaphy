@@ -60,7 +60,9 @@ var _segHitBoxNum=0;
  * A 3d box shape.
  */
 export class Box extends Shape implements MinkowskiShape {
-    halfExtents: Vec3;
+	halfExtents: Vec3;
+	origHalfExt:Vec3|null = null;		// 原始大小。如果有缩放，则这个就会有值
+
     /**
      * Used by the contact generator to make contacts with other convex polyhedra for example
      * 把BOX转成convex
@@ -333,6 +335,25 @@ export class Box extends Shape implements MinkowskiShape {
         }
     }	
 
+	setScale(x:number,y:number,z:number, recalcMassProp:boolean=false){
+		let orig = this.origHalfExt;
+		let ext = this.halfExtents;
+		if(x!=1||y!=1||z!=1){
+			if(!orig){
+				this.origHalfExt = orig = new Vec3();
+				orig.copy(ext);
+			}
+			// 注意处理负的缩放的问题 .TODO 先临时处理负的情况，以后遇到实际问题再说
+			ext.set(Math.abs(orig.x*x),Math.abs(orig.y*y),Math.abs(orig.z*z));
+		}else{
+			if(orig){
+				ext.copy(orig);
+				this.origHalfExt=null;
+			}
+		}
+        this.updateConvexPolyhedronRepresentation();
+        this.updateBndSphR();
+	}
 
     static calculateInertia(halfExtents: Vec3, mass: number, target: Vec3) {
         const e = halfExtents;

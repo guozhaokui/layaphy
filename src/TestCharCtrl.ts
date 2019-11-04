@@ -287,7 +287,7 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, camctrl: MouseCtrl1)
 	ctrl.enableFriction(true);
 
 	//
-	let cmtl = new ContactMaterial(phymtl2,ctrl._mtl,0,0);
+	let cmtl = new ContactMaterial(phymtl2,ctrl._mtl,0.2,0);
 	world.world.addContactMaterial(cmtl);
 
 	Laya.timer.loop(1, null, () => {
