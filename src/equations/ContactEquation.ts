@@ -77,7 +77,7 @@ export class ContactEquation extends Equation {
         penetrationVec.vadd(rj, penetrationVec);            // posj+rj
         penetrationVec.vsub(bi.position, penetrationVec);   // 
         penetrationVec.vsub(ri, penetrationVec);            // posi+ri - (posj+rj)
-        // g 是约束函数.这里是约束函数的值。希望这个值>=0, <0表示插入了
+        // g 就是约束函数的值。希望这个值=0, <0表示插入了
         const g = n.dot(penetrationVec);                    // .n
 
         // Compute iteration

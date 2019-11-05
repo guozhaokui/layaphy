@@ -269,7 +269,8 @@ export class Sphere extends Shape {
 					}
 					if(miniface>=0&&miniface<6){
 						deep = minidist+R;
-						hitNormal.copy(boxFaceNorml[miniface]);
+						//hitNormal.copy(boxFaceNorml[miniface]);
+						boxQuat.vmult(boxFaceNorml[miniface],hitNormal);
 						myPos.addScaledVector(-R,hitNormal,hitPos);
 						myPos.addScaledVector(minidist,hitNormal,hitpos1);
 					}

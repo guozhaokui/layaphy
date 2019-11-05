@@ -85,21 +85,23 @@ function testGSSover1(){
 	bodyBox.addShape(new Box(new Vec3(10,10,10)));
 	bodyBox.position.set(0,0,0);
 
+	let dt = 1/60;
+
 	world.addBody(bodySph);
 	world.addBody(bodyBox);
 
 	let c1 = new ContactEquation(bodySph, bodyBox);
+	c1.setSpookParams(1e7,1,dt);
 	c1.ni.set(0,-1,0);
 
 	c1.ri.set(0, -0.3, 0);// 球心到碰撞点
 	c1.rj.set(2.0916726666364083, 5, -0.8227107766723314);// box中心到碰撞点
 	solver.addEquation(c1);
 
-	let dt = 1/60;
 	solver.solve(dt,world);
 
 	bodySph.integrate(dt,true,false);
-
+	console.log(bodySph.position);
 }
 //testQuat();
 //test();

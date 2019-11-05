@@ -42,7 +42,7 @@ export class Equation {
     /**
      * Recalculates a,b,eps.
      * @param stiffness 
-     * @param relaxation 
+     * @param relaxation 	d 几步稳定约束。>0
      * @param timeStep      单位是秒
      */
     setSpookParams(stiffness: f32, relaxation: f32, timeStep: f32) {
@@ -105,7 +105,8 @@ export class Equation {
         const vi = bi.vlambda;
         const vj = bj.vlambda;
         const wi = bi.wlambda;
-        const wj = bj.wlambda;
+		const wj = bj.wlambda;
+		//dot(GA.s,vi)+dot(GA.r,wi) + dot(GB.s,vj) + dot(GB.r,wj)
         return GA.multiplyVectors(vi, wi) + GB.multiplyVectors(vj, wj);
     }
 

@@ -71,10 +71,10 @@ export class GSSolver extends Solver {
             // 把每个Body的vlambda和wlambda清零
             for (var i = 0; i !== Nbodies; i++) {
 				var b = bodies[i];
-				if(b.type==BODYTYPE.DYNAMIC){
+				//if(b.type==BODYTYPE.DYNAMIC){		由于需要对方的vlambda和wlambda所以都要清零
 	                b.vlambda.set(0,0,0);
 					b.wlambda.set(0,0,0);
-				}
+				//}
             }
 
             // 下面开始迭代计算 Iterate over equations

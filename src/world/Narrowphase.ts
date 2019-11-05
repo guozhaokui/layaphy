@@ -735,9 +735,9 @@ export class Narrowphase {
 		let half = sj.halfExtents;
 		let maxw = Math.max(half.x,half.y,half.z);
 
-		if(si.radius>4*maxw){
+		//if(si.radius>4*maxw){
 			return this.bigSphereBox(si,sj,xi,xj,qi,qj,bi,bj,rsi,rsj,justTest);
-		}
+		//}
         // we refer to the box as body j
         const sides = sphereBox_sides;
         xi.vsub(xj, box_to_sphere);

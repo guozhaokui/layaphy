@@ -131,6 +131,7 @@ export class Body extends EventTarget {
      */
     postStep:(b:Body)=>void|undefined;
 
+	/** 每次resolve计算的v增量 */
     vlambda = new Vec3();
 
     collisionFilterGroup = 1;
@@ -285,6 +286,7 @@ export class Body extends EventTarget {
      */
     boundingRadius = 0;
 
+	/** 每次resolve计算的w增量 */
 	wlambda = new Vec3();
 
 	/** 如果是kinematic对象，用速度控制还是用位置控制。 */
