@@ -92,6 +92,7 @@ export class DefaultMaterial extends BaseMaterial {
 		}
 		
         var uniformMap = {
+			'u_CameraPos': Shader3D.PERIOD_CAMERA,
             'u_MvpMatrix': Shader3D.PERIOD_SPRITE,
 			'u_WorldMat': Shader3D.PERIOD_SPRITE,
 			'u_DiffuseColor': Shader3D.PERIOD_MATERIAL,

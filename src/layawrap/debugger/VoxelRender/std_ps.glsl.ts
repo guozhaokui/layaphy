@@ -90,7 +90,7 @@ vec3 diff_sh9(vec3 dir){
 vec4 pbrlight(vec3 normal, float rough, float NoV, vec3 R){
     vec4 basecolor = vertColor;// texture2D(texBaseColor,vUv);
 	//basecolor.rgb = pow(basecolor.rgb,vec3(2.2));
-	float metaless = 0.0; 	
+	float metaless = 1.0; 	
     const vec3 nonmetalF0 =vec3(0.02);
     vec3 F0 =  mix(nonmetalF0, basecolor.rgb, metaless);
 	
@@ -112,7 +112,7 @@ void main(){
     vec3 view   = -normalize(vViewDir);
     float NoV = saturate(dot( view, normal ));
     vec3 R = 2. * NoV * normal - view;
-    float roughness = 0.2;
+    float roughness = 0.1;
 
     vec4 pbrl = pbrlight(normal,roughness,NoV,R);//*u_roughness_metaless_hdrexp.z;
     //vec4 pbrl = vertColor*vec4(diff_sh9(normal),1.0)*u_roughness_metaless_hdrexp.z;
