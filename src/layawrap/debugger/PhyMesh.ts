@@ -26,9 +26,9 @@ function updateMax(max:Vec3, x:number,y:number, z:number){
  * @param min 外部提供的包围盒
  * @param max 
  */
-export function createVoxMesh(data: any, xn: i32, yn: i32, zn: i32, min: Vector3, max: Vector3): Mesh {
+export function createVoxMesh(data: any, xn: i32, yn: i32, zn: i32, rx:int, ry:int, rz:int, min: Vector3, max: Vector3): Mesh {
 	var vertDecl = VertexMesh.getVertexDeclaration("POSITION,NORMAL,UV");
-	let quad = GreedyMesh(data, [xn, yn, zn]);
+	let quad = GreedyMesh(data, [rx, ry, rz]);
 	let vertex: number[] = [];
 	let index: number[] = [];
 

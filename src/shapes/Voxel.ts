@@ -1,11 +1,10 @@
-import {AABB} from "../collision/AABB";
-import {RaycastResult} from "../collision/RaycastResult";
-import {Mat3} from "../math/Mat3";
-import {Quaternion} from "../math/Quaternion";
-import {Vec3} from "../math/Vec3";
-import { getPhyRender } from "../world/World";
-import {Box} from "./Box";
-import {Shape, SHAPETYPE } from "./Shape";
+import { AABB } from "../collision/AABB";
+import { RaycastResult } from "../collision/RaycastResult";
+import { Mat3 } from "../math/Mat3";
+import { Quaternion } from "../math/Quaternion";
+import { Vec3 } from "../math/Vec3";
+import { Box } from "./Box";
+import { Shape, SHAPETYPE } from "./Shape";
 
 function POT(v: i32): i32 {
 	let r: i32 = 1;
@@ -242,6 +241,10 @@ class VoxelBitData {
 	ys = 0;
 	zs = 0;
 	dt: Uint8Array;
+	/** 由于上面为了对齐可能有多余的，这里记录实际数据 */
+	rx=0;
+	ry=0;
+	rz=0;
 	/**
 	 * 由于不是POT
 	 * 可能会扩展bbx，例如 上一级x有6个格子,对应的xs=3, bbx=0~6， 每个格子宽度为1
@@ -260,6 +263,9 @@ class VoxelBitData {
 	 * @param max 
 	 */
 	constructor(xsize: i32, ysize: i32, zsize: i32, min: Vec3, max: Vec3) {
+		this.rx = xsize;
+		this.ry = ysize;
+		this.rz = zsize;
 		this.xs = (xsize + 1) >> 1;
 		this.ys = (ysize + 1) >> 1;
 		this.zs = (zsize + 1) >> 1
@@ -291,9 +297,10 @@ class VoxelBitData {
 	}
 
 	getBit(x: i32, y: i32, z: i32) {
-		if (x >= this.xs * 2 || x < 0 || y >= this.ys * 2 || y < 0 || z >= this.zs * 2 || z < 0) {
+		if (x >= this.rx || x < 0 || y >= this.ry || y < 0 || z >= this.rz || z < 0) {
 			//debugger;
 			console.error('getbit param error');
+			return 0;
 		}
 		//bit:z,y,x, 所以是
 		//      Y

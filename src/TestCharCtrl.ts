@@ -41,6 +41,10 @@ let phyr: IPhyRender;
 let ctrl: PhyCharactorCtrl;
 let m2v = new Mesh2Voxel();
 
+let emitPos = new Vec3();
+let emitDir = new Vec3();
+let lockEmit = false;
+
 function initPhy(scene: Scene3D) {
 	let phyworld = world = scene.addComponent(CannonWorld) as CannonWorld;
 	phyworld.world.gravity.set(0, -10, 0);
@@ -100,6 +104,10 @@ function dokey(e: Event, down: boolean) {
 				ctrl.jump(new Vector3(0, 10, 0))
 			}
 			break;
+		case 'L': // 锁定发射位置和方向
+			if(!down)
+				lockEmit=!lockEmit;
+			break;
 		default:
 			break;
 	}
@@ -117,8 +125,21 @@ function test(mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 
 		let ray = new Ray(new Vector3(), new Vector3());
 		cam.camera.viewportPointToRay(new Vector2(e.stageX, e.stageY), ray);
-		stpos.set(ray.origin.x, ray.origin.y, ray.origin.z);
-		dir.set(ray.direction.x, ray.direction.y, ray.direction.z);
+		if(!lockEmit){
+			emitPos.set(ray.origin.x, ray.origin.y, ray.origin.z);
+			//DEBUG
+			//emitPos.set(-31.65083976589477,20.991332874362374,66.50135643487836 );
+		}
+
+		stpos.set(emitPos.x, emitPos.y, emitPos.z);
+
+		if(!lockEmit){
+			emitDir.set(ray.direction.x, ray.direction.y, ray.direction.z);
+			//DEBUG
+			//emitDir.set(-0.18446392214973648,-0.17484450459282244,-0.9671620653431494);
+		}
+		
+		dir.set(emitDir.x,emitDir.y,emitDir.z);
 		let sp = addSphere(.3, stpos.x, stpos.y, stpos.z);
 		//let sp = addBox(new Vec3(0.5, 0.5, 0.5), stpos, 10, phymtl1);
 		//sp.fixedRotation=true;
@@ -127,6 +148,10 @@ function test(mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 			sp.owner.destroy();
 		}, 33000);
 		sp.setVel(dir.x * v, dir.y * v, dir.z * v);
+	});
+
+	Laya.stage.on(Event.MOUSE_MOVE, null, (e:Event)=>{
+
 	});
 
 	Laya.stage.on(Event.KEY_DOWN, null, (e: Event) => { dokey(e, true) });
@@ -209,7 +234,7 @@ function loadVoxel(file:string, pos?:Vec3,q?:Quaternion,scale?:Vec3) {
 		let max = dt.max as any as Vector3;
 		let mesh = createVoxMesh(
 			{ get: function (x: int, y: int, z: int) { return dt.getBit(x, y, z); } }, 
-			dt.xs * 2, dt.ys * 2, dt.zs * 2, min, max);// PrimitiveMesh.createQuad(10,10) ;//PrimitiveMesh.createBox(1,1,1);		
+			dt.xs * 2, dt.ys * 2, dt.zs * 2, dt.rx, dt.ry, dt.rz, min, max);// PrimitiveMesh.createQuad(10,10) ;//PrimitiveMesh.createBox(1,1,1);		
 		let vox = new PhyMeshSprite(mesh, min, max);
 		//vox.createMesh();
 		sce3d.addChild(vox);
@@ -245,7 +270,7 @@ function loadJSONCubeModuleObj(obj:any,pos?:Vec3,q?:Quaternion){
 	let max = dt.max as any as Vector3;
 	let mesh = createVoxMesh(
 		{ get: function (x: int, y: int, z: int) { return dt.getBit(x, y, z); } }, 
-		dt.xs * 2, dt.ys * 2, dt.zs * 2, min, max);// PrimitiveMesh.createQuad(10,10) ;//PrimitiveMesh.createBox(1,1,1);		
+		dt.xs * 2, dt.ys * 2, dt.zs * 2, dt.rx,dt.ry,dt.rz, min, max);// PrimitiveMesh.createQuad(10,10) ;//PrimitiveMesh.createBox(1,1,1);		
 	let vox = new PhyMeshSprite(mesh, min, max);
 	//vox.createMesh();
 	sce3d.addChild(vox);
@@ -278,8 +303,8 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, camctrl: MouseCtrl1)
 	let q1 = new Quaternion();
 	q1.setFromAxisAngle(new Vec3(0,1,0),-Math.PI/4);
 
-	loadVoxel('res/house/house1.obj',new Vec3(-37, 1, 45), undefined, new Vec3(-2,2,2));
-	loadVoxel('res/house/wall.obj',new Vec3(-37,1, 0),undefined, new Vec3(-1,-1,-1));
+	loadVoxel('res/house/house1.obj',new Vec3(-37, 1, 45), undefined, new Vec3(-1,-1,1));
+	//loadVoxel('res/house/wall.obj',new Vec3(-37,1, 0),undefined, new Vec3(-1,-1,-1));
 
 	//loadJSONCubeModuleObj(vox_diban, new Vec3(-37,0,100));
 	//loadJSONCubeModuleObj(vox_shu, new Vec3(-37,0,100));
@@ -296,6 +321,10 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, camctrl: MouseCtrl1)
 	world.world.addContactMaterial(cmtl);
 
 	Laya.timer.loop(1, null, () => {
+		raycast(world.world,cam.camera,(pt:Vec3, norm:Vec3)=>{
+			//phyr.addPersistPoint( pt);
+		});
+
 		if (moving) {
 			ctrl.step(1 / 60);
 		}

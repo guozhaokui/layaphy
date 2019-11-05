@@ -13,6 +13,7 @@ import {Trimesh} from '../shapes/Trimesh.js';
 import {Sphere} from '../shapes/Sphere.js';
 import {Plane} from '../shapes/Plane.js';
 import { Voxel } from '../shapes/Voxel.js';
+import { PhyRender } from '../layawrap/PhyRender.js';
 
 var tmpVec1 = new Vec3();
 var tmpVec2 = new Vec3();
@@ -666,7 +667,8 @@ export class Ray {
 			var pmax = new Vec3();
 			voxel.xyzToPos(x,y,z,position,quat,pmin,pmax);
 			//console.log('hit',x,y,z);
-			//let phyr =  (window as any).phyr;// getPhyRender();
+			//let phyr =  (window as any).phyr as PhyRender;// getPhyRender();
+			//phyr.addAABB(new Vec3(),pmax,0xff00);
 			//phyr.addPersistPoint( pmin );
 			//phyr.addPersistPoint( pmax );
 			intersectionPoint.copy(pmax);	//TODO 先粗略的加一个，碰撞点

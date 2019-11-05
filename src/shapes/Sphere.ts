@@ -445,6 +445,32 @@ export class Sphere extends Shape {
 		return hit;
 	}
 
+	private  _hitInfoToWorld(hitpoints:HitPointInfoArray,voxPos:Vec3, voxQuat:Quaternion, scale:Vec3|null){
+		let hl = hitpoints.length;
+		for (let i = 0; i < hl; i++) {
+			let hi = hitpoints.data[i];
+			voxQuat.vmult(hi.posi, hi.posi); 
+			if(scale){
+				hi.posi.vmul(scale,hi.posi);
+			}
+			voxPos.vadd(hi.posi, hi.posi);
+
+			voxQuat.vmult(hi.posj, hi.posj); 
+			if(scale){
+				hi.posj.vmul(scale,hi.posj);
+			}
+			voxPos.vadd(hi.posj, hi.posj);
+
+			voxQuat.vmult(hi.normal, hi.normal);
+			// 法线不用缩放,除非有镜像
+			if(scale) {
+				if(scale.x<0) hi.normal.x*=-1;
+				if(scale.y<0) hi.normal.y*=-1;
+				if(scale.z<0) hi.normal.z*=-1;
+			}
+		}		
+	}
+
 	// 球主要检测6个方向是否正面碰撞，非正面碰撞的，每个格子元素用球模拟
 	// hiti 球的碰撞点， hitj voxel的碰撞点
 	hitVoxel1(myPos: Vec3, voxel: Voxel, voxPos: Vec3, voxQuat: Quaternion, hitpoints: HitPointInfoArray, justtest: boolean): boolean {
@@ -536,6 +562,12 @@ export class Sphere extends Shape {
 			let velInVox = hitVoxelTmpVel;
 			let sphvel = this.body.velocity;
 			//console.log('球进入格子了',sphvel.x,sphvel.y,sphvel.z)
+			// 把球的速度转换到vox空间 
+			if(scale){
+				if(scale.x<0) velInVox.x*=-1;
+				if(scale.y<0) velInVox.y*=-1;
+				if(scale.z<0) velInVox.z*=-1;
+			}
 			invQ.vmult(sphvel, velInVox);
 			let NotCheckSphVel = false;
 
@@ -545,11 +577,12 @@ export class Sphere extends Shape {
 
 			// x正方向
 			if (NotCheckSphVel || velInVox.x <= 0) {
-				dist1 = voxmax.x - sphInVox.x;	// 先假设是到aabb的距离
+				dist1 = Math.abs(voxmax.x - sphInVox.x);	// 先假设是到aabb的距离
 				if (dist1 < mindist) {
 					mindist = dist1;
 					mindistid = 0;
 				}
+				// 然后从当前格子向后（相对于速度）遍历，找到第一个空的，这就是这个速度方向的最近的*外*面
 				for (i = cgridx + 1; i < voxszx; i++) {
 					if (!voxel.getVox(i, cgridy, cgridz)) {
 						mindist = gridw * i + voxmin.x - sphInVox.x;
@@ -560,7 +593,7 @@ export class Sphere extends Shape {
 
 			// x负方向
 			if (NotCheckSphVel || velInVox.x >= 0) {
-				dist1 = sphInVox.x - voxmin.x;
+				dist1 = Math.abs(sphInVox.x - voxmin.x);
 				if (dist1 < mindist) {
 					mindist = dist1;
 					mindistid = 1;
@@ -578,7 +611,7 @@ export class Sphere extends Shape {
 			}
 			//y+
 			if (NotCheckSphVel || velInVox.y <= 0) {
-				dist1 = voxmax.y - sphInVox.y;
+				dist1 = Math.abs(voxmax.y - sphInVox.y);
 				if (dist1 < mindist) {
 					mindist = dist1;
 					mindistid = 2;
@@ -595,7 +628,7 @@ export class Sphere extends Shape {
 			}
 			//y-
 			if (NotCheckSphVel || velInVox.y >= 0) {
-				dist1 = sphInVox.y - voxmin.y;
+				dist1 = Math.abs(sphInVox.y - voxmin.y);
 				if (dist1 < mindist) {
 					mindist = dist1;
 					mindistid = 3;
@@ -614,7 +647,7 @@ export class Sphere extends Shape {
 
 			//z+
 			if (NotCheckSphVel || velInVox.z <= 0) {
-				dist1 = voxmax.z - sphInVox.z;
+				dist1 = Math.abs( voxmax.z - sphInVox.z);
 				if (dist1 < mindist) {
 					mindist = dist1;
 					mindistid = 4;
@@ -633,7 +666,7 @@ export class Sphere extends Shape {
 
 			//z-
 			if (NotCheckSphVel || velInVox.z >= 0) {
-				dist1 = sphInVox.z - voxmin.z;
+				dist1 = Math.abs( sphInVox.z - voxmin.z);
 				if (dist1 < mindist) {
 					mindist = dist1;
 					mindistid = 5;
@@ -686,6 +719,9 @@ export class Sphere extends Shape {
 					norm.set(0, 0, -1);
 					break;
 			}
+
+			// 转换到世界空间
+			this._hitInfoToWorld(hitpoints, voxPos, voxQuat, scale);
 
 		} else {// 如果球心在外面，先进一步缩小范围
 			// 注意这时候包围盒检测已经通过了，所以不用再做包围盒相关检测
@@ -776,6 +812,8 @@ export class Sphere extends Shape {
 			}
 
 			// 先把上面的碰撞转换到世界空间，因为下面用的是球的碰撞，都是在世界空间进行的
+			this._hitInfoToWorld(hitpoints, voxPos, voxQuat, scale);
+			/*
 			let hl = hitpoints.length;
 			for (i = 0; i < hl; i++) {
 				let hi = hitpoints.data[i];
@@ -799,6 +837,7 @@ export class Sphere extends Shape {
 					if(scale.z<0) hi.normal.z*=-1;
 				}
 			}
+			*/
 
 			let tmpV = hitVoxelTmpVec2;
 			let hitpos = hitvoxHitPos1;

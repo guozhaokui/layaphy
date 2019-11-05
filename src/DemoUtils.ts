@@ -86,7 +86,8 @@ export function addSphere(r: f32, x: f32, y: f32, z: f32): CannonBody {
     pos.setValue(x, y, z);
     transform.position = pos;
 
-    var phy = sph.addComponent(CannonBody) as CannonBody;
+	var phy = sph.addComponent(CannonBody) as CannonBody;
+	//phy.phyBody.setScale(3,1,1);
     phy.addShape(new Sphere(r));
     phy.setMass(1);
     return phy;
