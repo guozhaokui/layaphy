@@ -792,7 +792,12 @@ export class Sphere extends Shape {
 				voxPos.vadd(hi.posj, hi.posj);
 
 				voxQuat.vmult(hi.normal, hi.normal);
-				// 法线不用缩放
+				// 法线不用缩放,除非有镜像
+				if(scale) {
+					if(scale.x<0) hi.normal.x*=-1;
+					if(scale.y<0) hi.normal.y*=-1;
+					if(scale.z<0) hi.normal.z*=-1;
+				}
 			}
 
 			let tmpV = hitVoxelTmpVec2;

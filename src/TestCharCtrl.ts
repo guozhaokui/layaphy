@@ -197,7 +197,7 @@ function testGround(img: HTMLImageElement) {
 	let terrain = phy.phyBody;
 }
 
-function loadVoxel(file:string, pos?:Vec3,q?:Quaternion) {
+function loadVoxel(file:string, pos?:Vec3,q?:Quaternion,scale?:Vec3) {
 	m2v.loadObj(file, 0.1, (voxdata: SparseVoxData) => {
 		console.time('voxel');
 		
@@ -215,6 +215,11 @@ function loadVoxel(file:string, pos?:Vec3,q?:Quaternion) {
 		sce3d.addChild(vox);
 		vox.transform.localPosition.setValue(0, 0, 0);
 		var phy = vox.addComponent(CannonBody) as CannonBody;
+		phy.phyBody.dbgShow=true;
+		if(scale){
+			phy.phyBody.setScale(scale.x,scale.y,scale.z);
+			vox.transform.scale =  new Vector3(scale.x, scale.y, scale.z);
+		}
 		phy.addShape(phyvox);
 		if(pos){
 			phy.phyBody.setPos(pos.x,pos.y,pos.z);
@@ -267,17 +272,17 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, camctrl: MouseCtrl1)
 	initPhy(sce);
 	let sceobj =
 		[{"name": "Cube", "dim": {"x": 20.0, "y": 40.0, "z": 0.20000004768371582}, "pos": {"x": -9.5367431640625e-07, "y": 2.384185791015625e-07, "z": 2.384185791015625e-07}, "quat": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}, "mass": 0}, {"name": "Cube.001", "dim": {"x": 2.0, "y": 8.0, "z": 0.30000001192092896}, "pos": {"x": -10.583667755126953, "y": 1.719085931777954, "z": 0.19451212882995605}, "quat": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}, "mass": 0}, {"name": "Cube.003", "dim": {"x": 1.2832520008087158, "y": 44.06886672973633, "z": 8.352557182312012}, "pos": {"x": 10.349227905273438, "y": -0.4336942434310913, "z": 3.357720375061035}, "quat": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}, "mass": 0}, {"name": "Cube.002", "dim": {"x": 2.0, "y": 8.0, "z": 0.30000001192092896}, "pos": {"x": -12.58366584777832, "y": 1.719085931777954, "z": 0.49451208114624023}, "quat": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}, "mass": 0}, {"name": "Cube.004", "dim": {"x": 2.0, "y": 8.0, "z": 0.30000001192092896}, "pos": {"x": -14.58366584777832, "y": 1.719085931777954, "z": 0.7945119142532349}, "quat": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}, "mass": 0}, {"name": "Cube.005", "dim": {"x": 2.0, "y": 8.0, "z": 0.30000001192092896}, "pos": {"x": -16.583667755126953, "y": 1.719085931777954, "z": 1.0945121049880981}, "quat": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}, "mass": 0}, {"name": "Cube.006", "dim": {"x": 20.69036293029785, "y": 2.0, "z": 2.4215731620788574}, "pos": {"x": 0.10714340209960938, "y": -21.061107635498047, "z": 0.5030307769775391}, "quat": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}, "mass": 0}, {"name": "Cube.007", "dim": {"x": 21.156166076660156, "y": 2.0, "z": 22.843353271484375}, "pos": {"x": 0.7932448387145996, "y": 28.999530792236328, "z": 5.831474304199219}, "quat": {"x": -0.4526829719543457, "y": -0.0, "z": 0.0, "w": 0.8916715383529663}, "mass": 0}, {"name": "Cube.008", "dim": {"x": 2.0, "y": 2.0, "z": 2.0}, "pos": {"x": 0.82879638671875, "y": 29.197895050048828, "z": 15.298372268676758}, "quat": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}, "mass": 0}, {"name": "Cube.009", "dim": {"x": 0.5103281736373901, "y": 15.272051811218262, "z": 7.38112735748291}, "pos": {"x": 2.218686819076538, "y": -5.52827787399292, "z": 3.0185797214508057}, "quat": {"x": 0.0, "y": 0.0, "z": 0.17481115460395813, "w": 0.9846019744873047}, "mass": 0}, {"name": "Cube.010", "dim": {"x": 39.56965637207031, "y": 46.535789489746094, "z": 2.0}, "pos": {"x": -36.34748840332031, "y": -1.1900715827941895, "z": 0.12122726440429688}, "quat": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}, "mass": 0}, {"name": "Cube.011", "dim": {"x": 0.6901216506958008, "y": 15.746346473693848, "z": 1.3006709814071655}, "pos": {"x": -16.843605041503906, "y": 14.00429916381836, "z": 4.685491561889648}, "quat": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}, "mass": 0}, {"name": "Cube.012", "dim": {"x": 7.238906383514404, "y": 6.746131420135498, "z": 0.257480263710022}, "pos": {"x": -13.103920936584473, "y": -10.703566551208496, "z": 0.40030667185783386}, "quat": {"x": 0.0, "y": 0.07997595518827438, "z": 0.0, "w": 0.9967967867851257}, "mass": 0}]
-	loadSce(sce, phymtl2, sceobj as PhyObj[], true)
+	//loadSce(sce, phymtl2, sceobj as PhyObj[], true)
 	test(mtl, cam);
 
 	let q1 = new Quaternion();
-	q1.setFromAxisAngle(new Vec3(0,1,0),-Math.PI/2);
+	q1.setFromAxisAngle(new Vec3(0,1,0),-Math.PI/4);
 
-	loadVoxel('res/house/house1.obj',new Vec3(-37, 1, 45), q1);
-	loadVoxel('res/house/wall.obj',new Vec3(-37, 1, 0));
+	loadVoxel('res/house/house1.obj',new Vec3(-37, 1, 45), undefined, new Vec3(-2,2,2));
+	loadVoxel('res/house/wall.obj',new Vec3(-37,1, 0),undefined, new Vec3(-1,-1,-1));
 
-	loadJSONCubeModuleObj(vox_diban, new Vec3(-37,0,100));
-	loadJSONCubeModuleObj(vox_shu, new Vec3(-37,0,100));
+	//loadJSONCubeModuleObj(vox_diban, new Vec3(-37,0,100));
+	//loadJSONCubeModuleObj(vox_shu, new Vec3(-37,0,100));
 	//
 	(window as any).ctrl = ctrl = createCharCtrl(new Vec3(0.3, 1.8, 0.3));
 	ctrl.setPos(-2, 2, 2);
