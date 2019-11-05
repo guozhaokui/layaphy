@@ -73,6 +73,7 @@ export class PhyCharactorCtrl extends Component implements ICharactorCtrl{
 	private _initPhyBody(){
 		// 
 		let body = this.phyBody;
+		body.dbgShow=true;
 		let h = this.stepHeight=0.5;
 		body.addShape( new Sphere(h));
 		/*

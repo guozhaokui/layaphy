@@ -395,7 +395,11 @@ export class Voxel extends Shape {
 	pos:Vec3 ;// 目前是一个临时引用，不可以跨函数
 	centroid: Vec3 = new Vec3();	// 在voxData坐标系下的质心 @TODO 转换
 	mat: Mat3;   // 相当于记录了xyz的轴
-	scale = new Vec3(1, 1, 1);		// 注意这个动态改变的话会破坏刚体的假设。
+	/** 别的形状都是直接改变参数，这里为了简单通用，记下了scale。注意非均匀缩放是有问题的。动态改变的话会破坏刚体的假设 */
+	scale:Vec3|null = null;
+	invScale:Vec3|null = null;
+	maxScale=1;
+
 	aabbmin = new Vec3();			// 当前的aabb
 	aabbmax = new Vec3();
 	addToSceTick = -1;  // 
@@ -509,7 +513,29 @@ export class Voxel extends Shape {
 				this.bitDataLod[++clv] = cdt;
 			}
 		}
+	}
 
+	/**
+	 * voxel的缩放只能是均匀的。
+	 * @param x 
+	 * @param y 
+	 * @param z 
+	 * @param recalcMassProp 
+	 */
+	setScale(x:number,y:number,z:number, recalcMassProp:boolean=false){
+		if(!this.scale){
+			this.scale = new Vec3(x,y,z);
+		}else{
+			this.scale.set(x,y,z);
+		}
+
+		if(!this.invScale){
+			this.invScale = new Vec3(1/x,1/y,1/z);
+		}else{
+			this.invScale.set(1/x,1/y,1/z);
+		}
+
+		this.maxScale = Math.max(Math.abs(x),Math.abs(y),Math.abs(z));
 	}
 
 	updateAABB(): void {
@@ -692,7 +718,11 @@ export class Voxel extends Shape {
 
 
 	pointToWorld(pt:Vec3, out:Vec3):Vec3{
-		this.quat.vmult(pt,out);
+		if(this.scale){
+			pt.vmul(this.scale,out);
+			this.quat.vmult(out,out);
+		}else
+			this.quat.vmult(pt,out);
 		out.vadd(this.pos,out);
 		return out;
 	}
@@ -711,14 +741,20 @@ export class Voxel extends Shape {
 		let w = this.gridw;
 		let orimin = this.voxData.aabbmin;
 		let orimax = this.voxData.aabbmax;
-	
+		let scale = this.scale;
+
 		min.set(x*w,y*w,z*w);
 		min.vadd(orimin, min);
+		if(scale)
+			min.vmul(scale,min);
+
 		Q.vmult(min,min);
 		min.vadd(pos,min);
 
 		max.set(x*w+w,y*w+w,z*w+w);
 		max.vadd(orimin, max);
+		if(scale)
+			max.vmul(scale,max);
 		Q.vmult(max,max);
 		max.vadd(pos,max);
 	}

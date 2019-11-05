@@ -615,6 +615,11 @@ export class Ray {
 		const from = this.from;
 		const to = this.to;
 		// 世界空间的包围盒
+		// TEMP
+		voxel.pos = position;
+		voxel.quat = quat;
+		voxel.updateAABB();
+		// TEMP
 		let voxmin = voxel.aabbmin;
 		let voxmax = voxel.aabbmax;
 
@@ -639,8 +644,12 @@ export class Ray {
 		quat.conjugate(invQ);
 		let fromLocal = tmpVec1;
 		let toLocal = tmpVec2;
-		from.vsub(position,fromLocal); invQ.vmult(fromLocal,fromLocal);
+		from.vsub(position,fromLocal); invQ.vmult(fromLocal,fromLocal); 
 		to.vsub(position,toLocal); invQ.vmult(toLocal,toLocal);
+		if(voxel.invScale){
+			fromLocal.vmul(voxel.invScale,fromLocal);
+			toLocal.vmul(voxel.invScale, toLocal);
+		}
 
 		const intersectionPoint = Ray_intersectSphere_intersectionPoint;
 		const normal = Ray_intersectSphere_normal;
@@ -664,9 +673,7 @@ export class Ray {
 			return false;
 		});
 
-
 		// 转回世界空间
-
 		this.reportIntersection(normal, intersectionPoint, reportedShape, body, -1);
 	}
 

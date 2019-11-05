@@ -285,6 +285,8 @@ export class PhyRender extends IPhyRender {
 		let wq = new Quaternion();
 		let wpos = new Vec3();
 		bodies.forEach((b, i) => {
+			if(!b.dbgShow)
+				return;
 			let shapes = b.shapes;
 			b.type & BODYTYPE.KINEMATIC;
 			b.sleepState;
@@ -377,7 +379,11 @@ export class PhyRender extends IPhyRender {
 			case SHAPETYPE.VOXEL:
 				{
 					let vox = shape as Voxel;
-					this.addAABB(vox.aabbmin, vox.aabbmin, 0xff0000);
+					vox.pos = pos;
+					vox.quat = quat;
+					//vox.scale =;
+					vox.updateAABB();
+					this.addAABB(vox.aabbmin, vox.aabbmax, 0xff0000);
 					//vox.boundingSphereRadius
 				}
 				break;

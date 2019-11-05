@@ -270,7 +270,7 @@ export class Box extends Shape implements MinkowskiShape {
 	 * @param min 	相对于原点的min
 	 * @param max 	相对于原点的max
 	 */
-    static calculateWorldAABB1(pos: Vec3, quat: Quaternion, scale:Vec3, min: Vec3, max: Vec3, outmin:Vec3, outmax:Vec3) {
+    static calculateWorldAABB1(pos: Vec3, quat: Quaternion, scale:Vec3|null, min: Vec3, max: Vec3, outmin:Vec3, outmax:Vec3) {
 		let ext = Box.boxext1;
 		ext.x = (max.x-min.x)/2;
 		ext.y = (max.y-min.y)/2;
@@ -279,8 +279,12 @@ export class Box extends Shape implements MinkowskiShape {
 		off.x = (max.x+min.x)/2;
 		off.y = (max.y+min.y)/2;
 		off.z = (max.z+min.z)/2;
-		quat.vmult(off,off).vmul(scale,off); // 把这个偏移旋转一下  rot(off)*scale
-		quat_AABBExt_mult(quat,ext,ext).vmul(scale,ext);// 旋转原点在中心的包围盒	rot(ext)*scale
+		quat.vmult(off,off);
+		if(scale)
+			off.vmul(scale,off); // 把这个偏移旋转一下  rot(off)*scale
+		quat_AABBExt_mult(quat,ext,ext);
+		if(scale)
+			ext.vmul(scale,ext);// 旋转原点在中心的包围盒	rot(ext)*scale
         pos.vsub(ext,outmin).vadd(off,outmin);	// 计算原点在中心的包围盒	(pos+ext)+off
 		pos.vadd(ext,outmax).vadd(off,outmax);	// (pos-ext)+off
         return ;

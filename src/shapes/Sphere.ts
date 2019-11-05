@@ -28,11 +28,14 @@ var extsubpos=new Vec3();
 export class Sphere extends Shape {
 	onPreNarrowpase(stepId: number, pos: Vec3, quat: Quaternion): void { }
 	radius = 1;
+	oriRadius=1;	// 原始半径，用来应用缩放的
+
 	constructor(radius: number) {
 		super();
 		this.margin = radius;
 		this.type = SHAPETYPE.SPHERE;
 		this.radius = radius !== undefined ? radius : 1.0;
+		this.oriRadius=this.radius;
 
 		if (this.radius < 0) {
 			throw new Error('The sphere radius cannot be negative.');
@@ -65,6 +68,12 @@ export class Sphere extends Shape {
 		max.y = pos.y + r;
 		min.z = pos.z - r;
 		max.z = pos.z + r;
+	}
+
+	/** 只取最大的 */
+	setScale(x:number,y:number,z:number, recalcMassProp:boolean=false){
+		let s = Math.max(Math.abs(x),Math.abs(y),Math.abs(z));
+		this.radius = this.oriRadius*s;
 	}
 
 	/**
@@ -445,6 +454,8 @@ export class Sphere extends Shape {
 		//myPos.z = 3.8401824198470447;
 		//DEBUG
 		hitpoints.length = 0;
+		let scale = voxel.scale;
+		let invScale = voxel.invScale;
 
 		let R = this.radius;
 		let voxmin = voxel.voxData.aabbmin;// voxel.aabbmin;  要用原始aabb，因为计算相对
@@ -458,6 +469,12 @@ export class Sphere extends Shape {
 		let invQ = hitvoxelInvQ;
 		voxQuat.conjugate(invQ);
 		invQ.vmult(sphInVox, sphInVox);
+
+		// 缩放
+		if(invScale){
+			sphInVox.vmul(invScale,sphInVox);
+			R/=voxel.maxScale;	// 半径也要修改
+		}
 
 		let gridw = voxel.gridw;
 		let voxr = gridw / 2;
@@ -762,15 +779,31 @@ export class Sphere extends Shape {
 			let hl = hitpoints.length;
 			for (i = 0; i < hl; i++) {
 				let hi = hitpoints.data[i];
-				voxQuat.vmult(hi.posi, hi.posi); voxPos.vadd(hi.posi, hi.posi);
-				voxQuat.vmult(hi.posj, hi.posj); voxPos.vadd(hi.posj, hi.posj);
+				voxQuat.vmult(hi.posi, hi.posi); 
+				if(scale){
+					hi.posi.vmul(scale,hi.posi);
+				}
+				voxPos.vadd(hi.posi, hi.posi);
+
+				voxQuat.vmult(hi.posj, hi.posj); 
+				if(scale){
+					hi.posj.vmul(scale,hi.posj);
+				}
+				voxPos.vadd(hi.posj, hi.posj);
+
 				voxQuat.vmult(hi.normal, hi.normal);
+				// 法线不用缩放
 			}
 
 			let tmpV = hitVoxelTmpVec2;
 			let hitpos = hitvoxHitPos1;
 			let hitpos1 = hitVoxHitPos2;
 			let hitnorm = hitVoxHitNorm;
+			if(scale){
+				// 要在世界空间碰撞，恢复一些数据
+				R = this.radius;	 
+				voxr = gridw / 2 * voxel.maxScale;
+			}
 			// 把缩小后的范围中的所有的格子当做球来处理
 			for (let z = gridminz; z <= gridmaxz; z++) {
 				for (let y = gridminy; y <= gridmaxy; y++) {
@@ -780,6 +813,9 @@ export class Sphere extends Shape {
 							// 把xyz映射到box空间
 							tmpV.set(x + 0.5, y + 0.5, z + 0.5);// 在格子的中心
 							voxmin.addScaledVector(gridw, tmpV, tmpV);// tmpV = min + (vox.xyz+0.5)*gridw
+							if(scale){
+								tmpV.vmul(scale, tmpV);	//缩放
+							}
 							//tmpV现在是在vox空间内的一个点
 							voxQuat.vmult(tmpV, tmpV);//TODO 直接用矩阵的方向
 							tmpV.vadd(voxPos, tmpV);
@@ -830,6 +866,7 @@ export class Sphere extends Shape {
 }
 
 var hitVoxelTmpVec1 = new Vec3();
+var hitVoxelInvScale = new Vec3();
 var hitVoxelTmpVec2 = new Vec3();
 var hitVoxelTmpVel = new Vec3();
 var hitvoxHitPos1 = new Vec3();
