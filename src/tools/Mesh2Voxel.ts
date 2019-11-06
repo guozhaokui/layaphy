@@ -208,9 +208,9 @@ export class Mesh2Voxel {
         let gridSize = this.gridSize = gridsz; 
 
         let trifiller = this.trifiller;
-        this.gridXSize = Math.max(Math.ceil(modelXSize / gridSize), 1);
-        this.gridYSize = Math.max(Math.ceil(modelYSize / gridSize), 1);
-        this.gridZSize = Math.max(Math.ceil(modelZSize / gridSize), 1);
+        this.gridXSize = Math.max(Math.ceil(modelXSize / gridSize), 1)+1;// +1是解决正好在最边上的问题
+        this.gridYSize = Math.max(Math.ceil(modelYSize / gridSize), 1)+1;
+        this.gridZSize = Math.max(Math.ceil(modelZSize / gridSize), 1)+1;
 
         var ret1:{x:number,y:number,z:number,color:number}[] = [];		//x,y,z,color
         var ret:number[][] = [];			//三维数组

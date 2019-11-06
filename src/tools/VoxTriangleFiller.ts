@@ -177,8 +177,41 @@ export class VoxTriangleFiller {
 
         var y: int = 0;
         var turnDir: number = (v1[0] - v0[0]) * (v2[1] - v0[1]) - (v2[0] - v0[0]) * (v1[1] - v0[1]);
-        if (turnDir == 0) {	// 同一条线上
-
+		if (turnDir == 0) {	// 同一条线上
+			let dx = v2[0]-v0[0];
+			let dy = v2[1]-v0[1];
+			let dz = v2[2]-v0[2];
+			if(dy==0){
+				//this.fillCB(v0[0],v0[1],v0[2],0,0); //TODO 临时，给物理不关心uv
+			}else{
+				switch (this.faceDir) {
+					case 0://yzx x是y，y是z，z是x
+						for (y = v0[1]; y <= v2[1]; y++) {
+							let k = (y-v0[1])/dy;
+							let cx = v0[0]+(k*dx)|0;
+							let cz = v0[2]+(k*dz)|0;
+							this.fillCB(cz,cx,y,0,0);//TODO 
+						}
+						break;
+					case 1://xzy 即 x是x，y是z， z是y
+						for (y = v0[1]; y <= v2[1]; y++) {
+							let k = (y-v0[1])/dy;
+							let cx = v0[0]+(k*dx)|0;
+							let cz = v0[2]+(k*dz)|0;
+							this.fillCB(cx,cz,y,0,0);//TODO 
+						}
+					break;
+					case 2://xyz x是x，y是y，z是z
+						for (y = v0[1]; y <= v2[1]; y++) {
+							let k = (y-v0[1])/dy;
+							let cx = v0[0]+(k*dx)|0;
+							let cz = v0[2]+(k*dz)|0;
+							this.fillCB(cx,y,cz,0,0);//TODO 
+						}
+					break;
+					default:
+				}
+			}
         } else if (turnDir > 0) {// >0 则v0-v2在v0-v1的右边，即向右拐
             // v0
             // -
