@@ -31,6 +31,7 @@ var shapeChecks: checkFunc[] = [];
 let sphereVoxel_hitPoints = new HitPointInfoArray();
 sphereVoxel_hitPoints.reserve(32);
 
+export var enableFriction = true;
 
 /**
  * Helper class for the World. Generates ContactEquations.
@@ -141,6 +142,8 @@ export class Narrowphase {
 	 * @param outArray 
 	 */
     createFrictionEquationsFromContact(contactEq: ContactEquation, outArray: FrictionEquation[]) {
+		if(!enableFriction)
+			return;
         const bodyA = contactEq.bi;
         const bodyB = contactEq.bj;
         const shapeA = contactEq.si;

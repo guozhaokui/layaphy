@@ -389,6 +389,7 @@ export class Body extends EventTarget {
 		}else{
 			this._scale.set(x,y,z);
 		}
+		this.updateBoundingRadius();
 	}
 
     /**

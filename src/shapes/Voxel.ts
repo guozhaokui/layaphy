@@ -631,8 +631,14 @@ export class Voxel extends Shape {
 
 	// 参数是local空间的盒子大小
 	getLOD(szx: f32, szy: f32, szz: f32): i32 {
-		let scale = this.scale;
-		let szmax = Math.max(szx / scale.x, szy / scale.y, szz / scale.z);
+		let iscale = this.invScale;
+		let sx = 1; let sy=1; let sz=1;
+		if(iscale){
+			sx=iscale.x;
+			sy=iscale.y;
+			sz=iscale.z;
+		}
+		let szmax = Math.max(szx*sx, szy*sy, szz*sz);
 		let lod = Math.round(Math.log2(szmax));
 		return lod;
 	}
@@ -643,10 +649,12 @@ export class Voxel extends Shape {
 	}
 
 	updateBndSphR(): void {
-		let mx = Math.max(Math.abs(this.aabbmax.x), Math.abs(this.aabbmin.x));
-		let my = Math.max(Math.abs(this.aabbmax.y), Math.abs(this.aabbmin.y));
-		let mz = Math.max(Math.abs(this.aabbmax.z), Math.abs(this.aabbmin.z));
-		this.boundSphR = Math.sqrt(mx * mx + my * my + mz * mz);
+		let min = this.voxData.aabbmin;
+		let max = this.voxData.aabbmax;
+		let mx = Math.max(Math.abs(max.x), Math.abs(min.x));
+		let my = Math.max(Math.abs(max.y), Math.abs(min.y));
+		let mz = Math.max(Math.abs(max.z), Math.abs(min.z));
+		this.boundSphR = Math.sqrt(mx * mx + my * my + mz * mz)*this.maxScale;
 	}
 
 	calculateWorldAABB(pos: Vec3, quat: Quaternion, min: Vec3, max: Vec3): void {
