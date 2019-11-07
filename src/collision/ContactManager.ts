@@ -1,6 +1,7 @@
 import { Vec3 } from "../math/Vec3";
 import { ContactEquation } from "../equations/ContactEquation";
 import { Body } from "../objects/Body";
+import { Shape } from "../shapes/Shape";
 
 // 优化的时候避免对象重用导致被多个其他对象的修改
 
@@ -9,6 +10,8 @@ export class ContactInfo{
 	body:Body;			// 对方
 	hitpos = new Vec3();	// 自己的碰撞点
 	hitnorm = new Vec3();	// 对方的法线
+	myshape:Shape|null=null;	// 自己的shape
+	othershape:Shape|null=null;	// 对方的shape
 }
 
 var hitpos = new Vec3();
@@ -43,7 +46,8 @@ export class ContactInfoMgr{
 	}
 
 	/**
-	 * 这个维护remove列表，因此如果与b碰撞了，必须把上次记录的所有的与b相关的都从removed中移除
+	 * 通知与b发生碰撞了， 这个函数维护remove列表，
+	 * 如果与b碰撞了，必须把上次记录的所有的与b相关的碰撞信息都从removed列表中移除
 	 * @param b 
 	 */
 	private hitBody(b:Body):boolean{
@@ -67,6 +71,21 @@ export class ContactInfoMgr{
 		return find;
 	}
 
+	/**
+	 * 触发器碰撞事件
+	 * @param other 
+	 * @param si 
+	 * @param sj 
+	 */
+	addTriggerContact(other:Body, si:Shape, sj:Shape){
+		this._addC(other,null,null,si,sj);
+	}
+
+	/**
+	 * 普通接触的碰撞事件
+	 * @param me 
+	 * @param c 
+	 */
 	addContact(me:Body, c:ContactEquation){
 		let other:Body;
 		if(c.bi==me){
@@ -80,6 +99,8 @@ export class ContactInfoMgr{
 			hitnorm.copy(c.ni);	//hitnorm = c.ni
 		}
 
+		this._addC(other,hitpos,hitnorm,null,null);
+		/*
 		// 添加全部碰撞信息
 		let addall:ContactInfo;
 		if(this.allcLen>=this.allc.length){
@@ -107,6 +128,43 @@ export class ContactInfoMgr{
 			add.body = other;
 			add.hitpos.copy(hitpos);
 			add.hitnorm.copy(hitnorm);
+			this.addlen++;
+		}
+		*/
+	}
+
+	private _addC(other:Body, hitpos:Vec3|null, hitnorm:Vec3|null, shapei:Shape|null, shapej:Shape|null){
+		// 添加全部碰撞信息
+		let addall:ContactInfo;
+		if(this.allcLen>=this.allc.length){
+			addall = new ContactInfo();
+			this.allc.push(addall);
+		}else{
+			addall = this.allc[this.allcLen];
+		}
+		addall.body=other;
+		hitpos && addall.hitpos.copy(hitpos);
+		hitnorm && addall.hitnorm.copy(hitnorm);
+		if(shapei) addall.myshape=shapei;
+		if(shapej) addall.othershape=shapej;
+		this.allcLen++;
+
+		//如果发生碰撞了，看是否需要从remove中删除
+		let lastC = this.hitBody(other);	
+		if(!lastC){
+			// 上次没有，所以是新增加的
+			let add:ContactInfo;
+			if(this.addlen>=this.added.length){
+				add = new ContactInfo();
+				this.added.push(add);
+			}else{
+				add = this.added[this.addlen];
+			}
+			add.body = other;
+			hitpos && add.hitpos.copy(hitpos);
+			hitnorm && add.hitnorm.copy(hitnorm);
+			if(shapei) add.myshape=shapei;
+			if(shapej) add.othershape=shapej;
 			this.addlen++;
 		}
 	}

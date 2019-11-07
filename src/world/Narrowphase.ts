@@ -361,9 +361,12 @@ export class Narrowphase {
                         }
 
                         if (retval && justTest) {
+							// 触发器的碰撞处理
                             // Register overlap
                             //world.shapeOverlapKeeper.set(si.id, sj.id);
-                            //world.bodyOverlapKeeper.set(bi.id, bj.id);
+							//world.bodyOverlapKeeper.set(bi.id, bj.id);
+							bi.type!=BODYTYPE.STATIC && bi.contact.addTriggerContact(bj,si,sj)
+							bj.type!=BODYTYPE.STATIC && bj.contact.addTriggerContact(bi,sj,si);							
                         }
                     }
                 }

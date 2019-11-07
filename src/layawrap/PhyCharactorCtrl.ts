@@ -143,16 +143,27 @@ export class PhyCharactorCtrl extends Component implements ICharactorCtrl{
 		//body.velocity.set(0,0,0);
 		body.angularVelocity.set(0,0,0);
 		//this.state=0;
+		if(c){
+			if(c.body.isTrigger){
+				console.log('enter trigger', c.othershape);
+			}
+		}
 	}
 
-	onExitCollide(c:PhyCollideEvent){
+	onExitCollide(colEvt:PhyCollideEvent){
 		let body = this.phyBody;
+		let c = colEvt.contact;
 		let vel = body.velocity.length();
 		if(body.contact.allcLen>0 || vel<6){
 			//body.velocity.set(0,0,0);
 		}
 		//this.state=1;
 		//console.log('exitcollide',c.otherBody, body.velocity);
+		if(c){
+			if(c.body.isTrigger){
+				console.log('exit trigger', c.othershape);
+			}
+		}
 	}
 
     applyPose(){
@@ -259,7 +270,7 @@ export class PhyCharactorCtrl extends Component implements ICharactorCtrl{
 
 		let allc = phbody.contact.allc;
 
-		if(this.phyBody.contact.allcLen>0){
+		if(true){//this.phyBody.contact.allcLen>0){
 			// 看看当前朝向的分量是否满足指定速度，不满足的话，就补充到目标速度
 			// 大于指定速度的话，则不管？
 			let dot = (vel.x*rvel.x+vel.y*rvel.y+vel.z*rvel.z)/lvel;	// vel的长度是curVel，所以要除掉

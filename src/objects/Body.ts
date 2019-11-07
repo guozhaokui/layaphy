@@ -300,7 +300,8 @@ export class Body extends EventTarget {
 	/** 每个刚体自定义的重力，设置以后，不再受到全局重力影响 */
 	bodyGravity:Vec3|null=null; 
 
-	dbgShow=false;
+	/** 控制是否显示包围盒 */
+	dbgShow=true;	
 
     constructor(mass: number = 1, shape: Shape|null = null, pos:Vec3|null=null, options?: BodyInitOptions) {
         super();
@@ -734,6 +735,16 @@ export class Body extends EventTarget {
         this.applyImpulse(worldImpulse, relativePointWorld);
     }
 
+	set isTrigger(b:boolean){
+		if(b) this.type|=BODYTYPE.TRIGGER;
+		else{
+			this.type &=(~BODYTYPE.TRIGGER);
+		}
+	}
+
+	get isTrigger():boolean{
+		return (this.type & BODYTYPE.TRIGGER)!=0;
+	}
     /**
      * Should be called whenever you change the body shape or mass.
      * 更新对象的转动惯量相关值
