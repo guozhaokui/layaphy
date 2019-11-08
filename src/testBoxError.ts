@@ -16,6 +16,7 @@ import { Vec3 } from "./math/Vec3";
 import { BODYTYPE } from "./objects/Body";
 import { Mesh2Voxel } from "./tools/Mesh2Voxel";
 import { getPhyRender, IPhyRender } from "./world/World";
+import { Quaternion } from "./math/Quaternion";
 
 var sce3d: Scene3D;
 var mtl1: BlinnPhongMaterial;
@@ -25,6 +26,7 @@ let phymtl2 = new Material();
 let phymtl3 = new Material();
 let cmtl1 = new ContactMaterial(phymtl1, phymtl2, 0.001, 1);
 let cmtl2 = new ContactMaterial(phymtl1, phymtl3, 0, 1);
+//cmtl1.contactEquationRelaxation=1;
 let cam:MouseCtrl1;
 
 let phyr: IPhyRender;
@@ -71,7 +73,10 @@ function error1(){
 
 // 球在box上会跳
 function error2(){
-	let b = addBox(new Vec3(10, 10, 10), new Vec3(), 0, phymtl2);
+	let b = addBox(new Vec3(10, 10, 10), new Vec3(-10,0,0), 0, phymtl2);
+	let q = b.phyBody.quaternion;// new Quaternion();
+	q.setFromAxisAngle(new Vec3(1,0,0), Math.PI/4);
+
 	b.phyBody.allowSleep = false;
 	b.phyBody.name = 'ban';
 

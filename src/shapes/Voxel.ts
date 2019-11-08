@@ -389,7 +389,6 @@ interface IOrigVoxData{
 }
 
 export class Voxel extends Shape {
-	id = 0;
 	voxData: IOrigVoxData;//|PhyVoxelData;
 	//data:Uint8Array;
 	//bitData:Uint8Array;
@@ -411,6 +410,8 @@ export class Voxel extends Shape {
 	aabbmax = new Vec3();
 	addToSceTick = -1;  // 
 	gridw = 0;
+	/** 简化为box时的情况 */
+	box:Box|null = null; 	
 
 	constructor(dt: SparseVoxData|CubeModule,scale:number=1) {
 		super();
@@ -519,6 +520,22 @@ export class Voxel extends Shape {
 			if (cdt) {
 				this.bitDataLod[++clv] = cdt;
 			}
+		}
+	}
+
+	/**
+	 * 按照box来处理voxel
+	 * @param b 
+	 */
+	setAsBox(b:boolean):void{
+		let min = this.aabbmin;
+		let max = this.aabbmax;
+		if(b){
+			if(!this.box){
+				
+			}
+		}else{
+
 		}
 	}
 

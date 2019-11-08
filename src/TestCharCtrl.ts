@@ -47,7 +47,7 @@ let lockEmit = false;
 
 function initPhy(scene: Scene3D) {
 	let phyworld = world = scene.addComponent(CannonWorld) as CannonWorld;
-	phyworld.world.gravity.set(0, -10, 0);
+	phyworld.world.gravity.set(0, 0, 0);
 	(window as any).phyr = new PhyRender(scene, phyworld.world);
 	phyworld.world.addContactMaterial(cmtl1).addContactMaterial(cmtl2);
 	phyr = getPhyRender();
@@ -169,7 +169,7 @@ function createCharCtrl(size: Vec3) {
 
 // 测试传送带
 function testConveyorbelt() {
-	let b = addBox(new Vec3(10, 0.1, 10), new Vec3(-59, 0.3, 0), 1000, phymtl2);
+	let b = addBox(new Vec3(10, 0.1, 10), new Vec3(-79, 0.3, 0), 1000, phymtl2);
 	b.phyBody.type = BODYTYPE.KINEMATIC;
 	//b.phyBody.velocity.set(1,0,0);
 	b.phyBody.allowSleep = false;
@@ -178,7 +178,7 @@ function testConveyorbelt() {
 	let tm = 0;
 	b.phyBody.preCollision = () => {
 		let b1 = b.phyBody;
-		b1.position.x = -70 + 10 * Math.sin(tm++ / 100);
+		b1.position.x = -80 + 10 * Math.sin(tm++ / 100);
 	}
 }
 
@@ -218,12 +218,12 @@ function testGround(img: HTMLImageElement) {
 	phy.addShape(p, new Vector3(0, 0, 0), shapeq);
 	//phy.phyBody.setPos(0, 2, 0);
 	phy.setMass(0);
-	phy.setPos(-180, 0.31, -60);
+	phy.setPos(-210, 0.31, -60);
 	let terrain = phy.phyBody;
 }
 
 function loadVoxel(file:string, pos?:Vec3,q?:Quaternion,scale?:Vec3) {
-	m2v.loadObj(file, 0.1, (voxdata: SparseVoxData) => {
+	m2v.loadObj(file, 0.25, (voxdata: SparseVoxData) => {
 		console.time('voxel');
 		
 		let phyvox = new Voxel(voxdata,3);
@@ -288,6 +288,11 @@ function loadJSONCubeModuleObj(obj:any,pos?:Vec3,q?:Quaternion){
 	phy.setMass(0);
 }
 
+function testTrigger(){
+	let b = addBox(new Vec3(10,10,2), new Vec3(-30,2,0),0,phymtl1);
+	b.phyBody.isTrigger=true;
+}
+
 export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, camctrl: MouseCtrl1) {
 	cam=camctrl;
 	cam.dist = 20;
@@ -304,7 +309,7 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, camctrl: MouseCtrl1)
 	q1.setFromAxisAngle(new Vec3(0,1,0),-Math.PI/4);
 
 	loadVoxel('res/house/house1.obj',new Vec3(-37, 1, 45));//, undefined, new Vec3(-1,-1,1));
-	loadVoxel('res/house/wall.obj',new Vec3(-37,1, 0),undefined, new Vec3(-1,-1,-1));
+	loadVoxel('res/house/wall.obj',new Vec3(-37,1, 0),undefined, new Vec3(0.2,0.2,0.2));
 
 	loadJSONCubeModuleObj(vox_diban, new Vec3(-37,0,100));
 	loadJSONCubeModuleObj(vox_shu, new Vec3(-37,0,100));
@@ -331,6 +336,7 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, camctrl: MouseCtrl1)
 	})
 
 	testConveyorbelt();
+	testTrigger();
 
 	let img = new Image();
 	img.src = './res/height1.jpg';
