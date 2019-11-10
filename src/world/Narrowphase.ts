@@ -1215,8 +1215,8 @@ export class Narrowphase {
 				//debug
                 hit.normal.negate(r.ni);
                 //r.ni.copy(hit.normal);
-                hit.posi.vsub(pos1,r.ri);
-                hit.posj.vsub(pos2,r.rj);
+                hit.posi.vsub( body1.position,r.ri);	// 相对位置必须是相对于body的，因为pos1可能考虑了shape的偏移，变成了相对于shape的偏移了。
+                hit.posj.vsub( body2.position,r.rj);
     
                 this.result.push(r);
                 this.createFrictionEquationsFromContact(r, this.frictionResult);
@@ -1237,8 +1237,8 @@ export class Narrowphase {
 			let r = this.createContactEquation(body1,body2,cap1,cap2,rsi,rsj);
 			ni.negate(ni);
 			r.ni.copy(ni);
-			hitpos.vsub(pos1,r.ri);
-			hit1.vsub(pos2,r.rj);
+			hitpos.vsub(body1.position,r.ri);
+			hit1.vsub(body2.position,r.rj);
 
             this.result.push(r);
 			this.createFrictionEquationsFromContact(r, this.frictionResult);
@@ -1257,8 +1257,8 @@ export class Narrowphase {
 			let r = this.createContactEquation(capBody,sphBody,capsule,sphere,rsi,rsj);
             ni.negate(ni);// 
 			r.ni.copy(ni);
-			hitpos.vsub(capPos,r.ri);
-			hit1.vsub(sphPos,r.rj);
+			hitpos.vsub(sphBody.position,r.ri);
+			hit1.vsub(capBody.position,r.rj);
 
             this.result.push(r);
 			this.createFrictionEquationsFromContact(r, this.frictionResult);
@@ -1326,8 +1326,8 @@ export class Narrowphase {
 			let r = this.createContactEquation(boxBody,capBody, box, capsule, rsi, rsj);
             ni.negate(ni);// 
 			r.ni.copy(ni);
-			hitpos.vsub(boxPos,r.ri);
-			hit1.vsub(capPos,r.rj);
+			hitpos.vsub(boxBody.position,r.ri);
+			hit1.vsub(capBody.position,r.rj);
 
             this.result.push(r);
 			this.createFrictionEquationsFromContact(r, this.frictionResult);
@@ -1353,8 +1353,8 @@ export class Narrowphase {
                 let r = this.createContactEquation(body1,body2,box,voxel,rsi,rsj);
                 //hit.normal.negate(r.ni);
                 r.ni.copy(hit.normal);  // 现在的法线是推开voxel的， 所以不用取反
-                hit.posi.vsub(pos1,r.ri);
-                hit.posj.vsub(pos2,r.rj);
+                hit.posi.vsub(body1.position,r.ri);
+                hit.posj.vsub(body2.position,r.rj);
     
                 this.result.push(r);
                 this.createFrictionEquationsFromContact(r, this.frictionResult);

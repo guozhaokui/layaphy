@@ -445,7 +445,14 @@ export class Sphere extends Shape {
 		return hit;
 	}
 
-	private  _hitInfoToWorld(hitpoints:HitPointInfoArray,voxPos:Vec3, voxQuat:Quaternion, scale:Vec3|null){
+	/**
+	 * 
+	 * @param hitpoints 
+	 * @param voxPos 
+	 * @param voxQuat 
+	 * @param scale   voxel 的缩放
+	 */
+	private  _voxHitInfoToWorld(hitpoints:HitPointInfoArray,voxPos:Vec3, voxQuat:Quaternion, scale:Vec3|null){
 		let hl = hitpoints.length;
 		for (let i = 0; i < hl; i++) {
 			let hi = hitpoints.data[i];
@@ -721,7 +728,7 @@ export class Sphere extends Shape {
 			}
 
 			// 转换到世界空间
-			this._hitInfoToWorld(hitpoints, voxPos, voxQuat, scale);
+			this._voxHitInfoToWorld(hitpoints, voxPos, voxQuat, scale);
 
 		} else {// 如果球心在外面，先进一步缩小范围
 			// 注意这时候包围盒检测已经通过了，所以不用再做包围盒相关检测
@@ -812,7 +819,7 @@ export class Sphere extends Shape {
 			}
 
 			// 先把上面的碰撞转换到世界空间，因为下面用的是球的碰撞，都是在世界空间进行的
-			this._hitInfoToWorld(hitpoints, voxPos, voxQuat, scale);
+			this._voxHitInfoToWorld(hitpoints, voxPos, voxQuat, scale);
 			/*
 			let hl = hitpoints.length;
 			for (i = 0; i < hl; i++) {
