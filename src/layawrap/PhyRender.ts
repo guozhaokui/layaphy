@@ -81,9 +81,9 @@ export class PhyRender extends IPhyRender {
 	setPosInd = false;
 
 	/** 持久显示的点，直到clear */
-	persistPoint: Vec3[] = [];
+	private persistPoint: Vec3[] = [];
 	/** 持久显示的矢量。格式是 vec,pos,vec,pos, ... 直到clear */
-	persistVec: Vec3[] = [];
+	private persistVec: Vec3[] = [];
 	ui1: UIPlane = new UIPlane(new Sprite());
 
 	private static inst: PhyRender;

@@ -658,6 +658,7 @@ export class Ray {
 		//test
 		voxel.pos=position;	//position是临时的，因此只能使用前随时设置
 		voxel.quat=quat;
+		let find = false;
 		//test
 		voxel.rayTravel(fromLocal,toLocal,(x:int,y:int,z:int,b:boolean)=>{
 			if(!b)
@@ -671,11 +672,13 @@ export class Ray {
 			//phyr.addPersistPoint( pmin );
 			//phyr.addPersistPoint( pmax );
 			intersectionPoint.copy(pmax);	//TODO 先粗略的加一个，碰撞点
+			find = true;
 			return false;
 		});
 
 		// 转回世界空间
-		this.reportIntersection(normal, intersectionPoint, reportedShape, body, -1);
+		if(find)
+			this.reportIntersection(normal, intersectionPoint, reportedShape, body, -1);
 	}
 
     /**

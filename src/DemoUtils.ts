@@ -126,7 +126,7 @@ export function raycast(world:World, cam:Camera, cb:(pt:Vec3, norm:Vec3)=>void){
 	let len = 10000;
 	let phyRay = new PhyRay();
 	phyRay.from.set(ray.origin.x, ray.origin.y, ray.origin.z);
-	phyRay.to.set(ray.direction.x * len, ray.direction.y * len, ray.direction.z * len);
+	phyRay.to.set(ray.origin.x+ray.direction.x * len, ray.origin.y+ray.direction.y * len, ray.origin.z+ray.direction.z * len);
 	let options: hitworldOptions = { mode: RayMode.CLOSEST };
 	if (phyRay.intersectWorld(world, options)) {
 		let r = phyRay.result;

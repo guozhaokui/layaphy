@@ -416,7 +416,7 @@ export class Voxel extends Shape {
 
 	//3dline
 	/**
-	 * 射线经过voxle的路径。原理是每次根据碰撞到每个分隔面的时间取最近的。
+	 * 射线经过voxel的路径。原理是每次根据碰撞到每个分隔面的时间取最近的。
 	 * @param st  voxel空间的起点
 	 * @param ed  voxel空间的终点
 	 * @param visitor 返回true则继续
