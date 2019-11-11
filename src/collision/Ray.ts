@@ -672,6 +672,7 @@ export class Ray {
 			//phyr.addPersistPoint( pmin );
 			//phyr.addPersistPoint( pmax );
 			intersectionPoint.copy(pmax);	//TODO 先粗略的加一个，碰撞点
+			normal.set(0,0,0);	//没有做，设成0，避免误解
 			find = true;
 			return false;
 		});
