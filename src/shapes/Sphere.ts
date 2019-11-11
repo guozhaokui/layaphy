@@ -405,6 +405,7 @@ export class Sphere extends Shape {
 		let rPos = hitVoxelTmpVec1;
 		voxPos.vsub(myPos, rPos);
 
+		/*
 		// 先用最笨的方法验证流程
 		let voxdt = voxel.voxData.data;
 		if(!voxdt)
@@ -443,6 +444,8 @@ export class Sphere extends Shape {
 			hit = true;
 		}
 		return hit;
+		*/
+		return false;
 	}
 
 	/**

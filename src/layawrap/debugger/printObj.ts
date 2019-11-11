@@ -1,4 +1,4 @@
-
+/*
 var obj_props{
 	'World':{
 
@@ -14,3 +14,4 @@ var obj_props{
 export function printObj(obj:any){
 	
 }
+*/

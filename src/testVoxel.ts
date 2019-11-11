@@ -18,8 +18,9 @@ import { PhyRender } from "./layawrap/PhyRender";
 import { ContactMaterial } from "./material/ContactMaterial";
 import { Material } from "./material/Material";
 import { Vec3 } from "./math/Vec3";
-import { SparseVoxData, Voxel } from "./shapes/Voxel";
 import { Mesh2Voxel } from "./tools/Mesh2Voxel";
+import { SparseVoxData } from "./shapes/VoxelData";
+import { Voxel } from "./shapes/Voxel";
 
 /**
  * 测试盒子可以被推走，被抬起

@@ -23,9 +23,10 @@ import { CannonBody } from "./layawrap/CannonBody";
 import { Quaternion } from "./math/Quaternion";
 import { BODYTYPE } from "./objects/Body";
 import { Mesh2Voxel } from "./tools/Mesh2Voxel";
-import { SparseVoxData, Voxel } from "./shapes/Voxel";
 import { vox_diban } from "./diban.vox";
 import { vox_shu } from "./shu.vox";
+import { Voxel } from "./shapes/Voxel";
+import { SparseVoxData } from "./shapes/VoxelData";
 
 var sce3d: Scene3D;
 var mtl1: BlinnPhongMaterial;

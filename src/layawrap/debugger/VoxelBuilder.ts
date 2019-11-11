@@ -1,5 +1,6 @@
-import { PhyVoxelData } from "../../shapes/Voxel";
-import { voxdata } from './../../shapes/Voxel';
+import { voxdata } from "../../shapes/VoxelData";
+import { PhyVoxelData } from "../../shapes/voxDep";
+
 
 /**
  * 创建一个box的体素数据

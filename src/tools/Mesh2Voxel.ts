@@ -5,7 +5,7 @@ import { ColorQuantization_Mediancut } from "./ColorQuantization_Mediancut";
 import { OBJLoader_Material, OBJLoader_mesh } from "./ObjectFile";
 import { VoxTriangleFiller } from "./VoxTriangleFiller";
 import {Vec3} from "../math/Vec3";
-import { SparseVoxData } from "../shapes/Voxel";
+import { SparseVoxData } from "../shapes/VoxelData";
 
 /**
  * 使用方法：

@@ -130,15 +130,15 @@ export class Trimesh extends Shape {
         return this.tree.aabbQuery(unscaledAABB, result);
     }
 
-    setScale(scale: Vec3) {
+    setScale(x:number,y:number,z:number){//scale: Vec3) {
         const wasUniform = this.scale.x === this.scale.y && this.scale.y === this.scale.z;;
-        const isUniform = scale.x === scale.y && scale.y === scale.z;
+        const isUniform = x === y && y === z;
 
         if (!(wasUniform && isUniform)) {
             // Non-uniform scaling. Need to update normals.
             this.updateNormals();
         }
-        this.scale.copy(scale);
+        this.scale.set(x,y,z);//copy(scale);
         this.updateAABB();
         this.updateBndSphR();
     }
