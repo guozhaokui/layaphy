@@ -495,7 +495,7 @@ export class Sphere extends Shape {
 
 		let R = this.radius;
 		let voxmin = voxel.voxData.aabbmin;// voxel.aabbmin;  要用原始aabb，因为计算相对
-		let voxmax = voxel.voxData.aabbmin;// voxel.aabbmax;
+		let voxmax = voxel.voxData.aabbmax;// voxel.aabbmax;
 
 		// 把球转换到voxel空间
 		/** 球在vox空间的坐标 */
@@ -633,6 +633,7 @@ export class Sphere extends Shape {
 							mindist = dist1;
 							mindistid = 2;
 						}
+						break;	// 找到空的以后就要停止
 					}
 				}
 			}
@@ -704,7 +705,7 @@ export class Sphere extends Shape {
 					norm.set(1, 0, 0);
 					break;
 				case 1://想从-x弹出
-					posi.set(sphmaxz, sphInVox.y, sphInVox.z);
+					posi.set(sphmaxx, sphInVox.y, sphInVox.z);
 					posj.set(sphInVox.x - mindist, sphInVox.y, sphInVox.z)
 					norm.set(-1, 0, 0);
 					break;
