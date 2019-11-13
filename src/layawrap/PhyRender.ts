@@ -79,7 +79,7 @@ export class PhyRender extends IPhyRender {
 	posInd = new Vector3();
 	posIndColor = Color.BLUE;
 	setPosInd = false;
-	enable=false;
+	enable=true;
 
 	/** 持久显示的点，直到clear */
 	private persistPoint: Vec3[] = [];

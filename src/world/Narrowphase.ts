@@ -20,6 +20,7 @@ import { Trimesh } from '../shapes/Trimesh.js';
 import { Voxel } from '../shapes/Voxel.js';
 import { Vec3Pool } from '../utils/Vec3Pool.js';
 import { World } from './World.js';
+import { Material } from '../material/Material.js';
 
 //declare type anyShape=Box|Sphere|Capsule|Voxel|ConvexPolyhedron|Heightfield|Trimesh;
 interface checkFunc {
@@ -45,24 +46,20 @@ export class Narrowphase {
     /**
      * Internal storage of pooled contact points.
      */
-    contactPointPool: ContactEquation[] = [];
+    private contactPointPool: ContactEquation[] = [];
+    private frictionEquationPool: FrictionEquation[] = [];
+    private v3pool = new Vec3Pool();
 
-    frictionEquationPool: FrictionEquation[] = [];
+	world: World;
 
     /**
      * 碰撞结果保存为 ContactEquation
      */
     result: ContactEquation[] = [];
     frictionResult: FrictionEquation[] = [];
-
-    /**
-     * Pooled vectors.
-     * @property {Vec3Pool} v3pool
-     */
-    v3pool = new Vec3Pool();
-
-    world: World;
-    currentContactMaterial: ContactMaterial;
+	
+	/** 当前使用的材质 */
+    private currentContactMaterial = new ContactMaterial(null,null, 0.3,0);
 
     /**
      * @property {Boolean} enableFrictionReduction
@@ -124,12 +121,6 @@ export class Narrowphase {
             this.world.dt
         );
 
-        const matA = si.material || bi.material;	// 优先使用shape的材质
-        const matB = sj.material || bj.material;
-        if (matA && matB && matA.restitution >= 0 && matB.restitution >= 0) {
-            c.restitution = matA.restitution * matB.restitution;
-        }
-
         c.si = overrideShapeA || si;
         c.sj = overrideShapeB || sj;
 
@@ -146,20 +137,12 @@ export class Narrowphase {
 			return;
         const bodyA = contactEq.bi;
         const bodyB = contactEq.bj;
-        const shapeA = contactEq.si;
-        const shapeB = contactEq.sj;
 
         const world = this.world;
         const cm = this.currentContactMaterial;
 
         // If friction or restitution were specified in the material, use them
-        let friction = cm.friction;
-        const matA = shapeA.material || bodyA.material;	// 优先使用shape的材质
-		const matB = shapeB.material || bodyB.material;
-		// 如果shape有材质，就用shape之间的参数，否则，直接使用cm的
-        if (matA && matB && matA.friction >= 0 && matB.friction >= 0) {
-            friction = matA.friction * matB.friction;
-        }
+		let friction = cm.friction;
 
         if (friction > 0) {
 			// Create 2 tangent equations
@@ -265,17 +248,33 @@ export class Narrowphase {
         const xi = tmpVec1;
         const xj = tmpVec2;
 
+		// 给接触材质赋初始值
+		let cm = this.currentContactMaterial;
+		let defcm = world.defaultContactMaterial;
+		cm.friction = defcm.friction;
+		cm.restitution = defcm.restitution;
+
         for (let k = 0, N = p1.length; k !== N; k++) {
-            // Get current collision bodies
             const bi = p1[k];
 			const bj = p2[k];
 			let typei = bi.type;
 			let typej = bj.type;
 
-            // Get contact material
-            let bodyContactMaterial = null;
-            if (bi.material && bj.material) {
-                bodyContactMaterial = world.getContactMaterial(bi.material, bj.material);
+			/**
+			 * 接触材质，优先使用shape的相对材质，然后是body的相对材质，然后是两个材质的合并，最后是世界缺省
+			 */
+			let mi = bi.material;
+			let mj = bj.material;
+			let lastmi:Material|null = null;	// 优化用的，避免在shape中每次都查找
+			let lastmj:Material|null = null;
+            if (mi && mj) {
+				let bodycm = world.getContactMaterial(mi, mj);
+				if(bodycm){
+					lastmi = mi;
+					lastmj = mj;
+					cm.friction=bodycm.friction;
+					cm.restitution=bodycm.restitution;
+				}
             }
 
 			const justTest =  
@@ -290,7 +289,6 @@ export class Narrowphase {
 
             for (let i = 0; i < bi.shapes.length; i++) {
 				const si = bi.shapes[i];
-
 				if(!si.enable) continue;
 
 				let shapeoffi = bi.shapeOffsets[i];
@@ -309,6 +307,8 @@ export class Narrowphase {
 
                 if(si.hasPreNarrowPhase)
                     si.onPreNarrowpase(stepNum,xi,qi);
+
+				mi = si.material || mi;
 
                 for (let j = 0; j < bj.shapes.length; j++) {
 					const sj = bj.shapes[j];
@@ -341,14 +341,24 @@ export class Narrowphase {
                         continue;
                     }
 
-                    // Get collision material
-                    let shapeContactMaterial = null;
-                    if (si.material && sj.material) {
-                        shapeContactMaterial = world.getContactMaterial(si.material, sj.material);
-                    }
+					mj = sj.material || mj;
 
-					// 材质的优先级：按照shape取的添加到world中的材质对关系，按照body取的天骄到world中的材质关系，世界缺省材质
-                    this.currentContactMaterial = shapeContactMaterial || bodyContactMaterial || world.defaultContactMaterial;
+                    if (mi && mj) {
+						// 双方都有的情况下，先找相对材质
+						if( (mi===lastmi && mj===lastmj ) || (mi===lastmj && mj===lastmi)){
+							//前面body阶段已经找到了
+						}else{
+							let shapecm = world.getContactMaterial(mi,mj);
+							if(shapecm){
+								cm.friction=shapecm.friction;
+								cm.restitution=shapecm.restitution;
+							}else{
+								// 如果没有相对材质，就计算组合。先用最简单的乘法
+								cm.friction = mi.friction*mj.friction;
+								cm.restitution = mi.restitution*mj.restitution;
+							}
+						}
+                    }
 
                     // Get contacts
                     const resolver = shapeChecks[si.type | sj.type];
