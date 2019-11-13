@@ -79,6 +79,7 @@ export class PhyRender extends IPhyRender {
 	posInd = new Vector3();
 	posIndColor = Color.BLUE;
 	setPosInd = false;
+	enable=false;
 
 	/** 持久显示的点，直到clear */
 	private persistPoint: Vec3[] = [];
@@ -118,6 +119,9 @@ export class PhyRender extends IPhyRender {
 	}
 
 	showPos(x: f32, y: f32, z: f32) {
+		if(!this.enable)
+			return;
+
 		this.posInd.setValue(x, y, z);
 		this.setPosInd = true;
 	}
@@ -133,6 +137,9 @@ export class PhyRender extends IPhyRender {
 	 * @param color 
 	 */
 	addVec(stx: number, sty: number, stz: number, dirx: number, diry: number, dirz: number, color: number): void {
+		if(!this.enable)
+			return;
+
 		let r = this.renders[0];
 		p1.setValue(stx, sty, stz);
 		p2.setValue(dirx, diry, dirz);
@@ -144,10 +151,16 @@ export class PhyRender extends IPhyRender {
 	}
 
 	addVec1(st:Vec3, dir:Vec3,scale:number,color:number){
+		if(!this.enable)
+			return;
+
 		this.addVec(st.x,st.y,st.z, dir.x*scale,dir.y*scale,dir.z*scale,color);
 	}
 
 	addPersistPoint(x: number|Vec3, y?: number, z?: number, name?: string) {
+		if(!this.enable)
+			return 0;
+
 		if((x as Vec3).x!=undefined){
 			this.persistPoint.push( (x as Vec3).clone());	
 		}else
@@ -158,6 +171,9 @@ export class PhyRender extends IPhyRender {
 		this.persistPoint = this.persistPoint.splice(id, 1);
 	}
 	addPersistVec(dx: number|Vec3, dy: number|Vec3, dz?: number, x: number = 0, y: number = 0, z: number = 0, name?: string) {
+		if(!this.enable)
+			return 0;
+
 		if((dx as Vec3).x!=undefined){
 			this.persistVec.push( (dx as Vec3).clone() ,(dy as Vec3).clone());	
 		}else{
@@ -174,6 +190,9 @@ export class PhyRender extends IPhyRender {
 	}
 
 	addSeg(stx: number, sty: number, stz: number, edx: number, edy: number, edz: number, color: number): void {
+		if(!this.enable)
+			return;
+
 		let r = this.renders[0];
 		p1.setValue(stx, sty, stz);
 		p2.setValue(edx, edy, edz);
@@ -184,6 +203,8 @@ export class PhyRender extends IPhyRender {
 	}
 
 	addSegV3(st: Vec3, ed: Vec3,color: number): void {
+		if(!this.enable)
+			return;
 		this.addSeg(st.x,st.y,st.z,ed.x,ed.y,ed.z,color);
 	}
 
@@ -196,6 +217,9 @@ export class PhyRender extends IPhyRender {
 	 * @param color 
 	 */
 	addPoint(px: number, py: number, pz: number, color: number): void {
+		if(!this.enable)
+			return;
+
 		let axlen = 0.4;
 		let hAxlen = 0.2;
 		this.addVec(px - hAxlen, py, pz, axlen, 0, 0, color);
@@ -203,10 +227,16 @@ export class PhyRender extends IPhyRender {
 		this.addVec(px, py, pz - hAxlen, 0, 0, axlen, color);
 	}
 	addPoint1(p:Vec3,color:number):void{
+		if(!this.enable)
+			return;
+
 		this.addPoint(p.x,p.y,p.z,color);
 	}
 
 	drawLine(pts: Vec3[], color: number): void {
+		if(!this.enable)
+			return;
+
 		for (let i = 0; i < pts.length - 1; i++) {
 			let p1 = pts[i];
 			let p2 = pts[i + 1];
@@ -216,6 +246,9 @@ export class PhyRender extends IPhyRender {
 
 	// 画笼子的竖线
 	drawLine1(pts: Vec3[], h: Vec3, color: number): void {
+		if(!this.enable)
+			return;
+
 		for (let i = 0; i < pts.length - 1; i++) {
 			let p1 = pts[i];
 			this.addSeg(p1.x, p1.y, p1.z, p1.x + h.x, p1.y + h.y, p1.z + h.z, color);
@@ -223,6 +256,9 @@ export class PhyRender extends IPhyRender {
 	}
 
 	addAABB(min:Vec3, max:Vec3, color:number){
+		if(!this.enable)
+			return;
+
 		this.addSeg(min.x,min.y,min.z, max.x, min.y, min.z, color);
 		this.addSeg(max.x, min.y, min.z, max.x, min.y, max.z, color);
 		this.addSeg(max.x, min.y, max.z, min.x, min.y, max.z, color);
@@ -241,6 +277,8 @@ export class PhyRender extends IPhyRender {
 	}
 
 	stepStart(): void {
+		if(!this.enable)
+			return;
 		this.renders.forEach(r => {
 			r.clear();
 		})
@@ -280,6 +318,9 @@ export class PhyRender extends IPhyRender {
 	}
 
 	internalStep() {
+		if(!this.enable)
+			return;
+
 		let world = this.phyworld;
 		let bodies = world.bodies;
 		let wq = new Quaternion();

@@ -13,10 +13,8 @@ import { PhyRender } from "./layawrap/PhyRender";
 import { ContactMaterial } from "./material/ContactMaterial";
 import { Material } from "./material/Material";
 import { Vec3 } from "./math/Vec3";
-import { BODYTYPE } from "./objects/Body";
 import { Mesh2Voxel } from "./tools/Mesh2Voxel";
 import { getPhyRender, IPhyRender } from "./world/World";
-import { Quaternion } from "./math/Quaternion";
 
 var sce3d: Scene3D;
 var mtl1: BlinnPhongMaterial;

@@ -80,7 +80,7 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 	createGround(false);
 
 	// 问题： box和plane的碰撞没有问题，但是box和box的碰撞在不是原点的地方不太对，不稳定
-	for (let i = 0; i < 1; i++) {
+	for (let i = 0; i < 100; i++) {
 		let b = addBox(new Vec3(1, 2, 0.3), new Vec3(0, 1.5, -20 + -1.5 * i), 1, phymtl2, false);
 		b.phyBody.allowSleep = false;
 	}

@@ -736,14 +736,15 @@ export class Narrowphase {
 	}
 
     sphereBox(si: Sphere, sj: Box, xi: Vec3, xj: Vec3, qi: Quaternion, qj: Quaternion, bi: Body, bj: Body, rsi: Shape, rsj: Shape, justTest: boolean): boolean {
+		return this.bigSphereBox(si,sj,xi,xj,qi,qj,bi,bj,rsi,rsj,justTest);
+		/*
         const v3pool = this.v3pool;
-
 		let half = sj.halfExtents;
 		let maxw = Math.max(half.x,half.y,half.z);
 
-		//if(si.radius>4*maxw){
+		if(si.radius>4*maxw){
 			return this.bigSphereBox(si,sj,xi,xj,qi,qj,bi,bj,rsi,rsj,justTest);
-		//}
+		}
         // we refer to the box as body j
         const sides = sphereBox_sides;
         xi.vsub(xj, box_to_sphere);
@@ -947,7 +948,8 @@ export class Narrowphase {
             }
         }
         v3pool.release(edgeTangent).release(edgeCenter).release(r).release(orthogonal).release(dist);
-        return found;
+		return found;
+		*/
     }
 
     sphereConvex(si: Sphere, sj: ConvexPolyhedron, xi: Vec3, xj: Vec3, qi: Quaternion, qj: Quaternion, bi: Body, bj: Body, rsi: Shape, rsj: Shape, justTest: boolean): boolean {
