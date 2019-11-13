@@ -4,7 +4,6 @@ import { ColliderShape } from "laya/d3/physics/shape/ColliderShape";
 import { Material } from "../material/Material";
 import { Vec3 } from "../math/Vec3";
 import { Body } from "../objects/Body";
-import { Spring } from "../objects/Spring";
 import { Sphere } from "../shapes/Sphere";
 import { PhyCollideEvent, World } from "../world/World";
 import { CannonWorld } from "./CannonWorld";
@@ -182,7 +181,9 @@ export class PhyCharactorCtrl extends Component implements ICharactorCtrl{
 		}
 
 		//console.log('vel:',v.x|0,v.y|0,v.z|0);
-		
+
+		//body.vlambda;
+		//body.velocity.set(0,0,0);
 		//let body1 = this.phyBody1;
 		//body1.position.x=body.position.x;
 		//body1.position.z=body.position.z;

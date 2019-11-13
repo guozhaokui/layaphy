@@ -134,15 +134,23 @@ export class GSSolver extends Solver {
                 b.wlambda.vmul(b.angularFactor, b.wlambda);
                 w.vadd(b.wlambda, w);
 
-                phyr && phyr.addVec(b.position.x, b.position.y, b.position.z, b.vlambda.x, b.vlambda.y, b.vlambda.z, 0xffff);
+				if(phyr){
+					let cp = b.position;
+					let dv = b.vlambda;
+					phyr.addVec(cp.x, cp.y, cp.z, dv.x, 0, 0, 0xffff);
+					phyr.addVec(cp.x, cp.y, cp.z, 0, dv.y, 0, 0xffff);
+					phyr.addVec(cp.x, cp.y, cp.z, 0, 0, dv.z, 0xffff);
+				}
             }
 
-            // Set the .multiplier property of each equation
+			// Set the .multiplier property of each equation
+			/* 这个没人用过，先注掉
             let l = equations.length;
             const invDt = 1 / h;
             while (l--) {
-                equations[l].multiplier = lambda[l] * invDt;        // 这个好像没有用
-            }
+                equations[l].multiplier = lambda[l] * invDt;
+			}
+			*/
         }
         //console.log('Err=',deltalambdaTot,'iter=',iter);
         return iter;

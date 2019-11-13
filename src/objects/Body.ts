@@ -76,9 +76,6 @@ export class Body extends EventTarget {
     /**
      * Dispatched after two bodies collide. This event is dispatched on each
      * of the two bodies involved in the collision.
-     * @event collide
-     * @param {Body} body The body that was involved in the collision.
-     * @param {ContactEquation} contact The details of the collision.
      */
 	static EVENT_COLLIDE_ENTER = "collideEnter";
 	static EVENT_COLLIDE_EXIT = "collideExit";
@@ -87,7 +84,6 @@ export class Body extends EventTarget {
 
     /**
      * Dispatched after a sleeping body has woken up.
-     * @event wakeup
      */
     static wakeupEvent = {
         type: "wakeup"
@@ -113,23 +109,19 @@ export class Body extends EventTarget {
 	
 	enable=true;
 
-    /**
-     * Reference to the world the body is living in
-     */
     world: World|null =null;    // null 表示没有加到world中
 
     /**
-     * Callback function that is used BEFORE stepping the system. Use it to apply forces, for example. Inside the function, "this" will refer to this Body object.
-     * @deprecated Use World events instead
+	 * integrate之前调用
+	 * 这时候已经完成碰撞处理了
+	 * integrate包含更新速度和位置
      */
-    preStep:(b:Body)=>void|undefined;
+    preIntegrate:(b:Body)=>void|undefined;
 
     /**
-     * Callback function that is used AFTER stepping the system. Inside the function, "this" will refer to this Body object.
-     * @type {Function}
-     * @deprecated Use World events instead
+	 * integrate之后调用
      */
-    postStep:(b:Body)=>void|undefined;
+    postIntegrate:(b:Body)=>void|undefined;
 
 	/** 每次resolve计算的v增量 */
     vlambda = new Vec3();
@@ -175,12 +167,10 @@ export class Body extends EventTarget {
     _mass:f32  = 0;
     invMass:f32 = 0;
 
-    material?:Material;
+	material?:Material;
+	/** 线速度衰减系数，0到1 */
     linearDamping:f32 = 0.01;
 
-    /**
-     * One of: Body.DYNAMIC, Body.STATIC and Body.KINEMATIC.
-     */
     type = BODYTYPE.STATIC;
 
     /**
@@ -217,7 +207,7 @@ export class Body extends EventTarget {
      * World space orientation of the body.
      */
     quaternion = new Quaternion();
-    initQuaternion = new Quaternion();
+    //initQuaternion = new Quaternion();
     previousQuaternion = new Quaternion();
     /**
      * Interpolated orientation of the body.
@@ -334,7 +324,7 @@ export class Body extends EventTarget {
             }
             if (options.quaternion) {
                 this.quaternion.copy(options.quaternion);
-                this.initQuaternion.copy(options.quaternion);
+                //this.initQuaternion.copy(options.quaternion);
                 this.previousQuaternion.copy(options.quaternion);
                 this.interpolatedQuaternion.copy(options.quaternion);
             }
@@ -821,6 +811,7 @@ export class Body extends EventTarget {
 
     /**
      * Move the body forward in time.
+	 * 先更新速度，使用新的速度计算位置
      * @param  dt Time step
      * @param  quatNormalize Set to true to normalize the body quaternion
      * @param  quatNormalizeFast If the quaternion should be normalized using "fast" quaternion normalization

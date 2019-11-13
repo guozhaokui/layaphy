@@ -480,9 +480,9 @@ export class World extends EventTarget {
         body.initPosition.copy(body.position);
         body.initVelocity.copy(body.velocity);
         body.timeLastSleepy = this.time;
-        if (body instanceof Body) {
+        if (body) {
             body.initAngularVelocity.copy(body.angularVelocity);
-            body.initQuaternion.copy(body.quaternion);
+            //body.initQuaternion.copy(body.quaternion);
         }
         //this.collisionMatrix.setNumObjects(this.bodies.length);
         this.addBodyEvent.body = body;
@@ -1021,7 +1021,8 @@ export class World extends EventTarget {
         // Remove all contacts from solver
         solver.removeAllEquations();
 
-        // Apply damping, see http://code.google.com/p/bullet/issues/detail?id=74 for details
+		// Apply damping, see http://code.google.com/p/bullet/issues/detail?id=74 for details
+		// 衰减
         var pow = Math.pow;
         for (i = 0; i !== N; i++) {
             var bi = bodies[i];
@@ -1039,11 +1040,12 @@ export class World extends EventTarget {
 
         this.dispatchEvent(World_step_preStepEvent);
 
-        // Invoke pre-step callbacks
+		// Invoke pre-step callbacks  这里是integrate之前，post是integrate之后
+		// TODO 优化或者去掉
         for (i = 0; i !== N; i++) {
             var bi = bodies[i];
-            if (bi.preStep) {
-                bi.preStep.call(bi);
+            if (bi.preIntegrate) {
+                bi.preIntegrate.call(bi);
             }
         }
 
@@ -1074,10 +1076,11 @@ export class World extends EventTarget {
 
         this.dispatchEvent(World_step_postStepEvent);
 
-        // Invoke post-step callbacks
+		// Invoke post-step callbacks
+		// TODO 优化或者去掉
         for (i = 0; i !== N; i++) {
             var bi = bodies[i];
-            var postStep = bi.postStep;
+            var postStep = bi.postIntegrate;
             if (postStep) {
                 postStep.call(bi);
             }
