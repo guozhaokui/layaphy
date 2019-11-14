@@ -68,6 +68,9 @@ export class Narrowphase {
 
 	gjkdist = new GJKPairDetector();
 
+	private curm1:Material|null = null;
+	private curm2:Material|null = null;
+
     constructor(world: World) {
         this.world = world;
         shapeChecks[SHAPETYPE.BOX] = this.boxBox;
@@ -228,6 +231,44 @@ export class Narrowphase {
         // return eq;
     }
 
+	private _getContactMtl(mi:Material|null, mj:Material|null){
+		let cm = this.currentContactMaterial;
+		let lastmi = this.curm1;
+		let lastmj = this.curm2;
+		if(!mi&&!mj){
+			return cm; 	// 为了提高效率，外面指定
+			let defcm = this.world.defaultContactMaterial;
+			cm.friction = defcm.friction;
+			cm.restitution = defcm.restitution;
+		}
+		if(!mi || !mj){
+			// 任意一个没有指定的话，则使用指定的
+			let sm = mi||mj;
+			//@ts-ignore
+			cm.friction=sm.friction;
+			//@ts-ignore
+			cm.restitution=sm.restitution;
+			return cm;
+		}
+
+		// 双方都有的情况下，先找相对材质
+		if( (mi===lastmi && mj===lastmj ) || (mi===lastmj && mj===lastmi)){
+			//前面已经找到了
+		}else{
+			let rcm = this.world.getContactMaterial(mi,mj);
+			if(rcm){
+				cm.friction=rcm.friction;
+				cm.restitution=rcm.restitution;
+			}else{
+				// 如果没有相对材质，就计算组合。先用最简单的乘法
+				cm.friction = mi.friction*mj.friction;
+				cm.restitution = mi.restitution*mj.restitution;
+			}
+			this.curm1 = mi;
+			this.curm2 = mj;
+		}
+		return cm;
+	}
     /**
      * Generate all contacts between a list of body pairs
      * @param  p1 Array of body indices
@@ -265,18 +306,6 @@ export class Narrowphase {
 			 */
 			let mi = bi.material;
 			let mj = bj.material;
-			let lastmi:Material|null = null;	// 优化用的，避免在shape中每次都查找
-			let lastmj:Material|null = null;
-            if (mi && mj) {
-				let bodycm = world.getContactMaterial(mi, mj);
-				if(bodycm){
-					lastmi = mi;
-					lastmj = mj;
-					cm.friction=bodycm.friction;
-					cm.restitution=bodycm.restitution;
-				}
-            }
-
 			const justTest =  
 					typei & BODYTYPE.TRIGGER || 
 					typej & BODYTYPE.TRIGGER ||
@@ -343,22 +372,7 @@ export class Narrowphase {
 
 					mj = sj.material || mj;
 
-                    if (mi && mj) {
-						// 双方都有的情况下，先找相对材质
-						if( (mi===lastmi && mj===lastmj ) || (mi===lastmj && mj===lastmi)){
-							//前面body阶段已经找到了
-						}else{
-							let shapecm = world.getContactMaterial(mi,mj);
-							if(shapecm){
-								cm.friction=shapecm.friction;
-								cm.restitution=shapecm.restitution;
-							}else{
-								// 如果没有相对材质，就计算组合。先用最简单的乘法
-								cm.friction = mi.friction*mj.friction;
-								cm.restitution = mi.restitution*mj.restitution;
-							}
-						}
-                    }
+					cm = this._getContactMtl(mi,mj);
 
                     // Get contacts
                     const resolver = shapeChecks[si.type | sj.type];

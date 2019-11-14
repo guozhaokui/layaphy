@@ -11,19 +11,19 @@ export class Material {
 
     name?: string;
 
-    /**
-     * Friction for this material. If non-negative, it will be used instead of the friction given by ContactMaterials. 
-	 * If there's no matching ContactMaterial, the value from .defaultContactMaterial in the World will be used.
-     */
-    friction = -1;
+    friction = 0.3;
 
-    /**
-     * Restitution for this material. If non-negative, it will be used instead of the restitution given by ContactMaterials. 
-	 * If there's no matching ContactMaterial, the value from .defaultContactMaterial in the World will be used.
-     */
-    restitution = -1;
+	_restitution = 0;
+	
+	set restitution(v){
+		this._restitution=v;
+	}
 
-    constructor(name?:string,friction=-1,restitution=-1) {
+	get restitution(){
+		return this._restitution;
+	}
+
+    constructor(name?:string,friction=0.3,restitution=0) {
         this.name = name;
         this.friction = friction;
         this.restitution = restitution;

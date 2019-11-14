@@ -167,7 +167,7 @@ export class Body extends EventTarget {
     _mass:f32  = 0;
     invMass:f32 = 0;
 
-	material?:Material;
+	material:Material|null=null;
 	/** 线速度衰减系数，0到1 */
     linearDamping:f32 = 0.01;
 
@@ -308,7 +308,7 @@ export class Body extends EventTarget {
         if (options) {
             this.collisionFilterGroup = typeof (options.collisionFilterGroup) === 'number' ? options.collisionFilterGroup : 1;
             this.collisionFilterMask = typeof (options.collisionFilterMask) === 'number' ? options.collisionFilterMask : -1;
-            this.material = options.material;
+            this.material = options.material||null;
             this.linearDamping = typeof (options.linearDamping) === 'number' ? options.linearDamping : 0.01;
             this.allowSleep = typeof (options.allowSleep) !== 'undefined' ? options.allowSleep : true;
             this.sleepSpeedLimit = typeof (options.sleepSpeedLimit) !== 'undefined' ? options.sleepSpeedLimit : 0.1;
