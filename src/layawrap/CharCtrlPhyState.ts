@@ -7,18 +7,32 @@ export const enum PhyState {
 	FALLING = 3,
 }
 
+var stateName:string[]=[];
+stateName[PhyState.GROUND]='地面';
+stateName[PhyState.JUMPUP]='跳-上升';
+stateName[PhyState.FALL]='可能要下落';
+stateName[PhyState.FALLING]='下落中';
+
 export const enum PhyEvent {
-	STARTFALL = 1,	// 开始下落
 	COLLIDE = 2,	// 发生碰撞
 	JUMP = 3,		// 起跳
-	HITGROUND = 4,	// 碰到地面
 	TICK = 5,		// 时间相关
 }
 
-interface ISprite {
-	event: (evt: string) => void;
+export const enum PhyOutEvent{
+	FALLSTART=0,
+	FALLSTOP=1,
 }
 
+const _internalEvt_STARTFALL=101;	// 开始下落
+const _internalEvt_HITGROUND=104;	// 碰到地面
+
+interface ISprite {
+	phyStateEvent(evt: PhyOutEvent):void;
+	getGroundDist():number;
+}
+
+const FALLDIST=2;
 /**
  * 维护一个物理状态
  */
@@ -34,8 +48,8 @@ export class CharCtrlPhyState {
 		this.owner = owner;
 	}
 
-	init(){
-		
+	isOnGround(){
+		return this.state==PhyState.GROUND;
 	}
 
 	/**
@@ -44,10 +58,13 @@ export class CharCtrlPhyState {
 	tick(){
 		let vel = this.phyBody.velocity;
 		if (this.lastSpeedY > 0 && vel.y <= 0) {
-			this.handlePhyState(PhyEvent.STARTFALL);
+			//TODO 这个其实不用每帧调用
+			// 射线检测一下距离
+			
+			this.handlePhyState(_internalEvt_STARTFALL);
 		}
 		if (this.lastSpeedY < 0 && vel.y >= 0) {
-			this.handlePhyState(PhyEvent.HITGROUND);
+			this.handlePhyState(_internalEvt_HITGROUND);
 		}
 		this.lastSpeedY = vel.y;
 		this.handlePhyState(PhyEvent.TICK);
@@ -57,7 +74,7 @@ export class CharCtrlPhyState {
 	 * 发送事件引起内部状态变化。并可能触发owner的事件
 	 * @param evt 
 	 */
-	handlePhyState(evt: PhyEvent) {
+	handlePhyState(evt: PhyEvent|int) {
 		let stateTm = 0;
 		if(evt==PhyEvent.TICK){
 			stateTm = Date.now()-this.stateStartTm;
@@ -69,7 +86,7 @@ export class CharCtrlPhyState {
 					case PhyEvent.JUMP:
 						this._toState(PhyState.JUMPUP);
 						break;
-					case PhyEvent.STARTFALL:
+					case _internalEvt_STARTFALL:
 						this._toState(PhyState.FALL);
 						break;
 				}
@@ -77,26 +94,26 @@ export class CharCtrlPhyState {
 			break;
 			case PhyState.JUMPUP:
 				switch(evt){
-					case PhyEvent.STARTFALL:
+					case _internalEvt_STARTFALL:
 						this._toState(PhyState.FALL);
 						break;
 					case PhyEvent.COLLIDE:
 						//this.toState(physta)
 						break;
-					case PhyEvent.HITGROUND:
+					case _internalEvt_HITGROUND:
 						this._toState(PhyState.GROUND);
 						break;
 				}
 				break;
 			case PhyState.FALL:{
-				if(stateTm>100){
+				if(this.owner.getGroundDist()>FALLDIST){
 					this._toState(PhyState.FALLING);
 				}
 				switch(evt){
 					case PhyEvent.JUMP:
 						this._toState(PhyState.JUMPUP);
 						break;
-					case PhyEvent.HITGROUND:
+					case _internalEvt_HITGROUND:
 						this._toState(PhyState.GROUND);
 						break;
 				}
@@ -107,7 +124,7 @@ export class CharCtrlPhyState {
 					case PhyEvent.JUMP:
 						this._toState(PhyState.JUMPUP);
 						break;
-					case PhyEvent.HITGROUND:
+					case _internalEvt_HITGROUND:
 						this._toState(PhyState.GROUND);
 						break;
 				}
@@ -125,14 +142,17 @@ export class CharCtrlPhyState {
 		let last = this.state;
 		switch (s) {
 			case PhyState.GROUND:
-				if (last == PhyState.FALLING)
-					owner.event('FallStop');
+				if (last == PhyState.FALLING){
+					owner.phyStateEvent(PhyOutEvent.FALLSTOP);
+				}
 				break;
 			case PhyState.FALLING:
-				owner.event('FallStart');
+				owner.phyStateEvent(PhyOutEvent.FALLSTART);
 				break;
 			default:
 				break;
 		}
+		this.state=s;
+		console.log('toState:',stateName[s]);
 	}
 }

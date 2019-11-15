@@ -119,6 +119,9 @@ export class Ray {
 			this.result = result;
 			this._updateDirection();
 		}
+		
+		if(!body.enableRayTest)
+			return;
 		const checkCollisionResponse = this.checkCollisionResponse;
 
 		if (checkCollisionResponse && !body.collisionResponse) {

@@ -108,6 +108,8 @@ export class Body extends EventTarget {
 	name='noname';  // for debug
 	
 	enable=true;
+	/** 是否允许射线检测 */
+	enableRayTest=true;	
 
     world: World|null =null;    // null 表示没有加到world中
 
