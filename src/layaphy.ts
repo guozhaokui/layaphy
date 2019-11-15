@@ -18,6 +18,7 @@ import { testBullet } from "./TestBullet";
 import { DefaultMaterial } from "./layawrap/debugger/DefaultMtl";
 import { loadEnvTexture, loadLUTTex } from "./layawrap/debugger/envTexMgr";
 import { Matrix4x4 } from "laya/d3/math/Matrix4x4";
+//import { Main } from "./TestEPA";
 import { Main } from "./TestCharCtrl";
 //import { Main } from "./testBoxError";
 //import { Main } from "./testDomino";

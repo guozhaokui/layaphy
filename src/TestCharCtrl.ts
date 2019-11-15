@@ -319,14 +319,14 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, camctrl: MouseCtrl1)
 	loadJSONCubeModuleObj(vox_shu, new Vec3(-37,0,100));
 	//
 	(window as any).ctrl = ctrl = createCharCtrl(new Vec3(0.3, 1.8, 0.3));
-	ctrl.setPos(-2, 2, 2);
+	ctrl.setPos(-2, 0.6, 2);
 	ctrl.curDir = 180;
 	ctrl.curVel = 10;
 	ctrl.friction = 0;
 	ctrl.enableFriction(true);
 
 	//
-	let cmtl = new ContactMaterial(phymtl2,ctrl._mtl,0.2,0);
+	let cmtl = new ContactMaterial(phymtl2,ctrl._mtl,0.0,0);
 	world.world.addContactMaterial(cmtl);
 
 	Laya.timer.loop(1, null, () => {

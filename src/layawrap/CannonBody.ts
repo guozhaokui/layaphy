@@ -9,8 +9,24 @@ import {Body} from "../objects/Body";
 import {Shape} from "../shapes/Shape";
 import { CannonWorld } from "./CannonWorld";
 import { IPhyBody } from "./PhyInterface";
+import { CharCtrlPhyState } from "./CharCtrlPhyState";
 
 export class CannonBody extends Component implements IPhyBody{
+	mass: number;
+	lineVel: Vector3;
+	angVel: Vector3;
+	gravity: Vector3 | null;
+	noRotate: boolean;
+	collisionGroup: number;
+	canCollideWith: number;
+	_enablePhy=false;
+	phyBody:Body;
+	private _ROOff:Vector3|null;	// 渲染原点的位置。相对于物理原点
+
+    constructor(){
+		super();
+	}
+	
 	set fixedRotation(v: boolean){
 		let b = this.phyBody;
 		if(b.fixedRotation!=v){
@@ -22,31 +38,24 @@ export class CannonBody extends Component implements IPhyBody{
 	get fixedRotation():boolean{
 		return this.phyBody.fixedRotation;
 	}
+
 	addCenterForce(f: Vector3): void {
 		let b = this.phyBody;
 		b.force.x+=f.x;
 		b.force.y+=f.y;
 		b.force.z+=f.z;
 	}
+
 	addForce(f: Vector3, pos: Vector3): void {
 		throw new Error("Method not implemented.");
 	}
-	mass: number;
-	lineVel: Vector3;
-	angVel: Vector3;
-	gravity: Vector3 | null;
-	noRotate: boolean;
-	collisionGroup: number;
-	canCollideWith: number;
-	_enablePhy=false;
-	phyBody:Body;
-	private _ROOff:Vector3|null;	// 渲染原点的位置。相对于物理原点
-    constructor(){
-        super();
-    }
+
     _onEnable(){
+		let owner = this.owner;
+
         //let sce = this.owner.scene as Scene3D;
-        this.phyBody.enable=true;
+		this.phyBody.enable=true;
+		
     }
     _onDisable(){
         this.phyBody.enable=false;
@@ -57,7 +66,7 @@ export class CannonBody extends Component implements IPhyBody{
         let body = this.phyBody;
         if(!body){
             this.phyBody = body = new Body(1);
-            body.userData = this;
+			body.userData = this;
         }
 
         //CannonWorld.inst.bodies.push(this);//TODO 会多次添加么
@@ -131,8 +140,8 @@ export class CannonBody extends Component implements IPhyBody{
 	}
 
     setShape(){
-        
-    }
+	}
+	
     setG(g:f32){
 
     }

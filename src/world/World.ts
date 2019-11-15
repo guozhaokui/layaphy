@@ -214,7 +214,10 @@ export class World extends EventTarget {
     /**
      * Number of timesteps taken since start
      */
-    stepnumber:f32 = 0;
+	stepnumber:f32 = 0;
+	
+	/** step 实际经历的时间，因为可能有多个internalstep */
+	stepTime:number=0;
 
     /// Default and last timestep sizes
     default_dt:f32 = 1 / 60;
@@ -687,17 +690,18 @@ export class World extends EventTarget {
         if (timeSinceLastCalled === 0) { // Fixed, simple stepping
             this.internalStep(dt);
             // Increment time
-            this.time += dt;
+			this.time += dt;
+			this.stepTime=dt;
         } else {
             this.accumulator += timeSinceLastCalled;   // 上次可能还有一部分时间没有处理，所以是 +=
-            var substeps = 0;
+			var substeps = 0;
             while (this.accumulator >= dt && substeps < maxSubSteps) {
                 // Do fixed steps to catch up
                 this.internalStep(dt);
                 this.accumulator -= dt;
                 substeps++;
             }
-
+			this.stepTime = substeps*dt;
             // accumulator可能还剩一些
             /*
             var t = (this.accumulator % dt) / dt;

@@ -8,10 +8,16 @@ import { Sphere } from "../shapes/Sphere";
 import { PhyCollideEvent, World } from "../world/World";
 import { CannonWorld } from "./CannonWorld";
 import { ICharactorCtrl } from "./PhyInterface";
+import { CharCtrlPhyState } from "./CharCtrlPhyState";
+
+var posErr = new Vec3();
 
 export class PhyCharactorCtrl extends Component implements ICharactorCtrl{
 	private _mass: number;
 	private _friction=0;
+	private phyState:CharCtrlPhyState;
+	continueDrive=false;
+
 	get mass(){
 		return this._mass;
 	}
@@ -26,7 +32,30 @@ export class PhyCharactorCtrl extends Component implements ICharactorCtrl{
 	/** 当前速度的值 */
 	curVel:number=10;
 
-	_lineVel =new Vec3();// 只有get，没有set
+	/** 期望速度。只有get, 没有set，因为是根据速度和朝向设置的 */
+	private _desVel =new Vec3();
+
+	/** 实际速度，处在不断调整中 */
+	private _realVel = new Vec3();
+
+	/**
+	 * 为了抵消各种干扰（摩擦、轻微反弹）设置的基位置，例如平面行走，则就是初始位置，一旦发生硬碰撞就要重置这个位置 
+	 * 状态是空中的话，每次都重置
+	 * 其实可以用 _targetPos 替代，但是保留以便调试
+	 */
+	private _basePos = new Vec3();		
+
+	/** 上一次的实际位置 */
+	private _lastPos:Vec3 = new Vec3();
+	
+	/** 上一帧的目标位置 */
+	private _targetPos = new Vec3();
+
+	//// config ////
+	/** 任何碰撞都会反弹 */
+	asRigid=false;
+	/** 空中的时候不反弹 */
+	noBounceWhileJumping=true;
 
 	angVel: Vector3;
 	noRotate: boolean;
@@ -54,8 +83,7 @@ export class PhyCharactorCtrl extends Component implements ICharactorCtrl{
 	maxSlope: number;
 	stepHeight: number;
 	state = 0;				//0 正常 1 空中
-	pos = new Vec3();
-	targetPos = new Vec3();
+
 	onCollisionEnter: (other: ColliderShape, pos: Vector3, normal: Vector3) => void;
 	onCollisionExit: (other: ColliderShape) => void;
 	onGround: () => void;
@@ -85,7 +113,8 @@ export class PhyCharactorCtrl extends Component implements ICharactorCtrl{
 		body.allowSleep=false;
 		body.fixedRotation=true;
 		body.material=this._mtl;
-		//body.linearDamping=0.1;
+		body.linearDamping=0.1;
+
 		body.updateMassProperties();
 
 		body.preCollision = this.onPhyPreCollision.bind(this);
@@ -95,6 +124,8 @@ export class PhyCharactorCtrl extends Component implements ICharactorCtrl{
 
 		body.addEventListener(Body.EVENT_COLLIDE_ENTER, this.onCollide.bind(this));
 		body.addEventListener(Body.EVENT_COLLIDE_EXIT,this.onExitCollide.bind(this));
+
+		this.phyState = new CharCtrlPhyState(this.phyBody,this.owner)
 
 		/*
 		let body1 = this.phyBody1;
@@ -113,7 +144,7 @@ export class PhyCharactorCtrl extends Component implements ICharactorCtrl{
 		//b.force.vadd(new Vec3(0,-10,0), b.force);
 
 		let curpos = this.phyBody.position;
-		let tarpos = this.targetPos;
+		let tarpos = this._targetPos;
 		// 希望一帧就补偿摩擦损失
 		let d = new Vec3(); //TODO temp
 		tarpos.vsub(curpos,d);
@@ -165,8 +196,55 @@ export class PhyCharactorCtrl extends Component implements ICharactorCtrl{
 		}
 	}
 
+	private resetBasePos(){
+		this._basePos.copy(this.phyBody.position);
+	}
+
+	/**
+	 * 根据期望的位置调整速度
+	 */
+	private updateVel(){
+		let phy = this.phyBody;
+		let posE = posErr;
+
+		let cpos = phy.position;
+		this._targetPos.vsub(cpos,posE);
+		let rvel = phy.velocity;// this._realVel;
+		let desVel = this._desVel;
+
+		//DEBUG
+		//console.log(`updateVel:距离差${posE.x},实际速度${this._realVel.x}`);
+		//posE.y=0;
+		//DEBUG
+
+		/* 补偿法
+		let Kp = 0.01;
+		if(phy.world){
+			let dt = phy.world.default_dt;
+			let vx = posE.x/dt;
+			let vy = posE.y/dt;
+			let vz = posE.z/dt;
+			rvel.x=  desVel.x + Kp*vx;
+			rvel.y= desVel.y+ Kp*vy;
+			rvel.z= desVel.z+ Kp*vz;
+			//phy.velocity.copy(rvel)
+			//phy.velocity.copy(this._desVel);
+		}
+		*/
+
+		//// 规则法
+		console.log('desvel:', desVel );
+		// 抵消弹起
+		if(desVel.y<=0){
+			if(rvel.y>0){
+				rvel.y = (desVel.y+rvel.y)/2;
+			}
+		}
+	}
+
     applyPose(){
 		let body = this.phyBody;
+		let tarVel = this._desVel;
 		let v = body.velocity;
 		let contact = body.contact;
 		let phyr = (body.world as World).phyRender;
@@ -179,22 +257,16 @@ export class PhyCharactorCtrl extends Component implements ICharactorCtrl{
 				//phyr.addVec1(body.position, c.hitnorm, 10,0xffff0000);
 			}
 		}
-
+		this.updateVel();
 		//console.log('vel:',v.x|0,v.y|0,v.z|0);
-
-		//body.vlambda;
-		//body.velocity.set(0,0,0);
-		//let body1 = this.phyBody1;
-		//body1.position.x=body.position.x;
-		//body1.position.z=body.position.z;
 	}
 
 	set curDir(v:number){
 		this._curDir=v;
 		let v1 = (v+90)*Math.PI/180;	// z朝外
 
-		this._lineVel.x=this.curVel*Math.cos(v1);
-		this._lineVel.z=this.curVel*Math.sin(v1);
+		this._desVel.x=this.curVel*Math.cos(v1);
+		this._desVel.z=this.curVel*Math.sin(v1);
 	}
 
 	get curDir(){
@@ -203,11 +275,11 @@ export class PhyCharactorCtrl extends Component implements ICharactorCtrl{
 
 	set curVDir(v:Vec3){
 		let vl = this.curVel;
-		this._lineVel.set(v.x*vl,v.y*vl,v.z*vl);
+		this._desVel.set(v.x*vl,v.y*vl,v.z*vl);
 	}
 
 	get lineVel(){
-		return this._lineVel as any as Vector3;
+		return this._desVel as any as Vector3;
 	}
 
 	set friction(f:number){
@@ -240,18 +312,17 @@ export class PhyCharactorCtrl extends Component implements ICharactorCtrl{
 		throw new Error("Method not implemented.");
 	}
 	setPos(x: number, y: number, z: number): void {
-		this.pos.set(x,y,z);
-		this.targetPos.set(x,y,z);
+		this._targetPos.set(x,y,z);
+		this._basePos.set(x,y,z);
 		this.phyBody.position.set(x,y+this.stepHeight,z);
-		//this.phyBody1.position.set(x,y+this.stepHeight+2,z)
 	}
 	setUpDir(up: Vector3): void {
 		throw new Error("Method not implemented.");
 	}
 
 	jump(dir: Vector3): void {
-		//this.lineVel.setValue(dir.x,dir.y,dir.z);
-		this.phyBody.velocity.set(dir.x,dir.y,dir.z);
+		//this.phyBody.velocity.set(dir.x,dir.y,dir.z);
+		this._desVel.set(dir.x,dir.y,dir.z);
 	}
 
 	preStep(): void {
@@ -259,17 +330,25 @@ export class PhyCharactorCtrl extends Component implements ICharactorCtrl{
 	}
 
 	step(dt: number): void {
-		let phbody = this.phyBody;
+		let phybody = this.phyBody;
 		/** 期望速度矢量 */
-		let vel = this._lineVel;
-		//this.phyBody.velocity.set(vel.x,vel.y,vel.z);
-		this.targetPos.vadd(vel,this.targetPos);
+		let vel = this._desVel;
+		/** 期望能到达的位置。这是一个从basePos开始的累加值 */
+		let del1 = this._targetPos.x;
+
+		this._targetPos.addScaledVector(dt,vel,this._targetPos);
+		//DEBUG
+		//console.log(`step: 目标：${this._targetPos.x}，速度：${this._desVel.x},距离:${this._targetPos.x-del1}`)
+		//DEBUG
 
 		/** 实际速度矢量 */
-		let rvel = phbody.velocity;
+		let rvel = phybody.velocity;
 		let lvel = this.curVel;
+		rvel.x=vel.x;
+		rvel.z=vel.z;
+		/*
 
-		let allc = phbody.contact.allc;
+		let allc = phybody.contact.allc;
 
 		if(true){//this.phyBody.contact.allcLen>0){
 			// 看看当前朝向的分量是否满足指定速度，不满足的话，就补充到目标速度
@@ -283,6 +362,7 @@ export class PhyCharactorCtrl extends Component implements ICharactorCtrl{
 				rvel.z += k*vel.z;
 			}
 		}
+		*/
 		/*
 		let pos = this.pos;
 		let phypos = this.phyBody.position;
