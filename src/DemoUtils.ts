@@ -50,8 +50,8 @@ export function addBox( size:Vec3, pos:Vec3, mass:number, phyMtl:PhyMtl, randr=f
     return rigidBody;
 }
 
-export function addCapsule(r: f32, h: f32, x: f32, y: f32, z: f32,randr=true): CannonBody {
-    var cap = scene.addChild(new MeshSprite3D(PrimitiveMesh.createCapsule(r, h + r + r, 0, 0))) as MeshSprite3D;
+export function addCapsule(r: f32, h: f32, x: f32, y: f32, z: f32,randr=false): CannonBody {
+    var cap = scene.addChild(new MeshSprite3D(PrimitiveMesh.createCapsule(r, h + r + r, 10, 10))) as MeshSprite3D;
     cap.meshRenderer.material = mtl;
     var transform = cap.transform;
     var pos = transform.position;
