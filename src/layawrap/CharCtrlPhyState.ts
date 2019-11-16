@@ -29,7 +29,7 @@ const _internalEvt_HITGROUND=104;	// 碰到地面
 
 interface ISprite {
 	phyStateEvent(evt: PhyOutEvent):void;
-	getGroundDist():number;
+	getGroundDist(maxdist:number):number;
 }
 
 const FALLDIST=2;
@@ -106,7 +106,7 @@ export class CharCtrlPhyState {
 				}
 				break;
 			case PhyState.FALL:{
-				if(this.owner.getGroundDist()>FALLDIST){
+				if(this.owner.getGroundDist(100)>FALLDIST){
 					this._toState(PhyState.FALLING);
 				}
 				switch(evt){

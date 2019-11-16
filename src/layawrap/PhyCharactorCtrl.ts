@@ -205,12 +205,13 @@ export class PhyCharactorCtrl extends Component implements ICharactorCtrl{
 		}
 	}
 
-	getGroundDist(){
+	getGroundDist(maxdist:number){
 		let curpos = this.phyBody.position;
 		let phyRay = testHeightRay;
 		let world = this.phyBody.world as World;
 		phyRay.from.copy(curpos);
-		phyRay.to.set(0,-1,0);
+		phyRay.to.copy(curpos);
+		phyRay.to.y-=maxdist;
 
 		this.phyBody.enableRayTest=false;
 		let options: hitworldOptions = { mode: RayMode.CLOSEST };
@@ -218,6 +219,8 @@ export class PhyCharactorCtrl extends Component implements ICharactorCtrl{
 			let r = phyRay.result;
 			//cb(r.hitPointWorld, r.hitNormalWorld);
 			this.distToGround = r.distance
+		}else{
+			this.distToGround=1e10;
 		}	
 		this.phyBody.enableRayTest=true;
 		return this.distToGround;
@@ -292,6 +295,8 @@ export class PhyCharactorCtrl extends Component implements ICharactorCtrl{
 		this.updateVel();
 		this.phyState.tick();
 		//console.log('vel:',v.x|0,v.y|0,v.z|0);
+		//TEST
+		//console.log('dist=',this.getGroundDist(100));
 	}
 
 	set curDir(v:number){

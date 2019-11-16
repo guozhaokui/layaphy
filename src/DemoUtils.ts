@@ -113,9 +113,11 @@ export function loadSce(rsce:Scene3D, mtl:Material, sce:PhyObj[],zup2yup:boolean
 			transQ.vmult(cbox.pos,newpos);
 			let b = addBox(cbox.dim,newpos,cbox.mass,mtl,false);
 			transQ.mult(cbox.quat,b.phyBody.quaternion);
+			b.phyBody.aabbNeedsUpdate=true;	//TODO 这个怎么能自动实现
 		}else{
 			let b = addBox(cbox.dim,cbox.pos,cbox.mass,mtl,false);
 			b.phyBody.quaternion.copy(cbox.quat);
+			b.phyBody.aabbNeedsUpdate=true;
 		}
 	});
 }
