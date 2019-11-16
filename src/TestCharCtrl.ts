@@ -150,7 +150,7 @@ function test(mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 		let v = 20;
 		setTimeout(() => {
 			sp.owner.destroy();
-		}, 1000);
+		}, 11000);
 		sp.setVel(dir.x * v, dir.y * v, dir.z * v);
 	});
 

@@ -19,7 +19,7 @@ interface PhyShapeBase{
 interface PN_Dyna extends PhyN_Base{
 	mass:number;
 	shape:PhyShapeBase;
-	shapeParam:Object;
+	shapeparam:Object;
 	pos?:Vec3;
 	qua?:Quaternion;
 }
@@ -54,7 +54,14 @@ interface PhyC_Point2PointDist{
 	dist:number;
 }
 
-interface PhyC_Hinge{
+interface Phyc_HingeWorld extends PhyN_Base{
+	A:string;
+	B:string;
+	pos:Vec3;			// 世界坐标
+	quat:Quaternion;
+}
+
+interface PhyC_Hinge extends PhyN_Base{
 	A:string;
 	B:string;
 	pa:Vec3;
