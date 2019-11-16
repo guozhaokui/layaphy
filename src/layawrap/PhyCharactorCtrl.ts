@@ -170,6 +170,7 @@ export class PhyCharactorCtrl extends Component implements ICharactorCtrl{
 		//body.velocity.set(0,0,0);
 		body.angularVelocity.set(0,0,0);
 		//this.state=0;
+		this.phyState.handlePhyState(PhyEvent.COLLIDE);
 		if(c){
 			if(c.body.isTrigger){
 				console.log('enter trigger', c.othershape);
@@ -272,8 +273,10 @@ export class PhyCharactorCtrl extends Component implements ICharactorCtrl{
 	 */
 	private updateVel(){
 		let rvel = this.phyBody.velocity;
-		if(this.phyState){
-
+		if(this.phyState.isOnGround()){
+			// 没有主观跳起，则y速度只能下落，不能弹起
+			if(rvel.y>0)
+				rvel.y=0;
 		}
 	}	
 
