@@ -18,7 +18,7 @@ export class PhyCharactorCtrl extends Component implements ICharactorCtrl{
 	private _mass: number;
 	private _friction=0;
 	private phyState:CharCtrlPhyState;
-	continueDrive=false;
+	continueDrive=false;	// 假设存在一个动力，能避免碰撞后的反弹
 
 	get mass(){
 		return this._mass;
@@ -142,6 +142,7 @@ export class PhyCharactorCtrl extends Component implements ICharactorCtrl{
 
 		let curpos = this.phyBody.position;
 		let tarpos = this._targetPos;
+		/*
 		// 希望一帧就补偿摩擦损失
 		let d = new Vec3(); //TODO temp
 		tarpos.vsub(curpos,d);
@@ -158,7 +159,7 @@ export class PhyCharactorCtrl extends Component implements ICharactorCtrl{
 			d.z*=k;
 			b.force.vadd(d,b.force);
 		}
-
+		*/
 		//this.spring.applyForce();
 	}
 
@@ -278,6 +279,9 @@ export class PhyCharactorCtrl extends Component implements ICharactorCtrl{
 			if(rvel.y>0)
 				rvel.y=0;
 		}
+		let desVel = this._desVel;
+		rvel.x = desVel.x;
+		rvel.z = desVel.z;
 	}	
 
     applyPose(){

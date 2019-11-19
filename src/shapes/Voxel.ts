@@ -106,7 +106,8 @@ export class Voxel extends Shape {
 	/**
 	 * 根据定义的中间接口构造
 	 * @param dt 
-	 * @param scale 
+	 * @param scale 每个格子的缩放，这个并不记录，相当于会直接修改形状，影响参数是每个格子的大小和包围盒。
+	 * 				下面的setScale是真正记录的缩放。
 	 */
 	private initFromVData(dt:IOrigVoxData,scale:number){
 		let min = this.aabbmin;
@@ -117,6 +118,9 @@ export class Voxel extends Shape {
 		max.copy(dt.aabbmax);
 
 		this.gridw = ((max.x - min.x) / dt.dataszx);
+		if(this.gridw!=scale){
+			console.error('格子大小不对？');
+		}
 
 		let xs = this.dataxsize = dt.dataszx;
 		let ys = this.dataysize = dt.dataszy;

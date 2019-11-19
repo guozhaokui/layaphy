@@ -73,7 +73,9 @@ export class VoronoiSimplexSolver{
 		let found=false;
 		let num = this.vertNum;
 		for(let i=0; i<num; i++){
-
+			if (this.vecW[i].almostEquals(p)){
+				found = true;
+			}
 		}
 		return found;
 	}
@@ -91,9 +93,34 @@ export class VoronoiSimplexSolver{
 		return this.vertNum>=4;
 	}
 
+	removeVertex(index: number): void {
+		// this.vertNum > 0;
+		
+		this.vertNum--;
+		this.vecW[index] = this.vecW[this.vertNum];
+		this.pointP[index] = this.pointP[this.vertNum];
+		this.pointQ[index] = this.pointQ[this.vertNum];
+	}
+
 	//去掉不用的
 	reduceVertices(used:i32){
+		var usedA: number = used & 0x0001;
+		var usedB: number = (used >> 1) & 0x0001;
+		var usedC: number = (used >> 2) & 0x0001;
+		var usedD: number = (used >> 3) & 0x0001;
 
+		if ((this.vertNum >= 4) && (!usedD)) {
+			this.removeVertex(3);
+		}
+		if ((this.vertNum >= 3) && (!usedC)) {
+			this.removeVertex(2);
+		}
+		if ((this.vertNum >= 2) && (!usedB)) {
+			this.removeVertex(1);
+		}
+		if ((this.vertNum >= 1) && (!usedA)) {
+			this.removeVertex(0);
+		}
 	}
 
 	compute_points(p1:Vec3, p2:Vec3){
@@ -354,7 +381,7 @@ export class VoronoiSimplexSolver{
 			let Qs = this.pointQ;
 			this.needUpdate=false;
 			cachedBC.reset();
-			switch( this.vertNum){
+			switch(this.vertNum){
 				case 0: this.cachedValidClosest=false; break;
 				case 1:	// 一个支撑
 					cachedP.copy(Ps[0]);

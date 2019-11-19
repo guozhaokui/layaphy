@@ -804,7 +804,7 @@ export class GJKPairDetector {
 		//transA.position = oldTransB;
 		//transB.position = oldTransB;
 //DEBUG
-return -1;
+//return -1;
 		//performance.mark('getcloseptend');
 		//performance.measure('getClosePoint','getcloseptstart','getcloseptend');
 		return -distance;
