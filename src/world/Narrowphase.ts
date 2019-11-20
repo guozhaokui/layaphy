@@ -294,6 +294,8 @@ export class Narrowphase {
 		let defcm = world.defaultContactMaterial;
 		cm.friction = defcm.friction;
 		cm.restitution = defcm.restitution;
+		this.curm1 = null;
+		this.curm2 = null;
 
         for (let k = 0, N = p1.length; k !== N; k++) {
             const bi = p1[k];
