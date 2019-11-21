@@ -21,9 +21,39 @@ import { World } from "./world/World";
 var scene:Scene3D;
 var mtl:BaseMaterial;
 
+let zup2yupQ = new Quaternion();
+zup2yupQ.setFromAxisAngle(new Vec3(1,0,0),-Math.PI/2);
+
 export function initDemo(sce:Scene3D, m:BaseMaterial){
 	scene = sce;
 	mtl=m;
+}
+
+var tmpPos=new Vec3();
+var tmpQ=new Quaternion();
+
+export function ZupPos2Yup(pos:Vec3,out:Vec3){
+	zup2yupQ.vmult(pos,out);
+}
+
+export function ZupQuat2Yup(quat:Quaternion,out:Quaternion){
+	zup2yupQ.mult(quat,out);
+}
+
+export function addZupBox(size:Vec3, mass:number, pos:Vec3, q:Quaternion){
+	zup2yupQ.vmult(pos,tmpPos);	// 转到Yup
+	zup2yupQ.mult(q,tmpQ);		// 转到Yup
+
+	let box = new MeshSprite3D(PrimitiveMesh.createBox(size.x,size.y,size.z));
+	scene.addChild(box);
+	var rigidBody = box.addComponent(CannonBody) as CannonBody;
+	var boxShape = new Box(new Vec3(size.x / 2, size.y / 2, size.z / 2));
+	rigidBody.phyBody.position.copy(tmpPos);
+	rigidBody.phyBody.quaternion.copy(tmpQ);
+    rigidBody.addShape(boxShape);
+	rigidBody.setMass(mass);
+	rigidBody.phyBody.aabbNeedsUpdate=true;	//TODO 这个怎么能自动实现
+    return rigidBody;
 }
 
 export function addBox( size:Vec3, pos:Vec3, mass:number, phyMtl:PhyMtl, randr=false):CannonBody {
@@ -104,15 +134,14 @@ export interface PhyObj{
 	quat:Quaternion;
 	mass:number;
 }
+
 export function loadSce(rsce:Scene3D, mtl:Material, sce:PhyObj[],zup2yup:boolean){
-	let transQ = new Quaternion();
-	transQ.setFromAxisAngle(new Vec3(1,0,0),-Math.PI/2);
 	let newpos=new Vec3();
 	sce.forEach(cbox=>{
 		if(zup2yup){
-			transQ.vmult(cbox.pos,newpos);
+			zup2yupQ.vmult(cbox.pos,newpos);
 			let b = addBox(cbox.dim,newpos,cbox.mass,mtl,false);
-			transQ.mult(cbox.quat,b.phyBody.quaternion);
+			zup2yupQ.mult(cbox.quat,b.phyBody.quaternion);
 			b.phyBody.aabbNeedsUpdate=true;	//TODO 这个怎么能自动实现
 		}else{
 			let b = addBox(cbox.dim,cbox.pos,cbox.mass,mtl,false);

@@ -8,7 +8,7 @@ import { Event } from "laya/events/Event";
 import { ConeTwistConstraint } from "./constraints/ConeTwistConstraint";
 import { DistanceConstraint } from './constraints/DistanceConstraint';
 import { HingeConstraint } from "./constraints/HingeConstraint";
-import { addBox, addSphere } from "./DemoUtils";
+import { addBox, addSphere, addZupBox, ZupPos2Yup, ZupQuat2Yup } from "./DemoUtils";
 import { CannonWorld } from "./layawrap/CannonWorld";
 import { MouseCtrl1 } from "./layawrap/ctrls/MouseCtrl1";
 import { PhyRender } from "./layawrap/PhyRender";
@@ -16,348 +16,446 @@ import { ContactMaterial } from "./material/ContactMaterial";
 import { Material } from "./material/Material";
 import { Vec3 } from "./math/Vec3";
 import { Body } from './objects/Body';
+import { Quaternion } from "./math/Quaternion";
+import { Mat3 } from "./math/Mat3";
+import { PointToPointConstraint } from "./constraints/PointToPointConstraint";
 
-var oo=[
+/**
+ * TODO  现在的约束导入的不对，位置差不多，但是轴是错的。Hinge都是错的
+ */
+
+var oo = [
 	{
-	 "name": "body",
-	 "dim": {
-	  "x": 2,
-	  "y": 2,
-	  "z": 0.7146314382553101
-	 },
-	 "pos": {
-	  "x": 0,
-	  "y": 0,
-	  "z": 0.1639881581068039
-	 },
-	 "quat": {
-	  "x": 0,
-	  "y": 0,
-	  "z": 0,
-	  "w": 1
-	 },
-	 "mass": 1
+		"name": "body",
+		"dim": {
+			"x": 2,
+			"y": 2,
+			"z": 0.7146314382553101
+		},
+		"pos": {
+			"x": 0,
+			"y": 0,
+			"z": 0.1639881581068039
+		},
+		"quat": {
+			"x": 0,
+			"y": 0,
+			"z": 0,
+			"w": 1
+		},
+		"mass": 1
 	},
 	{
-	 "name": "upleg1",
-	 "dim": {
-	  "x": 0.37193983793258667,
-	  "y": 2,
-	  "z": 0.3193705379962921
-	 },
-	 "pos": {
-	  "x": -1.2967536449432373,
-	  "y": 1.4567104578018188,
-	  "z": 0.7426637411117554
-	 },
-	 "quat": {
-	  "x": 0.21128535270690918,
-	  "y": 0.07480047643184662,
-	  "z": 0.32523849606513977,
-	  "w": 0.9186856150627136
-	 },
-	 "mass": 1
+		"name": "upleg1",
+		"dim": {
+			"x": 0.37193983793258667,
+			"y": 2,
+			"z": 0.3193705379962921
+		},
+		"pos": {
+			"x": -1.2967536449432373,
+			"y": 1.4567104578018188,
+			"z": 0.7426637411117554
+		},
+		"quat": {
+			"x": 0.21128535270690918,
+			"y": 0.07480047643184662,
+			"z": 0.32523849606513977,
+			"w": 0.9186856150627136
+		},
+		"mass": 1
 	},
 	{
-	 "name": "leg1",
-	 "dim": {
-	  "x": 0.37193983793258667,
-	  "y": 3.309077024459839,
-	  "z": 0.3193705081939697
-	 },
-	 "pos": {
-	  "x": -2.2149131298065186,
-	  "y": 2.6389265060424805,
-	  "z": -0.24280133843421936
-	 },
-	 "quat": {
-	  "x": -0.4858756959438324,
-	  "y": -0.1644555628299713,
-	  "z": 0.2752131223678589,
-	  "w": 0.8131032586097717
-	 },
-	 "mass": 1
+		"name": "leg1",
+		"dim": {
+			"x": 0.37193983793258667,
+			"y": 3.309077024459839,
+			"z": 0.3193705081939697
+		},
+		"pos": {
+			"x": -2.2149131298065186,
+			"y": 2.6389265060424805,
+			"z": -0.24280133843421936
+		},
+		"quat": {
+			"x": -0.4858756959438324,
+			"y": -0.1644555628299713,
+			"z": 0.2752131223678589,
+			"w": 0.8131032586097717
+		},
+		"mass": 1
 	},
 	{
-	 "name": "uplegpiv0",
-	 "pos": {
-	  "x": -0.7917226552963257,
-	  "y": 0.8426451683044434,
-	  "z": 0.3600959777832031
-	 },
-	 "quat": {
-	  "x": -0.5004355311393738,
-	  "y": -0.17742197215557098,
-	  "z": 0.28244081139564514,
-	  "w": 0.798944890499115
-	 },
-	 "type": "CPOINT",
-	 "A": "body",
-	 "B": "upleg1"
+		"name": "uplegpiv0",
+		"pos": {
+			"x": -0.7917226552963257,
+			"y": 0.8426451683044434,
+			"z": 0.3600959777832031
+		},
+		"quat": {
+			"x": -0.5004355311393738,
+			"y": -0.17742197215557098,
+			"z": 0.28244081139564514,
+			"w": 0.798944890499115
+		},
+		"type": "CPOINT",
+		"A": "body",
+		"B": "upleg1"
 	},
 	{
-	 "name": "elbow1",
-	 "pos": {
-	  "x": -1.7303791046142578,
-	  "y": 2.037281036376953,
-	  "z": 1.128298282623291
-	 },
-	 "quat": {
-	  "x": -0.2769056558609009,
-	  "y": 0.6490680575370789,
-	  "z": 0.16814890503883362,
-	  "w": 0.6883021593093872
-	 },
-	 "type": "CHINGE",
-	 "A": "upleg1",
-	 "B": "leg1"
+		"name": "elbow1",
+		"pos": {
+			"x": -1.7303791046142578,
+			"y": 2.037281036376953,
+			"z": 1.128298282623291
+		},
+		"quat": {
+			"x": -0.2769056558609009,
+			"y": 0.6490680575370789,
+			"z": 0.16814890503883362,
+			"w": 0.6883021593093872
+		},
+		"type": "CHINGE",
+		"A": "upleg1",
+		"B": "leg1"
 	},
 	{
-	 "name": "upleg2",
-	 "dim": {
-	  "x": 0.37193983793258667,
-	  "y": 2,
-	  "z": 0.3193705081939697
-	 },
-	 "pos": {
-	  "x": 1.405050277709961,
-	  "y": 1.3525564670562744,
-	  "z": 0.7426637411117554
-	 },
-	 "quat": {
-	  "x": 0.20413632690906525,
-	  "y": -0.09254719316959381,
-	  "z": -0.40240252017974854,
-	  "w": 0.8876010179519653
-	 },
-	 "mass": 1
+		"name": "upleg2",
+		"dim": {
+			"x": 0.37193983793258667,
+			"y": 2,
+			"z": 0.3193705081939697
+		},
+		"pos": {
+			"x": 1.405050277709961,
+			"y": 1.3525564670562744,
+			"z": 0.7426637411117554
+		},
+		"quat": {
+			"x": 0.20413632690906525,
+			"y": -0.09254719316959381,
+			"z": -0.40240252017974854,
+			"w": 0.8876010179519653
+		},
+		"mass": 1
 	},
 	{
-	 "name": "leg2",
-	 "dim": {
-	  "x": 0.37193983793258667,
-	  "y": 3.309077024459839,
-	  "z": 0.3193705081939697
-	 },
-	 "pos": {
-	  "x": 2.5505735874176025,
-	  "y": 2.316105842590332,
-	  "z": -0.24280133843421936
-	 },
-	 "quat": {
-	  "x": -0.46419721841812134,
-	  "y": 0.2182699292898178,
-	  "z": -0.36527034640312195,
-	  "w": 0.7768247723579407
-	 },
-	 "mass": 1
+		"name": "leg2",
+		"dim": {
+			"x": 0.37193983793258667,
+			"y": 3.309077024459839,
+			"z": 0.3193705081939697
+		},
+		"pos": {
+			"x": 2.5505735874176025,
+			"y": 2.316105842590332,
+			"z": -0.24280133843421936
+		},
+		"quat": {
+			"x": -0.46419721841812134,
+			"y": 0.2182699292898178,
+			"z": -0.36527034640312195,
+			"w": 0.7768247723579407
+		},
+		"mass": 1
 	},
 	{
-	 "name": "uplegpiv2",
-	 "pos": {
-	  "x": 0.8111399412155151,
-	  "y": 0.8239705562591553,
-	  "z": 0.3600959777832031
-	 },
-	 "quat": {
-	  "x": -0.48367947340011597,
-	  "y": 0.21901701390743256,
-	  "z": -0.3502465486526489,
-	  "w": 0.7716301083564758
-	 },
-	 "type": "CPOINT",
-	 "A": "body",
-	 "B": "upleg2"
+		"name": "uplegpiv2",
+		"pos": {
+			"x": 0.8111399412155151,
+			"y": 0.8239705562591553,
+			"z": 0.3600959777832031
+		},
+		"quat": {
+			"x": -0.48367947340011597,
+			"y": 0.21901701390743256,
+			"z": -0.3502465486526489,
+			"w": 0.7716301083564758
+		},
+		"type": "CPOINT",
+		"A": "body",
+		"B": "upleg2"
 	},
 	{
-	 "name": "elbow2",
-	 "pos": {
-	  "x": 1.968274712562561,
-	  "y": 1.8084851503372192,
-	  "z": 1.128298282623291
-	 },
-	 "quat": {
-	  "x": 0.2503434419631958,
-	  "y": 0.6597684025764465,
-	  "z": -0.35592737793922424,
-	  "w": 0.6126577854156494
-	 },
-	 "type": "CHINGE",
-	 "A": "upleg2",
-	 "B": "leg2"
+		"name": "elbow2",
+		"pos": {
+			"x": 1.968274712562561,
+			"y": 1.8084851503372192,
+			"z": 1.128298282623291
+		},
+		"quat": {
+			"x": 0.2503434419631958,
+			"y": 0.6597684025764465,
+			"z": -0.35592737793922424,
+			"w": 0.6126577854156494
+		},
+		"type": "CHINGE",
+		"A": "upleg2",
+		"B": "leg2"
 	},
 	{
-	 "name": "upleg3",
-	 "dim": {
-	  "x": 0.3719399869441986,
-	  "y": 2.0000007152557373,
-	  "z": 0.3193705379962921
-	 },
-	 "pos": {
-	  "x": 1.47260320186615,
-	  "y": -1.278676986694336,
-	  "z": 0.7426637411117554
-	 },
-	 "quat": {
-	  "x": 0.08820129185914993,
-	  "y": -0.20605134963989258,
-	  "z": -0.8959276080131531,
-	  "w": 0.38350626826286316
-	 },
-	 "mass": 1
+		"name": "upleg3",
+		"dim": {
+			"x": 0.3719399869441986,
+			"y": 2.0000007152557373,
+			"z": 0.3193705379962921
+		},
+		"pos": {
+			"x": 1.47260320186615,
+			"y": -1.278676986694336,
+			"z": 0.7426637411117554
+		},
+		"quat": {
+			"x": 0.08820129185914993,
+			"y": -0.20605134963989258,
+			"z": -0.8959276080131531,
+			"w": 0.38350626826286316
+		},
+		"mass": 1
 	},
 	{
-	 "name": "leg3",
-	 "dim": {
-	  "x": 0.3719399869441986,
-	  "y": 3.3090782165527344,
-	  "z": 0.3193705379962921
-	 },
-	 "pos": {
-	  "x": 2.534581184387207,
-	  "y": -2.3335957527160645,
-	  "z": -0.24280133843421936
-	 },
-	 "quat": {
-	  "x": -0.19528786838054657,
-	  "y": 0.47432416677474976,
-	  "z": -0.7937721014022827,
-	  "w": 0.32681041955947876
-	 },
-	 "mass": 1
+		"name": "leg3",
+		"dim": {
+			"x": 0.3719399869441986,
+			"y": 3.3090782165527344,
+			"z": 0.3193705379962921
+		},
+		"pos": {
+			"x": 2.534581184387207,
+			"y": -2.3335957527160645,
+			"z": -0.24280133843421936
+		},
+		"quat": {
+			"x": -0.19528786838054657,
+			"y": 0.47432416677474976,
+			"z": -0.7937721014022827,
+			"w": 0.32681041955947876
+		},
+		"mass": 1
 	},
 	{
-	 "name": "uplegpiv3",
-	 "pos": {
-	  "x": 0.8931016325950623,
-	  "y": -0.7343330383300781,
-	  "z": 0.3600959777832031
-	 },
-	 "quat": {
-	  "x": -0.209161639213562,
-	  "y": 0.48802223801612854,
-	  "z": -0.7791792154312134,
-	  "w": 0.3331148326396942
-	 },
-	 "type": "CPOINT",
-	 "A": "body",
-	 "B": "upleg3"
+		"name": "uplegpiv3",
+		"pos": {
+			"x": 0.8931016325950623,
+			"y": -0.7343330383300781,
+			"z": 0.3600959777832031
+		},
+		"quat": {
+			"x": -0.209161639213562,
+			"y": 0.48802223801612854,
+			"z": -0.7791792154312134,
+			"w": 0.3331148326396942
+		},
+		"type": "CPOINT",
+		"A": "body",
+		"B": "upleg3"
 	},
 	{
-	 "name": "elbow3",
-	 "pos": {
-	  "x": 1.9769980907440186,
-	  "y": -1.7989451885223389,
-	  "z": 1.128298282623291
-	 },
-	 "quat": {
-	  "x": 0.6299661993980408,
-	  "y": 0.31797581911087036,
-	  "z": -0.6760967969894409,
-	  "w": 0.21196015179157257
-	 },
-	 "type": "CHINGE",
-	 "A": "upleg3",
-	 "B": "leg3"
+		"name": "elbow3",
+		"pos": {
+			"x": 1.9769980907440186,
+			"y": -1.7989451885223389,
+			"z": 1.128298282623291
+		},
+		"quat": {
+			"x": 0.6299661993980408,
+			"y": 0.31797581911087036,
+			"z": -0.6760967969894409,
+			"w": 0.21196015179157257
+		},
+		"type": "CHINGE",
+		"A": "upleg3",
+		"B": "leg3"
 	},
 	{
-	 "name": "upleg0",
-	 "dim": {
-	  "x": 0.37193983793258667,
-	  "y": 2,
-	  "z": 0.3193705379962921
-	 },
-	 "pos": {
-	  "x": -1.425223469734192,
-	  "y": -1.3312822580337524,
-	  "z": 0.7426637411117554
-	 },
-	 "quat": {
-	  "x": -0.09407898783683777,
-	  "y": -0.20343495905399323,
-	  "z": -0.8845512866973877,
-	  "w": -0.40906283259391785
-	 },
-	 "mass": 1
+		"name": "upleg0",
+		"dim": {
+			"x": 0.37193983793258667,
+			"y": 2,
+			"z": 0.3193705379962921
+		},
+		"pos": {
+			"x": -1.425223469734192,
+			"y": -1.3312822580337524,
+			"z": 0.7426637411117554
+		},
+		"quat": {
+			"x": -0.09407898783683777,
+			"y": -0.20343495905399323,
+			"z": -0.8845512866973877,
+			"w": -0.40906283259391785
+		},
+		"mass": 1
 	},
 	{
-	 "name": "leg0",
-	 "dim": {
-	  "x": 0.3719398081302643,
-	  "y": 3.3090767860412598,
-	  "z": 0.3193705081939697
-	 },
-	 "pos": {
-	  "x": -2.585102081298828,
-	  "y": -2.2775027751922607,
-	  "z": -0.24280133843421936
-	 },
-	 "quat": {
-	  "x": 0.22175291180610657,
-	  "y": 0.46254342794418335,
-	  "z": -0.7740572690963745,
-	  "w": -0.3710990846157074
-	 },
-	 "mass": 1
+		"name": "leg0",
+		"dim": {
+			"x": 0.3719398081302643,
+			"y": 3.3090767860412598,
+			"z": 0.3193705081939697
+		},
+		"pos": {
+			"x": -2.585102081298828,
+			"y": -2.2775027751922607,
+			"z": -0.24280133843421936
+		},
+		"quat": {
+			"x": 0.22175291180610657,
+			"y": 0.46254342794418335,
+			"z": -0.7740572690963745,
+			"w": -0.3710990846157074
+		},
+		"mass": 1
 	},
 	{
-	 "name": "uplegpiv1",
-	 "pos": {
-	  "x": -0.8234346508979797,
-	  "y": -0.8116840124130249,
-	  "z": 0.3600959777832031
-	 },
-	 "quat": {
-	  "x": 0.22264637053012848,
-	  "y": 0.4820196032524109,
-	  "z": -0.7689757347106934,
-	  "w": -0.35603657364845276
-	 },
-	 "type": "CPOINT",
-	 "A": "body",
-	 "B": "upleg0"
+		"name": "uplegpiv1",
+		"pos": {
+			"x": -0.8234346508979797,
+			"y": -0.8116840124130249,
+			"z": 0.3600959777832031
+		},
+		"quat": {
+			"x": 0.22264637053012848,
+			"y": 0.4820196032524109,
+			"z": -0.7689757347106934,
+			"w": -0.35603657364845276
+		},
+		"type": "CPOINT",
+		"A": "body",
+		"B": "upleg0"
 	},
 	{
-	 "name": "elbow0",
-	 "pos": {
-	  "x": -1.9952385425567627,
-	  "y": -1.7786928415298462,
-	  "z": 1.128298282623291
-	 },
-	 "quat": {
-	  "x": 0.657867968082428,
-	  "y": -0.2552954852581024,
-	  "z": -0.6099652647972107,
-	  "w": -0.3605222702026367
-	 },
-	 "type": "CHINGE",
-	 "A": "upleg0",
-	 "B": "leg0"
+		"name": "elbow0",
+		"pos": {
+			"x": -1.9952385425567627,
+			"y": -1.7786928415298462,
+			"z": 1.128298282623291
+		},
+		"quat": {
+			"x": 0.657867968082428,
+			"y": -0.2552954852581024,
+			"z": -0.6099652647972107,
+			"w": -0.3605222702026367
+		},
+		"type": "CHINGE",
+		"A": "upleg0",
+		"B": "leg0"
 	}
-   ]
+]
 
-var obj1={
-	name:'sp1',
-	parts:[
+var obj1 = {
+	name: 'sp1',
+	parts: [
 		{
-			name:'body',
-			type:'Dynamic',
-			mass:1,
-			shape:'Box',
-			shapeparam:{x:0,y:0,z:0},
-			pos:{},
-			quat:{}
+			name: 'body',
+			type: 'Dynamic',
+			mass: 1,
+			shape: 'Box',
+			shapeparam: { x: 0, y: 0, z: 0 },
+			pos: {},
+			quat: {}
 		},
 		{
-			name:'elbow0',
-			type:'c_hingeworld',
-			A:'',
-			B:'',
-			pos:{},
-			quat:{}
+			name: 'elbow0',
+			type: 'c_hingeworld',
+			A: '',
+			B: '',
+			pos: {},
+			quat: {}
 		}
 	]
 };
+
+var tmpV1 = new Vec3();
+var tmpQ = new Quaternion();
+function worldPosToLocal(pos: Vec3, body: Body): Vec3 {
+	let ret = new Vec3();
+	let rpos = tmpV1;
+	pos.vsub(body.position, rpos);
+	let invq = tmpQ;
+	body.quaternion.conjugate(invq);
+	invq.vmult(rpos, ret);
+	return ret;
+}
+
+function worldQToLocal(q: Quaternion, body: Body): Quaternion {
+	let invq = tmpQ;
+	body.quaternion.conjugate(invq);
+	let ret = new Quaternion();
+	invq.mult(q, ret);
+	return ret;
+}
+
+function getZAxisFromQ(q: Quaternion) {
+	let ret = new Vec3();
+	let m = new Mat3();
+	m.setRotationFromQuaternion(q);
+	ret.set(m.ele[6], m.ele[7], m.ele[8])
+	return ret;
+}
+
+function loadObj(o: Object[]) {
+	// 创建body
+	var allpart: { [key: string]: Body } = {};
+	o.forEach((obj: any) => {
+		if (!obj.type || obj.type == "Rigid") {
+			let b = addZupBox(obj.dim, obj.mass, obj.pos, obj.quat);
+			b.setName(obj.name);
+			allpart[obj.name] = b.phyBody;
+		}
+	});
+	// 创建constraint
+	o.forEach((c: any) => {
+		switch (c.type) {
+			case 'CPOINT': {
+				let a = allpart[c.A];
+				let b = allpart[c.B];
+				let cpos = new Vec3(c.pos.x, c.pos.y, c.pos.z);
+				let cquat = new Quaternion(c.quat.x, c.quat.y, c.quat.z, c.quat.w);
+				//pos和quat转到y向上
+				ZupPos2Yup(cpos, cpos);
+				ZupQuat2Yup(cquat, cquat);
+				let ct = new PointToPointConstraint(a,
+					worldPosToLocal(cpos, a),
+					b,
+					worldPosToLocal(cpos, b));
+
+				let ct1 = new ConeTwistConstraint(a, b, 1e10,
+					worldPosToLocal(cpos, a),
+					worldPosToLocal(cpos, b),
+					getZAxisFromQ(worldQToLocal(cquat, a)),
+					getZAxisFromQ(worldQToLocal(cquat, b)),
+					deg2r(10), deg2r(10), false);
+				ct.collideConnected = false;
+				world.world.addConstraint(ct);
+			}
+				break;
+			case 'CHINGE': {
+				let a = allpart[c.A];	// a,b这时候的位置已经被修改成y向上了。
+				let b = allpart[c.B];
+				let cpos = new Vec3(c.pos.x, c.pos.y, c.pos.z);
+				let cquat = new Quaternion(c.quat.x, c.quat.y, c.quat.z, c.quat.w);
+				//pos和quat转到y向上
+				ZupPos2Yup(cpos, cpos);
+				ZupQuat2Yup(cquat, cquat);
+
+				let h = new HingeConstraint(a, b, 1e6,
+					worldPosToLocal(cpos, a),
+					worldPosToLocal(cpos, b),
+					getZAxisFromQ(worldQToLocal(cquat, a)),
+					getZAxisFromQ(worldQToLocal(cquat, b)));
+				h.collideConnected = false;
+				world.world.addConstraint(h);
+			}
+				break;
+			case '':
+				break;
+			default:
+				break;
+		}
+		//if(C.type ==)
+	});
+}
 
 /**
  * 测试盒子可以被推走，被抬起
@@ -393,7 +491,7 @@ function rand(a: number, b: number) {
 function testGround() {
 	world.world.gravity.set(0, -11, 0);
 	//plane
-	let p = addBox(new Vec3(100, 100, 100), new Vec3(0, -50, 0), 0, phymtl1);
+	let p = addBox(new Vec3(100, 100, 100), new Vec3(0, -53, 0), 0, phymtl1);
 	/*
 	let plane = new Sprite3D();
     let planephy = plane.addComponent(CannonBody) as CannonBody;
@@ -474,10 +572,10 @@ class Leg {
 class mainbody {
 	phybody: Body
 	legpoint: Vec3[] = [
-		new Vec3(0.3, 0.2, -0.3), new Vec3(1,0,0),	//point,dir。dir可以认为是插槽的方向
-		new Vec3(-0.3, 0.2, -0.3), new Vec3(-1,0,0),
-		new Vec3(0.3, 0.2, 0.3), new Vec3(1,0,0),
-		new Vec3(-0.3, 0.2, 0.3), new Vec3(-1,0,0)
+		new Vec3(0.3, 0.2, -0.3), new Vec3(1, 0, 0),	//point,dir。dir可以认为是插槽的方向
+		new Vec3(-0.3, 0.2, -0.3), new Vec3(-1, 0, 0),
+		new Vec3(0.3, 0.2, 0.3), new Vec3(1, 0, 0),
+		new Vec3(-0.3, 0.2, 0.3), new Vec3(-1, 0, 0)
 	];
 	constructor() {
 		let body = addBox(new Vec3(1, 0.4, 1), new Vec3(0, 3, 0), 2, phymtl1);
@@ -499,14 +597,6 @@ class mainbody {
 
 	}
 
-}
-
-function createJoint() {
-	let b = new mainbody();
-	b.addleg(0);
-	b.addleg(1);
-	b.addleg(2);
-	b.addleg(3);
 }
 
 function mouseDownEmitObj(scrx: number, scry: number) {
@@ -538,7 +628,7 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 	initPhy(sce);
 
 	testGround();
-	createJoint();
+	//createJoint();
 
 	Laya.stage.on(Event.MOUSE_DOWN, null, (e: { stageX: number, stageY: number }) => {
 		mouseDownEmitObj(e.stageX, e.stageY);
@@ -560,6 +650,7 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 
 	//testLift();
 	//testConveyorbelt();
+	loadObj(oo);
 
 	//b.phyBody.velocity=new Vec3(-1,0,0);
 }

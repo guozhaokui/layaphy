@@ -25,14 +25,13 @@ export const enum PhyOutEvent{
 }
 
 const _internalEvt_STARTFALL=101;	// 开始下落
-const _internalEvt_HITGROUND=104;	// 碰到地面
 
 interface ISprite {
 	phyStateEvent(evt: PhyOutEvent):void;
 	getGroundDist(maxdist:number):number;
 }
 
-const FALLDIST=2;
+var FALLDIST=2;
 /**
  * 维护一个物理状态
  */
@@ -52,6 +51,14 @@ export class CharCtrlPhyState {
 
 	isOnGround(){
 		return this.state==PhyState.GROUND;
+	}
+
+	/**
+	 * 距离地面多高能感觉到，会引起状态变换
+	 * @param v 
+	 */
+	setFallDist(v:number){
+		FALLDIST = v;
 	}
 
 	/**

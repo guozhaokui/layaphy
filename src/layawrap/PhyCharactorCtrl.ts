@@ -27,12 +27,12 @@ export class PhyCharactorCtrl extends Component implements ICharactorCtrl{
 		//TODO
 	}
 	//private _mtl =new Material('ctrl',1,0);
-	_mtl =new Material('ctrl',1,0);
+	_mtl =new Material('ctrl',0,0);
 
 	/** 当前朝向， +z为0 */
 	_curDir:number=0;	
 	/** 当前速度的值 */
-	curVel:number=10;
+	_curVel:number=10;
 
 	/** 期望速度。只有get, 没有set，因为是根据速度和朝向设置的 */
 	private _desVel =new Vec3();
@@ -306,12 +306,25 @@ export class PhyCharactorCtrl extends Component implements ICharactorCtrl{
 		//console.log('dist=',this.getGroundDist(100));
 	}
 
+	set curVel(v:number){
+		this._curVel=v;
+		if(v>0){
+			this.friction=0;
+		}else{
+			this.friction=1;
+		}
+	}
+
+	get curVel(){
+		return this._curVel;
+	}
+
 	set curDir(v:number){
 		this._curDir=v;
 		let v1 = (v+90)*Math.PI/180;	// z朝外
 
-		this._desVel.x=this.curVel*Math.cos(v1);
-		this._desVel.z=this.curVel*Math.sin(v1);
+		this._desVel.x=this._curVel*Math.cos(v1);
+		this._desVel.z=this._curVel*Math.sin(v1);
 	}
 
 	get curDir(){
@@ -319,7 +332,7 @@ export class PhyCharactorCtrl extends Component implements ICharactorCtrl{
 	}
 
 	set curVDir(v:Vec3){
-		let vl = this.curVel;
+		let vl = this._curVel;
 		this._desVel.set(v.x*vl,v.y*vl,v.z*vl);
 	}
 
