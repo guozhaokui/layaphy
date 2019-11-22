@@ -149,16 +149,18 @@ export class CharCtrlPhyState {
 						this._toState(PhyState.JUMPUP);
 						break;
 					case PhyEvent.COLLIDE:
-						this._toState(PhyState.MAYBEGROUND);
+						this._toState(PhyState.GROUND);// 直接转到地面，再判断是否下落
 						break;
 				}
 				break;
+			/*
 			case PhyState.MAYBEGROUND:
 				if(Math.abs(vel.y)<0.001){
 					this._toState(PhyState.GROUND);
 					break;
 				}
 				break;
+			*/
 		}
 	}
 
