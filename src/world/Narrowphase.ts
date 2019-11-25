@@ -269,7 +269,7 @@ export class Narrowphase {
 				if(mi.friction == Material.infiniteFriction || mj.friction==Material.infiniteFriction){
 					cm.friction=1;	// 特殊情况
 				}else
-					cm.friction = mi.friction*mj.friction;
+					cm.friction = (mi.friction+mj.friction)/2;
 				cm.restitution = mi.restitution*mj.restitution;
 			}
 			this.curm1 = mi;

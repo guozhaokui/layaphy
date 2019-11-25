@@ -352,6 +352,8 @@ export class Body extends EventTarget {
     }
 
     set mass(v:f32){
+		if(v==undefined)
+			console.error('set mass error');
         this._mass=v;
         this.updateMassProperties();
     }
