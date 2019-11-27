@@ -13,6 +13,7 @@ import {Vec3} from "./math/Vec3";
 import {Box} from "./shapes/Box";
 import {Sphere} from "./shapes/Sphere";
 import { GridBroadphase1 } from "./collision/GridBroadphase1";
+import { SAPBroadphase } from "./collision/SAPBroadphase";
 
 /**
  * 测试基于格子的宽检测方法
@@ -76,7 +77,9 @@ class gameBody extends MeshSprite3D{
 
 function initPhy(scene:Scene3D){
 	let phyworld = scene.addComponent(CannonWorld) as CannonWorld;
-	//phyworld.world.broadphase = new GridBroadphase1();
+	let world = phyworld.world;
+	//world.broadphase = new GridBroadphase1();
+	world.broadphase = new SAPBroadphase(world);
     // phyworld
     phyworld.world.gravity.set(0,0,0);
 

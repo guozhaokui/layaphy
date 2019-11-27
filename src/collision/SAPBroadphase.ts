@@ -1,5 +1,5 @@
 import {Broadphase} from './Broadphase.js';
-import {World} from '../world/World.js';
+import {World, AddBodyEvent, RemoveBodyEvent} from '../world/World.js';
 import {Body} from '../objects/Body.js';
 import {AABB} from './AABB.js';
 /**
@@ -26,20 +26,22 @@ export class SAPBroadphase extends Broadphase {
      */
     axisIndex: f32 = 0;
 
-    _addBodyHandler: (b: Body) => void;
-    _removeBodyHandler: (b: Body) => void;
+    _addBodyHandler: (b: AddBodyEvent) => void;
+    _removeBodyHandler: (b: RemoveBodyEvent) => void;
 
     constructor(world: World) {
         super();
 
         const axisList = this.axisList;
 
-        this._addBodyHandler = (body) => {
-            axisList.push(body);
+        this._addBodyHandler = (evt:AddBodyEvent) => {
+			//@ts-ignore
+            axisList.push(evt.body);
         };
 
-        this._removeBodyHandler = (body) => {
-            const idx = axisList.indexOf(body);
+        this._removeBodyHandler = (evt:RemoveBodyEvent) => {
+			//@ts-ignore
+            const idx = axisList.indexOf(evt.body);
             if (idx !== -1) {
                 axisList.splice(idx, 1);
             }
