@@ -101,7 +101,7 @@ export function Main(sce:Scene3D, mtl:BlinnPhongMaterial,cam:MouseCtrl1){
 	initPhy(sce);
 	addSphere(0,50,0,0,0);
 
-	for(let i=0; i<1000; i++){
+	for(let i=0; i<2000; i++){
 		let obj = new gameBody(1,1,2,1);
 		sce.addChild(obj);
 		obj.transform.localPosition = new Vector3(Math.random()*10,Math.random()*100+50,Math.random()*100);

@@ -171,7 +171,15 @@ export class Body extends EventTarget {
 
 	material:Material|null=null;
 	/** 线速度衰减系数，0到1 */
-    linearDamping:f32 = 0.01;
+	private _linearDamping:f32 = 0.01;
+	ldampPow=0.9998325084307209;
+	get linearDamping(){
+		return this._linearDamping;
+	}
+	set linearDamping(v:number){
+		this._linearDamping=v;
+		this.ldampPow = Math.pow(1.0-this._linearDamping,1/60);
+	}
 
     type = BODYTYPE.STATIC;
 
@@ -254,7 +262,15 @@ export class Body extends EventTarget {
      */
     fixedRotation = false;
 
-    angularDamping = 0.01;  // 旋转速度的衰减，现在没有材质能提供转动摩擦
+	private _angularDamping = 0.01;  // 旋转速度的衰减，现在没有材质能提供转动摩擦
+	adampPow=0.9998325084307209;
+	set angularDamping(v:number){
+		this._linearDamping=v;
+		this.adampPow = Math.pow(1-v,1/60);
+	}
+	get angularDamping(){
+		return this._angularDamping;
+	}
 
     /**
      * Use this property to limit the motion along any world axis. (1,1,1) will allow motion along all axes while (0,0,0) allows none.

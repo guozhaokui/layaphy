@@ -731,8 +731,6 @@ export class World extends EventTarget {
             gravity = this.gravity,
             doProfiling = this.doProfiling,
             profile = this.profile,
-			DYNAMIC = BODYTYPE.DYNAMIC,
-			KINEMATIC=BODYTYPE.KINEMATIC,
             profilingStart:f32=0,
             constraints = this.constraints,
             frictionEquationPool = World_step_frictionEquationPool,
@@ -757,14 +755,14 @@ export class World extends EventTarget {
 				if(bi.preCollision){
 					bi.preCollision();
 				}
-				if(bi.type==KINEMATIC && bi.kinematicUsePos){
+				if(bi.type==BODYTYPE.KINEMATIC && bi.kinematicUsePos){
 					//由于碰撞处理需要速度，如果kinematic没有速度的话，需要计算
 					bi.position.vsub(bi.previousPosition,bi.velocity);
 					bi.velocity.scale(1/dt, bi.velocity);	// TODO 如果插值多次会有问题么
 					// bi.quaternion; 旋转先不管，必须通过设置角速度来达到效果
 				}
 				//temp
-				if(bi.type===DYNAMIC){// static和kinematic的不响应受力的
+				if(bi.type=== BODYTYPE.DYNAMIC){// static和kinematic的不响应受力的
 					var f = bi.force, m = bi._mass;
 					let bg = bi.bodyGravity;
 					if(bg){
@@ -1027,16 +1025,15 @@ export class World extends EventTarget {
 
 		// Apply damping, see http://code.google.com/p/bullet/issues/detail?id=74 for details
 		// 衰减
-        var pow = Math.pow;
         for (i = 0; i !== N; i++) {
             var bi = bodies[i];
-            if (bi.type & DYNAMIC) { // Only for dynamic bodies
-                var ld = pow(1.0 - bi.linearDamping, dt);
+            if (bi.type & BODYTYPE.DYNAMIC) { // Only for dynamic bodies
+                var ld = bi.ldampPow;// Math.pow(1.0 - bi.linearDamping, dt);
                 var v = bi.velocity;
                 v.scale(ld, v);
                 var av = bi.angularVelocity;
                 if (av) {
-                    var ad = pow(1.0 - bi.angularDamping, dt);
+					var ad = bi.adampPow;// Math.pow(1.0 - bi.angularDamping, dt);
                     av.scale(ad, av);
                 }
             }
