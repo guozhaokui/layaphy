@@ -98,7 +98,7 @@ var oo = [
 			"z": 0.28244081139564514,
 			"w": 0.798944890499115
 		},
-		"type": "CPOINT",
+		"type": "C_POINT",
 		"A": "body",
 		"B": "upleg1"
 	},
@@ -115,7 +115,7 @@ var oo = [
 			"z": 0.16814890503883362,
 			"w": 0.6883021593093872
 		},
-		"type": "CHINGE",
+		"type": "C_HINGE",
 		"A": "upleg1",
 		"B": "leg1"
 	},
@@ -172,7 +172,7 @@ var oo = [
 			"z": -0.3502465486526489,
 			"w": 0.7716301083564758
 		},
-		"type": "CPOINT",
+		"type": "C_POINT",
 		"A": "body",
 		"B": "upleg2"
 	},
@@ -189,7 +189,7 @@ var oo = [
 			"z": -0.35592737793922424,
 			"w": 0.6126577854156494
 		},
-		"type": "CHINGE",
+		"type": "C_HINGE",
 		"A": "upleg2",
 		"B": "leg2"
 	},
@@ -246,7 +246,7 @@ var oo = [
 			"z": -0.7791792154312134,
 			"w": 0.3331148326396942
 		},
-		"type": "CPOINT",
+		"type": "C_POINT",
 		"A": "body",
 		"B": "upleg3"
 	},
@@ -263,7 +263,7 @@ var oo = [
 			"z": -0.6760967969894409,
 			"w": 0.21196015179157257
 		},
-		"type": "CHINGE",
+		"type": "C_HINGE",
 		"A": "upleg3",
 		"B": "leg3"
 	},
@@ -320,7 +320,7 @@ var oo = [
 			"z": -0.7689757347106934,
 			"w": -0.35603657364845276
 		},
-		"type": "CPOINT",
+		"type": "C_POINT",
 		"A": "body",
 		"B": "upleg0"
 	},
@@ -337,34 +337,15 @@ var oo = [
 			"z": -0.6099652647972107,
 			"w": -0.3605222702026367
 		},
-		"type": "CHINGE",
+		"type": "C_HINGE",
 		"A": "upleg0",
 		"B": "leg0"
 	}
 ]
 
-var obj1 = {
-	name: 'sp1',
-	parts: [
-		{
-			name: 'body',
-			type: 'Dynamic',
-			mass: 1,
-			shape: 'Box',
-			shapeparam: { x: 0, y: 0, z: 0 },
-			pos: {},
-			quat: {}
-		},
-		{
-			name: 'elbow0',
-			type: 'c_hingeworld',
-			A: '',
-			B: '',
-			pos: {},
-			quat: {}
-		}
-	]
-};
+var oo1 = 
+[{"name": "Cube", "dim": {"x": 2.0, "y": 2.0, "z": 2.0}, "pos": {"x": 0.0, "y": 0.0, "z": 0.0}, "quat": {"x": 0.0, "y": 0.0, "z": -0.36059334874153137, "w": 0.9327231645584106}, "mass": 1.0}, {"name": "Cube.001", "dim": {"x": 2.0, "y": 2.0, "z": 2.0}, "pos": {"x": 0.0, "y": 0.0, "z": 2.2614493370056152}, "quat": {"x": 0.0, "y": 0.0, "z": -0.36059334874153137, "w": 0.9327231645584106}, "mass": 1.0}, {"name": "Empty", "pos": {"x": 0.0, "y": 0.0, "z": 1.1762117147445679}, "quat": {"x": -0.7088689208030701, "y": 0.0, "z": 0.0, "w": 0.7053402066230774}, "type": "C_HINGE", "A": "Cube.001", "B": "Cube"}]
+;
 
 var tmpV1 = new Vec3();
 var tmpQ = new Quaternion();
@@ -378,11 +359,25 @@ function worldPosToLocal(pos: Vec3, body: Body): Vec3 {
 	return ret;
 }
 
+/**
+ * 把全局的q转到body空间
+ * @param q 
+ * @param body 
+ */
 function worldQToLocal(q: Quaternion, body: Body): Quaternion {
 	let invq = tmpQ;
 	body.quaternion.conjugate(invq);
 	let ret = new Quaternion();
+	//q.mult(invq,ret);
 	invq.mult(q, ret);
+	//DEBUG
+	/*
+	var axx = new Vec3();
+	var axy = new Vec3();
+	var axz = new Vec3();
+	ret.vmultAxis(axx,axy,axz);
+	*/
+	//DEBUG
 	return ret;
 }
 
@@ -390,7 +385,9 @@ function getZAxisFromQ(q: Quaternion) {
 	let ret = new Vec3();
 	let m = new Mat3();
 	m.setRotationFromQuaternion(q);
-	ret.set(m.ele[6], m.ele[7], m.ele[8])
+	//ret.set(m.ele[6], m.ele[7], m.ele[8])
+	let e =m.ele;
+	ret.set(e[2],e[5],e[8]);	//第三列是z轴。不是第三行
 	return ret;
 }
 
@@ -407,7 +404,7 @@ function loadObj(o: Object[]) {
 	// 创建constraint
 	o.forEach((c: any) => {
 		switch (c.type) {
-			case 'CPOINT': {
+			case 'C_POINT': {
 				let a = allpart[c.A];
 				let b = allpart[c.B];
 				let cpos = new Vec3(c.pos.x, c.pos.y, c.pos.z);
@@ -415,22 +412,22 @@ function loadObj(o: Object[]) {
 				//pos和quat转到y向上
 				ZupPos2Yup(cpos, cpos);
 				ZupQuat2Yup(cquat, cquat);
-				let ct = new PointToPointConstraint(a,
+				let ct1 = new PointToPointConstraint(a,
 					worldPosToLocal(cpos, a),
 					b,
 					worldPosToLocal(cpos, b));
 
-				let ct1 = new ConeTwistConstraint(a, b, 1e10,
+				let ct = new ConeTwistConstraint(a, b, 1e10,
 					worldPosToLocal(cpos, a),
 					worldPosToLocal(cpos, b),
 					getZAxisFromQ(worldQToLocal(cquat, a)),
 					getZAxisFromQ(worldQToLocal(cquat, b)),
-					deg2r(10), deg2r(10), false);
+					deg2r(10), deg2r(200), false); //TODO 这个twistangle有问题
 				ct.collideConnected = false;
 				world.world.addConstraint(ct);
 			}
 				break;
-			case 'CHINGE': {
+			case 'C_HINGE': {
 				let a = allpart[c.A];	// a,b这时候的位置已经被修改成y向上了。
 				let b = allpart[c.B];
 				let cpos = new Vec3(c.pos.x, c.pos.y, c.pos.z);

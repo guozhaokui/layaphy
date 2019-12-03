@@ -3,17 +3,16 @@ import { MeshSprite3D } from "laya/d3/core/MeshSprite3D";
 import { Scene3D } from "laya/d3/core/scene/Scene3D";
 import { Vector3 } from "laya/d3/math/Vector3";
 import { PrimitiveMesh } from "laya/d3/resource/models/PrimitiveMesh";
-import {CannonBody} from "./layawrap/CannonBody";
+import { SAPBroadphase } from "./collision/SAPBroadphase";
+import { CannonBody } from "./layawrap/CannonBody";
 import { CannonWorld } from "./layawrap/CannonWorld";
 import { MouseCtrl1 } from "./layawrap/ctrls/MouseCtrl1";
 import { PhyRender } from "./layawrap/PhyRender";
-import {ContactMaterial} from "./material/ContactMaterial";
-import {Material} from "./material/Material";
-import {Vec3} from "./math/Vec3";
-import {Box} from "./shapes/Box";
-import {Sphere} from "./shapes/Sphere";
-import { GridBroadphase1 } from "./collision/GridBroadphase1";
-import { SAPBroadphase } from "./collision/SAPBroadphase";
+import { ContactMaterial } from "./material/ContactMaterial";
+import { Material } from "./material/Material";
+import { Vec3 } from "./math/Vec3";
+import { Box } from "./shapes/Box";
+import { Sphere } from "./shapes/Sphere";
 
 /**
  * 测试基于格子的宽检测方法
