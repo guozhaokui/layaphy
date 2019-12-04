@@ -20,10 +20,6 @@ import { Quaternion } from "./math/Quaternion";
 import { Mat3 } from "./math/Mat3";
 import { PointToPointConstraint } from "./constraints/PointToPointConstraint";
 
-/**
- * TODO  现在的约束导入的不对，位置差不多，但是轴是错的。Hinge都是错的
- */
-
 var oo = [
 	{
 		"name": "body",
@@ -380,7 +376,7 @@ function worldQToLocal(q: Quaternion, body: Body): Quaternion {
 	//DEBUG
 	return ret;
 }
-
+ 
 function getZAxisFromQ(q: Quaternion) {
 	let ret = new Vec3();
 	let m = new Mat3();
@@ -422,7 +418,7 @@ function loadObj(o: Object[]) {
 					worldPosToLocal(cpos, b),
 					getZAxisFromQ(worldQToLocal(cquat, a)),
 					getZAxisFromQ(worldQToLocal(cquat, b)),
-					deg2r(10), deg2r(200), false); //TODO 这个twistangle有问题
+					deg2r(10), deg2r(0), false); //TODO 这个twistangle有问题
 				ct.collideConnected = false;
 				world.world.addConstraint(ct);
 			}

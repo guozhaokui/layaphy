@@ -239,6 +239,7 @@ export class Vec3 {
             n.set(this.x * inorm, this.y * inorm, this.z * inorm);
             const randVec = Vec3_tangents_randVec;
             if (Math.abs(n.x) < 0.9) {
+				// 如果没有与x轴重合，则可以用x轴来计算与n垂直的t1
                 randVec.set(1, 0, 0);
                 n.cross(randVec, t1);
             } else {

@@ -17,10 +17,14 @@ import { Camera } from "laya/d3/core/Camera";
 import { Vector2 } from "laya/d3/math/Vector2";
 import { Laya } from "Laya";
 import { World } from "./world/World";
+import { HingeConstraint } from "./constraints/HingeConstraint";
+import { PointToPointConstraint } from "./constraints/PointToPointConstraint";
+import { ConeTwistConstraint } from "./constraints/ConeTwistConstraint";
+import { Mat3 } from "./math/Mat3";
+import { Body } from "./objects/Body";
 
 var scene:Scene3D;
 var mtl:BaseMaterial;
-
 let zup2yupQ = new Quaternion();
 zup2yupQ.setFromAxisAngle(new Vec3(1,0,0),-Math.PI/2);
 
@@ -164,4 +168,147 @@ export function raycast(world:World, cam:Camera, cb:(pt:Vec3, norm:Vec3)=>void){
 		cb(r.hitPointWorld, r.hitNormalWorld);
 		//phyr.addPersistPoint( hitpt);
 	}	
+}
+
+
+var tmpV1 = new Vec3();
+var tmpQ = new Quaternion();
+function worldPosToLocal(pos: Vec3, body: Body): Vec3 {
+	let ret = new Vec3();
+	let rpos = tmpV1;
+	pos.vsub(body.position, rpos);
+	let invq = tmpQ;
+	body.quaternion.conjugate(invq);
+	invq.vmult(rpos, ret);
+	return ret;
+}
+
+/**
+ * 把全局的q转到body空间
+ * @param q 
+ * @param body 
+ */
+function worldQToLocal(q: Quaternion, body: Body): Quaternion {
+	let invq = tmpQ;
+	body.quaternion.conjugate(invq);
+	let ret = new Quaternion();
+	//q.mult(invq,ret);
+	invq.mult(q, ret);
+	//DEBUG
+	/*
+	var axx = new Vec3();
+	var axy = new Vec3();
+	var axz = new Vec3();
+	ret.vmultAxis(axx,axy,axz);
+	*/
+	//DEBUG
+	return ret;
+}
+ 
+function getZAxisFromQ(q: Quaternion) {
+	let ret = new Vec3();
+	let m = new Mat3();
+	m.setRotationFromQuaternion(q);
+	//ret.set(m.ele[6], m.ele[7], m.ele[8])
+	let e =m.ele;
+	ret.set(e[2],e[5],e[8]);	//第三列是z轴。不是第三行
+	return ret;
+}
+
+function deg2r(deg: number) {
+	return deg * Math.PI / 180;
+}
+
+/**
+ * 加载一个组合对象，这个对象是一个数组，包含body和constraint。例如
+ * 
+ [
+ {
+  "name": "Cube",
+  "dim": {"x": 2, "y": 2, "z": 2  },
+  "pos": {"x": 0, "y": 0, "z": 0  },
+  "quat": {"x": 0, "y": 0, "z": -0.36059334874153137, "w": 0.9327231645584106  },
+  "mass": 1
+ },
+ {
+  "name": "Cube.001",
+  "dim": { "x": 2, "y": 2, "z": 2  },
+  "pos": { "x": 0, "y": 0, "z": 2.2614493370056152  },
+  "quat": { "x": 0, "y": 0, "z": -0.36059334874153137, "w": 0.9327231645584106  },
+  "mass": 1
+ },
+ {
+  "name": "Empty",
+  "pos": { "x": 0, "y": 0, "z": 1.1762117147445679  },
+  "quat": { "x": -0.7088689208030701, "y": 0, "z": 0, "w": 0.7053402066230774  },
+  "type": "C_HINGE",
+  "A": "Cube.001",
+  "B": "Cube"
+ }
+]
+ * 
+ * @param o 
+ * @param world 
+ */
+export function loadObj(o: Object[],world:World) {
+	// 创建body
+	var allpart: { [key: string]: Body } = {};
+	o.forEach((obj: any) => {
+		if (!obj.type || obj.type == "Rigid") {
+			let b = addZupBox(obj.dim, obj.mass, obj.pos, obj.quat);
+			b.setName(obj.name);
+			allpart[obj.name] = b.phyBody;
+		}
+	});
+	// 创建constraint
+	o.forEach((c: any) => {
+		switch (c.type) {
+			case 'C_POINT': {
+				let a = allpart[c.A];
+				let b = allpart[c.B];
+				let cpos = new Vec3(c.pos.x, c.pos.y, c.pos.z);
+				let cquat = new Quaternion(c.quat.x, c.quat.y, c.quat.z, c.quat.w);
+				//pos和quat转到y向上
+				ZupPos2Yup(cpos, cpos);
+				ZupQuat2Yup(cquat, cquat);
+				let ct1 = new PointToPointConstraint(a,
+					worldPosToLocal(cpos, a),
+					b,
+					worldPosToLocal(cpos, b));
+
+				let ct = new ConeTwistConstraint(a, b, 1e10,
+					worldPosToLocal(cpos, a),
+					worldPosToLocal(cpos, b),
+					getZAxisFromQ(worldQToLocal(cquat, a)),
+					getZAxisFromQ(worldQToLocal(cquat, b)),
+					deg2r(10), deg2r(0), false); //TODO 这个twistangle有问题
+				ct.collideConnected = false;
+				world.addConstraint(ct);
+			}
+				break;
+			case 'C_HINGE': {
+				let a = allpart[c.A];	// a,b这时候的位置已经被修改成y向上了。
+				let b = allpart[c.B];
+				let cpos = new Vec3(c.pos.x, c.pos.y, c.pos.z);
+				let cquat = new Quaternion(c.quat.x, c.quat.y, c.quat.z, c.quat.w);
+				//pos和quat转到y向上
+				ZupPos2Yup(cpos, cpos);
+				ZupQuat2Yup(cquat, cquat);
+
+				let h = new HingeConstraint(a, b, 1e6,
+					worldPosToLocal(cpos, a),
+					worldPosToLocal(cpos, b),
+					getZAxisFromQ(worldQToLocal(cquat, a)),
+					getZAxisFromQ(worldQToLocal(cquat, b)));
+				h.collideConnected = false;
+				world.addConstraint(h);
+			}
+				break;
+			case '':
+				break;
+			default:
+				break;
+		}
+		//if(C.type ==)
+	});
 }

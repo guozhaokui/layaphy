@@ -8,15 +8,6 @@ import {Body} from '../objects/Body.js';
  * @class ConeTwistConstraint
  * @constructor
  * @author schteppe
- * @param {Body} bodyA
- * @param {Body} bodyB
- * @param {object} [options]
- * @param {Vec3} [options.pivotA]
- * @param {Vec3} [options.pivotB]
- * @param {Vec3} [options.axisA]
- * @param {Vec3} [options.axisB]
- * @param {Number} [options.maxForce=1e6]
- * @extends PointToPointConstraint
  */
 export class ConeTwistConstraint extends PointToPointConstraint {
     coneEquation:ConeEquation;
@@ -24,7 +15,20 @@ export class ConeTwistConstraint extends PointToPointConstraint {
     axisA:Vec3;
     axisB:Vec3;
     angle:f32=0;
-    twistAngle:f32=0;
+	twistAngle:f32=0;
+	/**
+	 * 
+	 * @param bodyA 
+	 * @param bodyB 
+	 * @param maxForce 
+	 * @param pivotA 
+	 * @param pivotB 
+	 * @param axisA 
+	 * @param axisB 
+	 * @param angle 
+	 * @param twistAngle 	axis 允许扭曲的弧度。实际是根据axis的垂直轴来做角度限制。
+	 * @param collideConnected 
+	 */
     constructor(bodyA:Body, bodyB:Body, maxForce:f32=1e6, pivotA=new Vec3(), pivotB=new Vec3(), axisA=new Vec3(), axisB=new Vec3(), angle:f32=0, twistAngle:f32=0, collideConnected=false) {
         super(bodyA, pivotA, bodyB, pivotB, maxForce);
         // Set pivot point in between
@@ -60,7 +64,9 @@ export class ConeTwistConstraint extends PointToPointConstraint {
         bodyA.vectorToWorldFrame(this.axisA, cone.axisA);
         bodyB.vectorToWorldFrame(this.axisB, cone.axisB);
 
-        // Update the world axes in the twist constraint
+		// Update the world axes in the twist constraint
+		// TODO 感觉这个地方有问题，各自在本地空间求tangent，然后转到世界空间，那么两个向量是不是没有同一的标准，导致角度不是期望的
+		// 以后实在不行就再加一个显式的tangent向量。
         this.axisA.tangents(twist.axisA, twist.axisA);
         bodyA.vectorToWorldFrame(twist.axisA, twist.axisA);
 
