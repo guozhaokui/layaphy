@@ -16,13 +16,13 @@ export class RigidVehicle {
     wheelAxes:Vec3[] = [];
     wheelForces:f32[] = [];
 
-    constructor(coordinateSystem: Vec3, chassisBody: Body) {
+    constructor(coordinateSystem: Vec3|null, chassisBody: Body|null) {
         this.coordinateSystem = coordinateSystem ? coordinateSystem.clone() : new Vec3(1, 2, 3);
         chassisBody && (this.chassisBody = chassisBody);
 
         if (!this.chassisBody) {
             // No chassis body given. Create it!
-            const chassisShape = new Box(new Vec3(5, 2, 0.5));
+            let chassisShape = new Box(new Vec3(5, 2, 0.5));
             this.chassisBody = new Body(1, chassisShape);
         }
     }
@@ -37,7 +37,7 @@ export class RigidVehicle {
      * @param {Vec3} [options.axis] Axis of rotation of the wheel, locally defined in the chassis.
      * @param {Body} [options.body] The wheel body.
      */
-    addWheel(body: Body, position: Vec3 = new Vec3(), direction: Vec3, axis: Vec3 = new Vec3()) {
+    addWheel(body: Body|null, position: Vec3 = new Vec3(), direction: Vec3|null=null, axis: Vec3 = new Vec3()) {
         let wheelBody = body;
         if (!wheelBody) {
             wheelBody = new Body(1, new Sphere(1.2));
@@ -56,14 +56,15 @@ export class RigidVehicle {
         // Constrain wheel
         this.wheelAxes.push(axis);
 
-        const hingeConstraint = new HingeConstraint(this.chassisBody, wheelBody, 1e6, position, Vec3.ZERO, axis, axis);
+		let hingeConstraint = new HingeConstraint(this.chassisBody, wheelBody, 1e6, position, Vec3.ZERO, axis, axis);
+		hingeConstraint.collideConnected=false;
         this.constraints.push(hingeConstraint);
         return this.wheelBodies.length - 1;
     }
 
     /**
-     * Set the steering value of a wheel.
-     * @todo check coordinateSystem
+     * 方向盘控制。 按照y轴向上的坐标系。所以只是水平旋转
+     * @param value 旋转弧度
      */
     setSteeringValue(value: f32, wheelIndex: i32) {
         // Set angle of the hinge axis
@@ -72,19 +73,26 @@ export class RigidVehicle {
         const c = Math.cos(value);
         const s = Math.sin(value);
         const x = axis.x;
-        const y = axis.y;
+        const y = axis.z;
         this.constraints[wheelIndex].axisA.set(
             c * x - s * y,
-            s * x + c * y,
-            0
+            0,
+            s * x + c * y
         );
-    }
+	}
+	
+	/**
+	 * 刹车
+	 */
+	brake(wheelIndex:int){
+        let wheel = this.wheelBodies[wheelIndex];
+	}
 
     /**
      * Set the target rotational speed of the hinge constraint.
      */
     setMotorSpeed(value:f32, wheelIndex:i32) {
-        const hingeConstraint = this.constraints[wheelIndex];
+        let hingeConstraint = this.constraints[wheelIndex];
         hingeConstraint.enableMotor();
         hingeConstraint.motorTargetVelocity = value;
     }
@@ -107,7 +115,7 @@ export class RigidVehicle {
     /**
      * Apply a torque on one of the wheels.
      */
-    applyWheelForce(value: f32, wheelIndex: i32) {
+    private applyWheelForce(value: f32, wheelIndex: i32) {
         const axis = this.wheelAxes[wheelIndex];
         const wheelBody = this.wheelBodies[wheelIndex];
         const bodyTorque = wheelBody.torque;
@@ -135,11 +143,17 @@ export class RigidVehicle {
         world.addEventListener('preStep', this._update.bind(this));
     }
 
-    _update() {
+    private _update() {
         const wheelForces = this.wheelForces;
         for (let i: i32 = 0; i < wheelForces.length; i++) {
             this.applyWheelForce(wheelForces[i], i);
-        }
+		}
+		
+		let wheels = this.wheelBodies;
+		for(let i=0; i<wheels.length; i++){
+			//let w = wheels[i];
+			//w.force.y-=100;
+		}
     }
 
     /**
@@ -167,7 +181,19 @@ export class RigidVehicle {
         const w = wheelBody.angularVelocity;
         this.chassisBody.vectorToWorldFrame(axis, worldAxis);
         return w.dot(worldAxis);
-    }
+	}
+	
+	get speed(){
+		return this.chassisBody.velocity.length();
+	}
+
+	/**
+	 * 为了增加摩擦增加的压力
+	 * @param p 
+	 */
+	addPressure(p:Vec3){
+
+	}
 }
 
 var torque = new Vec3();

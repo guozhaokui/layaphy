@@ -32,8 +32,9 @@ export class HingeConstraint extends PointToPointConstraint {
     axisB: Vec3;
     rotationalEquation1: RotationalEquation;
     rotationalEquation2: RotationalEquation;
-    motorEquation: RotationalMotorEquation;
-    motorTargetVelocity:f32=0;
+	motorEquation: RotationalMotorEquation;
+	/** TODO 这个目前还没有实现 */
+    motorTargetVelocity:f32=0;		
 
     constructor(bodyA: Body, bodyB: Body, maxForce:f32=1e6, pivotA=new Vec3(), pivotB=new Vec3(), axisA=new Vec3(1,0,0), axisB=new Vec3(1,0,0)) {
         super(bodyA, pivotA, bodyB, pivotB, maxForce);
@@ -52,7 +53,7 @@ export class HingeConstraint extends PointToPointConstraint {
             r1, // rotational1
             r2, // rotational2
             motor
-        );
+		);
     }
 
     /**

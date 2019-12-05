@@ -108,7 +108,7 @@ export class Body extends EventTarget {
 	name='noname';  // for debug
 	
 	enable=true;
-	/** 是否允许射线检测 */
+	/** 是否允许射线检测。 TODO 用collisionResponse*/
 	enableRayTest=true;	
 
     world: World|null =null;    // null 表示没有加到world中

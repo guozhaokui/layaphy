@@ -4,7 +4,7 @@ import {Body} from '../objects/Body.js';
 
 /**
  * Rotational constraint. Works to keep the local vectors orthogonal to each other in world space.
- * 旋转约束。
+ * 旋转约束。A只能绕着axisA旋转，B只能绕着axisB旋转。
  * @author schteppe
  */
 export class RotationalEquation extends Equation {

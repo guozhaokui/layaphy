@@ -44,6 +44,7 @@ export class RaycastVehicle {
      */
     indexUpAxis:i32 = 2;
 
+	/** 当前速度，单位是 Km/h */
     currentVehicleSpeedKmHour=0;
     preStepCallback:()=>void;
 
@@ -62,7 +63,6 @@ export class RaycastVehicle {
         const info = new WheelInfo(options);
         const index = this.wheelInfos.length;
         this.wheelInfos.push(info);
-
         return index;
     }
 
@@ -114,6 +114,10 @@ export class RaycastVehicle {
         this.chassisBody.vectorToWorldFrame(result, result);
     }
 
+	/**
+	 * 主逻辑
+	 * @param timeStep 
+	 */
     updateVehicle(timeStep:number) {
         const wheelInfos = this.wheelInfos;
         const numWheels = wheelInfos.length;
@@ -139,6 +143,7 @@ export class RaycastVehicle {
 
         this.updateSuspension(timeStep);
 
+		/** 每个轮胎贡献的冲击力 */
         const impulse = new Vec3();
         const relpos = new Vec3();
         for (var i = 0; i < numWheels; i++) {
@@ -173,6 +178,7 @@ export class RaycastVehicle {
                     break;
             }
 
+			// 更新轮胎旋转
             if (wheel.isInContact) {
 
                 this.getVehicleAxisWorld(this.indexForwardAxis, fwd);
@@ -210,14 +216,9 @@ export class RaycastVehicle {
             const wheel = wheelInfos[w_it];
 
             if (wheel.isInContact) {
-                let force;
-
                 // Spring
-                const susp_length = wheel.suspensionRestLength;
-                const current_length = wheel.suspensionLength;
-                const length_diff = (susp_length - current_length);
-
-                force = wheel.suspensionStiffness * length_diff * wheel.clippedInvContactDotSuspension;
+                const length_diff = (wheel.suspensionRestLength - wheel.suspensionLength);
+                let force = wheel.suspensionStiffness * length_diff * wheel.clippedInvContactDotSuspension;
 
                 // Damper
                 const projected_rel_vel = wheel.suspensionRelativeVelocity;
@@ -249,10 +250,17 @@ export class RaycastVehicle {
         this.world = null;
     }
 
-    castRay(wheel:WheelInfo) {
+	/**
+	 * wheel做射线检测
+	 * @param wheel 
+	 * @return 返回距离地面的高度，-1表示没有接触地面
+	 */
+    castRay(wheel:WheelInfo):number {
         if(!this.world)
-            return;
-        const rayvector = castRay_rayvector;
+			return -1;
+		/** 射线朝向 */
+		const rayvector = castRay_rayvector;
+		/** 射线终点 */
         const target = castRay_target;
 
         this.updateWheelTransformWorld(wheel);
@@ -260,6 +268,7 @@ export class RaycastVehicle {
 
         let depth = -1;
 
+		// 射线检测长度是悬挂缺省长度+轮胎半径
         const raylen = wheel.suspensionRestLength + wheel.radius;
 
         wheel.directionWorld.scale(raylen, rayvector);
@@ -270,23 +279,23 @@ export class RaycastVehicle {
         //const param = 0;
 
         raycastResult.reset();
-        // Turn off ray collision with the chassis temporarily
+		// Turn off ray collision with the chassis temporarily
+		// 先关掉底盘的射线检测，测完再恢复
         const oldState = chassisBody.collisionResponse;
         chassisBody.collisionResponse = false;
-
         // Cast ray against world
         this.world.rayTest(source, target, raycastResult);
         chassisBody.collisionResponse = oldState;
 
         const object = raycastResult.body;
-        wheel.raycastResult.groundObject = 0;
+        raycastResult.groundObject = 0;
         if (object) {
-            depth = raycastResult.distance;
-            wheel.raycastResult.hitNormalWorld = raycastResult.hitNormalWorld;
+			// 如果检测到物体了，表示轮胎接触地面
             wheel.isInContact = true;
+            //wheel.raycastResult.hitNormalWorld = raycastResult.hitNormalWorld;
 
-            const hitDistance = raycastResult.distance;
-            wheel.suspensionLength = hitDistance - wheel.radius;
+            depth = raycastResult.distance;
+            wheel.suspensionLength = depth - wheel.radius;
 
             // clamp on max suspension travel
             const minSuspensionLength = wheel.suspensionRestLength - wheel.maxSuspensionTravel;
@@ -295,16 +304,20 @@ export class RaycastVehicle {
                 wheel.suspensionLength = minSuspensionLength;
             }
             if (wheel.suspensionLength > maxSuspensionLength) {
+				// 超过最大长度了 。 ？？
                 wheel.suspensionLength = maxSuspensionLength;
-                wheel.raycastResult.reset();
+                raycastResult.reset();
             }
 
-            const denominator = wheel.raycastResult.hitNormalWorld.dot(wheel.directionWorld);
+			// 当前接触点的贡献值
+            const denominator = raycastResult.hitNormalWorld.dot(wheel.directionWorld);
 
+			// 当前接触点的速度
             const chassis_velocity_at_contactPoint = new Vec3();
-            chassisBody.getVelocityAtWorldPoint(wheel.raycastResult.hitPointWorld, chassis_velocity_at_contactPoint);
+            chassisBody.getVelocityAtWorldPoint(raycastResult.hitPointWorld, chassis_velocity_at_contactPoint);
 
-            const projVel = wheel.raycastResult.hitNormalWorld.dot(chassis_velocity_at_contactPoint);
+			// 速度到碰撞法线的投影
+            const projVel = raycastResult.hitNormalWorld.dot(chassis_velocity_at_contactPoint);
 
             if (denominator >= -0.1) {
                 wheel.suspensionRelativeVelocity = 0;
@@ -320,7 +333,7 @@ export class RaycastVehicle {
             //put wheel info as in rest position
             wheel.suspensionLength = wheel.suspensionRestLength + 0 * wheel.maxSuspensionTravel;
             wheel.suspensionRelativeVelocity = 0.0;
-            wheel.directionWorld.scale(-1, wheel.raycastResult.hitNormalWorld);
+            wheel.directionWorld.scale(-1, raycastResult.hitNormalWorld);
             wheel.clippedInvContactDotSuspension = 1.0;
         }
 
@@ -329,48 +342,55 @@ export class RaycastVehicle {
 
     updateWheelTransformWorld(wheel:WheelInfo) {
         wheel.isInContact = false;
-        const chassisBody = this.chassisBody;
-        chassisBody.pointToWorldFrame(wheel.chassisConnectionPointLocal, wheel.chassisConnectionPointWorld);
+		const chassisBody = this.chassisBody;
+		// 把轮子的相对连接点、上方向、轴都转到世界空间
+		chassisBody.pointToWorldFrame(wheel.chassisConnectionPointLocal, wheel.chassisConnectionPointWorld);
         chassisBody.vectorToWorldFrame(wheel.directionLocal, wheel.directionWorld);
         chassisBody.vectorToWorldFrame(wheel.axleLocal, wheel.axleWorld);
     }
 
     /**
      * Update one of the wheel transform.
-     * Note when rendering wheels: during each step, wheel transforms are updated BEFORE the chassis; ie. their position becomes invalid after the step. Thus when you render wheels, you must update wheel transforms before rendering them. See raycastVehicle demo for an example.
+     * Note when rendering wheels: during each step, wheel transforms are updated BEFORE the chassis; ie. their position becomes invalid after the step. 
+	 * Thus when you render wheels, you must update wheel transforms before rendering them. See raycastVehicle demo for an example.
      * @param wheelIndex The wheel index to update.
      */
     updateWheelTransform(wheelIndex:i32) {
-        const up = tmpVec4;
-        const right = tmpVec5;
-        const fwd = tmpVec6;
+        let up = tmpVec4;
+        let right = tmpVec5;
+        //let fwd = tmpVec6;
 
-        const wheel = this.wheelInfos[wheelIndex];
+		let wheel = this.wheelInfos[wheelIndex];
+		// 转到世界空间
         this.updateWheelTransformWorld(wheel);
 
+		// 计算本地空间的前和右
         wheel.directionLocal.scale(-1, up);
         right.copy(wheel.axleLocal);
-        up.cross(right, fwd);
-        fwd.normalize();
+        //up.cross(right, fwd);
+        //fwd.normalize();
         right.normalize();
 
-        // Rotate around steering over the wheelAxle
-        const steering = wheel.steering;
-        const steeringOrn = new Quaternion();
+		// 先在本地空间控制方向，然后再转到世界空间
+
+		// Rotate around steering over the wheelAxle
+        let steering = wheel.steering;
+        let steeringOrn = new Quaternion();	//TODO 去掉new
         steeringOrn.setFromAxisAngle(up, steering);
 
-        const rotatingOrn = new Quaternion();
+        let rotatingOrn = new Quaternion();
         rotatingOrn.setFromAxisAngle(right, wheel.rotation);
 
-        // World rotation of the wheel
-        const q = wheel.worldTransform.quaternion;
+		// World rotation of the wheel
+		// 轮子的世界空间的旋转 = 底盘旋转*方向盘*轮子旋转
+        let q = wheel.worldTransform.quaternion;
         this.chassisBody.quaternion.mult(steeringOrn, q);
         q.mult(rotatingOrn, q);
-
         q.normalize();
 
-        // world position of the wheel
-        const p = wheel.worldTransform.position;
+		// world position of the wheel
+		// 位置=世界空间位置+悬挂偏移
+        let p = wheel.worldTransform.position;
         p.copy(wheel.directionWorld);
         p.scale(wheel.suspensionLength, p);
         p.vadd(wheel.chassisConnectionPointWorld, p);
@@ -396,6 +416,7 @@ export class RaycastVehicle {
 
         //let numWheelsOnGround:i32 = 0;
 
+		// 初始化。 TODO 合并到下面
         for (var i = 0; i < numWheels; i++) {
             var wheel = wheelInfos[i];
 
@@ -543,16 +564,17 @@ export class RaycastVehicle {
     
                     // Scale the relative position in the up direction with rollInfluence.
                     // If rollInfluence is 1, the impulse will be applied on the hitPoint (easy to roll over), if it is zero it will be applied in the same plane as the center of mass (not easy to roll over).
-                    chassisBody.vectorToLocalFrame(rel_pos, rel_pos);
-                    // rel_pos['xyz'[this.indexUpAxis]] *= wheel.rollInfluence;
-                    console.error('上面这句有问题，先删掉了');
+					chassisBody.vectorToLocalFrame(rel_pos, rel_pos);
+					// rel_pos['xyz'[this.indexUpAxis]] *= wheel.rollInfluence;
+					rel_pos.y *= wheel.rollInfluence;
+                    //console.error('上面这句有问题，先删掉了');
                     chassisBody.vectorToWorldFrame(rel_pos, rel_pos);
                     chassisBody.applyImpulse(sideImp, rel_pos);
     
                     //apply friction impulse on the ground
                     sideImp.scale(-1, sideImp);
                     groundObject.applyImpulse(sideImp, rel_pos2);
-                    }
+                }
             }
         }
     }

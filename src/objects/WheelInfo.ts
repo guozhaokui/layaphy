@@ -36,10 +36,12 @@ import {Body} from './Body.js';
  * @param {boolean} [options.useCustomSlidingRotationalSpeed=false]
  * @param {number} [options.customSlidingRotationalSpeed=-0.1]
  */
+
 export class WheelInfo {
 
     /**
      * Max travel distance of the suspension, in meters.
+	 * 悬挂系统允许移动的最大范围。
      */
     maxSuspensionTravel: number=1;
 
@@ -56,31 +58,39 @@ export class WheelInfo {
     sliding = false;
 
     /**
-     * Connection point, defined locally in the chassis body frame.
+     * 轮子与底盘的连接点。
+	 * 世界空间的是以后更新的时候计算出来的
      */
     chassisConnectionPointLocal: Vec3 = new Vec3();
-
     chassisConnectionPointWorld: Vec3 = new Vec3();
 
+	/** 向下的方向 */
     directionLocal: Vec3 = new Vec3();
-
-    directionWorld: Vec3 = new Vec3();
+	directionWorld: Vec3 = new Vec3();
+	
     axleLocal: Vec3 = new Vec3();
-
     axleWorld: Vec3= new Vec3();
 
-    suspensionRestLength: number=1;
-    suspensionMaxLength: number=2;
-    radius: number=1;
-    suspensionStiffness: number=100;
+	/** 悬挂系统在正常状态下的长度。还可以伸长和压缩，范围是 maxSuspensionTravel */
+	suspensionRestLength: number=1;
+	/** 悬挂系统允许的最大长度 */
+	suspensionMaxLength: number=2;
+	
+	/** 轮胎半径 */
+	radius: number=1;
+	
+	suspensionStiffness: number=100;
+	
     dampingCompression: number=10;
-    dampingRelaxation: number=10;
+	dampingRelaxation: number=10;
+	
     frictionSlip: number=1000;
 
+	/** 方向盘方向，0表示向前 */
     steering = 0;
 
     /**
-     * Rotation value, in radians.
+	 * 当前轮子的转动弧度
      */
     rotation = 0;
     deltaRotation = 0;
@@ -90,11 +100,13 @@ export class WheelInfo {
     engineForce = 0;
     brake = 0;
     isFrontWheel=true;
-    clippedInvContactDotSuspension = 1;
+	clippedInvContactDotSuspension = 1;
+	/** 悬挂系统的相对速度。 */
     suspensionRelativeVelocity = 0;
     suspensionForce = 0;
     skidInfo = 0;
 
+	/** 当前的悬挂系统的长度 */
     suspensionLength = 0;
 
     sideImpulse = 0;
@@ -107,26 +119,26 @@ export class WheelInfo {
     raycastResult = new RaycastResult();
 
     /**
-     * Wheel world transform
+	 * 轮子的实际空间的位置和旋转
      */
     worldTransform = new Transform();
 
+	/** 轮胎是否接触地面 */
     isInContact = false;
 
     slipInfo:i32=0; //不知道有什么用，应该没用
 
     constructor(options?: any) {
-        /*
         if(options){
             this.maxSuspensionTravel = options.maxSuspensionTravel;
             this.customSlidingRotationalSpeed = options.customSlidingRotationalSpeed;
             this.useCustomSlidingRotationalSpeed = options.useCustomSlidingRotationalSpeed;
             this.chassisConnectionPointLocal = options.chassisConnectionPointLocal.clone();
-            this.chassisConnectionPointWorld = options.chassisConnectionPointWorld.clone();
+            options.chassisConnectionPointWorld && (this.chassisConnectionPointWorld.copy(options.chassisConnectionPointWorld));
             this.directionLocal = options.directionLocal.clone();
-            this.directionWorld = options.directionWorld.clone();
+            options.directionWorld && this.directionWorld.copy(options.directionWorld);
             this.axleLocal = options.axleLocal.clone();
-            this.axleWorld = options.axleWorld.clone();
+            options.axleWorld && this.axleWorld.copy( options.axleWorld);
             this.suspensionRestLength = options.suspensionRestLength;
             this.suspensionMaxLength = options.suspensionMaxLength;
             this.radius = options.radius;
@@ -138,13 +150,13 @@ export class WheelInfo {
             this.maxSuspensionForce = options.maxSuspensionForce;
             this.isFrontWheel = options.isFrontWheel;
         }
-        */
     }
 
     updateWheel(chassis:Body) {
         const raycastResult = this.raycastResult;
 
         if (this.isInContact) {
+			// 接触中
             const project = raycastResult.hitNormalWorld.dot(raycastResult.directionWorld);
             raycastResult.hitPointWorld.vsub(chassis.position, relpos);
             chassis.getVelocityAtWorldPoint(relpos, chassis_velocity_at_contactPoint);
