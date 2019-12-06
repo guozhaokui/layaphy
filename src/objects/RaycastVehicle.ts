@@ -4,6 +4,8 @@ import {World} from '../world/World.js';
 import {Body} from './Body.js';
 import {WheelInfo} from './WheelInfo.js';
 
+const gAxle=new Vec3(1,0,0);
+const gForward=new Vec3(0,0,-1);
 /**
  * Vehicle helper class that casts rays from the wheel positions towards the ground and applies forces.
  * @class RaycastVehicle
@@ -32,17 +34,17 @@ export class RaycastVehicle {
     /**
      * Index of the right axis, 0=x, 1=y, 2=z
      */
-    indexRightAxis:i32=1;
+    //indexRightAxis:i32=0;
 
     /**
      * Index of the forward axis, 0=x, 1=y, 2=z
      */
-    indexForwardAxis:i32 = 0;
+    //indexForwardAxis:i32 = 2;
 
     /**
      * Index of the up axis, 0=x, 1=y, 2=z
      */
-    indexUpAxis:i32 = 2;
+    //indexUpAxis:i32 = 1;
 
 	/** 当前速度，单位是 Km/h */
     currentVehicleSpeedKmHour=0;
@@ -50,9 +52,9 @@ export class RaycastVehicle {
 
     constructor( chassisBody:Body, indexRightAxis:i32=1, indexForwardAxis:i32=0, indexUpAxis:i32=2 ) {
         this.chassisBody = chassisBody;
-        this.indexRightAxis = typeof (indexRightAxis) !== 'undefined' ? indexRightAxis : 1;
-        this.indexForwardAxis = typeof (indexForwardAxis) !== 'undefined' ? indexForwardAxis : 0;
-        this.indexUpAxis = typeof (indexUpAxis) !== 'undefined' ? indexUpAxis : 2;
+        //this.indexRightAxis = typeof (indexRightAxis) !== 'undefined' ? indexRightAxis : 1;
+        //this.indexForwardAxis = typeof (indexForwardAxis) !== 'undefined' ? indexForwardAxis : 0;
+        //this.indexUpAxis = typeof (indexUpAxis) !== 'undefined' ? indexUpAxis : 2;
     }
 
     /**
@@ -110,7 +112,8 @@ export class RaycastVehicle {
             axisIndex === 0 ? 1 : 0,
             axisIndex === 1 ? 1 : 0,
             axisIndex === 2 ? 1 : 0
-        );
+		);
+		result.set(1,0,0);
         this.chassisBody.vectorToWorldFrame(result, result);
     }
 
@@ -130,8 +133,10 @@ export class RaycastVehicle {
         this.currentVehicleSpeedKmHour = 3.6 * chassisBody.velocity.length();
 
         const forwardWorld = new Vec3();
-        this.getVehicleAxisWorld(this.indexForwardAxis, forwardWorld);
+		//this.getVehicleAxisWorld(this.indexForwardAxis, forwardWorld);
+		this.chassisBody.vectorToWorldFrame(gForward, forwardWorld);
 
+		// 判断前进还是后退
         if (forwardWorld.dot(chassisBody.velocity) < 0) {
             this.currentVehicleSpeedKmHour *= -1;
         }
@@ -170,25 +175,28 @@ export class RaycastVehicle {
             //wheel.chassisConnectionPointWorld.vsub(chassisBody.position, relpos);
             chassisBody.getVelocityAtWorldPoint(wheel.chassisConnectionPointWorld, vel);
 
-            // Hack to get the rotation in the correct direction
+			// Hack to get the rotation in the correct direction
+			/*
             let m = 1;
             switch (this.indexUpAxis) {
                 case 1:
                     m = -1;
                     break;
-            }
+			}
+			*/
 
 			// 更新轮胎旋转
             if (wheel.isInContact) {
 
-                this.getVehicleAxisWorld(this.indexForwardAxis, fwd);
+				//this.getVehicleAxisWorld(this.indexForwardAxis, fwd);
+				this.chassisBody.vectorToWorldFrame(gForward, fwd);
                 const proj = fwd.dot(wheel.raycastResult.hitNormalWorld);
                 wheel.raycastResult.hitNormalWorld.scale(proj, hitNormalWorldScaledWithProj);
 
                 fwd.vsub(hitNormalWorldScaledWithProj, fwd);
 
                 const proj2 = fwd.dot(vel);
-                wheel.deltaRotation = m * proj2 * timeStep / wheel.radius;
+                wheel.deltaRotation = proj2 * timeStep / wheel.radius;	// 如果转反了改成-1
             }
 
             if ((wheel.sliding || !wheel.isInContact) && wheel.engineForce !== 0 && wheel.useCustomSlidingRotationalSpeed) {
@@ -435,27 +443,34 @@ export class RaycastVehicle {
             }
         }
 
+		// 计算每个轮胎的侧滑摩擦力
         for (var i = 0; i < numWheels; i++) {
             var wheel = wheelInfos[i];
 
             var groundObject = wheel.raycastResult.body;
 
             if (groundObject) {
+				// 如果此轮胎接触地面的情况
                 const axlei = axle[i];
                 const wheelTrans = this.getWheelTransformWorld(i);
 
                 // Get world axle
-                wheelTrans.vectorToWorldFrame(directions[this.indexRightAxis], axlei);
+				//wheelTrans.vectorToWorldFrame(directions[this.indexRightAxis], axlei);
+				wheelTrans.vectorToWorldFrame(gAxle, axlei);	// 轮轴
 
+				// 下面计算axle和forward。
+
+				/** 接触面法线 */
                 const surfNormalWS = wheel.raycastResult.hitNormalWorld;
                 const proj = axlei.dot(surfNormalWS);
-                surfNormalWS.scale(proj, surfNormalWS_scaled_proj);
-                axlei.vsub(surfNormalWS_scaled_proj, axlei);
+                surfNormalWS.scale(proj, surfNormalWS_scaled_proj);	// axle投影到normal上的部分
+                axlei.vsub(surfNormalWS_scaled_proj, axlei);	// 平行于接触面的分量，作为axle
                 axlei.normalize();
-
+				// 计算forward。如果axle=1,0,0, normal=0,1,0则forward指向 -z
                 surfNormalWS.cross(axlei, forwardWS[i]);
                 forwardWS[i].normalize();
 
+				// 计算侧滑导致的摩擦力。沿着车轴方向
                 wheel.sideImpulse = resolveSingleBilateral(
                     chassisBody,
                     wheel.raycastResult.hitPointWorld,
@@ -480,13 +495,15 @@ export class RaycastVehicle {
 
             wheel.slipInfo = 1;
             if (groundObject) {
-                const defaultRollingFrictionImpulse = 0;
+				const defaultRollingFrictionImpulse = 0;
+				// maxImpulse=0或者刹车的力
                 const maxImpulse = wheel.brake ? wheel.brake : defaultRollingFrictionImpulse;
 
                 // btWheelContactPoint contactPt(chassisBody,groundObject,wheelInfraycastInfo.hitPointWorld,forwardWS[wheel],maxImpulse);
-                // rollingFriction = calcRollingFriction(contactPt);
-                rollingFriction = calcRollingFriction(chassisBody, groundObject, wheel.raycastResult.hitPointWorld, forwardWS[i], maxImpulse);
-
+				// rollingFriction = calcRollingFriction(contactPt);
+				// 滚动摩擦产生的冲量
+				rollingFriction = calcRollingFriction(chassisBody, groundObject, wheel.raycastResult.hitPointWorld, forwardWS[i], maxImpulse);
+				// +engineForce
                 rollingFriction += wheel.engineForce * timeStep;
 
                 // rollingFriction = 0;
@@ -516,6 +533,7 @@ export class RaycastVehicle {
 
                 wheel.sliding = false;
                 if (impulseSquared > maximpSquared) {
+					// 超过了最大冲量，则产生滑动了
                     this.sliding = true;
                     wheel.sliding = true;
 
@@ -527,6 +545,7 @@ export class RaycastVehicle {
         }
 
         if (this.sliding) {
+			// 打滑的情况下，提供的动力会减少
             for (var i = 0; i < numWheels; i++) {
                 var wheel = wheelInfos[i];
                 if (wheel.sideImpulse !== 0) {
@@ -550,7 +569,12 @@ export class RaycastVehicle {
             if (wheel.forwardImpulse !== 0) {
                 const impulse = new Vec3();
                 forwardWS[i].scale(wheel.forwardImpulse, impulse);
-                chassisBody.applyImpulse(impulse, rel_pos);
+				chassisBody.applyImpulse(impulse, rel_pos);
+				//DEBUG
+				if(this.world){
+					this.world.phyRender.addVec1(wheel.raycastResult.hitPointWorld,impulse,2,0xffff0000);
+				}
+				//DEBUG
             }
 
             if (wheel.sideImpulse !== 0) {
@@ -573,7 +597,12 @@ export class RaycastVehicle {
     
                     //apply friction impulse on the ground
                     sideImp.scale(-1, sideImp);
-                    groundObject.applyImpulse(sideImp, rel_pos2);
+					groundObject.applyImpulse(sideImp, rel_pos2);
+					//DEBUG
+					if(this.world){
+						this.world.phyRender.addVec1(wheel.raycastResult.hitPointWorld,sideImp,2,0xffff0000);
+					}
+					//DEBUG
                 }
             }
         }
@@ -609,6 +638,14 @@ const calcRollingFriction_vel1 = new Vec3();
 const calcRollingFriction_vel2 = new Vec3();
 const calcRollingFriction_vel = new Vec3();
 
+/**
+ * 计算滚动摩擦力
+ * @param body0 
+ * @param body1 
+ * @param frictionPosWorld 			接触点的坐标
+ * @param frictionDirectionWorld 	前向量，就是摩擦力会产生的方向
+ * @param maxImpulse 				最大冲力
+ */
 function calcRollingFriction(body0:Body, body1:Body, frictionPosWorld:Vec3, frictionDirectionWorld:Vec3, maxImpulse:f32) {
     let j1 = 0;
     const contactPosWorld = frictionPosWorld;
@@ -622,17 +659,21 @@ function calcRollingFriction(body0:Body, body1:Body, frictionPosWorld:Vec3, fric
     // contactPosWorld.vsub(body1.position, rel_pos2);
 
     body0.getVelocityAtWorldPoint(contactPosWorld, vel1);
-    body1.getVelocityAtWorldPoint(contactPosWorld, vel2);
+	body1.getVelocityAtWorldPoint(contactPosWorld, vel2);
+	// 碰撞点的相对速度
     vel1.vsub(vel2, vel);
 
+	// 相对速度在摩擦力方向上的投影
     const vrel = frictionDirectionWorld.dot(vel);
+	console.log('vrel',vel.length());
 
     const denom0 = computeImpulseDenominator(body0, frictionPosWorld, frictionDirectionWorld);
     const denom1 = computeImpulseDenominator(body1, frictionPosWorld, frictionDirectionWorld);
     const relaxation = 1;
-    const jacDiagABInv = relaxation / (denom0 + denom1);
+	const jacDiagABInv = relaxation / (denom0 + denom1);
 
-    // calculate j that moves us to zero relative velocity
+	// calculate j that moves us to zero relative velocity
+	// 负的表示目标是减少相对速度
     j1 = -vrel * jacDiagABInv;
 
     if (maxImpulse < j1) {
@@ -649,14 +690,22 @@ const computeImpulseDenominator_r0 = new Vec3();
 const computeImpulseDenominator_c0 = new Vec3();
 const computeImpulseDenominator_vec = new Vec3();
 const computeImpulseDenominator_m = new Vec3();
+/**
+ * 计算body在pos位置，normal方向上的冲量的贡献量，这个位置和方向越容易引起旋转，则贡献越大？
+ * @param body 
+ * @param pos 
+ * @param normal 
+ */
 function computeImpulseDenominator( body:Body, pos:Vec3, normal:Vec3) {
+	/** r0 质心->pos */
     const r0 = computeImpulseDenominator_r0;
     const c0 = computeImpulseDenominator_c0;
     const vec = computeImpulseDenominator_vec;
     const m = computeImpulseDenominator_m;
 
     pos.vsub(body.position, r0);
-    r0.cross(normal, c0);
+	r0.cross(normal, c0);
+	
     body.invInertiaWorld.vmult(c0,m);
     m.cross(r0, vec);
 
@@ -685,8 +734,10 @@ function resolveSingleBilateral(body1:Body, pos1:Vec3, body2:Body, pos2:Vec3, no
     body1.getVelocityAtWorldPoint(pos1, vel1);
     body2.getVelocityAtWorldPoint(pos2, vel2);
 
+	// 两个点之间的相对速度
     vel1.vsub(vel2, vel);
 
+	// 相对速度在normal上的大小
     const rel_vel = normal.dot(vel);
 
     const contactDamping = 0.2;

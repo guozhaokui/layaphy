@@ -84,7 +84,7 @@ export function addBox( size:Vec3, pos:Vec3, mass:number, phyMtl:PhyMtl, randr=f
     return rigidBody;
 }
 
-function addRenderCylinder(r:number,h:number){
+export function addRenderCylinder(r:number,h:number){
 	let m = new MeshSprite3D(PrimitiveMesh.createCylinder(r,h,16))
 	scene.addChild(m);
 	m.meshRenderer.material=mtl;

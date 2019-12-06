@@ -691,6 +691,7 @@ export class Body extends EventTarget {
 
     /**
      * Apply impulse to a world point. This could for example be a point on the Body surface. An impulse is a force added to a body during a short period of time (impulse = force * time). Impulses will be added to Body.velocity and Body.angularVelocity.
+	 * 施加一个本地坐标系下的冲量。影响线速度和角速度。
      * @param   impulse The amount of impulse to add.
      * @param   relativePoint A point relative to the center of mass to apply the force on.
      */

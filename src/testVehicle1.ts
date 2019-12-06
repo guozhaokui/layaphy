@@ -5,7 +5,7 @@ import { Ray } from 'laya/d3/math/Ray';
 import { Vector2 } from 'laya/d3/math/Vector2';
 import { Vector3 } from "laya/d3/math/Vector3";
 import { Event } from "laya/events/Event";
-import { addBox, addSphere } from "./DemoUtils";
+import { addBox, addSphere, addRenderCylinder } from "./DemoUtils";
 import { CannonBody } from "./layawrap/CannonBody";
 import { CannonWorld } from "./layawrap/CannonWorld";
 import { MouseCtrl1 } from "./layawrap/ctrls/MouseCtrl1";
@@ -14,6 +14,15 @@ import { ContactMaterial } from "./material/ContactMaterial";
 import { Material } from "./material/Material";
 import { Vec3 } from "./math/Vec3";
 import { RaycastVehicle } from "./objects/RaycastVehicle";
+import { MeshSprite3D } from "laya/d3/core/MeshSprite3D";
+import { Quaternion as phyQuat } from "./math/Quaternion";
+import { Quaternion } from "laya/d3/math/Quaternion";
+import { WheelInfo } from "./objects/WheelInfo";
+import { Handler } from "laya/utils/Handler";
+import { Loader } from "laya/net/Loader";
+import { Mesh } from "laya/d3/resource/models/Mesh";
+import { Sprite3D } from "laya/d3/core/Sprite3D";
+import { Scene } from "laya/display/Scene";
 
 /**
  * 测试盒子可以被推走，被抬起
@@ -32,11 +41,64 @@ let phymtl3 = new Material();
 let cmtl1 = new ContactMaterial(phymtl1, phymtl2, 1, 0);
 let cmtl2 = new ContactMaterial(phymtl1, phymtl3, 1, 0);
 
+/*
+            var groundMaterial = new CANNON.Material("groundMaterial");
+            var wheelMaterial = new CANNON.Material("wheelMaterial");
+            var wheelGroundContactMaterial = window.wheelGroundContactMaterial = new CANNON.ContactMaterial(wheelMaterial, groundMaterial, {
+                friction: 0.3,
+                restitution: 0,
+                contactEquationStiffness: 1000
+            });
+
+            // We must add the contact materials to the world
+            world.addContactMaterial(wheelGroundContactMaterial);
+
+*/
+
 class VehicleBody extends CannonBody{
 	applyPose(){
 		super.applyPose();
 	}
 }
+
+var wheeloffq = new phyQuat();
+wheeloffq.setFromAxisAngle(new Vec3(0,0,1),Math.PI/2);
+var tempQ = new phyQuat();
+
+class CarModel{
+	wheels:MeshSprite3D[]=[];
+	initByPhy(car:RaycastVehicle){
+		car.wheelInfos.forEach((w:WheelInfo,i:int)=>{
+			let wheels = this.wheels;
+			wheels[i] = addRenderCylinder(w.radius,0.2);
+		})
+	}
+	updatePose(car:RaycastVehicle){
+		for (var i = 0; i < car.wheelInfos.length; i++) {
+			let wheelr = this.wheels[i];
+			car.updateWheelTransform(i);
+			var t = car.wheelInfos[i].worldTransform;
+			let phypos = t.position;
+			let phyquat = t.quaternion;
+			let rtranns = wheelr.transform;
+			let rpos = rtranns.position;
+			let rquat = rtranns.rotation;
+			rpos.setValue(phypos.x,phypos.y,phypos.z);
+			rtranns.position=rpos;
+			phyquat.mult(wheeloffq,tempQ);
+			rquat.x=tempQ.x; rquat.y=tempQ.y; rquat.z=tempQ.z; rquat.w=tempQ.w;
+			rtranns.rotation=rquat;
+			/*
+			var wheelBody = wheelBodies[i];
+			wheelBody.position.copy(t.position);
+			wheelBody.quaternion.copy(t.quaternion);
+			*/
+		}
+	}
+}
+
+let carR = new CarModel();
+
 
 function initPhy(scene: Scene3D) {
 	let phyworld = world = scene.addComponent(CannonWorld) as CannonWorld;
@@ -88,7 +150,24 @@ function mouseDownEmitObj(scrx: number, scry: number) {
 	sp.setVel(dir.x * v, dir.y * v, dir.z * v);
 }
 
+var wheel1:MeshSprite3D;
+
 function createCar(){
+	/*
+	Sprite3D.load("res/car/car.lh",Handler.create(null,function(sprite:Sprite3D):void{
+			var car = sprite;
+			car.transform.position = new Vector3(0,0,0);
+			sce3d.addChild(car);
+	})) 
+	*/
+	/*
+	Laya.loader.create("url",Handler.create(null,function(mesh:Mesh):void{
+		var meshSprite3D:MeshSprite3D = new MeshSprite3D(mesh);
+		var mat:BlinnPhongMaterial = new BlinnPhongMaterial();
+		meshSprite3D.meshRenderer.sharedMaterial = mat;
+		meshSprite3D.getChildByName
+	}),null,Loader.MESH)
+	*/
 	var options = {
 		radius: 0.5,
 		directionLocal: new Vec3(0, -1, 0),
@@ -100,28 +179,38 @@ function createCar(){
 		maxSuspensionForce: 100000,
 		rollInfluence:  0.01,
 		axleLocal: new Vec3(1, 0, 0),
-		chassisConnectionPointLocal: new Vec3(1, 1, 0),
+		chassisConnectionPointLocal: new Vec3(1, 0,1),
 		maxSuspensionTravel: 0.3,
 		customSlidingRotationalSpeed: -30,
 		useCustomSlidingRotationalSpeed: true
 	};
-	let chassisBody = addBox( new Vec3(5,0.1,5), new Vec3(0,10,0),100,cmtl1);
+	let chassisBody = addBox( new Vec3(1.8,0.5,4), new Vec3(0,10,0),150,cmtl1);
+	chassisBody.phyBody.allowSleep=false;	//TODO 现在加力不能唤醒，先禁止sleep
 
 	var car = new RaycastVehicle(chassisBody.phyBody);
-	options.chassisConnectionPointLocal.set(1, 0,1);
+
+	// 前轮，方向
+	options.chassisConnectionPointLocal.set(-1, 0.1, -1);
 	car.addWheel(options);
 
-	options.chassisConnectionPointLocal.set(1, 0,-1);
+	options.chassisConnectionPointLocal.set(1, 0.1,-1);
 	car.addWheel(options);
 
-	options.chassisConnectionPointLocal.set(-1, 0,1);
+	// 后轮，动力
+	options.chassisConnectionPointLocal.set(-1, 0.1, 1);
 	car.addWheel(options);
 
-	options.chassisConnectionPointLocal.set(-1, 0,-1);
+	options.chassisConnectionPointLocal.set(1, 0.1,1);
 	car.addWheel(options);	
+
+	carR.initByPhy(car);
 
 	//car.setMotorSpeed(111,2);
 	car.addToWorld(world.world);
+
+	world.world.addEventListener('postStep', function(){
+		carR.updatePose(car);
+	});	
 	return car;
 }
 
@@ -137,20 +226,22 @@ function handlKey(up:boolean,e:Event){
 
 	switch (e.keyCode) {
 		case 38: // forward
-			car.applyEngineForce(up ? 0 : -maxForce, 2);
-			car.applyEngineForce(up ? 0 : -maxForce, 3);
-			break;
-
-		case 40: // backward
 			car.applyEngineForce(up ? 0 : maxForce, 2);
 			car.applyEngineForce(up ? 0 : maxForce, 3);
 			break;
 
+		case 40: // backward
+			car.applyEngineForce(up ? 0 : -maxForce, 2);
+			car.applyEngineForce(up ? 0 : -maxForce, 3);
+			break;
+
 		case 66: // b
+			if(!up){
 			car.setBrake(brakeForce, 0);
 			car.setBrake(brakeForce, 1);
 			car.setBrake(brakeForce, 2);
 			car.setBrake(brakeForce, 3);
+			}
 			break;
 
 		case 39: // right

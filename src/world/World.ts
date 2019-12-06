@@ -283,7 +283,7 @@ export class World extends EventTarget {
 
     doProfiling = false;
 
-    profile = new profileData();
+    private profile = new profileData();
 
     /**
      * Time accumulator for interpolation. See http://gafferongames.com/game-physics/fix-your-timestep/
@@ -303,7 +303,7 @@ export class World extends EventTarget {
      */
     removeBodyEvent = new RemoveBodyEvent(null); 
 
-    idToBodyMap:{[id:string]:Body} = {};
+    private idToBodyMap:{[id:string]:Body} = {};
 
 	_phyRender:PhyRender;
 	
@@ -312,7 +312,7 @@ export class World extends EventTarget {
 	 */
 	_noDynamic=true;	
 
-	_pause=false;
+	private _pause=false;
 
     constructor(options?:any) {
         super();

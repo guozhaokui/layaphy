@@ -109,8 +109,10 @@ export class WheelInfo {
 	/** 当前的悬挂系统的长度 */
     suspensionLength = 0;
 
+	/** 由于侧滑导致的力 */
     sideImpulse = 0;
 
+	/** 提供的向前的力 */
     forwardImpulse = 0;
 
     /**
