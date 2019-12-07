@@ -152,7 +152,8 @@ export class RaycastVehicle {
         const impulse = new Vec3();
         const relpos = new Vec3();
         for (var i = 0; i < numWheels; i++) {
-            //apply suspension force
+			//apply suspension force
+			// 悬挂提供的力，影响底盘
             var wheel = wheelInfos[i];
             let suspensionForce = wheel.suspensionForce;
             if (suspensionForce > wheel.maxSuspensionForce) {
@@ -196,7 +197,7 @@ export class RaycastVehicle {
                 fwd.vsub(hitNormalWorldScaledWithProj, fwd);
 
                 const proj2 = fwd.dot(vel);
-                wheel.deltaRotation = -proj2 * timeStep / wheel.radius;	// 如果转反了改成-1
+                wheel.deltaRotation = -proj2 * timeStep / wheel.radius;	// 如果转反了改-1
             }
 
             if ((wheel.sliding || !wheel.isInContact) && wheel.engineForce !== 0 && wheel.useCustomSlidingRotationalSpeed) {
@@ -269,8 +270,9 @@ export class RaycastVehicle {
 		/** 射线朝向 */
 		const rayvector = castRay_rayvector;
 		/** 射线终点 */
-        const target = castRay_target;
-
+		const target = castRay_target;
+		
+        wheel.isInContact = false;
         this.updateWheelTransformWorld(wheel);
         const chassisBody = this.chassisBody;
 
@@ -349,7 +351,6 @@ export class RaycastVehicle {
     }
 
     updateWheelTransformWorld(wheel:WheelInfo) {
-        wheel.isInContact = false;
 		const chassisBody = this.chassisBody;
 		// 把轮子的相对连接点、上方向、轴都转到世界空间
 		chassisBody.pointToWorldFrame(wheel.chassisConnectionPointLocal, wheel.chassisConnectionPointWorld);

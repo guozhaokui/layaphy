@@ -1,30 +1,24 @@
 import { Laya } from "Laya";
 import { BlinnPhongMaterial } from "laya/d3/core/material/BlinnPhongMaterial";
+import { MeshSprite3D } from "laya/d3/core/MeshSprite3D";
 import { Scene3D } from "laya/d3/core/scene/Scene3D";
+import { Sprite3D } from "laya/d3/core/Sprite3D";
 import { Ray } from 'laya/d3/math/Ray';
 import { Vector2 } from 'laya/d3/math/Vector2';
 import { Vector3 } from "laya/d3/math/Vector3";
 import { Event } from "laya/events/Event";
-import { addBox, addSphere, addRenderCylinder, loadSce, PhyObj } from "./DemoUtils";
-import { CannonBody } from "./layawrap/CannonBody";
+import { Handler } from "laya/utils/Handler";
+import { addBox, addRenderCylinder, addSphere, loadSce, PhyObj } from "./DemoUtils";
 import { CannonWorld } from "./layawrap/CannonWorld";
 import { MouseCtrl1 } from "./layawrap/ctrls/MouseCtrl1";
 import { PhyRender } from "./layawrap/PhyRender";
 import { ContactMaterial } from "./material/ContactMaterial";
 import { Material } from "./material/Material";
+import { Quaternion as phyQuat } from "./math/Quaternion";
 import { Vec3 } from "./math/Vec3";
 import { RaycastVehicle } from "./objects/RaycastVehicle";
-import { MeshSprite3D } from "laya/d3/core/MeshSprite3D";
-import { Quaternion as phyQuat } from "./math/Quaternion";
-import { Quaternion } from "laya/d3/math/Quaternion";
 import { WheelInfo } from "./objects/WheelInfo";
-import { Handler } from "laya/utils/Handler";
-import { Loader } from "laya/net/Loader";
-import { Mesh } from "laya/d3/resource/models/Mesh";
-import { Sprite3D } from "laya/d3/core/Sprite3D";
-import { Scene } from "laya/display/Scene";
-import { Transform3D } from "laya/d3/core/Transform3D";
-import { Transform } from "./math/Transform";
+import { Sprite } from "laya/display/Sprite";
 
 /**
  * 测试盒子可以被推走，被抬起
@@ -57,6 +51,12 @@ let cmtl2 = new ContactMaterial(phymtl1, phymtl3, 1, 0);
 
 */
 
+class Dashboard extends Sprite{
+	speed=0;
+	force=0;
+
+}
+
 /*
 var wheeloffq = new phyQuat();
 wheeloffq.setFromAxisAngle(new Vec3(0,0,1),Math.PI/2);
@@ -70,6 +70,10 @@ class CarModel{
 	chassisoffp = new Vec3();		// 车身偏移，即重心的位置取反。车身的原点在000
 	wheels:MeshSprite3D[]=[];	// TODO 对于轮子可以做到不需要这个。
 	wheelsOffQuat:phyQuat[]=[];
+	wheelstrackf:Vec3[]=[];
+	wheelstrackr:Vec3[]=[];
+	tracklen=1000;
+
 	initByPhy(car:RaycastVehicle){
 		car.wheelInfos.forEach((w:WheelInfo,i:int)=>{
 			let wheels = this.wheels;
@@ -77,6 +81,7 @@ class CarModel{
 			this.wheelsOffQuat[i]=new phyQuat();
 		})
 	}
+
 	updatePose(car:RaycastVehicle){
 		if(this.chassis){
 			let phypos = car.chassisBody.position;
@@ -113,12 +118,35 @@ class CarModel{
 			phyquat.mult(wheeloffq,tempQ);
 			rquat.x=tempQ.x; rquat.y=tempQ.y; rquat.z=tempQ.z; rquat.w=tempQ.w;
 			rtranns.rotation=rquat;
+
+			let wheelinfo = car.wheelInfos[i];
+			if(wheelinfo.isInContact){
+				if(wheelinfo.isFrontWheel){
+					this.wheelstrackf.push(wheelinfo.raycastResult.hitPointWorld.clone());
+					if(this.wheelstrackf.length>this.tracklen){
+						this.wheelstrackf.shift();
+					}
+				}else{
+					this.wheelstrackr.push(wheelinfo.raycastResult.hitPointWorld.clone());
+					if(this.wheelstrackr.length>this.tracklen){
+						this.wheelstrackr.shift();
+					}
+				}
+			}
 			/*
 			var wheelBody = wheelBodies[i];
 			wheelBody.position.copy(t.position);
 			wheelBody.quaternion.copy(t.quaternion);
 			*/
 		}
+
+		let phyr = world.world.phyRender;
+		this.wheelstrackf.forEach((v:Vec3)=>{
+			phyr.addVec(v.x,v.y,v.z,0,.1,0,0x000000);
+		});
+		this.wheelstrackr.forEach((v:Vec3)=>{
+			phyr.addVec(v.x,v.y,v.z,0,.1,0,0x00ff00);
+		});
 	}
 }
 
@@ -185,7 +213,16 @@ var carData={
 	 *  2. 车身模型根据这个来偏移：模型原点在000，所以移动模型的时候，要减去这个
 	 */
 	center:new Vec3(0,0.486,0),	
+	mass:1500,
+	单轮拉力:10000,
+	单轮刹车:100000,
 	radius:0.4,
+	悬挂硬度:30,
+	悬挂平时长度:0.2,
+	悬挂最大移动范围:0.3,		// 在正负v之间
+	悬挂移动范围:0,
+	悬挂提供的最大力:100000,		// 支撑底盘
+	侧滑翻滚系数:0.01,			// 0的时候，侧滑力会施加到中心，不易翻滚，1的时候，侧滑力施加在轮胎接触点，基本上一拐弯就翻车
 	flpos:new Vec3(0.773268, 0.406936, 1.41364),
 	frpos:new Vec3(-0.773268, 0.406936, 1.41364),
 	rlpos:new Vec3(0.773268, 0.406936, -1.5505),
@@ -241,25 +278,27 @@ function createCar(){
 	var options = {
 		radius: carData.radius,
 		directionLocal: new Vec3(0, -1, 0),
-		suspensionStiffness: 30,
-		suspensionRestLength: 0.2,
+		suspensionStiffness: carData.悬挂硬度,
+		suspensionRestLength: carData.悬挂平时长度,
 		frictionSlip: 5,
 		dampingRelaxation: 2.3,
 		dampingCompression: 4.4,
-		maxSuspensionForce: 100000,
-		rollInfluence:  0.01,
+		maxSuspensionForce: carData.悬挂提供的最大力,
+		rollInfluence:  carData.侧滑翻滚系数,
 		axleLocal: new Vec3(1, 0, 0),
 		chassisConnectionPointLocal: new Vec3(1, 0,1),
-		maxSuspensionTravel: 0.3,
+		maxSuspensionTravel: carData.悬挂最大移动范围,
 		customSlidingRotationalSpeed: -30,
-		useCustomSlidingRotationalSpeed: true
+		useCustomSlidingRotationalSpeed: true,
+		isFrontWheel:true
 	};
-	let chassisBody = addBox( new Vec3(1.8,0.5,4), new Vec3(-5,7,0),1500,cmtl1);
+	let chassisBody = addBox( new Vec3(1.8,0.5,4), new Vec3(-5,7,0),carData.mass,cmtl1);
 	chassisBody.phyBody.allowSleep=false;	//TODO 现在加力不能唤醒，先禁止sleep
 
 	var car = new RaycastVehicle(chassisBody.phyBody);
 
 	// 前轮，方向
+	options.isFrontWheel=true;
 	carData.flpos.vsub(carData.center,options.chassisConnectionPointLocal);
 	car.addWheel(options);
 
@@ -267,6 +306,7 @@ function createCar(){
 	car.addWheel(options);
 
 	// 后轮，动力
+	options.isFrontWheel=false;
 	carData.rlpos.vsub(carData.center,options.chassisConnectionPointLocal);
 	car.addWheel(options);
 
@@ -286,8 +326,8 @@ function createCar(){
 
 function handlKey(up:boolean,e:Event){
 	var maxSteerVal = 0.5;
-	var maxForce = 10000;
-	var brakeForce = 1000000;
+	var maxForce = carData.单轮拉力;
+	var brakeForce = carData.单轮刹车;
 
 	car.setBrake(0, 0);
 	car.setBrake(0, 1);
@@ -324,7 +364,7 @@ function handlKey(up:boolean,e:Event){
 			car.setSteeringValue(up ? 0 : maxSteerVal, 1);
 			break;
 		case 'R'.charCodeAt(0):
-			car.chassisBody.position.set(0,0,0);
+			//car.chassisBody.position.set(0,0,0);
 			car.chassisBody.quaternion.set(0,0,0,1);
 			break;
 		default:
@@ -364,6 +404,6 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 	car = createCar();
 	setInterval(() => {
 		console.log('speed=',car.currentVehicleSpeedKmHour,'Km/H');
-	}, 5000);
+	}, 1000);
 	//b.phyBody.velocity=new Vec3(-1,0,0);
 }
