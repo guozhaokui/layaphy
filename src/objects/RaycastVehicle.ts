@@ -196,7 +196,7 @@ export class RaycastVehicle {
                 fwd.vsub(hitNormalWorldScaledWithProj, fwd);
 
                 const proj2 = fwd.dot(vel);
-                wheel.deltaRotation = proj2 * timeStep / wheel.radius;	// 如果转反了改成-1
+                wheel.deltaRotation = -proj2 * timeStep / wheel.radius;	// 如果转反了改成-1
             }
 
             if ((wheel.sliding || !wheel.isInContact) && wheel.engineForce !== 0 && wheel.useCustomSlidingRotationalSpeed) {
@@ -665,7 +665,7 @@ function calcRollingFriction(body0:Body, body1:Body, frictionPosWorld:Vec3, fric
 
 	// 相对速度在摩擦力方向上的投影
     const vrel = frictionDirectionWorld.dot(vel);
-	console.log('vrel',vel.length());
+	//console.log('vrel',vel.length());
 
     const denom0 = computeImpulseDenominator(body0, frictionPosWorld, frictionDirectionWorld);
     const denom1 = computeImpulseDenominator(body1, frictionPosWorld, frictionDirectionWorld);
