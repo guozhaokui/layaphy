@@ -57,17 +57,12 @@ let cmtl2 = new ContactMaterial(phymtl1, phymtl3, 1, 0);
 
 */
 
-class VehicleBody extends CannonBody{
-	applyPose(){
-		super.applyPose();
-	}
-}
-
 /*
 var wheeloffq = new phyQuat();
 wheeloffq.setFromAxisAngle(new Vec3(0,0,1),Math.PI/2);
 */
 var tempQ = new phyQuat();
+var lastTarget=new Vec3();
 
 class CarModel{
 	chassis:MeshSprite3D;
@@ -95,6 +90,12 @@ class CarModel{
 			phyquat.mult(this.chassisoffq,tempQ);
 			rquat.x = tempQ.x;rquat.y = tempQ.y;rquat.z = tempQ.z;rquat.w = tempQ.w;
 			this.chassis.transform.rotation=rquat;
+
+			// 控制摄像机
+			lastTarget.vadd(phypos,lastTarget);
+			lastTarget.scale(0.5,lastTarget);
+			camctr.target.setValue(lastTarget.x,lastTarget.y,lastTarget.z);
+			camctr.updateCam(true);
 		}
 
 		for (var i = 0; i < car.wheelInfos.length; i++) {
@@ -174,14 +175,10 @@ function mouseDownEmitObj(scrx: number, scry: number) {
 	sp.setVel(dir.x * v, dir.y * v, dir.z * v);
 }
 
-var wheel1:MeshSprite3D;
-
-function worldtolocalTrans(wtrans:Transform3D, phypos:Vec3, phyrot:Quaternion, out:Transform3D){
-
-}
 
 // 车面向屏幕外面。位置是模型的全局坐标
 var carData={
+	modelUrl:'res/car/car.lh',
 	/**
 	 * 重心。是整个车的原点，其他的位置都根据他来算
 	 * 	1. 车身物理的shape根据这个来偏移
@@ -193,12 +190,13 @@ var carData={
 	frpos:new Vec3(-0.773268, 0.406936, 1.41364),
 	rlpos:new Vec3(0.773268, 0.406936, -1.5505),
 	rrpos:new Vec3(-0.773268, 0.406936, -1.5505),
+	
 }
 
 
 function createCar(){
-	Sprite3D.load("res/car/car.lh",Handler.create(null,function(sprite:Sprite3D):void{
-			sprite.transform.position = new Vector3(0,0,0);
+	Sprite3D.load(carData.modelUrl,Handler.create(null,function(sprite:Sprite3D):void{
+			//sprite.transform.position = new Vector3(0,0,0);
 			sce3d.addChild(sprite);
 			let chassis = sprite.getChildByName('SM_Veh_Convertable_01') as MeshSprite3D;
 			let wheelfl = sprite.getChildByName('Wheel_fl') as MeshSprite3D;
@@ -256,7 +254,7 @@ function createCar(){
 		customSlidingRotationalSpeed: -30,
 		useCustomSlidingRotationalSpeed: true
 	};
-	let chassisBody = addBox( new Vec3(1.8,0.5,4), new Vec3(-5,7,0),150,cmtl1);
+	let chassisBody = addBox( new Vec3(1.8,0.5,4), new Vec3(-5,7,0),1500,cmtl1);
 	chassisBody.phyBody.allowSleep=false;	//TODO 现在加力不能唤醒，先禁止sleep
 
 	var car = new RaycastVehicle(chassisBody.phyBody);
@@ -288,7 +286,7 @@ function createCar(){
 
 function handlKey(up:boolean,e:Event){
 	var maxSteerVal = 0.5;
-	var maxForce = 1000;
+	var maxForce = 10000;
 	var brakeForce = 1000000;
 
 	car.setBrake(0, 0);
@@ -311,8 +309,8 @@ function handlKey(up:boolean,e:Event){
 			if(!up){
 			car.setBrake(brakeForce, 0);
 			car.setBrake(brakeForce, 1);
-			car.setBrake(brakeForce, 2);
-			car.setBrake(brakeForce, 3);
+			//car.setBrake(brakeForce, 2);
+			//car.setBrake(brakeForce, 3);
 			}
 			break;
 
@@ -324,6 +322,10 @@ function handlKey(up:boolean,e:Event){
 		case 37: // left
 			car.setSteeringValue(up ? 0 : maxSteerVal, 0);
 			car.setSteeringValue(up ? 0 : maxSteerVal, 1);
+			break;
+		case 'R'.charCodeAt(0):
+			car.chassisBody.position.set(0,0,0);
+			car.chassisBody.quaternion.set(0,0,0,1);
 			break;
 		default:
 			break;
@@ -338,7 +340,7 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 	//mtl.renderMode = BlinnPhongMaterial.RENDERMODE_TRANSPARENT;
 	initPhy(sce);
 	let sceobj =
-	[{"name": "Cube", "dim": {"x": 20.0, "y": 40.0, "z": 0.20000004768371582}, "pos": {"x": -9.5367431640625e-07, "y": 2.384185791015625e-07, "z": 2.384185791015625e-07}, "quat": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}, "mass": 0}, {"name": "Cube.001", "dim": {"x": 2.0, "y": 8.0, "z": 0.30000001192092896}, "pos": {"x": -10.583667755126953, "y": 1.719085931777954, "z": 0.19451212882995605}, "quat": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}, "mass": 0}, {"name": "Cube.003", "dim": {"x": 1.2832520008087158, "y": 44.06886672973633, "z": 8.352557182312012}, "pos": {"x": 10.349227905273438, "y": -0.4336942434310913, "z": 3.357720375061035}, "quat": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}, "mass": 0}, {"name": "Cube.002", "dim": {"x": 2.0, "y": 8.0, "z": 0.30000001192092896}, "pos": {"x": -12.58366584777832, "y": 1.719085931777954, "z": 0.49451208114624023}, "quat": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}, "mass": 0}, {"name": "Cube.004", "dim": {"x": 2.0, "y": 8.0, "z": 0.30000001192092896}, "pos": {"x": -14.58366584777832, "y": 1.719085931777954, "z": 0.7945119142532349}, "quat": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}, "mass": 0}, {"name": "Cube.005", "dim": {"x": 2.0, "y": 8.0, "z": 0.30000001192092896}, "pos": {"x": -16.583667755126953, "y": 1.719085931777954, "z": 1.0945121049880981}, "quat": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}, "mass": 0}, {"name": "Cube.006", "dim": {"x": 20.69036293029785, "y": 2.0, "z": 8.276045799255371}, "pos": {"x": 0.10714340209960938, "y": -21.061107635498047, "z": 3.2415902614593506}, "quat": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}, "mass": 0}, {"name": "Cube.007", "dim": {"x": 21.156166076660156, "y": 2.0, "z": 22.843353271484375}, "pos": {"x": 0.7932448387145996, "y": 28.999530792236328, "z": 5.831474304199219}, "quat": {"x": -0.4526829719543457, "y": -0.0, "z": 0.0, "w": 0.8916715383529663}, "mass": 0}, {"name": "Cube.008", "dim": {"x": 2.0, "y": 2.0, "z": 2.0}, "pos": {"x": 0.82879638671875, "y": 29.197895050048828, "z": 15.298372268676758}, "quat": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}, "mass": 0}, {"name": "Cube.009", "dim": {"x": 0.5103281736373901, "y": 15.272051811218262, "z": 7.38112735748291}, "pos": {"x": 2.218686819076538, "y": -5.52827787399292, "z": 3.0185797214508057}, "quat": {"x": 0.0, "y": 0.0, "z": 0.17481115460395813, "w": 0.9846019744873047}, "mass": 0}, {"name": "Cube.010", "dim": {"x": 39.56965637207031, "y": 46.535789489746094, "z": 2.0}, "pos": {"x": -36.34748840332031, "y": -1.1900715827941895, "z": 0.12122726440429688}, "quat": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}, "mass": 0}, {"name": "Cube.011", "dim": {"x": 2.0, "y": 7.9040608406066895, "z": 2.0}, "pos": {"x": -29.992624282836914, "y": -8.7035551071167, "z": 4.685491561889648}, "quat": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}, "mass": 0}, {"name": "Cube.012", "dim": {"x": 10.628738403320312, "y": 6.746131420135498, "z": 2.0}, "pos": {"x": -11.732584953308105, "y": -10.690053939819336, "z": -0.7721989154815674}, "quat": {"x": 0.0, "y": 0.07997595518827438, "z": 0.0, "w": 0.9967967867851257}, "mass": 0}]
+	[{"name": "Cube", "dim": {"x": 20.0, "y": 40.0, "z": 0.20000004768371582}, "pos": {"x": -9.5367431640625e-07, "y": 2.384185791015625e-07, "z": 2.384185791015625e-07}, "quat": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}, "mass": 0}, {"name": "Cube.001", "dim": {"x": 2.0, "y": 8.0, "z": 0.30000001192092896}, "pos": {"x": -10.583667755126953, "y": 1.719085931777954, "z": 0.19451212882995605}, "quat": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}, "mass": 0}, {"name": "Cube.002", "dim": {"x": 2.0, "y": 8.0, "z": 0.30000001192092896}, "pos": {"x": -12.58366584777832, "y": 1.719085931777954, "z": 0.49451208114624023}, "quat": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}, "mass": 0}, {"name": "Cube.004", "dim": {"x": 2.0, "y": 8.0, "z": 0.30000001192092896}, "pos": {"x": -14.58366584777832, "y": 1.719085931777954, "z": 0.7945119142532349}, "quat": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}, "mass": 0}, {"name": "Cube.005", "dim": {"x": 2.0, "y": 8.0, "z": 0.30000001192092896}, "pos": {"x": -16.583667755126953, "y": 1.719085931777954, "z": 1.0945121049880981}, "quat": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}, "mass": 0}, {"name": "Cube.007", "dim": {"x": 21.156166076660156, "y": 2.0, "z": 22.843351364135742}, "pos": {"x": 0.7932448387145996, "y": 29.810110092163086, "z": 1.923642873764038}, "quat": {"x": -0.6076875925064087, "y": -2.8394364189311764e-17, "z": -1.2932333602556147e-17, "w": 0.7941761612892151}, "mass": 0}, {"name": "Cube.010", "dim": {"x": 39.56965637207031, "y": 46.535789489746094, "z": 2.0}, "pos": {"x": -36.34748840332031, "y": -1.1900715827941895, "z": 0.12122726440429688}, "quat": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}, "mass": 0}, {"name": "Cube.011", "dim": {"x": 2.0, "y": 7.904061317443848, "z": 2.0}, "pos": {"x": -28.82550811767578, "y": 20.522964477539062, "z": 5.052074909210205}, "quat": {"x": -0.7062811851501465, "y": -0.0, "z": 0.0, "w": 0.7079314589500427}, "mass": 0}, {"name": "Cube.012", "dim": {"x": 10.628738403320312, "y": 6.746131420135498, "z": 2.0}, "pos": {"x": -11.732584953308105, "y": -10.690053939819336, "z": -0.7721989154815674}, "quat": {"x": 0.0, "y": 0.07997595518827438, "z": 0.0, "w": 0.9967967867851257}, "mass": 0}, {"name": "Cube.013", "dim": {"x": 21.156166076660156, "y": 2.000000238418579, "z": 22.843355178833008}, "pos": {"x": 0.7932448387145996, "y": 50.98167037963867, "z": 4.678845405578613}, "quat": {"x": -0.7063905000686646, "y": -5.2919352835390326e-17, "z": -2.6763240121973548e-17, "w": 0.7078224420547485}, "mass": 0}, {"name": "Cube.014", "dim": {"x": 21.156166076660156, "y": 2.000000238418579, "z": 22.84335708618164}, "pos": {"x": 0.7932448387145996, "y": 72.1532211303711, "z": 1.0535789728164673}, "quat": {"x": -0.8072583079338074, "y": -8.069866853459951e-17, "z": -4.249768775422248e-17, "w": 0.5901987552642822}, "mass": 0}]
 	loadSce(sce, phymtl2, sceobj as PhyObj[], true)
 
 
