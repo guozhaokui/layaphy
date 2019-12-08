@@ -72,7 +72,9 @@ class CarModel{
 	wheelsOffQuat:phyQuat[]=[];
 	wheelstrackf:Vec3[]=[];
 	wheelstrackr:Vec3[]=[];
+	wheelstrackslid:Vec3[]=[];
 	tracklen=1000;
+	private static tmpV1:Vec3=new Vec3();
 
 	initByPhy(car:RaycastVehicle){
 		car.wheelInfos.forEach((w:WheelInfo,i:int)=>{
@@ -89,7 +91,9 @@ class CarModel{
 			let rpos = this.chassis.transform.position;
 			let rquat = this.chassis.transform.rotation;
 			let poff = carData.center;
-			rpos.setValue(phypos.x-poff.x,phypos.y-poff.y,phypos.z-poff.z);
+			var npoff = CarModel.tmpV1;
+			phyquat.vmult(poff,npoff)
+			rpos.setValue(phypos.x-npoff.x,phypos.y-npoff.y,phypos.z-npoff.z);
 			this.chassis.transform.position=rpos;
 
 			phyquat.mult(this.chassisoffq,tempQ);
@@ -120,16 +124,23 @@ class CarModel{
 			rtranns.rotation=rquat;
 
 			let wheelinfo = car.wheelInfos[i];
-			if(wheelinfo.isInContact){
-				if(wheelinfo.isFrontWheel){
-					this.wheelstrackf.push(wheelinfo.raycastResult.hitPointWorld.clone());
-					if(this.wheelstrackf.length>this.tracklen){
-						this.wheelstrackf.shift();
-					}
-				}else{
-					this.wheelstrackr.push(wheelinfo.raycastResult.hitPointWorld.clone());
-					if(this.wheelstrackr.length>this.tracklen){
-						this.wheelstrackr.shift();
+			if(wheelinfo.sliding){
+				this.wheelstrackslid.push(wheelinfo.raycastResult.hitPointWorld.clone());
+				if(this.wheelstrackslid.length>this.tracklen){
+					this.wheelstrackslid.shift();
+				}
+			}else{
+				if(wheelinfo.isInContact){
+					if(wheelinfo.isFrontWheel){
+						this.wheelstrackf.push(wheelinfo.raycastResult.hitPointWorld.clone());
+						if(this.wheelstrackf.length>this.tracklen){
+							this.wheelstrackf.shift();
+						}
+					}else{
+						this.wheelstrackr.push(wheelinfo.raycastResult.hitPointWorld.clone());
+						if(this.wheelstrackr.length>this.tracklen){
+							this.wheelstrackr.shift();
+						}
 					}
 				}
 			}
@@ -142,10 +153,13 @@ class CarModel{
 
 		let phyr = world.world.phyRender;
 		this.wheelstrackf.forEach((v:Vec3)=>{
-			phyr.addVec(v.x,v.y,v.z,0,.1,0,0x000000);
+			phyr.addVec(v.x,v.y,v.z,0,.1,0,0xff6666);
 		});
 		this.wheelstrackr.forEach((v:Vec3)=>{
-			phyr.addVec(v.x,v.y,v.z,0,.1,0,0x00ff00);
+			phyr.addVec(v.x,v.y,v.z,0,.1,0,0x66ff66);
+		});
+		this.wheelstrackslid.forEach((v)=>{
+			phyr.addVec(v.x,v.y,v.z,0,.2,0,0x000000);
 		});
 	}
 }
@@ -217,12 +231,17 @@ var carData={
 	单轮拉力:10000,
 	单轮刹车:100000,
 	radius:0.4,
-	悬挂硬度:30,
 	悬挂平时长度:0.2,
 	悬挂最大移动范围:0.3,		// 在正负v之间
 	悬挂移动范围:0,
 	悬挂提供的最大力:100000,		// 支撑底盘
+	悬挂硬度:30,					// 弹性系数
+	悬挂压缩阻尼:4.4,				// 阻尼系数，阻止车的震动的能力
+	悬挂放松阻尼:2.3,
 	侧滑翻滚系数:0.01,			// 0的时候，侧滑力会施加到中心，不易翻滚，1的时候，侧滑力施加在轮胎接触点，基本上一拐弯就翻车
+	滑动时轮胎转速:-30,			// 弧度/秒 ？	
+	开启滑动时轮胎转速:true,
+	轮胎静摩擦系数:5,			// 悬挂力*这个系数决定了抓地能力。受力超过这个限制就开始打滑
 	flpos:new Vec3(0.773268, 0.406936, 1.41364),
 	frpos:new Vec3(-0.773268, 0.406936, 1.41364),
 	rlpos:new Vec3(0.773268, 0.406936, -1.5505),
@@ -280,15 +299,15 @@ function createCar(){
 		directionLocal: new Vec3(0, -1, 0),
 		suspensionStiffness: carData.悬挂硬度,
 		suspensionRestLength: carData.悬挂平时长度,
-		frictionSlip: 5,
-		dampingRelaxation: 2.3,
-		dampingCompression: 4.4,
+		frictionSlip: carData.轮胎静摩擦系数,
+		dampingRelaxation: carData.悬挂放松阻尼,
+		dampingCompression: carData.悬挂压缩阻尼,
 		maxSuspensionForce: carData.悬挂提供的最大力,
 		rollInfluence:  carData.侧滑翻滚系数,
 		axleLocal: new Vec3(1, 0, 0),
 		chassisConnectionPointLocal: new Vec3(1, 0,1),
 		maxSuspensionTravel: carData.悬挂最大移动范围,
-		customSlidingRotationalSpeed: -30,
+		customSlidingRotationalSpeed: carData.滑动时轮胎转速,
 		useCustomSlidingRotationalSpeed: true,
 		isFrontWheel:true
 	};

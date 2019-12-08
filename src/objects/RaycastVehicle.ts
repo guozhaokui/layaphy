@@ -200,6 +200,7 @@ export class RaycastVehicle {
                 wheel.deltaRotation = -proj2 * timeStep / wheel.radius;	// 如果转反了改-1
             }
 
+            // 给油中，侧滑中，允许CustomSlidingRotationalSpeed 的情况下
             if ((wheel.sliding || !wheel.isInContact) && wheel.engineForce !== 0 && wheel.useCustomSlidingRotationalSpeed) {
                 // Apply custom rotation when accelerating and sliding
                 wheel.deltaRotation = (wheel.engineForce > 0 ? 1 : -1) * wheel.customSlidingRotationalSpeed * timeStep;
@@ -237,6 +238,7 @@ export class RaycastVehicle {
                 } else {
                     susp_damping = wheel.dampingRelaxation;
                 }
+                // 阻尼与速度成正比
                 force -= susp_damping * projected_rel_vel;
 
                 wheel.suspensionForce = force * chassisMass;

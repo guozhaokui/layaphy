@@ -46,7 +46,8 @@ export class WheelInfo {
     maxSuspensionTravel: number=1;
 
     /**
-     * Speed to apply to the wheel rotation when the wheel is sliding.
+     * Speed to apply to the wheel rotation when the wheel is sliding.  
+     * 当滑动的时候，设置的轮胎转速
      */
     customSlidingRotationalSpeed: number=-0.1;
 
@@ -80,10 +81,13 @@ export class WheelInfo {
 	radius: number=1;
 	
 	suspensionStiffness: number=100;
-	
+    
+    /** 悬挂压缩过程中的阻尼 */
     dampingCompression: number=10;
+    /** 悬挂放松过程中的阻尼 */
 	dampingRelaxation: number=10;
-	
+    
+    /** 静摩擦系数。悬挂力乘这个系数表示提供的静摩擦力，超过了就开始打滑 */
     frictionSlip: number=1000;
 
 	/** 方向盘方向，0表示向前 */
@@ -103,6 +107,7 @@ export class WheelInfo {
 	clippedInvContactDotSuspension = 1;
 	/** 悬挂系统的相对速度。 */
     suspensionRelativeVelocity = 0;
+    /** 悬挂系统提供的力，>0 */
     suspensionForce = 0;
     skidInfo = 0;
 
