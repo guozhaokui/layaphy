@@ -38,7 +38,7 @@ import {Body} from './Body.js';
  */
 
 export class WheelInfo {
-
+	id=0;
     /**
      * Max travel distance of the suspension, in meters.
 	 * 悬挂系统允许移动的最大范围。
@@ -69,6 +69,7 @@ export class WheelInfo {
     directionLocal: Vec3 = new Vec3();
 	directionWorld: Vec3 = new Vec3();
 	
+	/** 轮轴方向 */
     axleLocal: Vec3 = new Vec3();
     axleWorld: Vec3= new Vec3();
 
@@ -80,6 +81,7 @@ export class WheelInfo {
 	/** 轮胎半径 */
 	radius: number=1;
 	
+	/** 悬挂系统的硬度。变形*硬度=提供的悬挂力 */
 	suspensionStiffness: number=100;
     
     /** 悬挂压缩过程中的阻尼 */
@@ -99,17 +101,19 @@ export class WheelInfo {
     rotation = 0;
     deltaRotation = 0;
 
+	/** 侧滑力作用位置，0表示在质心，不易翻车，1表示在接触点，易翻车 */
     rollInfluence: number = 0.01;
-    maxSuspensionForce: number = Number.MAX_VALUE;
+	maxSuspensionForce: number = Number.MAX_VALUE;
+	
     engineForce = 0;
-    brake = 0;
+	brake = 0;
+	
     isFrontWheel=true;
 	clippedInvContactDotSuspension = 1;
 	/** 悬挂系统的相对速度。 */
     suspensionRelativeVelocity = 0;
     /** 悬挂系统提供的力，>0 */
     suspensionForce = 0;
-    skidInfo = 0;
 
 	/** 当前的悬挂系统的长度 */
     suspensionLength = 0;
@@ -120,20 +124,18 @@ export class WheelInfo {
 	/** 提供的向前的力 */
     forwardImpulse = 0;
 
-    /**
-     * The result from raycasting
-     */
     raycastResult = new RaycastResult();
 
-    /**
-	 * 轮子的实际空间的位置和旋转
-     */
+    /** 轮子的世界空间的位置和旋转  */
     worldTransform = new Transform();
 
 	/** 轮胎是否接触地面 */
     isInContact = false;
 
-    slipInfo:i32=0; //不知道有什么用，应该没用
+	/** 打滑比例 */
+	slipInfo:i32=0; 
+	/** 侧滑比例 */
+    skidInfo = 0;
 
     constructor(options?: any) {
         if(options){

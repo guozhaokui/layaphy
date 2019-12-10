@@ -137,11 +137,11 @@ class CarModel{
 			var npoff = CarModel.tmpV1;
 			phyquat.vmult(poff,npoff)
 			rpos.setValue(phypos.x-npoff.x,phypos.y-npoff.y,phypos.z-npoff.z);
-			this.chassis.transform.position=rpos;
+			//this.chassis.transform.position=rpos;
 
 			phyquat.mult(this.chassisoffq,tempQ);
 			rquat.x = tempQ.x;rquat.y = tempQ.y;rquat.z = tempQ.z;rquat.w = tempQ.w;
-			this.chassis.transform.rotation=rquat;
+			//this.chassis.transform.rotation=rquat;
 
 			// 控制摄像机
 			lastTarget.vadd(phypos,lastTarget);
@@ -204,6 +204,7 @@ class CarModel{
 		this.wheelstrackslid.forEach((v)=>{
 			phyr.addVec(v.x,v.y,v.z,0,.2,0,0x000000);
 		});
+		phyr.addPoint1(this.phyCar.chassisBody.position, 0xff0000)
 	}
 }
 
@@ -280,7 +281,6 @@ var carData={
 	radius:0.4,
 	悬挂平时长度:0.2,
 	悬挂最大移动范围:0.3,		// 在正负v之间
-	悬挂移动范围:0,
 	悬挂提供的最大力:100000,		// 支撑底盘
 	悬挂硬度:30,					// 弹性系数
 	悬挂压缩阻尼:4.4,				// 阻尼系数，阻止车的震动的能力

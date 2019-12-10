@@ -4,8 +4,8 @@ import {World} from '../world/World.js';
 import {Body} from './Body.js';
 import {WheelInfo} from './WheelInfo.js';
 
-const gAxle=new Vec3(1,0,0);
-const gForward=new Vec3(0,0,-1);
+const gAxle=new Vec3(1,0,0);	// 本地空间的轴向量
+const gForward=new Vec3(0,0,1);	// 本地空间的前向量
 /**
  * Vehicle helper class that casts rays from the wheel positions towards the ground and applies forces.
  * @class RaycastVehicle
@@ -63,7 +63,8 @@ export class RaycastVehicle {
      */
     addWheel(options = {}):i32 {
         const info = new WheelInfo(options);
-        const index = this.wheelInfos.length;
+		const index = this.wheelInfos.length;
+		info.id=index;
         this.wheelInfos.push(info);
         return index;
     }
@@ -148,7 +149,7 @@ export class RaycastVehicle {
 
         this.updateSuspension(timeStep);
 
-		/** 每个轮胎贡献的冲击力 */
+		/** 每个悬挂贡献的冲击力 */
         const impulse = new Vec3();
         const relpos = new Vec3();
         for (var i = 0; i < numWheels; i++) {
@@ -160,7 +161,11 @@ export class RaycastVehicle {
                 suspensionForce = wheel.maxSuspensionForce;
             }
             wheel.raycastResult.hitNormalWorld.scale(suspensionForce * timeStep, impulse);
-
+			//DEBUG
+			if(this.world){
+				this.world.phyRender.addVec1(wheel.raycastResult.hitPointWorld,impulse,0.05,0xffffff00);
+			}
+			//DEBUG
             wheel.raycastResult.hitPointWorld.vsub(chassisBody.position, relpos);
             chassisBody.applyImpulse(impulse, relpos);
         }
@@ -197,7 +202,7 @@ export class RaycastVehicle {
                 fwd.vsub(hitNormalWorldScaledWithProj, fwd);
 
                 const proj2 = fwd.dot(vel);
-                wheel.deltaRotation = -proj2 * timeStep / wheel.radius;	// 如果转反了改-1
+                wheel.deltaRotation = proj2 * timeStep / wheel.radius;	// 如果转反了改-1
             }
 
             // 给油中，侧滑中，允许CustomSlidingRotationalSpeed 的情况下
@@ -425,17 +430,9 @@ export class RaycastVehicle {
         const forwardWS = updateFriction_forwardWS;
         const axle = updateFriction_axle;
 
-        //let numWheelsOnGround:i32 = 0;
-
 		// 初始化。 TODO 合并到下面
         for (var i = 0; i < numWheels; i++) {
             var wheel = wheelInfos[i];
-
-            var groundObject = wheel.raycastResult.body;
-            if (groundObject) {
-                //numWheelsOnGround++;
-            }
-
             wheel.sideImpulse = 0;
             wheel.forwardImpulse = 0;
             if (!forwardWS[i]) {
@@ -451,9 +448,7 @@ export class RaycastVehicle {
             var wheel = wheelInfos[i];
 
             var groundObject = wheel.raycastResult.body;
-
             if (groundObject) {
-				// 如果此轮胎接触地面的情况
                 const axlei = axle[i];
                 const wheelTrans = this.getWheelTransformWorld(i);
 
@@ -481,8 +476,7 @@ export class RaycastVehicle {
                     wheel.raycastResult.hitPointWorld,
                     axlei
                 );
-
-                wheel.sideImpulse *= sideFrictionStiffness2;
+                wheel.sideImpulse *= sideFrictionStiffness;
             }
         }
 
@@ -571,9 +565,9 @@ export class RaycastVehicle {
                 forwardWS[i].scale(wheel.forwardImpulse, impulse);
 				chassisBody.applyImpulse(impulse, rel_pos);
 				//DEBUG
-				if(this.world){
-					this.world.phyRender.addVec1(wheel.raycastResult.hitPointWorld,impulse,2,0xffff0000);
-				}
+				//if(this.world){
+				//	this.world.phyRender.addVec1(wheel.raycastResult.hitPointWorld,impulse,2,0xffff0000);
+				//}
 				//DEBUG
             }
 
@@ -589,20 +583,19 @@ export class RaycastVehicle {
                     // Scale the relative position in the up direction with rollInfluence.
                     // If rollInfluence is 1, the impulse will be applied on the hitPoint (easy to roll over), if it is zero it will be applied in the same plane as the center of mass (not easy to roll over).
 					chassisBody.vectorToLocalFrame(rel_pos, rel_pos);
-					// rel_pos['xyz'[this.indexUpAxis]] *= wheel.rollInfluence;
 					rel_pos.y *= wheel.rollInfluence;
-                    //console.error('上面这句有问题，先删掉了');
                     chassisBody.vectorToWorldFrame(rel_pos, rel_pos);
                     chassisBody.applyImpulse(sideImp, rel_pos);
     
+					//DEBUG
+					if(this.world){
+						this.world.phyRender.addVec1(wheel.raycastResult.hitPointWorld,sideImp,0.05,0xffff0000);
+					}
+					//DEBUG
+
                     //apply friction impulse on the ground
                     sideImp.scale(-1, sideImp);
 					groundObject.applyImpulse(sideImp, rel_pos2);
-					//DEBUG
-					if(this.world){
-						this.world.phyRender.addVec1(wheel.raycastResult.hitPointWorld,sideImp,2,0xffff0000);
-					}
-					//DEBUG
                 }
             }
         }
@@ -622,17 +615,10 @@ var tmpVec6 = new Vec3();
 var castRay_rayvector = new Vec3();
 var castRay_target = new Vec3();
 
-var directions = [
-    new Vec3(1, 0, 0),
-    new Vec3(0, 1, 0),
-    new Vec3(0, 0, 1)
-];
-
-
 var updateFriction_surfNormalWS_scaled_proj = new Vec3();
 var updateFriction_axle:Vec3[] = [];
 var updateFriction_forwardWS:Vec3[] = [];
-var sideFrictionStiffness2 = 1;
+var sideFrictionStiffness = 1;
 
 const calcRollingFriction_vel1 = new Vec3();
 const calcRollingFriction_vel2 = new Vec3();
