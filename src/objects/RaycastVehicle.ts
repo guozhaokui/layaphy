@@ -511,14 +511,16 @@ export class RaycastVehicle {
             wheel.slipInfo = 1;
             if (groundObject) {
 				const defaultRollingFrictionImpulse = 0;
-				// maxImpulse=0或者刹车的力
+				// 允许的最大冲量 = 0或者刹车的力
                 const maxImpulse = wheel.brake ? wheel.brake : defaultRollingFrictionImpulse;
 
                 // btWheelContactPoint contactPt(chassisBody,groundObject,wheelInfraycastInfo.hitPointWorld,forwardWS[wheel],maxImpulse);
 				// rollingFriction = calcRollingFriction(contactPt);
-				// 刹车的情况下能提供的摩擦力
+				// 保持相对静止需要的摩擦力。非刹车的情况为0
 				rollingFriction = calcRollingFriction(chassisBody, groundObject, wheel.raycastResult.hitPointWorld, forwardWS[i], maxImpulse);
-				// +引擎拉力
+				// 刹车的情况这个从很大的值逐渐减少，目前会最终反向导致震荡
+
+				// 加上引擎拉力。引擎提供的力与速度有关
                 rollingFriction += wheel.engineForce * timeStep*speedK;
 
                 // rollingFriction = 0;
@@ -532,9 +534,12 @@ export class RaycastVehicle {
             wheel.skidInfo = 1;
 
             if (groundObject) {
-                //wheel.skidInfo = 1;
-
-                const maximp = wheel.suspensionForce * timeStep * wheel.frictionSlip;
+				//wheel.skidInfo = 1;
+				let mtlf = 1.0;
+				if(groundObject.material){
+					mtlf = groundObject.material.friction;	// 受到地面材质的影响
+				}
+                const maximp = wheel.suspensionForce * timeStep * wheel.frictionSlip*mtlf;//*0.01;
                 const maximpSide = maximp;
 
                 const maximpSquared = maximp * maximpSide;

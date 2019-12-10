@@ -58,7 +58,6 @@ let cmtl2 = new ContactMaterial(phymtl1, phymtl3, 1, 0);
 class Dashboard extends Sprite{
 	speed=0;
 	force=0;
-
 }
 
 /*
@@ -71,18 +70,22 @@ var lastTarget=new Vec3();
 class CarModel{
 	private static tmpV1:Vec3=new Vec3();
 
+	// 车身
 	chassis:MeshSprite3D;
 	chassisoffq = new phyQuat();
 	chassisoffp = new Vec3();		// 车身偏移，即重心的位置取反。车身的原点在000
 
+	// 轮胎
 	wheels:MeshSprite3D[]=[];	// TODO 对于轮子可以做到不需要这个。
 	wheelsOffQuat:phyQuat[]=[];
 
-	wheelstrackf:Vec3[]=[];
-	wheelstrackr:Vec3[]=[];
-	wheelstrackslid:Vec3[]=[];
+	// 调试轨迹
+	wheelstrackf:Vec3[]=[];	// 前轮
+	wheelstrackr:Vec3[]=[];	// 后轮
+	wheelstrackslid:Vec3[]=[];	// 侧滑
 	tracklen=1000;
 
+	// 刹车tween
 	wheelBrake:Tween[]=[];
 	isBraking=false;
 
@@ -137,11 +140,11 @@ class CarModel{
 			var npoff = CarModel.tmpV1;
 			phyquat.vmult(poff,npoff)
 			rpos.setValue(phypos.x-npoff.x,phypos.y-npoff.y,phypos.z-npoff.z);
-			//this.chassis.transform.position=rpos;
+			this.chassis.transform.position=rpos;
 
 			phyquat.mult(this.chassisoffq,tempQ);
 			rquat.x = tempQ.x;rquat.y = tempQ.y;rquat.z = tempQ.z;rquat.w = tempQ.w;
-			//this.chassis.transform.rotation=rquat;
+			this.chassis.transform.rotation=rquat;
 
 			// 控制摄像机
 			lastTarget.vadd(phypos,lastTarget);
@@ -221,11 +224,6 @@ function initPhy(scene: Scene3D) {
 	phyworld.world.addContactMaterial(cmtl1).addContactMaterial(cmtl2);
 }
 
-function rand(a: number, b: number) {
-	let d = b - a;
-	return Math.random() * d + a;
-}
-
 function testGround() {
 	world.world.gravity.set(0, -11, 0);
 	let p = addBox(new Vec3(10000, 100, 10000), new Vec3(0, -50, 0), 0, phymtl1);
@@ -294,7 +292,6 @@ var carData={
 	frpos:new Vec3(-0.773268, 0.406936, 1.41364),
 	rlpos:new Vec3(0.773268, 0.406936, -1.5505),
 	rrpos:new Vec3(-0.773268, 0.406936, -1.5505),
-	
 }
 
 
@@ -437,6 +434,14 @@ function handlKey(up:boolean,e:Event){
 		case 'R'.charCodeAt(0):
 			//car.chassisBody.position.set(0,0,0);
 			car.chassisBody.quaternion.set(0,0,0,1);
+			break;
+		case ' '.charCodeAt(0):
+			/*
+			car.wheelInfos[0].frictionSlip=0.01;
+			car.wheelInfos[1].frictionSlip=0.01;
+			car.wheelInfos[2].frictionSlip=0.01;
+			car.wheelInfos[3].frictionSlip=0.01;
+			*/
 			break;
 		default:
 			break;
