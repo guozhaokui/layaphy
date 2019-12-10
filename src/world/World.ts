@@ -679,14 +679,14 @@ export class World extends EventTarget {
      *     world.step(1/60);
      */
     step(dt: number, timeSinceLastCalled: number = 0, maxSubSteps: number = 10) {
-        if(this.phyRender){
-            this.phyRender.stepStart();
-        }
 		if(this._noDynamic)
 			return;
+		if(this.phyRender){
+			this.phyRender.stepStart();
+		}
 		if(this._pause)
-			return;
-
+		return;
+	
         if (timeSinceLastCalled === 0) { // Fixed, simple stepping
             this.internalStep(dt);
             // Increment time

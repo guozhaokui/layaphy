@@ -504,9 +504,9 @@ export class RaycastVehicle {
 
                 // btWheelContactPoint contactPt(chassisBody,groundObject,wheelInfraycastInfo.hitPointWorld,forwardWS[wheel],maxImpulse);
 				// rollingFriction = calcRollingFriction(contactPt);
-				// 滚动摩擦产生的冲量
+				// 刹车的情况下能提供的摩擦力
 				rollingFriction = calcRollingFriction(chassisBody, groundObject, wheel.raycastResult.hitPointWorld, forwardWS[i], maxImpulse);
-				// +engineForce
+				// +引擎拉力
                 rollingFriction += wheel.engineForce * timeStep;
 
                 // rollingFriction = 0;
@@ -520,7 +520,7 @@ export class RaycastVehicle {
             wheel.skidInfo = 1;
 
             if (groundObject) {
-                wheel.skidInfo = 1;
+                //wheel.skidInfo = 1;
 
                 const maximp = wheel.suspensionForce * timeStep * wheel.frictionSlip;
                 const maximpSide = maximp;
@@ -539,10 +539,7 @@ export class RaycastVehicle {
 					// 超过了最大冲量，则产生滑动了
                     this.sliding = true;
                     wheel.sliding = true;
-
-                    var factor = maximp / Math.sqrt(impulseSquared);
-
-                    wheel.skidInfo *= factor;
+                    wheel.skidInfo *= maximp / Math.sqrt(impulseSquared);	
                 }
             }
         }
@@ -642,7 +639,7 @@ const calcRollingFriction_vel2 = new Vec3();
 const calcRollingFriction_vel = new Vec3();
 
 /**
- * 计算滚动摩擦力
+ * 计算保持不滑动需要的滚动摩擦力
  * @param body0 
  * @param body1 
  * @param frictionPosWorld 			接触点的坐标
@@ -676,10 +673,10 @@ function calcRollingFriction(body0:Body, body1:Body, frictionPosWorld:Vec3, fric
 	const jacDiagABInv = relaxation / (denom0 + denom1);
 
 	// calculate j that moves us to zero relative velocity
-	// 负的表示目标是减少相对速度
+	// 为了达到相对速度为0需要的j
     j1 = -vrel * jacDiagABInv;
 
-    if (maxImpulse < j1) {
+    if ( j1>maxImpulse) {
         j1 = maxImpulse;
     }
     if (j1 < -maxImpulse) {

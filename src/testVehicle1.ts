@@ -19,6 +19,10 @@ import { Vec3 } from "./math/Vec3";
 import { RaycastVehicle } from "./objects/RaycastVehicle";
 import { WheelInfo } from "./objects/WheelInfo";
 import { Sprite } from "laya/display/Sprite";
+import { Body } from "./objects/Body";
+import { Box } from "./shapes/Box";
+import { Tween } from "laya/utils/Tween";
+import { Ease } from "laya/utils/Ease";
 
 /**
  * 测试盒子可以被推走，被抬起
@@ -65,23 +69,62 @@ var tempQ = new phyQuat();
 var lastTarget=new Vec3();
 
 class CarModel{
+	private static tmpV1:Vec3=new Vec3();
+
 	chassis:MeshSprite3D;
 	chassisoffq = new phyQuat();
 	chassisoffp = new Vec3();		// 车身偏移，即重心的位置取反。车身的原点在000
+
 	wheels:MeshSprite3D[]=[];	// TODO 对于轮子可以做到不需要这个。
 	wheelsOffQuat:phyQuat[]=[];
+
 	wheelstrackf:Vec3[]=[];
 	wheelstrackr:Vec3[]=[];
 	wheelstrackslid:Vec3[]=[];
 	tracklen=1000;
-	private static tmpV1:Vec3=new Vec3();
+
+	wheelBrake:Tween[]=[];
+	isBraking=false;
+
+	phyCar:RaycastVehicle;
 
 	initByPhy(car:RaycastVehicle){
+		this.phyCar=car;
 		car.wheelInfos.forEach((w:WheelInfo,i:int)=>{
 			let wheels = this.wheels;
 			wheels[i] = addRenderCylinder(w.radius,0.2);
 			this.wheelsOffQuat[i]=new phyQuat();
 		})
+		this.wheelBrake.length = car.wheelInfos.length;
+	}
+
+	brake(b:boolean){
+		if(b==this.isBraking)
+			return;
+		this.isBraking=b;
+		let phy = this.phyCar;
+		let n = this.wheelBrake.length;
+		for(let i=0; i<n; i++){
+			let tn = this.wheelBrake[i];
+			if(tn){
+				 tn.clear();
+			}else{
+				tn = this.wheelBrake[i] = new Tween();	
+			}
+		}
+
+		if(b){
+			let force = carData.脚刹力;
+			for(let i=0; i<n; i++){
+				let tn = this.wheelBrake[i];
+				tn.to(phy.wheelInfos[i], {brake:force},2000,Ease.linearInOut);
+			}
+		}else{
+			phy.setBrake(0,0);		
+			phy.setBrake(0,1);
+			phy.setBrake(0,2);
+			phy.setBrake(0,3);
+		}
 	}
 
 	updatePose(car:RaycastVehicle){
@@ -209,6 +252,7 @@ function mouseDownEmitObj(scrx: number, scry: number) {
 	dir.set(ray.direction.x, ray.direction.y, ray.direction.z);
 
 	let sp = addSphere(0.3, stpos.x, stpos.y, stpos.z);
+	sp.setMass(100);
 	//let sp = addBox(new Vec3(0.5, 0.5, 0.5), stpos, 1, phymtl1);
 	let v = 20;
 	setTimeout(() => {
@@ -226,10 +270,13 @@ var carData={
 	 * 	1. 车身物理的shape根据这个来偏移
 	 *  2. 车身模型根据这个来偏移：模型原点在000，所以移动模型的时候，要减去这个
 	 */
-	center:new Vec3(0,0.486,0),	
+	center:new Vec3(0,0.01,0),	
+	chassisBox:new Vec3(2/2,0.791/2,4.68/2),	//
+	chassisBoxPos:new Vec3(0.00716, 0.570108, -0.170404),	// 这是相对原点的，需要根据center转换
 	mass:1500,
 	单轮拉力:10000,
-	单轮刹车:100000,
+	脚刹力:10000,
+	手刹力:100,
 	radius:0.4,
 	悬挂平时长度:0.2,
 	悬挂最大移动范围:0.3,		// 在正负v之间
@@ -242,7 +289,7 @@ var carData={
 	滑动时轮胎转速:-30,			// 弧度/秒 ？	
 	开启滑动时轮胎转速:true,
 	轮胎静摩擦系数:5,			// 悬挂力*这个系数决定了抓地能力。受力超过这个限制就开始打滑
-	flpos:new Vec3(0.773268, 0.406936, 1.41364),
+	flpos:new Vec3(0.773268, 0.406936, 1.41364),	// 相对原点的
 	frpos:new Vec3(-0.773268, 0.406936, 1.41364),
 	rlpos:new Vec3(0.773268, 0.406936, -1.5505),
 	rrpos:new Vec3(-0.773268, 0.406936, -1.5505),
@@ -311,10 +358,16 @@ function createCar(){
 		useCustomSlidingRotationalSpeed: true,
 		isFrontWheel:true
 	};
-	let chassisBody = addBox( new Vec3(1.8,0.5,4), new Vec3(-5,7,0),carData.mass,cmtl1);
-	chassisBody.phyBody.allowSleep=false;	//TODO 现在加力不能唤醒，先禁止sleep
+	//let chassisBody = addBox( new Vec3(1.8,0.5,4), new Vec3(-5,7,0),carData.mass,cmtl1);
+	let chassisBody = new Body(carData.mass);
+	let chassisOff = new Vec3();
+	carData.chassisBoxPos.vsub(carData.center,chassisOff);
+	chassisBody.addShape(new Box(carData.chassisBox), chassisOff);
+	chassisBody.allowSleep=false;	//TODO 现在加力不能唤醒，先禁止sleep
+	chassisBody.position.copy(carData.center);
 
-	var car = new RaycastVehicle(chassisBody.phyBody);
+	var car = new RaycastVehicle(chassisBody);
+	
 
 	// 前轮，方向
 	options.isFrontWheel=true;
@@ -346,12 +399,7 @@ function createCar(){
 function handlKey(up:boolean,e:Event){
 	var maxSteerVal = 0.5;
 	var maxForce = carData.单轮拉力;
-	var brakeForce = carData.单轮刹车;
-
-	car.setBrake(0, 0);
-	car.setBrake(0, 1);
-	car.setBrake(0, 2);
-	car.setBrake(0, 3);	
+	var brakeForce = carData.脚刹力;
 
 	switch (e.keyCode) {
 		case 38: // forward
@@ -365,11 +413,13 @@ function handlKey(up:boolean,e:Event){
 			break;
 
 		case 66: // b
+			carR.brake(!up);
+			break;
+
+		case 'V'.charCodeAt(0):
 			if(!up){
-			car.setBrake(brakeForce, 0);
-			car.setBrake(brakeForce, 1);
-			//car.setBrake(brakeForce, 2);
-			//car.setBrake(brakeForce, 3);
+				car.setBrake(carData.手刹力, 2);
+				car.setBrake(carData.手刹力, 3);
 			}
 			break;
 
