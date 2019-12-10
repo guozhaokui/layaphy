@@ -31,6 +31,10 @@ export class RaycastVehicle {
 
     world:World|null=null; // null 表示没有加到场景中
 
+	/** 最大轮胎转速 */
+	wheelRPM=0; 	
+
+	maxSpeed=200;		//km/h
     /**
      * Index of the right axis, 0=x, 1=y, 2=z
      */
@@ -174,7 +178,8 @@ export class RaycastVehicle {
 
         const hitNormalWorldScaledWithProj = new Vec3();
         const fwd = new Vec3();
-        const vel = new Vec3();
+		const vel = new Vec3();
+		this.wheelRPM=0;
         for (i = 0; i < numWheels; i++) {
             var wheel = wheelInfos[i];
             //var relpos = new Vec3();
@@ -216,9 +221,16 @@ export class RaycastVehicle {
                 wheel.deltaRotation = 0;
             }
 
-            wheel.rotation += wheel.deltaRotation; // Use the old value
+			wheel.rotation += wheel.deltaRotation; // Use the old value
+			
+			// 每分钟转速
+			let rpm =  wheel.deltaRotation/timeStep*60/(2*Math.PI);
+			if(this.wheelRPM<rpm){
+				this.wheelRPM=rpm;
+			}
             wheel.deltaRotation *= 0.99; // damping of rotation when not in contact
-        }
+		}
+		//console.log('转速:',this.wheelRPM);
     }
 
     updateSuspension(deltaTime:f32) {
@@ -483,7 +495,13 @@ export class RaycastVehicle {
         const sideFactor = 1;
         const fwdFactor = 0.5;
 
-        this.sliding = false;
+		this.sliding = false;
+		// 速度越快引擎拉力越少
+		let speedK =  this.currentVehicleSpeedKmHour/this.maxSpeed;
+		if(speedK>1)
+			speedK=1;
+		speedK=1-speedK;
+
         for (var i = 0; i < numWheels; i++) {
             var wheel = wheelInfos[i];
             var groundObject = wheel.raycastResult.body;
@@ -501,7 +519,7 @@ export class RaycastVehicle {
 				// 刹车的情况下能提供的摩擦力
 				rollingFriction = calcRollingFriction(chassisBody, groundObject, wheel.raycastResult.hitPointWorld, forwardWS[i], maxImpulse);
 				// +引擎拉力
-                rollingFriction += wheel.engineForce * timeStep;
+                rollingFriction += wheel.engineForce * timeStep*speedK;
 
                 // rollingFriction = 0;
                 var factor = maxImpulse / rollingFriction;

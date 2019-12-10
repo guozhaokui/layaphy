@@ -99,7 +99,9 @@ export class WheelInfo {
 	 * 当前轮子的转动弧度
      */
     rotation = 0;
-    deltaRotation = 0;
+	deltaRotation = 0;
+	/** 转速 */
+	//rpm=0; 	
 
 	/** 侧滑力作用位置，0表示在质心，不易翻车，1表示在接触点，易翻车 */
     rollInfluence: number = 0.01;

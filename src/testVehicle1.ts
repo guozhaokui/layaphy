@@ -289,6 +289,7 @@ var carData={
 	滑动时轮胎转速:-30,			// 弧度/秒 ？	
 	开启滑动时轮胎转速:true,
 	轮胎静摩擦系数:5,			// 悬挂力*这个系数决定了抓地能力。受力超过这个限制就开始打滑
+	最大速度:200,				// km/h
 	flpos:new Vec3(0.773268, 0.406936, 1.41364),	// 相对原点的
 	frpos:new Vec3(-0.773268, 0.406936, 1.41364),
 	rlpos:new Vec3(0.773268, 0.406936, -1.5505),
@@ -367,6 +368,7 @@ function createCar(){
 	chassisBody.position.copy(carData.center);
 
 	var car = new RaycastVehicle(chassisBody);
+	car.maxSpeed=carData.最大速度;
 	
 
 	// 前轮，方向
