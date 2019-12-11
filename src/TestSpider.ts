@@ -1,24 +1,21 @@
 import { Laya } from "Laya";
 import { BlinnPhongMaterial } from "laya/d3/core/material/BlinnPhongMaterial";
 import { Scene3D } from "laya/d3/core/scene/Scene3D";
-import { Ray } from 'laya/d3/math/Ray';
-import { Vector2 } from 'laya/d3/math/Vector2';
-import { Vector3 } from "laya/d3/math/Vector3";
 import { Event } from "laya/events/Event";
 import { ConeTwistConstraint } from "./constraints/ConeTwistConstraint";
 import { DistanceConstraint } from './constraints/DistanceConstraint';
 import { HingeConstraint } from "./constraints/HingeConstraint";
-import { addBox, addSphere, addZupBox, ZupPos2Yup, ZupQuat2Yup } from "./DemoUtils";
+import { PointToPointConstraint } from "./constraints/PointToPointConstraint";
+import { addBox, addZupBox, mouseDownEmitObj, ZupPos2Yup, ZupQuat2Yup } from "./DemoUtils";
 import { CannonWorld } from "./layawrap/CannonWorld";
 import { MouseCtrl1 } from "./layawrap/ctrls/MouseCtrl1";
 import { PhyRender } from "./layawrap/PhyRender";
 import { ContactMaterial } from "./material/ContactMaterial";
 import { Material } from "./material/Material";
+import { Mat3 } from "./math/Mat3";
+import { Quaternion } from "./math/Quaternion";
 import { Vec3 } from "./math/Vec3";
 import { Body } from './objects/Body';
-import { Quaternion } from "./math/Quaternion";
-import { Mat3 } from "./math/Mat3";
-import { PointToPointConstraint } from "./constraints/PointToPointConstraint";
 
 var oo = [
 	{
@@ -339,10 +336,6 @@ var oo = [
 	}
 ]
 
-var oo1 = 
-[{"name": "Cube", "dim": {"x": 2.0, "y": 2.0, "z": 2.0}, "pos": {"x": 0.0, "y": 0.0, "z": 0.0}, "quat": {"x": 0.0, "y": 0.0, "z": -0.36059334874153137, "w": 0.9327231645584106}, "mass": 1.0}, {"name": "Cube.001", "dim": {"x": 2.0, "y": 2.0, "z": 2.0}, "pos": {"x": 0.0, "y": 0.0, "z": 2.2614493370056152}, "quat": {"x": 0.0, "y": 0.0, "z": -0.36059334874153137, "w": 0.9327231645584106}, "mass": 1.0}, {"name": "Empty", "pos": {"x": 0.0, "y": 0.0, "z": 1.1762117147445679}, "quat": {"x": -0.7088689208030701, "y": 0.0, "z": 0.0, "w": 0.7053402066230774}, "type": "C_HINGE", "A": "Cube.001", "B": "Cube"}]
-;
-
 var tmpV1 = new Vec3();
 var tmpQ = new Quaternion();
 function worldPosToLocal(pos: Vec3, body: Body): Vec3 {
@@ -592,26 +585,6 @@ class mainbody {
 
 }
 
-function mouseDownEmitObj(scrx: number, scry: number) {
-	let worlde = camctr.camera.transform.worldMatrix.elements;
-	let stpos = new Vec3(worlde[12], worlde[13], worlde[14]);
-	let dir = new Vec3(worlde[8], worlde[9], worlde[10]);
-
-	let ray = new Ray(new Vector3(), new Vector3());
-	camctr.camera.viewportPointToRay(new Vector2(scrx, scry), ray);
-	stpos.set(ray.origin.x, ray.origin.y, ray.origin.z);
-	dir.set(ray.direction.x, ray.direction.y, ray.direction.z);
-
-	let sp = addSphere(0.3, stpos.x, stpos.y, stpos.z);
-	//let sp = addBox(new Vec3(0.5, 0.5, 0.5), stpos, 1, phymtl1);
-	let v = 20;
-	setTimeout(() => {
-		sp.owner.destroy();
-	}, 13000);
-	sp.setVel(dir.x * v, dir.y * v, dir.z * v);
-
-}
-
 export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 	camctr = cam;
 	cam.dist = 20;
@@ -624,7 +597,7 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 	//createJoint();
 
 	Laya.stage.on(Event.MOUSE_DOWN, null, (e: { stageX: number, stageY: number }) => {
-		mouseDownEmitObj(e.stageX, e.stageY);
+		mouseDownEmitObj(e.stageX, e.stageY, cam.camera);
 	});
 
 	Laya.stage.on(Event.KEY_DOWN, null, (e: Event) => {

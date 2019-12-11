@@ -790,30 +790,14 @@ export class Heightfield extends Shape {
 		this.getTriangle(xi,yi,false,a,b,c);
 
 		// 
-		if(hitNorm.y>maxdot){
+		//if(hitNorm.y>maxdot){
 			// 当前所在位置太陡了,只能下滑
-			return 2;
-		}
+		//	return 2;
+		//}
 
 		return 0;
 	}
 
-
-	/**
-	 * 
-	 * @param data   0 1 2  ->x
-	 *               3 4 5 
-	 *               6 7 8
-	 * 				 |
-	 * 				 z
-	 * @param vScale 
-	 * @param gridsize 
-	 * @param hitPos 
-	 * @param hitNorm 
-	 */
-	sphereHit3x3Terrain(data:number[],vScale:number,gridsize:number,hitPos:Vec3, hitNorm:Vec3):boolean{
-
-	}
 
 	/**
 	 * 与本地空间的一个球相撞，给角色控制器用的。因此只要一个等效的碰撞点和碰撞法线就行

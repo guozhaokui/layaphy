@@ -403,6 +403,7 @@ export class Box extends Shape implements MinkowskiShape {
      * @param justtest 
      */
 	hitVoxel(myPos: Vec3, myQ:Quaternion, voxel:Voxel, voxPos: Vec3, voxQuat: Quaternion, hitpoints:HitPointInfo[], justtest: boolean): boolean {
+		/*
         // 把voxel转换到box空间
         let rPos = hitVoxelTmpVec1;
         let rMat = hitVoxelTmpMat;
@@ -448,6 +449,8 @@ export class Box extends Shape implements MinkowskiShape {
             hit=true;
         }
 		return hit;
+		*/
+		return false;
 	}
 
 	hitAAQuad(mypos:Vec3, myQ:Quaternion, minx:number,miny:number, maxx:number,maxy:number){

@@ -5,7 +5,7 @@ import { Ray } from 'laya/d3/math/Ray';
 import { Vector2 } from 'laya/d3/math/Vector2';
 import { Vector3 } from "laya/d3/math/Vector3";
 import { Event } from "laya/events/Event";
-import { addBox, addSphere, loadObj } from "./DemoUtils";
+import { addBox, addSphere, loadObj, mouseDownEmitObj } from "./DemoUtils";
 import { CannonWorld } from "./layawrap/CannonWorld";
 import { MouseCtrl1 } from "./layawrap/ctrls/MouseCtrl1";
 import { PhyRender } from "./layawrap/PhyRender";
@@ -69,25 +69,6 @@ function testGround() {
 
 }
 
-function mouseDownEmitObj(scrx: number, scry: number) {
-	let worlde = camctr.camera.transform.worldMatrix.elements;
-	let stpos = new Vec3(worlde[12], worlde[13], worlde[14]);
-	let dir = new Vec3(worlde[8], worlde[9], worlde[10]);
-
-	let ray = new Ray(new Vector3(), new Vector3());
-	camctr.camera.viewportPointToRay(new Vector2(scrx, scry), ray);
-	stpos.set(ray.origin.x, ray.origin.y, ray.origin.z);
-	dir.set(ray.direction.x, ray.direction.y, ray.direction.z);
-
-	let sp = addSphere(0.3, stpos.x, stpos.y, stpos.z);
-	//let sp = addBox(new Vec3(0.5, 0.5, 0.5), stpos, 1, phymtl1);
-	let v = 20;
-	setTimeout(() => {
-		sp.owner.destroy();
-	}, 13000);
-	sp.setVel(dir.x * v, dir.y * v, dir.z * v);
-}
-
 function createCar(){
 	
 	let chassisShape = new Box(new Vec3(5, 0.5, 6));
@@ -119,7 +100,7 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 	//createJoint();
 
 	Laya.stage.on(Event.MOUSE_DOWN, null, (e: { stageX: number, stageY: number }) => {
-		mouseDownEmitObj(e.stageX, e.stageY);
+		mouseDownEmitObj(e.stageX, e.stageY,cam.camera);
 	});
 
 	Laya.stage.on(Event.KEY_DOWN, null, (e: Event) => {

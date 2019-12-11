@@ -24,7 +24,7 @@ test('scaled', () => {
     mesh.updateTree();
 
     const bigMesh = Trimesh.createTorus();
-    bigMesh.setScale(new Vec3(2, 2, 2));
+    bigMesh.setScale(2, 2, 2);
 
     expect(bigMesh.aabb.upperBound.x).toBe(mesh.aabb.upperBound.x * 2);//, 'AABB does not scale with the mesh!');
 
@@ -80,7 +80,7 @@ test('unscaled', () => {
 });
 test('scaled', () => {
     const mesh = Trimesh.createTorus();
-    mesh.setScale(new Vec3(1, 2, 3));
+    mesh.setScale(1, 2, 3);
     const vertex = new Vec3();
     mesh.getVertex(0, vertex);
     expect(vertex).toEqual( new Vec3(1 * mesh.vertices[0], 2 * mesh.vertices[1], 3 * mesh.vertices[2]));

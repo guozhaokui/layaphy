@@ -103,7 +103,8 @@ function test(mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 		let sp = addBox(new Vec3(0.5, 0.5, 0.5), stpos, 1, phymtl1);
 		let v = 20;
 		setTimeout(() => {
-			sp.owner.destroy();
+			//sp.owner.destroy();
+			sp._onDestroy();
 		}, 13000);
 		sp.setVel(dir.x * v, dir.y * v, dir.z * v);
 	});

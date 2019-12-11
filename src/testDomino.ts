@@ -1,21 +1,21 @@
 import { Laya } from "Laya";
 import { BlinnPhongMaterial } from "laya/d3/core/material/BlinnPhongMaterial";
 import { Scene3D } from "laya/d3/core/scene/Scene3D";
+import { Sprite3D } from "laya/d3/core/Sprite3D";
 import { Ray } from 'laya/d3/math/Ray';
 import { Vector2 } from 'laya/d3/math/Vector2';
 import { Vector3 } from "laya/d3/math/Vector3";
 import { Event } from "laya/events/Event";
 import { hitworldOptions, Ray as PhyRay, RayMode } from "./collision/Ray";
-import { addBox, addSphere } from "./DemoUtils";
+import { addBox, mouseDownEmitObj } from "./DemoUtils";
+import { CannonBody } from "./layawrap/CannonBody";
 import { CannonWorld } from "./layawrap/CannonWorld";
 import { MouseCtrl1 } from "./layawrap/ctrls/MouseCtrl1";
 import { PhyRender } from "./layawrap/PhyRender";
 import { ContactMaterial } from "./material/ContactMaterial";
 import { Material } from "./material/Material";
-import { Vec3 } from "./math/Vec3";
-import { CannonBody } from "./layawrap/CannonBody";
-import { Sprite3D } from "laya/d3/core/Sprite3D";
 import { Quaternion } from "./math/Quaternion";
+import { Vec3 } from "./math/Vec3";
 import { Plane } from "./shapes/Plane";
 
 /**
@@ -86,22 +86,7 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 	}
 
 	Laya.stage.on(Event.MOUSE_DOWN, null, (e: { stageX: number, stageY: number }) => {
-		let worlde = cam.camera.transform.worldMatrix.elements;
-		let stpos = new Vec3(worlde[12], worlde[13], worlde[14]);
-		let dir = new Vec3(worlde[8], worlde[9], worlde[10]);
-
-		let ray = new Ray(new Vector3(), new Vector3());
-		cam.camera.viewportPointToRay(new Vector2(e.stageX, e.stageY), ray);
-		stpos.set(ray.origin.x, ray.origin.y, ray.origin.z);
-		dir.set(ray.direction.x, ray.direction.y, ray.direction.z);
-
-		let sp = addSphere(0.1, stpos.x, stpos.y, stpos.z);
-		//let sp = addBox(new Vec3(0.5, 0.5, 0.5), stpos, 1, phymtl1);
-		let v = 20;
-		setTimeout(() => {
-			sp.owner.destroy();
-		}, 13000);
-		sp.setVel(dir.x * v, dir.y * v, dir.z * v);
+		mouseDownEmitObj(e.stageX, e.stageY, cam.camera);
 	});
 
 	Laya.stage.on(Event.KEY_DOWN, null, (e: Event) => {

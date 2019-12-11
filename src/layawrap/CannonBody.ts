@@ -9,8 +9,12 @@ import { Body } from "../objects/Body";
 import { Shape } from "../shapes/Shape";
 import { CannonWorld } from "./CannonWorld";
 import { IPhyBody } from "./PhyInterface";
+import { MeshSprite3D } from "laya/d3/core/MeshSprite3D";
+import { PrimitiveMesh } from "laya/d3/resource/models/PrimitiveMesh";
+import { Box } from "../shapes/Box";
 
-export class CannonBody extends Component implements IPhyBody{
+let isComponent=true;
+export class CannonBody implements IPhyBody{
 	mass: number;
 	lineVel: Vector3;
 	angVel: Vector3;
@@ -21,9 +25,10 @@ export class CannonBody extends Component implements IPhyBody{
 	_enablePhy=false;
 	phyBody:Body;
 	private _ROOff:Vector3|null;	// 渲染原点的位置。相对于物理原点
+	private _renderobj:Sprite3D;
 
     constructor(){
-		super();
+		this._onAdded();
 	}
 	
 	set fixedRotation(v: boolean){
@@ -49,8 +54,17 @@ export class CannonBody extends Component implements IPhyBody{
 		throw new Error("Method not implemented.");
 	}
 
+	set renderobj(r:Sprite3D){
+		this._renderobj=r;
+		this.phyUseRenderPose();
+	}
+
+	get renderobj(){
+		return this._renderobj;
+	}
+
     _onEnable(){
-		let owner = this.owner;
+		let owner = this.renderobj;
 
         //let sce = this.owner.scene as Scene3D;
 		this.phyBody.enable=true;
@@ -101,7 +115,9 @@ export class CannonBody extends Component implements IPhyBody{
 	/** 位置是基于渲染模型的 */
 	setRPos(x:number,y:number,z:number):void{
 		let body = this.phyBody;
-        let sp = this.owner as Sprite3D;
+		let sp = this.renderobj;
+		if(!sp)
+			return;
         let trans = sp.transform;
         //let pos = trans.localPosition;
 		let q = trans.localRotation;
@@ -162,15 +178,21 @@ export class CannonBody extends Component implements IPhyBody{
         let w = this.phyBody.world;
         if(w){
             w.remove(this.phyBody);
-        }
-    }
+		}
+		if(this.renderobj && !this.renderobj.destroyed){
+			this.renderobj.destroy();
+		}
+	}
+	
     _onAwake(){
 
 	}
 	
 	phyUseRenderPose(){
 		let body = this.phyBody;
-        let sp = this.owner as Sprite3D;
+		let sp = this.renderobj
+		if(!sp)
+			return;
         let trans = sp.transform;
         let pos = trans.localPosition;
         body.position.set(pos.x,pos.y,pos.z);
@@ -183,11 +205,11 @@ export class CannonBody extends Component implements IPhyBody{
 
     applyPose(){
         let body = this.phyBody;
-        if(this.destroyed)
-            return;
         if(body.isSleep())
             return;
-        let sp = this.owner as Sprite3D;
+		let sp = this.renderobj
+		if(!sp)
+			return;
         let trans = sp.transform;
         let phypos = body.position;
         let phyrot = body.quaternion;
@@ -195,7 +217,8 @@ export class CannonBody extends Component implements IPhyBody{
         let q = trans.localRotation;
         q.x=phyrot.x, q.y=phyrot.y; q.z=phyrot.z; q.w=phyrot.w;
         trans.localRotation = q;
-    }
+	}
+
 }
 
 var tempVec3=new Vec3();

@@ -59,7 +59,7 @@ export class Narrowphase {
     frictionResult: FrictionEquation[] = [];
 	
 	/** 当前使用的材质 */
-    private currentContactMaterial = new ContactMaterial(null,null, 0.3,0);
+    currentContactMaterial = new ContactMaterial(null,null, 0.3,0);
 
     /**
      * @property {Boolean} enableFrictionReduction

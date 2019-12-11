@@ -2,31 +2,30 @@ import { Laya } from "Laya";
 import { BlinnPhongMaterial } from "laya/d3/core/material/BlinnPhongMaterial";
 import { MeshSprite3D } from "laya/d3/core/MeshSprite3D";
 import { Scene3D } from "laya/d3/core/scene/Scene3D";
-import { Ray } from 'laya/d3/math/Ray';
-import { Vector2 } from 'laya/d3/math/Vector2';
 import { Vector3 } from "laya/d3/math/Vector3";
 import { PrimitiveMesh } from "laya/d3/resource/models/PrimitiveMesh";
 import { Event } from "laya/events/Event";
-import { addBox, loadSce, PhyObj, addSphere, raycast } from "./DemoUtils";
+import { addBox, JSONLoader, mouseDownEmitObj, nodeProxy, raycast, ZupPos2Yup, ZupQuat2Yup } from "./DemoUtils";
+import { vox_diban } from "./diban.vox";
+import { CannonBody } from "./layawrap/CannonBody";
 import { CannonWorld } from "./layawrap/CannonWorld";
 import { MouseCtrl1 } from "./layawrap/ctrls/MouseCtrl1";
+import { createTerrainMesh, createVoxMesh } from "./layawrap/debugger/PhyMesh";
+import { PhyMeshSprite } from "./layawrap/debugger/PhyMeshSprite";
 import { PhyCharactorCtrl } from "./layawrap/PhyCharactorCtrl";
 import { PhyRender } from "./layawrap/PhyRender";
 import { ContactMaterial } from "./material/ContactMaterial";
 import { Material } from "./material/Material";
-import { Vec3 } from "./math/Vec3";
-import { getPhyRender, IPhyRender } from "./world/World";
-import { Heightfield } from "./shapes/Heightfield";
-import { createTerrainMesh, createVoxMesh } from "./layawrap/debugger/PhyMesh";
-import { PhyMeshSprite } from "./layawrap/debugger/PhyMeshSprite";
-import { CannonBody } from "./layawrap/CannonBody";
 import { Quaternion } from "./math/Quaternion";
+import { Vec3 } from "./math/Vec3";
 import { BODYTYPE } from "./objects/Body";
-import { Mesh2Voxel } from "./tools/Mesh2Voxel";
-import { vox_diban } from "./diban.vox";
-import { vox_shu } from "./shu.vox";
+import { Box } from "./shapes/Box";
+import { Heightfield } from "./shapes/Heightfield";
 import { Voxel } from "./shapes/Voxel";
 import { SparseVoxData } from "./shapes/VoxelData";
+import { vox_shu } from "./shu.vox";
+import { Mesh2Voxel } from "./tools/Mesh2Voxel";
+import { getPhyRender, IPhyRender } from "./world/World";
 
 var sce3d: Scene3D;
 var mtl1: BlinnPhongMaterial;
@@ -44,8 +43,6 @@ let phyr: IPhyRender;
 let ctrl: PhyCharactorCtrl;
 let m2v = new Mesh2Voxel();
 
-let emitPos = new Vec3();
-let emitDir = new Vec3();
 let lockEmit = false;
 
 function initPhy(scene: Scene3D) {
@@ -122,36 +119,7 @@ function dokey(e: Event, down: boolean) {
 
 function test(mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 	Laya.stage.on(Event.MOUSE_DOWN, null, (e: { stageX: number, stageY: number }) => {
-		let worlde = cam.camera.transform.worldMatrix.elements;
-		let stpos = new Vec3(worlde[12], worlde[13], worlde[14]);
-		let dir = new Vec3(worlde[8], worlde[9], worlde[10]);
-
-		let ray = new Ray(new Vector3(), new Vector3());
-		cam.camera.viewportPointToRay(new Vector2(e.stageX, e.stageY), ray);
-		if(!lockEmit){
-			emitPos.set(ray.origin.x, ray.origin.y, ray.origin.z);
-			//DEBUG
-			//emitPos.set(-31.65083976589477,20.991332874362374,66.50135643487836 );
-		}
-
-		stpos.set(emitPos.x, emitPos.y, emitPos.z);
-
-		if(!lockEmit){
-			emitDir.set(ray.direction.x, ray.direction.y, ray.direction.z);
-			//DEBUG
-			//emitDir.set(-0.18446392214973648,-0.17484450459282244,-0.9671620653431494);
-		}
-		
-		dir.set(emitDir.x,emitDir.y,emitDir.z);
-		let sp = addSphere(.3, stpos.x, stpos.y, stpos.z);
-		sp.setMaterial(phySph);
-		//let sp = addBox(new Vec3(0.5, 0.5, 0.5), stpos, 10, phymtl1);
-		//sp.fixedRotation=true;
-		let v = 20;
-		setTimeout(() => {
-			sp.owner.destroy();
-		}, 11000);
-		sp.setVel(dir.x * v, dir.y * v, dir.z * v);
+		mouseDownEmitObj(e.stageX,e.stageY,cam.camera,lockEmit);
 	});
 
 	Laya.stage.on(Event.MOUSE_MOVE, null, (e:Event)=>{
@@ -216,7 +184,8 @@ function testGround(img: HTMLImageElement) {
 	let renderobj = new PhyMeshSprite(m, min as any as Vector3, max as any as Vector3);
 	sce3d.addChild(renderobj);
 
-	var phy = renderobj.addComponent(CannonBody) as CannonBody;
+	var phy = new CannonBody();// renderobj.addComponent(CannonBody) as CannonBody;
+	phy.renderobj=renderobj;
 	let shapeq = new Quaternion();
 	//shapeq.setFromAxisAngle(new Vec3(1, 0, 0), -Math.PI / 2);	// 正的是顺时针
 	phy.addShape(p, new Vector3(0, 0, 0), shapeq);
@@ -243,7 +212,8 @@ function loadVoxel(file:string, pos?:Vec3,q?:Quaternion,scale?:Vec3) {
 		//vox.createMesh();
 		sce3d.addChild(vox);
 		vox.transform.localPosition.setValue(0, 0, 0);
-		var phy = vox.addComponent(CannonBody) as CannonBody;
+		var phy =  new CannonBody();// vox.addComponent(CannonBody) as CannonBody;
+		phy.renderobj=vox;
 		phy.phyBody.dbgShow=true;
 		if(scale){
 			phy.phyBody.setScale(scale.x,scale.y,scale.z);
@@ -279,7 +249,8 @@ function loadJSONCubeModuleObj(obj:any,pos?:Vec3,q?:Quaternion){
 	//vox.createMesh();
 	sce3d.addChild(vox);
 	vox.transform.localPosition.setValue(0, 0, 0);
-	var phy = vox.addComponent(CannonBody) as CannonBody;
+	var phy = new CannonBody();// vox.addComponent(CannonBody) as CannonBody;
+	phy.renderobj=vox;
 	phy.addShape(phyvox);
 	if(pos){
 		phy.phyBody.setPos(pos.x,pos.y,pos.z);
@@ -297,6 +268,80 @@ function testTrigger(){
 	b.phyBody.isTrigger=true;
 }
 
+// 加载器
+class NodeLoaderProxyBox implements nodeProxy{
+	rnode:CannonBody;
+	zup=true;
+	constructor(){
+		this.rnode=new CannonBody();
+		this.rnode._onAdded();
+	}
+	
+	getRealNode() {
+		return this.rnode;
+	}
+
+	setProp(name: string, value: any, node: any, loader: JSONLoader): void {
+		var rigidBody = this.rnode;//new CannonBody();
+
+		//rigidBody.phyBody.material = phymtl;
+		switch(name){
+			case 'name':
+				rigidBody.setName(value);
+				break;
+			case 'dim':
+				let boxShape = new Box(new Vec3(value.x / 2, value.y / 2, value.z / 2));
+				rigidBody.addShape(boxShape);
+				break;
+			case 'pos':
+				let pos = new Vec3(value.x,value.y,value.z);
+				ZupPos2Yup(pos,pos);
+				rigidBody.phyBody.position.copy(pos);
+				break;
+			case 'quat':
+				let quat = new Quaternion(value.x,value.y,value.z,value.w);
+				ZupQuat2Yup(quat,quat);
+				rigidBody.phyBody.quaternion.copy(quat);
+				break;
+			case 'mass':
+				rigidBody.setMass(value);
+				break;
+		}
+	}
+	setPropEnd(node: any, loader: JSONLoader): void {
+		var rigidBody = this.rnode
+		rigidBody.phyBody.aabbNeedsUpdate=true
+		rigidBody.phyBody.material= phymtl2;
+		let phypos = rigidBody.phyBody.position;
+		let phyquat = rigidBody.phyBody.quaternion;
+
+		// 调试渲染模型
+		let box = new MeshSprite3D(PrimitiveMesh.createBox(node.dim.x,node.dim.y,node.dim.z));
+		sce3d.addChild(box);
+		box.meshRenderer.material = mtl1;
+		var transform = box.transform;
+		var p = transform.position;
+		p.setValue(phypos.x, phypos.y, phypos.z);
+		transform.position = p;
+		let quat = transform.rotation;
+		quat.x = phyquat.x; quat.y=phyquat.y; quat.z=phyquat.z; quat.w=phyquat.w;
+		transform.rotation=quat;
+		this.rnode.renderobj=box;
+	}
+}
+
+class NodeLoadNodeProxyMtl implements nodeProxy{
+	getRealNode() {
+	}	
+	
+	setProp(name: string, value: any, node: any, loader: JSONLoader): void {
+	}
+
+	setPropEnd(node: any, loader: JSONLoader): void {
+	}
+}
+
+
 async function start(sce: Scene3D, mtl: BlinnPhongMaterial, camctrl: MouseCtrl1){
 	let res = await fetch('res/scene/sce1.json');
 	if(!res.ok)
@@ -309,7 +354,21 @@ async function start(sce: Scene3D, mtl: BlinnPhongMaterial, camctrl: MouseCtrl1)
 	mtl1 = mtl;
 	//mtl.renderMode = BlinnPhongMaterial.RENDERMODE_TRANSPARENT;
 	initPhy(sce);
-	loadSce(sce, phymtl2, sceobj as PhyObj[], true)
+	//loadSce(sce, phymtl2, sceobj as PhyObj[], true)
+	let loader = new JSONLoader()
+	loader.loadJSON( sceobj, (l,n)=>{
+		if(n instanceof Array)
+			return null;
+		switch(n.type){
+			case 'Material':
+				return new NodeLoadNodeProxyMtl();
+			case 'Body':
+				return new NodeLoaderProxyBox();
+			default:
+				return null;
+				
+		}
+	});
 	test(mtl, cam);
 
 	let q1 = new Quaternion();

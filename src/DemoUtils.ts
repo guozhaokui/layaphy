@@ -50,7 +50,8 @@ export function addZupBox(size:Vec3, mass:number, pos:Vec3, q:Quaternion){
 
 	let box = new MeshSprite3D(PrimitiveMesh.createBox(size.x,size.y,size.z));
 	scene.addChild(box);
-	var rigidBody = box.addComponent(CannonBody) as CannonBody;
+	var rigidBody = new CannonBody();// box.addComponent(CannonBody) as CannonBody;
+	rigidBody.renderobj=box;
 	var boxShape = new Box(new Vec3(size.x / 2, size.y / 2, size.z / 2));
 	rigidBody.phyBody.position.copy(tmpPos);
 	rigidBody.phyBody.quaternion.copy(tmpQ);
@@ -75,10 +76,11 @@ export function addBox( size:Vec3, pos:Vec3, mass:number, phyMtl:PhyMtl, randr=f
 		transform.rotationEuler = rotationEuler;
 	}
 
-	var rigidBody = box.addComponent(CannonBody) as CannonBody;
+	var rigidBody = new CannonBody();// box.addComponent(CannonBody) as CannonBody;
+	rigidBody.renderobj=box;
 	//rigidBody.phyBody.setScale(3,1,1);
     var boxShape = new Box(new Vec3(size.x / 2, size.y / 2, size.z / 2));
-    rigidBody.addShape(boxShape);
+	rigidBody.addShape(boxShape);
 	rigidBody.setMass(mass);
 	rigidBody.phyBody.material = phyMtl;
     return rigidBody;
@@ -111,7 +113,8 @@ export function addCapsule(r: f32, h: f32, x: f32, y: f32, z: f32,randr=false): 
     let shapeq = new Quaternion();
     shapeq.setFromAxisAngle(new Vec3(1,0,0),-Math.PI/2);
 
-    var phy = cap.addComponent(CannonBody) as CannonBody;
+	var phy = new CannonBody();// cap.addComponent(CannonBody) as CannonBody;
+	phy.renderobj=cap;
     phy.addShape(new Capsule(r, h), new Vector3(), shapeq);
 	phy.setMass(1);
 	phy.setName('capsule')
@@ -127,7 +130,8 @@ export function addSphere(r: f32, x: f32, y: f32, z: f32): CannonBody {
     pos.setValue(x, y, z);
     transform.position = pos;
 
-	var phy = sph.addComponent(CannonBody) as CannonBody;
+	var phy = new CannonBody();// sph.addComponent(CannonBody) as CannonBody;
+	phy.renderobj=sph;
 	//phy.phyBody.setScale(3,1,1);
     phy.addShape(new Sphere(r));
     phy.setMass(1);
@@ -146,20 +150,94 @@ export interface PhyObj{
 	mass:number;
 }
 
-export function loadSce(rsce:Scene3D, mtl:Material, sce:PhyObj[],zup2yup:boolean){
-	let newpos=new Vec3();
-	sce.forEach(cbox=>{
-		if(zup2yup){
-			zup2yupQ.vmult(cbox.pos,newpos);
-			let b = addBox(cbox.dim,newpos,cbox.mass,mtl,false);
-			zup2yupQ.mult(cbox.quat,b.phyBody.quaternion);
-			b.phyBody.aabbNeedsUpdate=true;	//TODO 这个怎么能自动实现
-		}else{
-			let b = addBox(cbox.dim,cbox.pos,cbox.mass,mtl,false);
-			b.phyBody.quaternion.copy(cbox.quat);
-			b.phyBody.aabbNeedsUpdate=true;
+function createNodeByType(type:string):any{
+	switch(type){
+		case 'Body':
+			return new CannonBody();
+			break;
+	}
+
+}
+
+interface unpackable{
+	initByJSONData(data:any):void;
+}
+
+export interface nodeProxy{
+	//createNode(type:string):any;
+	getRealNode():any;
+	setProp(name:string, value:any, node:any, loader:JSONLoader):void;
+	setPropEnd( node:any, loader:JSONLoader):void;
+}
+
+/**
+ * 遍历所有的节点，创建对应的对象，设置属性
+ * 管理引用关系
+ * 具体加载需要有一个代理类，接收对应的属性，并赋值给实际对象
+ * 有个潜规则是假设每个节点有type属性。没有也可以，但是不能分类了
+ * 
+ * node 动态增加
+ * 		___id
+ * 		___proxynode
+ * 		___parent
+ * 这里做遍历的事情，具体加载器就只要管一层就行了。
+ */
+export class JSONLoader{
+	typesMap:{[key:string]:any[]}={};	// 
+
+	getNodeByName(name:string,type:string){
+
+	}
+
+	loadJSON(obj:any, creater:(l:JSONLoader,nodeObj:any)=>nodeProxy|null){
+		let allnodes:any[]=[];
+		// 遍历所有节点。 创建空对象
+		let cid=0;
+		//obj.___id=cid++;
+		//obj.___proxynode = null;
+		//obj.___parent=null;
+
+		let typesMap = this.typesMap;
+		let stack:any[]=[];
+		stack.push(obj);
+		while(stack.length>0){
+			let cn = stack.pop();
+			allnodes.push(cn);
+			// 分组
+			let type = cn.type;
+			if(type && typeof(type)==='string'){
+				if(!typesMap[type])
+					typesMap[type]=[];
+				typesMap[type].push(cn);
+			}
+
+			// 属性，成员
+			for(let i in cn){
+				if(i=='___parent')
+					continue;
+				if(typeof(cn[i])==='object'){
+					cn[i].___parent=cn;
+					stack.push(cn[i]);
+				}
+			}
+			// 这个放到后面，不要影响cn的结构
+			cn.___id=cid++;
+			cn.___proxynode = creater(this, cn);
 		}
-	});
+
+		// 设置属性
+		allnodes.forEach( cn=>{
+			let proxy = cn.___proxynode;
+			if(proxy){
+				for(let i in cn){
+					if(i=='___id' || i=='___proxynode' || i=='___parent')
+						continue;
+					proxy.setProp(i, cn[i], cn, this);
+				}
+				proxy.setPropEnd(cn,this);
+			}
+		});
+	}
 }
 
 export function raycast(world:World, cam:Camera, cb:(pt:Vec3, norm:Vec3)=>void){
@@ -318,4 +396,40 @@ export function loadObj(o: Object[],world:World) {
 		}
 		//if(C.type ==)
 	});
+}
+
+let emitPos = new Vec3();
+let emitDir = new Vec3();
+
+export function mouseDownEmitObj(scrx: number, scry: number, cam:Camera, lockEmit:boolean=false){
+	let worlde = cam.transform.worldMatrix.elements;
+	let stpos = new Vec3(worlde[12], worlde[13], worlde[14]);
+	let dir = new Vec3(worlde[8], worlde[9], worlde[10]);
+
+	let ray = new Ray(new Vector3(), new Vector3());
+	cam.viewportPointToRay(new Vector2(scrx,scry), ray);
+	if(!lockEmit){
+		emitPos.set(ray.origin.x, ray.origin.y, ray.origin.z);
+		//DEBUG
+		//emitPos.set(-31.65083976589477,20.991332874362374,66.50135643487836 );
+	}
+
+	stpos.set(emitPos.x, emitPos.y, emitPos.z);
+
+	if(!lockEmit){
+		emitDir.set(ray.direction.x, ray.direction.y, ray.direction.z);
+		//DEBUG
+		//emitDir.set(-0.18446392214973648,-0.17484450459282244,-0.9671620653431494);
+	}
+	
+	dir.set(emitDir.x,emitDir.y,emitDir.z);
+	let sp = addSphere(.3, stpos.x, stpos.y, stpos.z);
+	//sp.setMaterial(phySph);
+	let v = 20;
+	setTimeout(() => {
+		//sp.owner.destroy();
+		sp._onDestroy();
+	}, 11000);
+	sp.setVel(dir.x * v, dir.y * v, dir.z * v);
+
 }

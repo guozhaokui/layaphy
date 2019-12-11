@@ -1,4 +1,5 @@
 import { Handler } from "laya/utils/Handler";
+import { Laya } from "Laya";
 
 export function delay(duration:number) {
     return new Promise(resolve=>{
@@ -11,7 +12,7 @@ export function delay(duration:number) {
 
 export function loadRes(url:string){
     return new Promise(resolve=>{
-        Laya.loader.load(url, Handler.create(this,()=>{
+        Laya.loader.load(url, Handler.create(null,()=>{
             resolve();}));
     });
 }
@@ -21,7 +22,7 @@ postData('http://example.com/answer', {answer: 42})
   .then(data => console.log(data)) // JSON from `response.json()` call
   .catch(error => console.error(error))
 
-function postData(url, data) {
+function postData(url:string, data:any) {
   // Default options are marked with *
   return fetch(url, {
     body: JSON.stringify(data), // must match 'Content-Type' header

@@ -27,7 +27,7 @@ export class PhyCharactorCtrl extends Component implements ICharactorCtrl{
 		//TODO
 	}
 	//private _mtl =new Material('ctrl',1,0);
-	_mtl =new Material('ctrl',0,0);
+	_mtl =new Material('ctrl',0.3,0);
 
 	/** 当前朝向， +z为0 */
 	_curDir:number=0;	
