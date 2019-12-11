@@ -34,7 +34,7 @@ function addSphere(mass:number, r: f32, x: f32, y: f32, z: f32): CannonBody {
     pos.setValue(x, y, z);
     transform.position = pos;
 
-    var phy = sph.addComponent(CannonBody) as CannonBody;
+    var phy =  new CannonBody(); phy.renderobj = sph;// sph.addComponent(CannonBody) as CannonBody;
     phy.addShape(new Sphere(r));
     phy.setMass(mass);
     return phy;
@@ -46,7 +46,9 @@ class gameBody extends MeshSprite3D{
 		super(PrimitiveMesh.createBox(wx,wy,wz));
 		this.meshRenderer.material = mtl1;
 		//物理组件
-		var rigidBody = this.phybody = this.addComponent(CannonBody) as CannonBody;
+		var rigidBody = this.phybody = new CannonBody();// this.addComponent(CannonBody) as CannonBody;
+		rigidBody.renderobj=this;
+		
 		var boxShape = new Box(new Vec3(wx / 2, wy / 2, wz / 2));
 		//var boxShape=new Sphere(2);
 		rigidBody.addShape(boxShape);
