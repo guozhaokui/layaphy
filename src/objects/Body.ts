@@ -756,6 +756,20 @@ export class Body extends EventTarget {
 	get isTrigger():boolean{
 		return (this.type & BODYTYPE.TRIGGER)!=0;
 	}
+
+	/** 获得整体的接触法线。这里不判断是否接触 */
+	getContactNormal(norm:Vec3){
+		norm.set(0,0,0);
+		let contact = this.contact;
+		let n =contact.allcLen; 
+		if(n<=0)
+			return;
+		for( let i=0; i<n; i++){
+			let c = contact.allc[i];
+			norm.vadd(c.hitnorm, norm);
+		}
+		norm.scale(1/n,norm);
+	}
     /**
      * Should be called whenever you change the body shape or mass.
      * 更新对象的转动惯量相关值

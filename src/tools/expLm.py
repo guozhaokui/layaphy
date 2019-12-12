@@ -66,6 +66,7 @@ def doexp():
 
 	bpy.data.meshes.remove(me)	# 清理创建的mesh
 
+	string_dict=[]	# 保存字符串数组，通过下标引用
     with open("d:/temp/obj.lm", "wb") as file:
         strver = 'LAYAMODEL:05'
         verlen = 12 #len()
@@ -74,5 +75,24 @@ def doexp():
         #Block:{count:u16}
         #allblocks：{start:u32,size:u32}[]
         #Strings:{offset:u32,count:u16}     offset based on Data
+
+		# block
+		# stringid:short,例如 "MESH"
+		# name:short, "Glass"
+		# vertexBufferCount:short,	下面是 vertexBufferCount 个vb数据
+		#	vbstart:U32, based on Data.offset 
+		#	vertCnt:U32
+		# 	vertFlag:U16(string)	"POSITION,NORMAL,UV,TANGENT"
+		#	下面是vertCnt个顶点数据。占用 vertCnt*stride(vertFlag)
+		# ibstart:u32
+		# iblength:u32
+		# ibBuffer:buffer
+		# bonecnt:u16
+		# ..
+		# bindPoseDataStart:u32
+		# bindPoseDataLength:u32
+
+		# "SUBMESH"
+		
 
 doexp()

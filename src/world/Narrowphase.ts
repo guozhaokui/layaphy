@@ -59,7 +59,7 @@ export class Narrowphase {
     frictionResult: FrictionEquation[] = [];
 	
 	/** 当前使用的材质 */
-    currentContactMaterial = new ContactMaterial(null,null, 0.3,0);
+    private currentContactMaterial = new ContactMaterial(null,null, 0.3,0);
 
     /**
      * @property {Boolean} enableFrictionReduction
@@ -249,6 +249,7 @@ export class Narrowphase {
 			//@ts-ignore
 			cm.friction=sm.friction;
 			if(cm.friction>1) cm.friction=1;
+			if(cm.friction<0) cm.friction=0;
 			//@ts-ignore
 			cm.restitution=sm.restitution;
 			this.curm1 = mi;
@@ -268,6 +269,8 @@ export class Narrowphase {
 				// 如果没有相对材质，就计算组合。先用最简单的乘法
 				if(mi.friction == Material.infiniteFriction || mj.friction==Material.infiniteFriction){
 					cm.friction=1;	// 特殊情况
+				}else if(mi.friction<0 || mj.friction<0){
+					cm.friction=0;
 				}else
 					cm.friction = (mi.friction+mj.friction)/2;
 				cm.restitution = mi.restitution*mj.restitution;
