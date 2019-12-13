@@ -2,6 +2,9 @@ import {Broadphase} from './Broadphase.js';
 import {World, AddBodyEvent, RemoveBodyEvent} from '../world/World.js';
 import {Body} from '../objects/Body.js';
 import {AABB} from './AABB.js';
+import { Vec3 } from '../math/Vec3.js';
+
+var tmpVec1=new Vec3();
 /**
  * Sweep and prune broadphase along one axis.
  *
@@ -215,7 +218,22 @@ export class SAPBroadphase extends Broadphase {
         }
 
         return result;
-    }
+	}
+	
+	sphereQuery(world:World, pos:Vec3, radius:number,result:Body[] = []):Body[]{
+		// 先用最简单的方法
+		let rr = radius*radius;
+        const axisList = this.axisList;
+        for (let i = 0; i < axisList.length; i++) {
+            const b = axisList[i];
+
+			b.position.vsub(pos,tmpVec1);
+			if(tmpVec1.lengthSquared()<rr){
+                result.push(b);
+            }
+        }
+        return result;
+	}	
 
     static insertionSortX(a: Body[]) {
         for (let i = 1, l = a.length; i < l; i++) {

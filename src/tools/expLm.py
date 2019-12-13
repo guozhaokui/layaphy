@@ -2,6 +2,8 @@ import bpy
 import os
 import json
 import mathutils, math, struct, time
+import numpy as np
+import array
 
 def mesh_triangulate(me):
     import bmesh
@@ -71,19 +73,24 @@ def doexp():
         strver = 'LAYAMODEL:05'
         verlen = 12 #len()
         file.write(struct.pack('<h12s',verlen,strver.encode('utf-8')))
+
         #Data:{ offset:u32,size:u32 }
         #Block:{count:u16}
         #allblocks：{start:u32,size:u32}[]
         #Strings:{offset:u32,count:u16}     offset based on Data
 
-		# block
-		# stringid:short,例如 "MESH"
-		# name:short, "Glass"
-		# vertexBufferCount:short,	下面是 vertexBufferCount 个vb数据
+		# # blocks
+		
+		# # "MESH" 块
+		# blockname:u16, "MESH"
+		# name:u16, "Glass"
+		# vertexBufferCount:u16,	
+		# # 下面是 vertexBufferCount 个vb数据
 		#	vbstart:U32, based on Data.offset 
 		#	vertCnt:U32
 		# 	vertFlag:U16(string)	"POSITION,NORMAL,UV,TANGENT"
-		#	下面是vertCnt个顶点数据。占用 vertCnt*stride(vertFlag)
+		#	# 下面是vertCnt个顶点数据。占用 vertCnt*stride(vertFlag)
+		#	vertbuf:buffer
 		# ibstart:u32
 		# iblength:u32
 		# ibBuffer:buffer
@@ -92,7 +99,26 @@ def doexp():
 		# bindPoseDataStart:u32
 		# bindPoseDataLength:u32
 
-		# "SUBMESH"
-		
+		# "SUBMESH" 块
+		#	blockname:u16
+		#   ibstart:u32
+		#   ibcount:u32
+		#   drawcnt:u17
+		#		//下面是drawcnt个
+		#		subibstart:u32
+		#		subibcnt:u32
+		#		bonedictofs:u32
+		#		bonedictcnt:u32
+
+		# temp
+		# bytearray([1,2,3])
+		# bytearray(b’abcef’)[2] 返回该字节对应的数，int类型
+		# append(int) 尾部追加一个元素  insert(index, int) 在指定索引位置插入元素
+		# bytearray 可以直接修改   b=bytearray([1,2,3]) b[1]=5
+		# binary_file.write(b'\xDE\xAD\xBE\xEF')		b表示bytes
+		# print(i.to_bytes(4, byteorder='little', signed=True))
+		# bytes_from_list = bytes([255, 254, 253, 252])
+		# i = int.from_bytes([255, 0, 0, 0], byteorder='big')
+		# text = binary_data.decode('utf-8')
 
 doexp()

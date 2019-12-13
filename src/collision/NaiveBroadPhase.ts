@@ -2,7 +2,9 @@ import {Broadphase} from './Broadphase.js';
 import {AABB} from './AABB.js';
 import {World} from '../world/World.js';
 import {Body} from '../objects/Body.js';
+import { Vec3 } from '../math/Vec3.js';
 
+var tmpVec1=new Vec3();
 /**
  * Naive broadphase implementation, used in lack of better ones.
  * @description The naive broadphase looks at all possible pairs without restriction, therefore it has complexity N^2 (which is bad)
@@ -59,5 +61,20 @@ export class NaiveBroadphase extends Broadphase {
         }
 
         return result;
-    }
+	}
+	
+	sphereQuery(world:World, pos:Vec3, radius:number,result:Body[] = []):Body[]{
+		let bodies = world.bodies;
+		let rr = radius*radius;
+        for (let i = 0; i < bodies.length; i++) {
+            const b = bodies[i];
+
+			// 先用最简单，最不精确的方法做
+			b.position.vsub(pos,tmpVec1);
+			if(tmpVec1.lengthSquared()<rr){
+				result.push(b);
+			}
+        }
+        return result;
+	}	
 }

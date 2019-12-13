@@ -146,6 +146,11 @@ export abstract class Broadphase {
         return [];
     }
 
+	sphereQuery(world:World, pos:Vec3, radius:number,result:Body[]):Body[]{
+		console.warn('.sphereQuery is not implemented in this Broadphase subclass.');
+		return [];
+	}
+
     /**
      * Check if the bounding spheres of two bodies overlap.
      * 检查两个body的包围球是否碰撞
