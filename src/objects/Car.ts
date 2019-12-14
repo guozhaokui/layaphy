@@ -100,10 +100,13 @@ export class Car{
 		this.world=world;
 	}
 
-	parse(data:typeof carData){
+	/**
+	 * 
+	 * @param data 
+	 * @param renderModel 如果传入这个参数，则不再自己加载。外部负责加载并加到场景中。模型必须符合制定的规则。
+	 */
+	parse(data:typeof carData, renderModel:Sprite3D|null){
 		this.carData=data;
-		// 加载渲染对象
-		Sprite3D.load(data.modelUrl,Handler.create(this,this.onModelLoaded));
 
 		// 创建物理对象
 		var options = {
@@ -158,10 +161,18 @@ export class Car{
 		this.world.addEventListener('postStep', ()=>{
 			this.updatePose();
 		});	
+
+		if(renderModel){
+			this.onModelLoaded(renderModel,false);
+		}else{
+			// 加载渲染对象
+			Sprite3D.load(data.modelUrl,Handler.create(this,this.onModelLoaded));
+		}		
 	}
 
-	onModelLoaded(model:Sprite3D){
-		this.scene3D.addChild(model);	//TODO
+	onModelLoaded(model:Sprite3D, addtoSce:boolean=true){
+		if(addtoSce)
+			this.scene3D.addChild(model);	//TODO
 
 		let dt = this.carData;
 		let chassis = model.getChildByName( dt.chassisNode ) as MeshSprite3D;
