@@ -16,6 +16,8 @@ import { Quaternion as phyQuat } from "./math/Quaternion";
 import { Vec3 } from "./math/Vec3";
 import { Car, carData } from "./objects/Car";
 import { Box } from "./shapes/Box";
+import { getGamePadStatus } from "./layawrap/ctrls/GamePad";
+import { ttt, updateStatus } from "./layawrap/ctrls/GamePadTest";
 
 /**
  * 测试盒子可以被推走，被抬起
@@ -166,9 +168,11 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 	});
 
 	testGround();
+
+	ttt();
 	//createJoint();
 	car1 = new Car(sce3d,world.world);
-	car1.parse(carData);
+	car1.parse(carData,null);
 	car1.enable();
 	car1.onUpdatePoseEnd=function(pos:Vec3,quat:phyQuat){
 		// 控制摄像机
@@ -176,6 +180,35 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 		lastTarget.scale(0.5,lastTarget);
 		camctr.target.setValue(lastTarget.x,lastTarget.y,lastTarget.z);
 		camctr.updateCam(true);
+
+		updateStatus((v)=>{
+			car1.steer(v*Math.PI/4)
+		},
+		(v)=>{
+			if(v<0){
+				car1.accel(v);
+			}else{
+				let phy = car1.phyCar;
+				let vv = 10000*v;
+				phy.setBrake(vv,0);		
+				phy.setBrake(vv,1);
+				phy.setBrake(vv,2);
+				phy.setBrake(vv,3);
+	
+			}
+		}
+		)
+
+		/*
+		// 控制
+		getGamePadStatus((v)=>{
+
+		}, (v)=>{
+
+		}, (v)=>{
+
+		});
+		*/
 	}
 	
 
@@ -195,7 +228,7 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 	//testConveyorbelt();
 	//loadObj(oo,world.world);
 	setInterval(() => {
-		console.log('speed=',car1.phyCar.currentVehicleSpeedKmHour,'Km/H');
+		//console.log('speed=',car1.phyCar.currentVehicleSpeedKmHour,'Km/H');
 	}, 1000);
 	//b.phyBody.velocity=new Vec3(-1,0,0);
 }
