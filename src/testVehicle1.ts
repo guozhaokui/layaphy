@@ -9,7 +9,7 @@ import { addBox, JSONLoader, mouseDownEmitObj, nodeProxy, ZupPos2Yup, ZupQuat2Yu
 import { CannonBody } from "./layawrap/CannonBody";
 import { CannonWorld } from "./layawrap/CannonWorld";
 import { MouseCtrl1 } from "./layawrap/ctrls/MouseCtrl1";
-import { PhyRender } from "./layawrap/PhyRender";
+import { PhyRender, UIPlane } from "./layawrap/PhyRender";
 import { ContactMaterial } from "./material/ContactMaterial";
 import { Material } from "./material/Material";
 import { Quaternion as phyQuat } from "./math/Quaternion";
@@ -18,6 +18,7 @@ import { Car, carData } from "./objects/Car";
 import { Box } from "./shapes/Box";
 import { getGamePadStatus } from "./layawrap/ctrls/GamePad";
 import { ttt, updateStatus } from "./layawrap/ctrls/GamePadTest";
+import { Vector3 } from "laya/d3/math/Vector3";
 
 /**
  * 测试盒子可以被推走，被抬起
@@ -173,11 +174,26 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 	if(useGamePad)
 		ttt();
 	//createJoint();
+	let kmhSp = new Sprite();
+	let uip = new UIPlane(kmhSp);
+	uip.transform.scale=new Vector3(5,1,1)
+	uip.transform.rotationEuler = new Vector3(-90,0,0);
+	sce3d.addChild(uip);
+	
 	car1 = new Car(sce3d,world.world);
 	car1.parse(carData,null);
 	car1.enable();
 	car1.phyCar.chassisBody.position.set(10,1,10);
 	car1.onUpdatePoseEnd=function(pos:Vec3,quat:phyQuat){
+		let speed = car1.phyCar.currentVehicleSpeedKmHour;
+		kmhSp.graphics.clear();
+		kmhSp.graphics.drawRect(0,0,150,30,null,'blue',2);
+		kmhSp.graphics.fillText('Speed:'+speed.toFixed(2),0,0,'20px Arial', 'red', 'left');
+		uip.buildTex();
+		let uipos = uip.transform.position;
+		uipos.setValue(pos.x,pos.y+2,pos.z);
+		uip.transform.position=uipos;
+
 		// 控制摄像机
 		lastTarget.vadd(pos,lastTarget);
 		lastTarget.scale(0.5,lastTarget);
