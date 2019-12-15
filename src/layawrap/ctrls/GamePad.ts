@@ -1,5 +1,6 @@
 
 // https://html5gamepad.com/
+// https://developer.mozilla.org/zh-CN/docs/Web/API/Gamepad_API/Using_the_Gamepad_API
 
 /*
 var gamepads = {};

@@ -150,6 +150,7 @@ class NodeLoaderProxy implements nodeProxy{
 	}
 }
 	
+var useGamePad=false;
 export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 	camctr = cam;
 	cam.dist = 20;
@@ -169,11 +170,13 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 
 	testGround();
 
-	ttt();
+	if(useGamePad)
+		ttt();
 	//createJoint();
 	car1 = new Car(sce3d,world.world);
 	car1.parse(carData,null);
 	car1.enable();
+	car1.phyCar.chassisBody.position.set(10,1,10);
 	car1.onUpdatePoseEnd=function(pos:Vec3,quat:phyQuat){
 		// 控制摄像机
 		lastTarget.vadd(pos,lastTarget);
@@ -181,34 +184,46 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 		camctr.target.setValue(lastTarget.x,lastTarget.y,lastTarget.z);
 		camctr.updateCam(true);
 
-		updateStatus((v)=>{
-			car1.steer(v*Math.PI/4)
-		},
-		(v)=>{
-			if(v<0){
-				car1.accel(v);
-			}else{
-				let phy = car1.phyCar;
-				let vv = 10000*v;
-				phy.setBrake(vv,0);		
-				phy.setBrake(vv,1);
-				phy.setBrake(vv,2);
-				phy.setBrake(vv,3);
-	
+		if(useGamePad){
+			let acck=0;
+			let isR=false;
+			updateStatus((v)=>{
+				car1.steer(-v*Math.PI/4)
+			},
+			(v)=>{
+				//console.log('v',v);
+				if(v<0.01){
+					if(v<0){
+						// 油门
+						acck=-v;
+						if(isR){
+							car1.reversing(acck);
+						}else{
+							car1.accel(acck);
+						}
+						let phy = car1.phyCar;
+						phy.setBrake(0,0);		
+						phy.setBrake(0,1);
+						phy.setBrake(0,2);
+						phy.setBrake(0,3);
+		
+					}
+				}else{
+					// 刹车
+					let phy = car1.phyCar;
+					let vv = 1000*v;
+					phy.setBrake(vv,0);		
+					phy.setBrake(vv,1);
+					phy.setBrake(vv,2);
+					phy.setBrake(vv,3);
+				}
+			},()=>{
+				isR=false;
+			}, ()=>{
+				isR=true;
 			}
+			);
 		}
-		)
-
-		/*
-		// 控制
-		getGamePadStatus((v)=>{
-
-		}, (v)=>{
-
-		}, (v)=>{
-
-		});
-		*/
 	}
 	
 

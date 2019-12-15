@@ -21,7 +21,7 @@ function removegamepad(gamepad: Gamepad) {
     delete controllers[gamepad.index];
 }
 
-export function updateStatus(steer:(v:number)=>void,acc:(v:number)=>void) {
+export function updateStatus(steer:(v:number)=>void,acc:(v:number)=>void, onD:()=>void,onR:()=>void) {
     if (!haveEvents) {
         scangamepads();
     }
@@ -39,6 +39,17 @@ export function updateStatus(steer:(v:number)=>void,acc:(v:number)=>void) {
                 val.value;
             }
         }
+
+        let bts=controller.buttons;
+        /*
+            17  19  21
+                O   
+            18  20  22
+        */
+        if(bts[17].pressed) onD();
+        if(bts[18].pressed) onR();  
+
+        // 手刹 2
 
         for (i = 0; i < controller.axes.length; i++) {
             //var a = axes[i];
