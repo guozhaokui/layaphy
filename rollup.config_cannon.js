@@ -91,7 +91,11 @@ export default {
 		'./bin/js/shapes/**/*.js',
 		'./bin/js/solver/**/*.js',
 		'./bin/js/utils/**/*.js',
-		'./bin/js/world/**/*.js'
+		'./bin/js/world/**/*.js',
+		'./bin/js/layawrap/ctrls/ArcBall.js',
+		'./bin/js/layawrap/ctrls/KeyInputAction.js',
+		'./bin/js/layawrap/ctrls/PositionAction.js',
+		'./bin/js/layawrap/ctrls/RotationAction.js'
 	],
     treeshake: false,
 	output: {

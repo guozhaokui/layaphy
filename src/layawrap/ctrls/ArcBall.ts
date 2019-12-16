@@ -14,17 +14,26 @@ export class ArcBall {
 
     //private isDrag: boolean = false;
 
-    private static xUnitVec3: Vector3 = new Vector3(1, 0, 0);
-    private static yUnitVec3: Vector3 = new Vector3(0, 1, 0);
-    static tmpVec3: Vector3 = new Vector3();
+    private static xUnitVec3: Vector3;
+    private static yUnitVec3: Vector3;
+    static tmpVec3: Vector3;
 
-    private camStartWorldMat: Matrix4x4 = new Matrix4x4();	//开始拖动的时候的矩阵
+	private camStartWorldMat: Matrix4x4 = new Matrix4x4();	//开始拖动的时候的矩阵
+	
+	initStatic(){
+		if(!ArcBall.xUnitVec3){
+			ArcBall.xUnitVec3 = new Vector3(1, 0, 0);
+			ArcBall.yUnitVec3 = new Vector3(0, 1, 0);
+			ArcBall.tmpVec3 = new Vector3();
+		}
+	}
 
     // 设置屏幕范围。可以不是方形的，对应的arcball也会变形。
     init(w: number, h: number): void {
+		this.initStatic();
         if (w <= ArcBall.e || h <= ArcBall.e) throw '设置大小不对，不能为0';
         this.width = w;
-        this.height = h;
+		this.height = h;
     }
 
     /**

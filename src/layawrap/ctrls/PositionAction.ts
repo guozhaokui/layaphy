@@ -7,9 +7,9 @@ import { Vector3 } from "laya/d3/math/Vector3";
 import { IAction, KeyInputAction } from "./KeyInputAction";
 
 export class PositionAction extends KeyInputAction implements IAction{
-	private static mousePt = new Vector2();
-	private static v1=new Vector3();
-	private static v2=new Vector3();
+	private static mousePt:Vector2;
+	private static v1:Vector3;
+	private static v2:Vector3;
 
 	private startPos:Vector3=new Vector3();
 	private lastHitPos = new Vector3();	
@@ -33,8 +33,16 @@ export class PositionAction extends KeyInputAction implements IAction{
 	// 操作的节点
 	node:Sprite3D|null;
 
+	initStatic(){
+		if(PositionAction.mousePt){
+			PositionAction.mousePt = new Vector2();
+			PositionAction.v1=new Vector3();
+			PositionAction.v2=new Vector3();
+		}
+	}
 	constructor(){
 		super();
+		this.initStatic();
 	}
 
 	private hitPlane(hitpos:Vector3):boolean{

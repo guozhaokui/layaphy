@@ -9,9 +9,9 @@ import { ArcBall } from "./ArcBall";
 import { KeyInputAction, IAction, OperatorInfo } from "./KeyInputAction";
 
 export class RotationAction extends KeyInputAction implements IAction{
-	private static mousePt = new Vector2();
-	private static v1=new Vector3();
-	private static v2=new Vector3();
+	private static mousePt:Vector2;
+	private static v1:Vector3;
+	private static v2:Vector3;
 
 	private startRot:Quaternion=new Quaternion();
 	// 起点要不断更新，否则幅度太大的时候会产生意外旋转
@@ -35,8 +35,16 @@ export class RotationAction extends KeyInputAction implements IAction{
 	// 操作的节点
 	node:Sprite3D|null;
 
+	initStatic(){
+		if(!RotationAction.mousePt){
+			RotationAction.mousePt = new Vector2();
+			RotationAction.v1=new Vector3();
+			RotationAction.v2=new Vector3();
+		}
+	}
 	constructor(){
 		super();
+		this.initStatic();
 	}
 
 	private hitPlane(hitpos:Vector3):boolean{
