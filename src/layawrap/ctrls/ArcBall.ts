@@ -69,15 +69,15 @@ export class ArcBall {
     }
 
     // 把屏幕空间换成-1,1
-    normx(x: number): number {
+    private normx(x: number): number {
         return x * 2 / this.width - 1;
     }
-    normy(y: number): number {
+    private normy(y: number): number {
         return -(y * 2 / this.height - 1);
     }
 
-    // 根据屏幕坐标返回一个arcball表面上的位置
-    hitpos(x: number, y: number, out: Vector3): void {
+    // 根据屏幕坐标返回一个arcball表面上的位置。这个位置会考虑摄像机的影响。
+    private hitpos(x: number, y: number, out: Vector3): void {
         var x1: number = this.normx(x);
         var y1: number = this.normy(y);
         var l: number = x1 * x1 + y1 * y1;
@@ -98,9 +98,10 @@ export class ArcBall {
 
     /**
      * 开始新的拖动。
-     * 以后调用dragTo的时候就不用再计算hitpos了
+	 * 记录开始拖动的位置
+     * 以后调用dragTo的时候都是跟这个比较，来计算旋转
      */
-    setTouchPos(x: number, y: number): void {
+    private setStartPos(x: number, y: number): void {
         this.hitpos(x, y, this.lastPos);
     }
 
@@ -120,12 +121,9 @@ export class ArcBall {
 
     startDrag(x: number, y: number, camWorldMatrix: Matrix4x4): void {
         //this.isDrag = true;
-        camWorldMatrix.cloneTo(this.camStartWorldMat);
-        this.setTouchPos(x, y);
-    }
-
-    stopDrag(): void {
-        //this.isDrag = false;
+		camWorldMatrix.cloneTo(this.camStartWorldMat);
+		// 记录起始接触点
+        this.setStartPos(x, y);
     }
 }
 

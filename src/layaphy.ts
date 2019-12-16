@@ -18,7 +18,8 @@ import { testBullet } from "./TestBullet";
 import { DefaultMaterial } from "./layawrap/debugger/DefaultMtl";
 import { loadEnvTexture, loadLUTTex } from "./layawrap/debugger/envTexMgr";
 import { Matrix4x4 } from "laya/d3/math/Matrix4x4";
-import { Main } from "./testVehicle1";
+import { Main } from "./testEditor";
+//import { Main } from "./testVehicle1";
 //import { Main } from "./testVehicle";
 //import { Main } from "./testGridBroad";
 //import { Main } from "./TestEPA";
@@ -72,7 +73,7 @@ function QuatToEuler(q:Quaternion) {
 
 let scene: Scene3D;
 //let mtl1:BlinnPhongMaterial;
-Laya3D.init(1920, 1080);
+Laya3D.init(window.innerWidth, window.innerHeight);
 scene = Laya.stage.addChild(new Scene3D()) as Scene3D;
 let mtl2 = new BlinnPhongMaterial();
 let stdmtl = new DefaultMaterial();
