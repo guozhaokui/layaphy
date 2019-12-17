@@ -22,6 +22,11 @@ import { PointToPointConstraint } from "./constraints/PointToPointConstraint";
 import { ConeTwistConstraint } from "./constraints/ConeTwistConstraint";
 import { Mat3 } from "./math/Mat3";
 import { Body } from "./objects/Body";
+import { SparseVoxData } from "./shapes/VoxelData";
+import { Voxel } from "./shapes/Voxel";
+import { createVoxMesh } from "./layawrap/debugger/PhyMesh";
+import { PhyMeshSprite } from "./layawrap/debugger/PhyMeshSprite";
+import { Mesh2Voxel } from "./tools/Mesh2Voxel";
 
 var scene:Scene3D;
 var mtl:BaseMaterial;
@@ -432,4 +437,44 @@ export function mouseDownEmitObj(scrx: number, scry: number, cam:Camera, lockEmi
 	}, 11000);
 	sp.setVel(dir.x * v, dir.y * v, dir.z * v);
 
+}
+
+
+
+export function loadVoxel(file:string, pos?:Vec3,q?:Quaternion,scale?:Vec3) {
+	let m2v = new Mesh2Voxel();	
+	m2v.loadObj(file, 0.25, (voxdata: SparseVoxData) => {
+		console.time('voxel');
+		
+		let phyvox = new Voxel(voxdata,3);
+		console.timeEnd('voxel');
+
+		let dt = phyvox.bitDataLod[0];
+		let min = dt.min as any as Vector3;
+		let max = dt.max as any as Vector3;
+		let mesh = createVoxMesh(
+			{ get: function (x: int, y: int, z: int) { return dt.getBit(x, y, z); } }, 
+			dt.xs * 2, dt.ys * 2, dt.zs * 2, dt.rx, dt.ry, dt.rz, min, max);// PrimitiveMesh.createQuad(10,10) ;//PrimitiveMesh.createBox(1,1,1);		
+		let vox = new PhyMeshSprite(mesh, min, max);
+		//vox.createMesh();
+		scene.addChild(vox);
+		vox.transform.localPosition.setValue(0, 0, 0);
+		var phy =  new CannonBody();// vox.addComponent(CannonBody) as CannonBody;
+		phy.renderobj=vox;
+		phy.phyBody.dbgShow=true;
+		if(scale){
+			phy.phyBody.setScale(scale.x,scale.y,scale.z);
+			vox.transform.scale =  new Vector3(scale.x, scale.y, scale.z);
+		}
+		phy.addShape(phyvox);
+		if(pos){
+			phy.phyBody.setPos(pos.x,pos.y,pos.z);
+		}
+		
+		if(q){
+			phy.phyBody.quaternion.copy(q);
+		}
+
+		phy.setMass(0);
+	});
 }

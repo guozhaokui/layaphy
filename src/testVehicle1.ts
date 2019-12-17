@@ -5,7 +5,7 @@ import { Scene3D } from "laya/d3/core/scene/Scene3D";
 import { PrimitiveMesh } from "laya/d3/resource/models/PrimitiveMesh";
 import { Sprite } from "laya/display/Sprite";
 import { Event } from "laya/events/Event";
-import { addBox, JSONLoader, mouseDownEmitObj, nodeProxy, ZupPos2Yup, ZupQuat2Yup } from "./DemoUtils";
+import { addBox, JSONLoader, mouseDownEmitObj, nodeProxy, ZupPos2Yup, ZupQuat2Yup, loadVoxel } from "./DemoUtils";
 import { CannonBody } from "./layawrap/CannonBody";
 import { CannonWorld } from "./layawrap/CannonWorld";
 import { MouseCtrl1 } from "./layawrap/ctrls/MouseCtrl1";
@@ -31,7 +31,7 @@ var world: CannonWorld;
 var camctr: MouseCtrl1;
 
 let phymtl1 = new Material("1",1,0);
-let phymtl2 = new Material('2',0,0);
+let phymtl2 = new Material('2',1,0);
 let phymtl3 = new Material('3',1,0);
 let cmtl1 = new ContactMaterial(phymtl1, phymtl2, 1, 0);
 let cmtl2 = new ContactMaterial(phymtl1, phymtl3, 1, 0);
@@ -170,6 +170,8 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 	});
 
 	testGround();
+
+	loadVoxel('res/house/house1.obj',new Vec3(-37, -0.5, 45));//, undefined, new Vec3(-1,-1,1));
 
 	if(useGamePad)
 		ttt();

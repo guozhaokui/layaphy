@@ -205,6 +205,7 @@ export class Car{
 		this.wheels[3]=wheelrr;
 
 		// 计算偏移。 
+		// 车身主偏移。在物理和显示重合的情况下，显示的旋转
 		let rquat = chassis.transform.rotation;
 		this.chassisoffq.set(rquat.x,rquat.y,rquat.z,rquat.w);
 
