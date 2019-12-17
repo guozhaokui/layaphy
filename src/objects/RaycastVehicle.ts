@@ -48,7 +48,10 @@ export class RaycastVehicle {
     /**
      * Index of the up axis, 0=x, 1=y, 2=z
      */
-    //indexUpAxis:i32 = 1;
+	//indexUpAxis:i32 = 1;
+	
+	dbgShowSlideForce=false;
+	dbgShowSuspForce=false;
 
 	/** 当前速度，单位是 Km/h */
     currentVehicleSpeedKmHour=0;
@@ -166,7 +169,7 @@ export class RaycastVehicle {
             }
             wheel.raycastResult.hitNormalWorld.scale(suspensionForce * timeStep, impulse);
 			//DEBUG
-			if(this.world){
+			if(this.world && this.dbgShowSuspForce){
 				this.world.phyRender.addVec1(wheel.raycastResult.hitPointWorld,impulse,0.05,0xffffff00);
 			}
 			//DEBUG
@@ -611,7 +614,7 @@ export class RaycastVehicle {
                     chassisBody.applyImpulse(sideImp, rel_pos);
     
 					//DEBUG
-					if(this.world){
+					if(this.world && this.dbgShowSlideForce){
 						this.world.phyRender.addVec1(wheel.raycastResult.hitPointWorld,sideImp,0.05,0xffff0000);
 					}
 					//DEBUG

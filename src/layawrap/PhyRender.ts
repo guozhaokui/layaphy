@@ -87,7 +87,7 @@ export class PhyRender extends IPhyRender {
 	private persistVec: Vec3[] = [];
 	ui1: UIPlane = new UIPlane(new Sprite());
 
-	private static inst: PhyRender;
+	static inst: PhyRender;
 	constructor(sce: Scene3D, world: World) {
 		super();
 		this.sce = sce;

@@ -82,22 +82,40 @@ export class Car{
 	wheelsOffQuat:Quaternion[]=[];
 
 	// 调试轨迹
-	wheelstrackf:Vec3[]=[];	// 前轮
-	wheelstrackr:Vec3[]=[];	// 后轮
-	wheelstrackslid:Vec3[]=[];	// 侧滑
-	tracklen=1000;
+	private wheelstrackf:Vec3[]=[];	// 前轮
+	private wheelstrackr:Vec3[]=[];	// 后轮
+	private wheelstrackslid:Vec3[]=[];	// 侧滑
+	private tracklen=1000;
 
 	// 刹车tween
-	wheelBrake:Tween[]=[];
-	isBraking=false;
+	private wheelBrake:Tween[]=[];
+	private isBraking=false;
 
 	phyCar:RaycastVehicle;
+
+	showTrack=false;
+	showCenter=false;
 
 	onUpdatePoseEnd:(pos:Vec3, quat:Quaternion)=>void;
 
 	constructor(sce:Scene3D,world:World){
 		this.scene3D=sce;
 		this.world=world;
+	}
+
+	set showSlideForce(b:boolean){
+		this.phyCar.dbgShowSlideForce=b;
+	}
+	get showSlideForce(){
+		return this.phyCar.dbgShowSlideForce;
+	}
+
+	set showSuspForce(b:boolean){
+		this.phyCar.dbgShowSuspForce=b;
+	}
+
+	get showSuspForce(){
+		return this.phyCar.dbgShowSuspForce;
 	}
 
 	/**
@@ -316,7 +334,7 @@ export class Car{
 					this.wheelstrackslid.shift();
 				}
 			}else{
-				if(wheelinfo.isInContact){
+				if(wheelinfo.isInContact && this.showTrack){
 					if(wheelinfo.isFrontWheel){
 						this.wheelstrackf.push(wheelinfo.raycastResult.hitPointWorld.clone());
 						if(this.wheelstrackf.length>this.tracklen){
@@ -338,16 +356,21 @@ export class Car{
 		}
 
 		let phyr = this.world.phyRender;
-		this.wheelstrackf.forEach((v:Vec3)=>{
-			phyr.addVec(v.x,v.y,v.z,0,.1,0,0xff6666);
-		});
-		this.wheelstrackr.forEach((v:Vec3)=>{
-			phyr.addVec(v.x,v.y,v.z,0,.1,0,0x66ff66);
-		});
-		this.wheelstrackslid.forEach((v)=>{
-			phyr.addVec(v.x,v.y,v.z,0,.2,0,0x000000);
-		});
-		phyr.addPoint1(this.phyCar.chassisBody.position, 0xff0000)
+		if(this.showTrack){
+			this.wheelstrackf.forEach((v:Vec3)=>{
+				phyr.addVec(v.x,v.y,v.z,0,.1,0,0xff6666);
+			});
+			this.wheelstrackr.forEach((v:Vec3)=>{
+				phyr.addVec(v.x,v.y,v.z,0,.1,0,0x66ff66);
+			});
+			this.wheelstrackslid.forEach((v)=>{
+				phyr.addVec(v.x,v.y,v.z,0,.2,0,0x000000);
+			});
+		}
+
+		if(this.showCenter)
+			phyr.addPoint1(this.phyCar.chassisBody.position, 0xff0000)
+
 	}
 
 	op_steerLeft=false;

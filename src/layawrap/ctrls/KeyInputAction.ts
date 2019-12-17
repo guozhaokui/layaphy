@@ -7,7 +7,7 @@ export class OperatorInfo{
 }
 
 export interface IAction{
-	startAction(node:Sprite3D,cam:Camera):void;
+	startAction(node:Sprite3D,cam:Camera,mousex:number,mousey:number):void;
 	apply(outop:OperatorInfo):void;
 	cancel():void;
 	onKeyEvent(key:number, down:boolean):void;
@@ -17,7 +17,8 @@ export interface IAction{
 export class KeyInputAction {
 	private strValue='';	// 输入的角度
 	protected useInput=false;	// 一旦开始输入，鼠标就不再控制了
-
+	protected altdown=false;
+	protected shift=false;
 	onKeyEvent(keycode:int,down:boolean){
 		if( keycode>=48 && keycode<=57){//0~9
 			this.strValue+= String.fromCharCode(keycode);
@@ -33,10 +34,16 @@ export class KeyInputAction {
 				this.strValue= this.strValue.substr(0,this.strValue.length-1);
 				this._onInputValueChanged();
 				break;
+			case 18:
+				this.altdown=down;
+				break;
+			case 16:
+				this.shift=down;
+				break;
 		}		
 	}
 
-	startAction(node:Sprite3D, cam:Camera){
+	_startAction(node:Sprite3D, cam:Camera){
 		this.strValue='';
 	}	
 

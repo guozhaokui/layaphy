@@ -62,6 +62,7 @@ let rotact = new RotationAction();
 let posact = new PositionAction();
 
 let curact:IAction|null;
+let altDown=false;
 
 let node:Sprite3D;
 
@@ -87,33 +88,44 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 	});
 
 	Laya.stage.on(Event.KEY_DOWN, null, (e: Event) => {
+		if(curact){
+			curact.onKeyEvent(e.keyCode,true);
+		}
 		switch(e.keyCode){
 			case 'R'.charCodeAt(0):
 				curact = rotact;
-				curact.startAction(node,cam.camera);
+				curact.startAction(node,cam.camera, Laya.stage.mouseX, Laya.stage.mouseY);
 				break;
 			case 'G'.charCodeAt(0):
 				curact = posact;
-				curact.startAction(node,cam.camera);
+				curact.startAction(node,cam.camera,Laya.stage.mouseX, Laya.stage.mouseY);
 				curact=posact;
 				break;
 			case 13:// 回车确认
 				curact && curact.apply({applyop:{},lastop:{}});
 				curact=null;
 				break;
+			case 18:	//alt
+				altDown=true;
+				break;
 		}
-	});
-
-	Laya.stage.on(Event.MOUSE_MOVE, null, (e: { stageX: number, stageY: number }) => {
-		if(curact)
-			curact.onMouseMove(e.stageX,e.stageY);
 	});
 
 	Laya.stage.on(Event.KEY_UP, null, (e: Event) => {
 		if(curact){
 			curact.onKeyEvent(e.keyCode,false);
 		}
+		if(e.keyCode==18){
+			altDown=false;
+		}
+	});	
+
+	Laya.stage.on(Event.MOUSE_MOVE, null, (e: { stageX: number, stageY: number }) => {
+		if(curact)
+			curact.onMouseMove(e.stageX,e.stageY);
 	});
+
+
 
 	Sprite3D.load('res/car/car.lh',Handler.create(null,(model:Sprite3D)=>{
 		sce3d.addChild(model);

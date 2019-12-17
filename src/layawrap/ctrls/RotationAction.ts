@@ -1,17 +1,18 @@
-import { Laya } from "Laya";
 import { Camera } from "laya/d3/core/Camera";
 import { Sprite3D } from "laya/d3/core/Sprite3D";
 import { Quaternion } from "laya/d3/math/Quaternion";
 import { Ray } from "laya/d3/math/Ray";
 import { Vector2 } from "laya/d3/math/Vector2";
 import { Vector3 } from "laya/d3/math/Vector3";
+import { PhyRender } from "../PhyRender";
 import { ArcBall } from "./ArcBall";
-import { KeyInputAction, IAction, OperatorInfo } from "./KeyInputAction";
+import { IAction, KeyInputAction, OperatorInfo } from "./KeyInputAction";
 
 export class RotationAction extends KeyInputAction implements IAction{
 	private static mousePt:Vector2;
 	private static v1:Vector3;
 	private static v2:Vector3;
+	private QuatI=new Quaternion();
 
 	private startRot:Quaternion=new Quaternion();
 	// 起点要不断更新，否则幅度太大的时候会产生意外旋转
@@ -53,7 +54,7 @@ export class RotationAction extends KeyInputAction implements IAction{
 		Vector3.normalize(r.direction,rdir);
 
 		// dot(raypos, norm)+dot(raydir,norm)*t=d;
-		let t = this.planeD-Vector3.dot(r.origin, this.rotAxis)/Vector3.dot(rdir, this.rotAxis);
+		let t = (this.planeD-Vector3.dot(r.origin, this.rotAxis))/Vector3.dot(rdir, this.rotAxis);
 		if(t>=0 && t<1e8){
 			r.origin.cloneTo(hitpos);
 			hitpos.x+=rdir.x*t;
@@ -64,10 +65,10 @@ export class RotationAction extends KeyInputAction implements IAction{
 		return false;
 	}
 
-	private updateRay(){
+	private updateRay(mousex:number,mousey:number){
 		let ray = this.camRay;
 		let mousept = RotationAction.mousePt;
-		mousept.setValue(Laya.stage.mouseX, Laya.stage.mouseY);
+		mousept.setValue(mousex,mousey);
 		this.camera.viewportPointToRay(mousept, ray);
 	}
 
@@ -78,9 +79,10 @@ export class RotationAction extends KeyInputAction implements IAction{
 		if(this.useInput)
 			return;
 
-		this.updateRay();
+		this.updateRay(mx,my);
 		let hitpos = this.curHitPos;
 		if(this.hitPlane(hitpos)){
+			PhyRender.inst.addPersistPoint(hitpos.x, hitpos.y, hitpos.z);
 			let v1=RotationAction.v1;
 			let v2=RotationAction.v2;
 	
@@ -90,6 +92,11 @@ export class RotationAction extends KeyInputAction implements IAction{
 			Vector3.normalize(v2,v2);
 			let deltaRot = this.deltaRot;
 			ArcBall.rotationTo(deltaRot, v1,v2);
+			//
+			if(this.shift){
+				//deltaRot/10
+				Quaternion.slerp( this.QuatI, deltaRot, 0.1, deltaRot);
+			}
 			Quaternion.multiply(deltaRot, this.outRot, this.outRot);
 
 			// 应用
@@ -130,15 +137,14 @@ export class RotationAction extends KeyInputAction implements IAction{
 		this.node=null;
 	}
 
-	startAction(node:Sprite3D, cam:Camera){
-		super.startAction(node,cam);
+	startAction(node:Sprite3D, cam:Camera,mousex:number,mousey:number){
+		super._startAction(node,cam);
 		this.node=node;
 		this.camera = cam;
 		node.transform.rotation.cloneTo(this.startRot);
 		node.transform.position.cloneTo(this.rotOrig);
 		this.startRot.cloneTo(this.outRot);
 
-        // 开始的时候，修正一个合理的dist，避免target在空中，dist很小了以后移动很慢的问题
         var mat = cam.transform.worldMatrix.elements;
         var zx = mat[8];		// z轴朝向
         var zy = mat[9];
@@ -146,7 +152,7 @@ export class RotationAction extends KeyInputAction implements IAction{
 		this.camDir.setValue(zx,zy,zz);	//TODO 是否要取反
 		Vector3.normalize(this.camDir, this.camDir);
 
-		this.updateRay();
+		this.updateRay(mousex,mousey);
 
 		this.cax=0;
 		this.worldAx=0;
@@ -194,8 +200,9 @@ export class RotationAction extends KeyInputAction implements IAction{
 				break;
 		}
 
-		console.log('rotax=',this.rotAxis);
+		Quaternion.createFromAxisAngle(this.rotAxis,0,this.QuatI);
 		this.planeD = Vector3.dot(this.rotAxis,this.rotOrig);
+		console.log('rotax=',this.rotAxis, this.planeD);
 		this.hitPlane(this.lastHitPos);
 	}
 

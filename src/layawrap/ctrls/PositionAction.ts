@@ -14,7 +14,6 @@ export class PositionAction extends KeyInputAction implements IAction{
 	private startPos:Vector3=new Vector3();
 	private lastHitPos = new Vector3();	
 	private curHitPos = new Vector3();
-	private deltaPos = new Vector3();
 	private outPos = new Vector3();
 
 	rotAxis=new Vector3();	// 旋转轴：缺省是摄像机z轴，第一次切换为世界空间轴，第二次本地空间轴
@@ -29,12 +28,12 @@ export class PositionAction extends KeyInputAction implements IAction{
 	private worldAx=0;	// 0 视平面， 世界空间， 本地空间
 
 	private movOnPlane=true;	// true则在平面移动。否则在轴上移动。在轴上移动的话，用直线交点
-
+	
 	// 操作的节点
 	node:Sprite3D|null;
 
 	initStatic(){
-		if(PositionAction.mousePt){
+		if(!PositionAction.mousePt){
 			PositionAction.mousePt = new Vector2();
 			PositionAction.v1=new Vector3();
 			PositionAction.v2=new Vector3();
@@ -51,7 +50,7 @@ export class PositionAction extends KeyInputAction implements IAction{
 		Vector3.normalize(r.direction,rdir);
 
 		// dot(raypos, norm)+dot(raydir,norm)*t=d;
-		let t = this.planeD-Vector3.dot(r.origin, this.rotAxis)/Vector3.dot(rdir, this.rotAxis);
+		let t = (this.planeD-Vector3.dot(r.origin, this.rotAxis))/Vector3.dot(rdir, this.rotAxis);
 		if(t>=0 && t<1e8){
 			r.origin.cloneTo(hitpos);
 			hitpos.x+=rdir.x*t;
@@ -118,10 +117,10 @@ export class PositionAction extends KeyInputAction implements IAction{
 		}
 	}
 
-	private updateRay(){
+	private updateRay(mousex:number,mousey:number){
 		let ray = this.camRay;
 		let mousept = PositionAction.mousePt;
-		mousept.setValue(Laya.stage.mouseX, Laya.stage.mouseY);
+		mousept.setValue(mousex,mousey);
 		this.camera.viewportPointToRay(mousept, ray);
 	}
 
@@ -140,7 +139,7 @@ export class PositionAction extends KeyInputAction implements IAction{
 		if(this.useInput)
 			return;
 
-		this.updateRay();
+		this.updateRay(mx,my);
 		let hitpos = this.curHitPos;
 		let hit=true;
 		if(this.movOnPlane)
@@ -149,10 +148,11 @@ export class PositionAction extends KeyInputAction implements IAction{
 			this.hitLine(hitpos);
 
 		if(hit){
+			let k = this.shift?0.1:1;
 			let lp = this.lastHitPos;
-			this.outPos.x += (hitpos.x-lp.x);
-			this.outPos.y += (hitpos.y-lp.y);
-			this.outPos.z += (hitpos.z-lp.z);
+			this.outPos.x += (hitpos.x-lp.x)*k;
+			this.outPos.y += (hitpos.y-lp.y)*k;
+			this.outPos.z += (hitpos.z-lp.z)*k;
 	
 			// 应用
 			this.__apply(this.outPos);
@@ -186,8 +186,8 @@ export class PositionAction extends KeyInputAction implements IAction{
 		this.node=null;
 	}
 
-	startAction(node:Sprite3D, cam:Camera){
-		super.startAction(node,cam);
+	startAction(node:Sprite3D, cam:Camera, mousex:number,mousey:number){
+		super._startAction(node,cam);
 		this.node=node;
 		this.camera = cam;
 		node.transform.position.cloneTo(this.startPos);
@@ -201,7 +201,7 @@ export class PositionAction extends KeyInputAction implements IAction{
 		this.camDir.setValue(zx,zy,zz);	//TODO 是否要取反
 		Vector3.normalize(this.camDir, this.camDir);
 
-		this.updateRay();
+		this.updateRay(mousex,mousey);
 
 		this.cax=0;
 		this.worldAx=0;

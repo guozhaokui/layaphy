@@ -50,7 +50,12 @@ export class ArcBall {
      * @returns {quat} out
      */
     static rotationTo(out: Quaternion, a: Vector3, b: Vector3): boolean {
-        var dot: number = Vector3.dot(a, b);
+		if(!ArcBall.xUnitVec3){
+			ArcBall.xUnitVec3 = new Vector3(1, 0, 0);
+			ArcBall.yUnitVec3 = new Vector3(0, 1, 0);
+			ArcBall.tmpVec3 = new Vector3();
+		}
+		        var dot: number = Vector3.dot(a, b);
         if (dot < -0.999999) {// 180度了，可以选择多个轴旋转
             Vector3.cross(ArcBall.xUnitVec3, a, ArcBall.tmpVec3);
             if (Vector3.scalarLength(ArcBall.tmpVec3) < 0.000001)
