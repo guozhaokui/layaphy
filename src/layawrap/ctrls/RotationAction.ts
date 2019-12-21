@@ -4,7 +4,6 @@ import { Quaternion } from "laya/d3/math/Quaternion";
 import { Ray } from "laya/d3/math/Ray";
 import { Vector2 } from "laya/d3/math/Vector2";
 import { Vector3 } from "laya/d3/math/Vector3";
-import { PhyRender } from "../PhyRender";
 import { ArcBall } from "./ArcBall";
 import { IAction, KeyInputAction, OperatorInfo } from "./KeyInputAction";
 
@@ -82,7 +81,6 @@ export class RotationAction extends KeyInputAction implements IAction{
 		this.updateRay(mx,my);
 		let hitpos = this.curHitPos;
 		if(this.hitPlane(hitpos)){
-			PhyRender.inst.addPersistPoint(hitpos.x, hitpos.y, hitpos.z);
 			let v1=RotationAction.v1;
 			let v2=RotationAction.v2;
 	
@@ -138,6 +136,7 @@ export class RotationAction extends KeyInputAction implements IAction{
 	}
 
 	startAction(node:Sprite3D, cam:Camera,mousex:number,mousey:number){
+		this.shift=false;
 		super._startAction(node,cam);
 		this.node=node;
 		this.camera = cam;

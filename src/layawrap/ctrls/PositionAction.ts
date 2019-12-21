@@ -187,6 +187,7 @@ export class PositionAction extends KeyInputAction implements IAction{
 	}
 
 	startAction(node:Sprite3D, cam:Camera, mousex:number,mousey:number){
+		this.shift=false;
 		super._startAction(node,cam);
 		this.node=node;
 		this.camera = cam;

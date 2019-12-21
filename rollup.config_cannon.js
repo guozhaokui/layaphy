@@ -104,8 +104,9 @@ export default {
 		sourcemap: false,
 		globals:{'Laya':'Laya'},
         name:'cannon',
-        //intro:'window.Laya=window.Laya||exports||{};\n',
-        //outro:layaexpreplace
+		//intro:'window.Laya=window.Laya||exports||{};\n',
+		//outro:layaexpreplace
+		outro:'exports.version="'+(new Date())+'"'
         //indent: false
 	},
 	external:['Laya'],

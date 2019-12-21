@@ -32,21 +32,35 @@ export var carData={
 	chassisBox:new Vec3(2/2,0.791/2,4.68/2),	//
 	chassisBoxPos:new Vec3(0.00716, 0.570108, -0.170404),	// 这是相对原点的，需要根据center转换
 	mass:1500,
-	单轮拉力:10000,
-	脚刹力:1000,
-	手刹力:100,
+	/** 单轮拉力 */
+	DanLunLaLi:10000,
+	/** 脚刹力 */
+	JiaoShaLi:1000,
+	/** 手刹力 */
+	ShouShaLi:100,
 	radius:0.4,
-	悬挂平时长度:0.2,
-	悬挂最大移动范围:0.3,		// 在正负v之间
-	悬挂提供的最大力:100000,		// 支撑底盘
-	悬挂硬度:30,					// 弹性系数
-	悬挂压缩阻尼:4.4,				// 阻尼系数，阻止车的震动的能力
-	悬挂放松阻尼:2.3,
-	侧滑翻滚系数:0.1,			// 0的时候，侧滑力会施加到中心，不易翻滚，1的时候，侧滑力施加在轮胎接触点，基本上一拐弯就翻车
-	滑动时轮胎转速:-30,			// 弧度/秒 ？	
-	开启滑动时轮胎转速:true,
-	轮胎静摩擦系数:4,			// 悬挂力*这个系数决定了抓地能力。受力超过这个限制就开始打滑
-	最大速度:300,				// km/h
+	/** 悬挂平时长度:0.2, */
+	suspensionRestLength:0.2,
+	/** 悬挂最大移动范围:0.3 */
+	maxSuspensionTravel:0.3,		// 在正负v之间
+	/** 悬挂提供的最大力 */
+	maxSuspensionForce:100000,		// 支撑底盘
+	/** 悬挂硬度 */
+	suspensionStiffness:30,					// 弹性系数
+	/** 悬挂压缩阻尼 */
+	dampingCompression:4.4,				// 阻尼系数，阻止车的震动的能力
+	/** 悬挂放松阻尼 */
+	dampingRelaxation:2.3,
+	/** 侧滑翻滚系数 */
+	rollInfluence:0.1,			// 0的时候，侧滑力会施加到中心，不易翻滚，1的时候，侧滑力施加在轮胎接触点，基本上一拐弯就翻车
+	/** 滑动时轮胎转速 */
+	customSlidingRotationalSpeed:-30,			// 弧度/秒 ？	
+	/** 开启滑动时轮胎转速 */
+	useCustomSlidingRotationalSpeed:true,
+	/** 轮胎静摩擦系数 */
+	StaticFric:4,			// 悬挂力*这个系数决定了抓地能力。受力超过这个限制就开始打滑
+	/** 最大速度 */
+	MaxSpeed:300,				// km/h
 	flpos:new Vec3(0.773268, 0.406936, 1.41364),	// 相对原点的
 	frpos:new Vec3(-0.773268, 0.406936, 1.41364),
 	rlpos:new Vec3(0.773268, 0.406936, -1.5505),
@@ -118,6 +132,13 @@ export class Car{
 		return this.phyCar.dbgShowSuspForce;
 	}
 
+	set showDriveForce(b:boolean){
+		this.phyCar.dbgShowDriveForce=b;
+	}
+	get showDriveForce(){
+		return this.phyCar.dbgShowDriveForce;
+	}
+
 	/**
 	 * 
 	 * @param data 
@@ -130,17 +151,17 @@ export class Car{
 		var options = {
 			radius: carData.radius,
 			directionLocal: new Vec3(0, -1, 0),
-			suspensionStiffness: carData.悬挂硬度,
-			suspensionRestLength: carData.悬挂平时长度,
-			frictionSlip: carData.轮胎静摩擦系数,
-			dampingRelaxation: carData.悬挂放松阻尼,
-			dampingCompression: carData.悬挂压缩阻尼,
-			maxSuspensionForce: carData.悬挂提供的最大力,
-			rollInfluence:  carData.侧滑翻滚系数,
+			suspensionStiffness: carData.suspensionStiffness,
+			suspensionRestLength: carData.suspensionRestLength,
+			frictionSlip: carData.StaticFric,
+			dampingRelaxation: carData.dampingRelaxation,
+			dampingCompression: carData.dampingCompression,
+			maxSuspensionForce: carData.maxSuspensionForce,
+			rollInfluence:  carData.rollInfluence,
 			axleLocal: new Vec3(1, 0, 0),
 			chassisConnectionPointLocal: new Vec3(1, 0,1),
-			maxSuspensionTravel: carData.悬挂最大移动范围,
-			customSlidingRotationalSpeed: carData.滑动时轮胎转速,
+			maxSuspensionTravel: carData.maxSuspensionTravel,
+			customSlidingRotationalSpeed: carData.customSlidingRotationalSpeed,
 			useCustomSlidingRotationalSpeed: true,
 			isFrontWheel:true
 		};
@@ -153,7 +174,7 @@ export class Car{
 		chassisBody.position.copy(carData.center);
 	
 		var car = this.phyCar = new RaycastVehicle(chassisBody);
-		car.maxSpeed=carData.最大速度;
+		car.maxSpeed=carData.MaxSpeed;
 	
 		// 前轮，方向
 		options.isFrontWheel=true;
@@ -184,8 +205,13 @@ export class Car{
 			this.onModelLoaded(renderModel,false);
 		}else{
 			// 加载渲染对象
-			Sprite3D.load(data.modelUrl,Handler.create(this,this.onModelLoaded));
+			data.modelUrl && Sprite3D.load(data.modelUrl,Handler.create(this,this.onModelLoaded));
 		}		
+	}
+
+	/** 获得当前速度，单位是Km/H */
+	getSpeed(){
+		return this.phyCar.currentVehicleSpeedKmHour;
 	}
 
 	onModelLoaded(model:Sprite3D, addtoSce:boolean=true){
@@ -231,20 +257,23 @@ export class Car{
 
 	// 加油前进
 	accel(k:number){
-		let maxForce = this.carData.单轮拉力;
+		let maxForce = this.carData.DanLunLaLi;
 		this.phyCar.applyEngineForce(-maxForce*k, 2);
 		this.phyCar.applyEngineForce(-maxForce*k, 3);
 	}
 
 	// 后退
 	reversing(k:number){
-		let maxForce = this.carData.单轮拉力;
+		let maxForce = this.carData.DanLunLaLi;
 		this.phyCar.applyEngineForce(maxForce*k, 2);
 		this.phyCar.applyEngineForce(maxForce*k, 3);
 	}
 
 	// 方向盘。v=0是直行。单位是弧度
-	steer(v:number){
+	steer(v:number,isDeg:boolean=false){
+		if(isDeg){
+			v= v*Math.PI/180;
+		}
 		this.phyCar.setSteeringValue(v, 0);
 		this.phyCar.setSteeringValue(v, 1);
 	}
@@ -252,7 +281,7 @@ export class Car{
 	// 手刹
 	handbrake(f:number|null){
 		if(f==null||f==undefined){
-			f=this.carData.手刹力;
+			f=this.carData.ShouShaLi;
 		}
 		this.phyCar.setBrake(f, 2);
 		this.phyCar.setBrake(f, 3);
@@ -275,7 +304,7 @@ export class Car{
 		}
 
 		if(b){
-			let force = carData.脚刹力;
+			let force = carData.JiaoShaLi;
 			for(let i=0; i<n; i++){
 				let tn = this.wheelBrake[i];
 				tn.to(phy.wheelInfos[i], {brake:force},2000,Ease.linearInOut);

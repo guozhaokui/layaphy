@@ -186,8 +186,9 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 	car1.parse(carData,null);
 	car1.enable();
 	car1.phyCar.chassisBody.position.set(10,1,10);
+	car1.showTrack=true;
 	car1.onUpdatePoseEnd=function(pos:Vec3,quat:phyQuat){
-		let speed = car1.phyCar.currentVehicleSpeedKmHour;
+		let speed = car1.getSpeed();
 		kmhSp.graphics.clear();
 		kmhSp.graphics.drawRect(0,0,150,30,null,'blue',2);
 		kmhSp.graphics.fillText('Speed:'+speed.toFixed(2),0,0,'20px Arial', 'red', 'left');

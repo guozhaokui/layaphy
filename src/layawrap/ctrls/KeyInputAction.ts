@@ -19,20 +19,33 @@ export class KeyInputAction {
 	protected useInput=false;	// 一旦开始输入，鼠标就不再控制了
 	protected altdown=false;
 	protected shift=false;
+	private  isUp=true;
+
 	onKeyEvent(keycode:int,down:boolean){
+		if(down && !this.isUp)	// 不重复处理down消息
+			return;
+		this.isUp=!down;
+
 		if( keycode>=48 && keycode<=57){//0~9
-			this.strValue+= String.fromCharCode(keycode);
-			this._onInputValueChanged();
+			// 避免一直触发
+			if(down){
+				this.strValue += String.fromCharCode(keycode);
+				this._onInputValueChanged();
+			}
 		}	
 
 		switch(keycode){
 			case 190:	//.
-				this.strValue+='.';
-				this._onInputValueChanged();
+				if(down){
+					this.strValue+='.';
+					this._onInputValueChanged();
+				}
 				break;
 			case 8:		//backspace
-				this.strValue= this.strValue.substr(0,this.strValue.length-1);
-				this._onInputValueChanged();
+				if(down){
+					this.strValue= this.strValue.substr(0,this.strValue.length-1);
+					this._onInputValueChanged();
+				}
 				break;
 			case 18:
 				this.altdown=down;
@@ -49,7 +62,13 @@ export class KeyInputAction {
 
 	private _onInputValueChanged(){
 		this.useInput=true;
-		this.onInputValueChanged(Number(this.strValue));
+		let v = Number(this.strValue);
+		if(isNaN(v)){
+			console.log('输入错误，强制清空:',v);
+			v=0;
+			this.strValue='';
+		}else
+			this.onInputValueChanged(v);
 	}	
 
 	protected onInputValueChanged(v:number){}

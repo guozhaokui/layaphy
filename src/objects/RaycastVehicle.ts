@@ -52,6 +52,7 @@ export class RaycastVehicle {
 	
 	dbgShowSlideForce=false;
 	dbgShowSuspForce=false;
+	dbgShowDriveForce=false;
 
 	/** 当前速度，单位是 Km/h */
     currentVehicleSpeedKmHour=0;
@@ -591,9 +592,9 @@ export class RaycastVehicle {
                 forwardWS[i].scale(wheel.forwardImpulse, impulse);
 				chassisBody.applyImpulse(impulse, rel_pos);
 				//DEBUG
-				//if(this.world){
-				//	this.world.phyRender.addVec1(wheel.raycastResult.hitPointWorld,impulse,2,0xffff0000);
-				//}
+				if(this.world && this.dbgShowDriveForce){
+					this.world.phyRender.addVec1(wheel.raycastResult.hitPointWorld,impulse,2,0xffff0000);
+				}
 				//DEBUG
             }
 
