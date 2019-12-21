@@ -33,23 +33,33 @@ export const enum BODYTYPE{
      * A dynamic body is fully simulated. Can be moved manually by the user, but normally they move according to forces. 
 	 * A dynamic body can collide with all body types. A dynamic body always has finite, non-zero mass.
      */
-    DYNAMIC = 1,
+	DYNAMIC = 1,
+	
+
     /**
      * A static body does not move during simulation and behaves as if it has infinite mass. 
 	 * Static bodies can be moved manually by setting the position of the body. The velocity of a static body is always zero. 
 	 * Static bodies do not collide with other static or kinematic bodies.
+	 * 静态对象不记录碰撞信息
+	 * 不计算转动惯量
      */
-    STATIC = 2,
+	STATIC = 2,
+	
+
     /**
      * A kinematic body moves under simulation according to its velocity. They do not respond to forces. 
 	 * They can be moved manually, but normally a kinematic body is moved by setting its velocity.
 	 * A kinematic body behaves as if it has infinite mass. Kinematic bodies do not collide with other static or kinematic bodies.
+	 * 能记录碰撞信息。无物理运动（会自己根据位置计算速度）
      */
 	KINEMATIC = 4,
+
 	
 	/**
 	 * 触发器，任何类型的对象与触发器都只进行碰撞检测
 	 * TODO 以后改成bit位表示？
+	 * trigger对象也不是动态对象，不计算转动惯量，因此不会物理运动。能记录碰撞信息，
+	 * 如果需要能物理运动且只是触发的，用动态对象去掉物理响应来做
 	 */
 	TRIGGER=8,	
 
@@ -181,7 +191,7 @@ export class Body extends EventTarget {
 		this.ldampPow = Math.pow(1.0-this._linearDamping,1/60);
 	}
 
-    type = BODYTYPE.STATIC;
+    type:BODYTYPE = BODYTYPE.STATIC;
 
     /**
      * If true, the body will automatically fall to sleep.
@@ -777,7 +787,10 @@ export class Body extends EventTarget {
     updateMassProperties() {
 		if(this.type & BODYTYPE.TRIGGER)
 			return;
-        this.type = (this._mass <= 0.0 ? BODYTYPE.STATIC : BODYTYPE.DYNAMIC);
+		if(this.type==BODYTYPE.DYNAMIC && this._mass<=0.0)
+			// 不要改变其他类型的
+			this.type=BODYTYPE.STATIC;
+
         this.invMass = this._mass > 0 ? 1.0 / this._mass : 0;
 
         const halfExtents = Body_updateMassProperties_halfExtents;
