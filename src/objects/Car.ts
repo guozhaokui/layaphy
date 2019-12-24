@@ -29,8 +29,8 @@ export var carData={
 	 *  2. 车身模型根据这个来偏移：模型原点在000，所以移动模型的时候，要减去这个
 	 */
 	center:new Vec3(0,0.1,0),	
-	chassisBox:new Vec3(2/2,0.791/2,4.68/2),	//
-	chassisBoxPos:new Vec3(0.00716, 0.570108, -0.170404),	// 这是相对原点的，需要根据center转换
+	chassisBox:new Vec3(2/2,0.691/2,4.68/2),	//
+	chassisBoxPos:new Vec3(0.00716, 0.670108, -0.170404),	// 这是相对原点的，需要根据center转换
 	mass:1500,
 	/** 单轮拉力 */
 	DanLunLaLi:10000,
@@ -86,10 +86,10 @@ export class Car{
 
 	carData:typeof carData;
 
-	// 车身
-	chassis:MeshSprite3D;
-	chassisoffq = new Quaternion();
-	chassisoffp = new Vec3();		// 车身偏移，即重心的位置取反。车身的原点在000
+	/** 控制车身的根节点。可能不是车身模型，例如可能有好几层父子关系，为了给外部方便获取位置，需要设置根节点。缺省是设置的车身 */
+	renderRoot:Sprite3D;
+	renderRootOffq = new Quaternion();
+	//chassisoffp = new Vec3();		// 车身偏移，即重心的位置取反。车身的原点在000
 
 	// 轮胎
 	wheels:MeshSprite3D[]=[];	// TODO 对于轮子可以做到不需要这个。
@@ -149,47 +149,47 @@ export class Car{
 
 		// 创建物理对象
 		var options = {
-			radius: carData.radius,
+			radius: data.radius,
 			directionLocal: new Vec3(0, -1, 0),
-			suspensionStiffness: carData.suspensionStiffness,
-			suspensionRestLength: carData.suspensionRestLength,
-			frictionSlip: carData.StaticFric,
-			dampingRelaxation: carData.dampingRelaxation,
-			dampingCompression: carData.dampingCompression,
-			maxSuspensionForce: carData.maxSuspensionForce,
-			rollInfluence:  carData.rollInfluence,
+			suspensionStiffness: data.suspensionStiffness,
+			suspensionRestLength: data.suspensionRestLength,
+			frictionSlip: data.StaticFric,
+			dampingRelaxation: data.dampingRelaxation,
+			dampingCompression: data.dampingCompression,
+			maxSuspensionForce: data.maxSuspensionForce,
+			rollInfluence:  data.rollInfluence,
 			axleLocal: new Vec3(1, 0, 0),
 			chassisConnectionPointLocal: new Vec3(1, 0,1),
-			maxSuspensionTravel: carData.maxSuspensionTravel,
-			customSlidingRotationalSpeed: carData.customSlidingRotationalSpeed,
+			maxSuspensionTravel: data.maxSuspensionTravel,
+			customSlidingRotationalSpeed: data.customSlidingRotationalSpeed,
 			useCustomSlidingRotationalSpeed: true,
 			isFrontWheel:true
 		};
 		//let chassisBody = addBox( new Vec3(1.8,0.5,4), new Vec3(-5,7,0),carData.mass,cmtl1);
 		let chassisBody = new Body(data.mass);
 		let chassisOff = new Vec3();
-		carData.chassisBoxPos.vsub(carData.center,chassisOff);
-		chassisBody.addShape(new Box(carData.chassisBox), chassisOff);
+		data.chassisBoxPos.vsub(data.center,chassisOff);
+		chassisBody.addShape(new Box(data.chassisBox), chassisOff);
 		chassisBody.allowSleep=false;	//TODO 现在加力不能唤醒，先禁止sleep
-		chassisBody.position.copy(carData.center);
+		chassisBody.position.copy(data.center);
 	
 		var car = this.phyCar = new RaycastVehicle(chassisBody);
-		car.maxSpeed=carData.MaxSpeed;
+		car.maxSpeed=data.MaxSpeed;
 	
 		// 前轮，方向
 		options.isFrontWheel=true;
-		carData.flpos.vsub(carData.center,options.chassisConnectionPointLocal);
+		data.flpos.vsub(data.center,options.chassisConnectionPointLocal);
 		car.addWheel(options);
 	
-		carData.frpos.vsub(carData.center,options.chassisConnectionPointLocal);
+		data.frpos.vsub(data.center,options.chassisConnectionPointLocal);
 		car.addWheel(options);
 	
 		// 后轮，动力
 		options.isFrontWheel=false;
-		carData.rlpos.vsub(carData.center,options.chassisConnectionPointLocal);
+		data.rlpos.vsub(data.center,options.chassisConnectionPointLocal);
 		car.addWheel(options);
 	
-		carData.rrpos.vsub(carData.center,options.chassisConnectionPointLocal);
+		data.rrpos.vsub(data.center,options.chassisConnectionPointLocal);
 		car.addWheel(options);	
 	
 		this.wheelsOffQuat=[new Quaternion(), new Quaternion(), new Quaternion(), new Quaternion()];
@@ -224,19 +224,17 @@ export class Car{
 		let wheelfr = model.getChildByName( dt.wheelfrNode ) as MeshSprite3D;
 		let wheelrl = model.getChildByName( dt.wheelrlNode ) as MeshSprite3D;
 		let wheelrr = model.getChildByName( dt.wheelrrNode ) as MeshSprite3D;
-		this.chassis=chassis;
 		this.wheels[0]=wheelfl;
 		this.wheels[1]=wheelfr;
 		this.wheels[2]=wheelrl;
 		this.wheels[3]=wheelrr;
 
+		this.setRootObj(chassis);
+
 		// 计算偏移。 
-		// 车身主偏移。在物理和显示重合的情况下，显示的旋转
-		let rquat = chassis.transform.rotation;
-		this.chassisoffq.set(rquat.x,rquat.y,rquat.z,rquat.w);
 
 		let offq = this.wheelsOffQuat[0];
-		rquat = wheelfl.transform.rotation;
+		let rquat = wheelfl.transform.rotation;
 		offq.set(rquat.x,rquat.y,rquat.z,rquat.w);
 
 		offq = this.wheelsOffQuat[1];
@@ -250,6 +248,17 @@ export class Car{
 		offq = this.wheelsOffQuat[3];
 		rquat = wheelrr.transform.rotation;
 		offq.set(rquat.x,rquat.y,rquat.z,rquat.w);
+	}
+
+	/**
+	 * 设置根渲染对象。物理对渲染的控制就是通过这个对象进行的。
+	 * @param s 
+	 */
+	setRootObj(s:Sprite3D){
+		this.renderRoot=s;
+		// 车身主偏移。在物理和显示重合的情况下，显示的旋转
+		let rquat = s.transform.rotation;
+		this.renderRootOffq.set(rquat.x,rquat.y,rquat.z,rquat.w);
 	}
 
 	enable(){
@@ -304,7 +313,7 @@ export class Car{
 		}
 
 		if(b){
-			let force = carData.JiaoShaLi;
+			let force = this.carData.JiaoShaLi;
 			for(let i=0; i<n; i++){
 				let tn = this.wheelBrake[i];
 				tn.to(phy.wheelInfos[i], {brake:force},2000,Ease.linearInOut);
@@ -319,20 +328,20 @@ export class Car{
 
 	updatePose(){
 		let car = this.phyCar;
-		if(this.chassis){
+		if(this.renderRoot){
 			let phypos = car.chassisBody.position;
 			let phyquat = car.chassisBody.quaternion;
-			let rpos = this.chassis.transform.position;
-			let rquat = this.chassis.transform.rotation;
-			let poff = carData.center;
+			let rpos = this.renderRoot.transform.position;
+			let rquat = this.renderRoot.transform.rotation;
+			let poff = this.carData.center;
 			var npoff = Car.tmpV1;
 			phyquat.vmult(poff,npoff)
 			rpos.setValue(phypos.x-npoff.x,phypos.y-npoff.y,phypos.z-npoff.z);
-			this.chassis.transform.position=rpos;
+			this.renderRoot.transform.position=rpos;
 
-			phyquat.mult(this.chassisoffq,tempQ);
+			phyquat.mult(this.renderRootOffq,tempQ);
 			rquat.x = tempQ.x;rquat.y = tempQ.y;rquat.z = tempQ.z;rquat.w = tempQ.w;
-			this.chassis.transform.rotation=rquat;
+			this.renderRoot.transform.rotation=rquat;
 
 			if(this.onUpdatePoseEnd){
 				this.onUpdatePoseEnd(phypos,phyquat)
@@ -474,6 +483,16 @@ export class Car{
 			this.handbrake(null);
 		}else{
 			this.brake(false);
+		}
+	}
+
+	// TODO 抽象一个物理接口。把复合物理对象（例如车）和简单物理对象统一处理。
+	addForce(x:number, y:number, z:number):void{
+		if(this.phyCar && this.phyCar.chassisBody){
+			let f=this.phyCar.chassisBody.force;
+			f.x+=x;
+			f.y+=y;
+			f.z+=z;
 		}
 	}
 }

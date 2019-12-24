@@ -14,17 +14,22 @@ export interface IAction{
 	onMouseMove(mx:number, my:number):void;
 }
 
+var keyState:number[]=[];
+/**
+ * 同一个键不允许重复，只有抬起才算。为了提高速度，不要求必须up才行，例如先9，9还没有抬起的时候按下0，则认为0是有效的
+ */
 export class KeyInputAction {
 	private strValue='';	// 输入的角度
 	protected useInput=false;	// 一旦开始输入，鼠标就不再控制了
 	protected altdown=false;
 	protected shift=false;
-	private  isUp=true;
 
 	onKeyEvent(keycode:int,down:boolean){
-		if(down && !this.isUp)	// 不重复处理down消息
+		let downv = down?1:0;
+		// 不重复处理相同的down消息
+		if(keyState[keycode]==downv)
 			return;
-		this.isUp=!down;
+		keyState[keycode]=downv;
 
 		if( keycode>=48 && keycode<=57){//0~9
 			// 避免一直触发
