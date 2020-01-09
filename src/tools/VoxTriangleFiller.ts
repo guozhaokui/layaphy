@@ -54,7 +54,8 @@ export class VoxTriangleFiller {
         //     pc
         //      \
         //       \pd
-        //   pd---pc
+		//   pd---pc
+		// gradient1 = (y-pa.y) /(pb.y-pa.y) 然后根据这个计算对应的 sx,sz 
         var gradient1 = pa[1] != pb[1] ? (y - pa[1]) / (pb[1] - pa[1]) : (pa[0] > pb[0] ? 1 : 0);	// y的位置，0 在pa， 1在pb
         var gradient2 = pc[1] != pd[1] ? (y - pc[1]) / (pd[1] - pc[1]) : (pc[0] > pd[0] ? 0 : 1); // pc-pd
 
@@ -67,13 +68,15 @@ export class VoxTriangleFiller {
         var sv: number = this.interpolate(fpa[4], fpb[4], gradient1);
         var ev: number = this.interpolate(fpc[4], fpd[4], gradient2);
 
-        var x: int = 0;
+		var x: int = 0;
+		// x每一步走多少
         var stepx: number = ex != sx ? 1 / (ex - sx) : 0;
         var kx: number = 0;
         var cz: int = sz;
         switch (this.faceDir) {
             case 0://yzx x是y，y是z，z是x
                 for (x = sx; x <= ex; x++) {
+					// z 进行线性差值。
                     cz = (this.interpolate(sz, ez, kx)) | 0;
                     this.fillCB(cz, x, y, this.interpolate(su, eu, kx), this.interpolate(sv, ev, kx));
                     kx += stepx;
@@ -224,8 +227,9 @@ export class VoxTriangleFiller {
             // -
             // v2
             for (y = v0[1]; y <= v2[1]; y++) {
-
+				// y分成两部分处理
                 if (y < v1[1]) {
+					// 上半部分。 v0-v2 扫描到 v0-v1
                     this.processScanLine(y, v0, v0f, v2, v2f, v0, v0f, v1, v1f);
                 }
                 else {

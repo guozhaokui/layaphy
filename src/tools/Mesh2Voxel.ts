@@ -63,6 +63,16 @@ export class Mesh2Voxel {
         }));
     }
 
+    loadTmp(data:any,gridsz:number, cb:(voxdata:SparseVoxData)=>void): void {
+		let dt = this.voxelizeTmpMesh(data,gridsz);
+		let xn=this.gridXSize; let yn=this.gridYSize; let zn = this.gridZSize;
+		let min=new Vec3(this.minx,this.miny,this.minz);
+		let max=new Vec3(xn,yn,zn);
+		min.addScaledVector(this.gridSize,max,max);
+		let ret = new SparseVoxData(dt,xn,yn,zn,min,max);
+		cb && cb(ret);
+	}
+
     onLoadMtl(mtlstr:string):void{
     }
     
@@ -70,6 +80,28 @@ export class Mesh2Voxel {
         var objmtl = this.objmtl = new OBJLoader_Material('root');
         objmtl.parse(mtlstr);
         return objmtl;
+    }
+
+    /**
+     * 
+     * @param data 
+     * @param sz 小格子大小
+     */
+    voxelizeTmpMesh(data:any, sz:number){
+        let verteices = data.vertices;
+        var vertnum = verteices.length / 3;
+        var vertex = [];
+        for (var vi = 0; vi < vertnum; vi++) {
+            vertex.push([
+                verteices[vi * 3], verteices[vi * 3 + 1], verteices[vi * 3 + 2],    //x,y,z
+                0, 0,             //u, v
+                null]    //texture
+            );
+        }
+
+        this.setModelData(vertex, data.indices);
+        var ret = this.renderToVoxel(sz);
+        return ret;
     }
 
     /**

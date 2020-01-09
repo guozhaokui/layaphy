@@ -17,14 +17,9 @@ export function loadRes(url:string){
     });
 }
 
-
-postData('http://example.com/answer', {answer: 42})
-  .then(data => console.log(data)) // JSON from `response.json()` call
-  .catch(error => console.error(error))
-
-function postData(url:string, data:any) {
+export function download(url:string, data:any|null=null) {
   // Default options are marked with *
-  return fetch(url, {
+  return fetch(url/*,{
     body: JSON.stringify(data), // must match 'Content-Type' header
     cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
     credentials: 'same-origin', // include, same-origin, *omit
@@ -36,6 +31,6 @@ function postData(url:string, data:any) {
     mode: 'cors', // no-cors, cors, *same-origin
     redirect: 'follow', // manual, *follow, error
     referrer: 'no-referrer', // *client, no-referrer
-  })
+  }*/)
   .then(response => response.json()) // parses response to JSON
 }
