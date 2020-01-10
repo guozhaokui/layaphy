@@ -31,7 +31,7 @@ export class VoxTriangleFiller {
     }
 
     // y是当前y，pa,pb 是左起始线，pc,pd 是右结束线
-    processScanLine(y: int,pa: number[], pb: number[], pc: number[], pd: number[], axisID:int): void {
+    processScanLine(y: int,pa:int[], pb:int[], pc:int[], pd:int[], axisID:int): void {
 		let xid = (axisID+1)%3;
 		let yid = (axisID+2)%3;
 		let w = this.gridsz;
@@ -58,12 +58,12 @@ export class VoxTriangleFiller {
         //       \pd
 		//   pd---pc
 		// gradient1 = (y-pa.y) /(pb.y-pa.y) 然后根据这个计算对应的 sx,sz 
-		let fy = (y+0.5)*w;
-        var gradient1 = pa[yid] != pb[yid] ? (fy - pa[yid]) / (pb[yid] - pa[yid]) : (pa[xid] > pb[xid] ? 1 : 0);	// y的位置，0 在pa， 1在pb
-        var gradient2 = pc[yid] != pd[yid] ? (fy - pc[yid]) / (pd[yid] - pc[yid]) : (pc[xid] > pd[xid] ? 0 : 1); // pc-pd
+		//let fy = (y+0.5)*w;
+        var gradient1 = pa[yid] != pb[yid] ? (y - pa[yid]) / (pb[yid] - pa[yid]) : (pa[xid] > pb[xid] ? 1 : 0);	// y的位置，0 在pa， 1在pb
+        var gradient2 = pc[yid] != pd[yid] ? (y - pc[yid]) / (pd[yid] - pc[yid]) : (pc[xid] > pd[xid] ? 0 : 1); // pc-pd
 
-        var sx: int = Math.round(this.interpolate(pa[xid], pb[xid], gradient1)/w);	// 
-        var ex: int = Math.round(this.interpolate(pc[xid], pd[xid], gradient2)/w);
+        var sx: int = Math.round(this.interpolate(pa[xid], pb[xid], gradient1));	// 
+        var ex: int = Math.round(this.interpolate(pc[xid], pd[xid], gradient2));
         //var su: number = this.interpolate(fpa[3], fpb[3], gradient1);
         //var eu: number = this.interpolate(fpc[3], fpd[3], gradient2);
         //var sv: number = this.interpolate(fpa[4], fpb[4], gradient1);
@@ -109,25 +109,24 @@ export class VoxTriangleFiller {
 		let planed = this.planeD;
 
 		let hw=w/2;
+		// 必须要上下都找，并且一直找到超出距离。因为这个可能倾斜着靠着轴
 		// 向上
 		let maxv = max[axis];
 		for(let xi=cx; xi<=maxv ;xi++ ){
 			// 计算中心位置到平面的距离
 			grid[axis]=xi;
-			let d1 = v1+normax*(xi+0.5)*w;
-			if(d1-planed>hw)break;
-			cb(grid[0],grid[1],grid[2],0,0);
-			break;
+			let d1 = v1+normax*(xi+0.5)*w-planed;
+			if(d1<=hw&&d1>=-hw)
+				cb(grid[0],grid[1],grid[2],0,0);
 		}
 
 		// 向下
 		let minv = min[axis];
 		for( let xi=cx-1; xi>=minv; xi--){
 			grid[axis]=xi;
-			let d1 = v1+normax*(xi+0.5)*w;
-			if(d1-planed<-hw)break;
-			cb(grid[0],grid[1],grid[2],0,0);
-			break;
+			let d1 = v1+normax*(xi+0.5)*w-planed;
+			if(d1<=hw&&d1>=-hw)
+				cb(grid[0],grid[1],grid[2],0,0);
 		}
 	}
 
@@ -176,10 +175,10 @@ export class VoxTriangleFiller {
 				// y分成两部分处理
                 if (y < nv1[yid]) {
 					// 上半部分。 v0-v2 扫描到 v0-v1
-                    this.processScanLine(y, v0, v2, v0, v1,axisID);
+                    this.processScanLine(y, nv0, nv2, nv0, nv1,axisID);
                 }
                 else {
-                    this.processScanLine(y, v0, v2, v1, v2,axisID);
+                    this.processScanLine(y, nv0, nv2, nv1, nv2,axisID);
                 }
             }
         } else {	// 否则，左拐
@@ -195,10 +194,10 @@ export class VoxTriangleFiller {
             //       v2
             for (y = nv0[yid]; y <= nv2[yid]; y++) {
                 if (y < nv1[yid]) {
-                    this.processScanLine(y, v0, v1, v0, v2,axisID);
+                    this.processScanLine(y, nv0, nv1, nv0, nv2,axisID);
                 }
                 else {
-                    this.processScanLine(y, v1, v2, v0, v2,axisID);
+                    this.processScanLine(y, nv1, nv2, nv0, nv2,axisID);
                 }
             }
         }
@@ -224,17 +223,17 @@ export class VoxTriangleFiller {
 		let nv1=this.nV1;
 		let nv2=this.nV2;
 		let gridsz = this.gridsz;
-		nv0[0] = Math.round(v0[0]/gridsz);
-		nv0[1] = Math.round(v0[1]/gridsz);
-		nv0[2] = Math.round(v0[2]/gridsz);
+		nv0[0] = (v0[0]/gridsz)|0;	//这个不能用round, 因为就是要定位在哪个格子中
+		nv0[1] = (v0[1]/gridsz)|0;
+		nv0[2] = (v0[2]/gridsz)|0;
 
-		nv1[0] = Math.round(v1[0]/gridsz);
-		nv1[1] = Math.round(v1[1]/gridsz);
-		nv1[2] = Math.round(v1[2]/gridsz);
+		nv1[0] = (v1[0]/gridsz)|0;
+		nv1[1] = (v1[1]/gridsz)|0;
+		nv1[2] = (v1[2]/gridsz)|0;
 
-		nv2[0] = Math.round(v2[0]/gridsz);
-		nv2[1] = Math.round(v2[1]/gridsz);
-		nv2[2] = Math.round(v2[2]/gridsz);
+		nv2[0] = (v2[0]/gridsz)|0;
+		nv2[1] = (v2[1]/gridsz)|0;
+		nv2[2] = (v2[2]/gridsz)|0;
 
 		let norm = this.norm;
 		if(!this.hasnorm){
