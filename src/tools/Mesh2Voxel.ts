@@ -3,7 +3,7 @@ import { Texture2D } from "laya/resource/Texture2D";
 import { Handler } from "laya/utils/Handler";
 import { ColorQuantization_Mediancut } from "./ColorQuantization_Mediancut";
 import { OBJLoader_Material, OBJLoader_mesh } from "./ObjectFile";
-import { VoxTriangleFiller } from "./VoxTriangleFiller";
+import { VoxTriangleFiller } from "./VoxTriangleFiller1";
 import {Vec3} from "../math/Vec3";
 import { SparseVoxData } from "../shapes/VoxelData";
 
@@ -252,34 +252,46 @@ export class Mesh2Voxel {
         let vertexArray = this.vertexArray;
         var faceNum = faceIndex.length / 3;
         var gridnum = 0;
-        var fidSt = 0;
+		var fidSt = 0;
+		trifiller.gridsz=gridSize;
         for (var fi = 0; fi < faceNum; fi++) {
             //取出纹理对象
             var vert0 = vertexArray[faceIndex[fidSt++]];
             var vert1 = vertexArray[faceIndex[fidSt++]];
-            var vert2 = vertexArray[faceIndex[fidSt++]];
+			var vert2 = vertexArray[faceIndex[fidSt++]];
+			//if(fi!=155) continue;
+			//if(!(fi>=130&&fi<=130))continue;
+			//if(!(fi>=45&&fi<=45))continue;
+			//if(!(fi>=200&&fi<=200))continue;
+			//if(!(fi>=143&&fi<=143))continue;
+			let inrange = (fi>=81&&fi<=81);
+			let inrange1 = (fi>=42&&fi<=42);
+			inrange = inrange1;
+			//if(!inrange)continue;
+
             //三个顶点的贴图必然一致。只取第一个就行了
             var tex: Texture2D = vert0[5];
-            trifiller.v0[0] = (vert0[0] / gridSize + 0.5) | 0;
-            trifiller.v0[1] = (vert0[1] / gridSize + 0.5) | 0;
-            trifiller.v0[2] = (vert0[2] / gridSize + 0.5) | 0;
-            trifiller.v0f[3] = vert0[3];
-            trifiller.v0f[4] = vert0[4];
+            trifiller.v0[0] = vert0[0];
+            trifiller.v0[1] = vert0[1];
+            trifiller.v0[2] = vert0[2];
+            //trifiller.v0f[3] = vert0[3];
+            //trifiller.v0f[4] = vert0[4];
 
-            trifiller.v1[0] = (vert1[0] / gridSize + 0.5) | 0;
-            trifiller.v1[1] = (vert1[1] / gridSize + 0.5) | 0;
-            trifiller.v1[2] = (vert1[2] / gridSize + 0.5) | 0;
-            trifiller.v1f[3] = vert1[3];
-            trifiller.v1f[4] = vert1[4];
+            trifiller.v1[0] = vert1[0];
+            trifiller.v1[1] = vert1[1];
+            trifiller.v1[2] = vert1[2];
+            //trifiller.v1f[3] = vert1[3];
+            //trifiller.v1f[4] = vert1[4];
 
-            trifiller.v2[0] = (vert2[0] / gridSize + 0.5) | 0;
-            trifiller.v2[1] = (vert2[1] / gridSize + 0.5) | 0;
-            trifiller.v2[2] = (vert2[2] / gridSize + 0.5) | 0;
-            trifiller.v2f[3] = vert2[3];
-            trifiller.v2f[4] = vert2[4];
+            trifiller.v2[0] = vert2[0];
+            trifiller.v2[1] = vert2[1];
+            trifiller.v2[2] = vert2[2];
+            //trifiller.v2f[3] = vert2[3];
+            //trifiller.v2f[4] = vert2[4];
 
             // TODO 现在的uv其实是不对的，应该根据重心坐标重新计算
             trifiller.fill((x:i32, y:i32, z:i32, u: number, v: number)=>{
+				//console.log(x,y,z);
                 var gridid = x << 20 | y << 10 | z;
                 var col = this.sampleTexture(tex, u, v);//[u*255,v*255,0,255];//
                 var curcoldt = ret[gridid];

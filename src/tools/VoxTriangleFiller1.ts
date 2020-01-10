@@ -108,7 +108,7 @@ export class VoxTriangleFiller {
 		let cb = this.fillCB;
 		let planed = this.planeD;
 
-		let hw=w/2;
+		let hw=w/2*1.414;
 		// 必须要上下都找，并且一直找到超出距离。因为这个可能倾斜着靠着轴
 		// 向上
 		let maxv = max[axis];
