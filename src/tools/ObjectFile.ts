@@ -5,7 +5,7 @@
  */
 
 export class OBJLoader_Material {
-    name: String;
+    name: string;
     ambient = [0, 0, 0]; // Ka - Ambient Reflectivity
     diffuse = [0, 0, 0]; // Kd - Defuse Reflectivity
     specular = [0, 0, 0];// Ks
@@ -31,7 +31,7 @@ export class OBJLoader_Material {
     //        statements for each side of the cube. If it's a spherical
     //        reflection, there should only ever be one.
     mapReflections = [];
-    currentMaterial :OBJLoader_Material|null;
+    currentMaterial :OBJLoader_Material;
     materials: {[key:string]:OBJLoader_Material} = {};		// 
 
     /**
@@ -77,51 +77,51 @@ export class OBJLoader_Material {
 
 
     parse_Ka(tokens:string[]) {
-        if( this.currentMaterial) this.currentMaterial.ambient = this.parseColor(tokens);
+        this.currentMaterial.ambient = this.parseColor(tokens);
     }
 
 
     parse_Kd(tokens:string[]) {
-        if( this.currentMaterial) this.currentMaterial.diffuse = this.parseColor(tokens);
+        this.currentMaterial.diffuse = this.parseColor(tokens);
     }
 
 
     parse_Ks(tokens:string[]) {
-        if( this.currentMaterial) this.currentMaterial.specular = this.parseColor(tokens);
+        this.currentMaterial.specular = this.parseColor(tokens);
     }
 
 
     parse_Ke(tokens:string[]) {
-        if( this.currentMaterial) this.currentMaterial.emissive = this.parseColor(tokens);
+        this.currentMaterial.emissive = this.parseColor(tokens);
     }
 
 
     parse_Tf(tokens:string[]) {
-        if( this.currentMaterial) this.currentMaterial.transmissionFilter = this.parseColor(tokens);
+        this.currentMaterial.transmissionFilter = this.parseColor(tokens);
     }
 
     parse_d(tokens:string[]) {
         // this ignores the -halo option as I can't find any documentation on what
         // it's supposed to be.
-        if( this.currentMaterial) this.currentMaterial.dissolve = parseFloat(tokens.pop() as string);
+        this.currentMaterial.dissolve = parseFloat(tokens.pop() as string);
     }
 
     parse_illum(tokens:string[]) {
-        if( this.currentMaterial) this.currentMaterial.illumination = parseInt(tokens[0]);
+        this.currentMaterial.illumination = parseInt(tokens[0]);
     }
 
 
     parse_Ni(tokens:string[]) {
-        if( this.currentMaterial) this.currentMaterial.refractionIndex = parseFloat(tokens[0]);
+        this.currentMaterial.refractionIndex = parseFloat(tokens[0]);
     }
 
     parse_Ns(tokens:string[]) {
-        if( this.currentMaterial) this.currentMaterial.specularExponent = parseInt(tokens[0]);
+        this.currentMaterial.specularExponent = parseInt(tokens[0]);
     }
 
 
     parse_sharpness(tokens:string[]) {
-        if( this.currentMaterial) this.currentMaterial.sharpness = parseInt(tokens[0]);
+        this.currentMaterial.sharpness = parseInt(tokens[0]);
     }
 
 
@@ -152,6 +152,7 @@ export class OBJLoader_Material {
 
     parse_ost(values:number[]|string[], option:any, defaultValue:number) {
         while (values.length < 3) {
+			//@ts-ignore
             values.push(defaultValue);
         }
 
@@ -234,6 +235,7 @@ export class OBJLoader_Material {
                 option = token.substr(1);
                 optionsToValues[option] = [];
             } else {
+				//@ts-ignore
                 optionsToValues[option].push(token);
             }
         }
@@ -279,41 +281,47 @@ export class OBJLoader_Material {
 
 
     parse_map_Ka(tokens:string[]) {
-        if( this.currentMaterial) this.currentMaterial.mapAmbient = this.parseMap(tokens);
+		//@ts-ignore
+        this.currentMaterial.mapAmbient = this.parseMap(tokens);
     }
 
 
     parse_map_Kd(tokens:string[]) {
-        if( this.currentMaterial) this.currentMaterial.mapDiffuse = this.parseMap(tokens);
+        this.currentMaterial.mapDiffuse = this.parseMap(tokens);
     }
 
     parse_map_Ks(tokens:string[]) {
-        if( this.currentMaterial) this.currentMaterial.mapSpecular = this.parseMap(tokens);
+		//@ts-ignore
+        this.currentMaterial.mapSpecular = this.parseMap(tokens);
     }
 
 
     parse_map_Ke(tokens:string[]) {
-        if( this.currentMaterial) this.currentMaterial.mapEmissive = this.parseMap(tokens);
+		//@ts-ignore
+        this.currentMaterial.mapEmissive = this.parseMap(tokens);
     }
 
 
     parse_map_Ns(tokens:string[]) {
-        if( this.currentMaterial) this.currentMaterial.mapSpecularExponent = this.parseMap(tokens);
+		//@ts-ignore
+        this.currentMaterial.mapSpecularExponent = this.parseMap(tokens);
     }
 
 
     parse_map_d(tokens:string[]) {
-        if( this.currentMaterial) this.currentMaterial.mapDissolve = this.parseMap(tokens);
+		//@ts-ignore
+        this.currentMaterial.mapDissolve = this.parseMap(tokens);
     }
 
 
     parse_map_aat(tokens:string[]) {
-        if( this.currentMaterial) this.currentMaterial.antiAliasing = tokens[0] == "on";
+        this.currentMaterial.antiAliasing = tokens[0] == "on";
     }
 
 
     parse_map_bump(tokens:string[]) {
-        if( this.currentMaterial) this.currentMaterial.mapBump = this.parseMap(tokens);
+		//@ts-ignore
+        this.currentMaterial.mapBump = this.parseMap(tokens);
     }
 
 
@@ -323,17 +331,20 @@ export class OBJLoader_Material {
 
 
     parse_disp(tokens:string[]) {
-        if( this.currentMaterial) this.currentMaterial.mapDisplacement = this.parseMap(tokens);
+		//@ts-ignore
+        this.currentMaterial.mapDisplacement = this.parseMap(tokens);
     }
 
 
     parse_decal(tokens:string[]) {
-        if( this.currentMaterial) this.currentMaterial.mapDecal = this.parseMap(tokens);
+		//@ts-ignore
+        this.currentMaterial.mapDecal = this.parseMap(tokens);
     }
 
 
     parse_refl(tokens:string[]) {
-        if( this.currentMaterial) this.currentMaterial.mapReflections.push(this.parseMap(tokens));
+		//@ts-ignore
+        this.currentMaterial.mapReflections.push(this.parseMap(tokens));
     }
 
 
@@ -346,7 +357,8 @@ export class OBJLoader_Material {
             }
 
             var tokens  = line.split(/\s/);
-            var directive = tokens[0];
+			var directive = tokens[0];
+			//@ts-ignore
             var parseMethod = this['parse_' + directive];
             if (!parseMethod) {
                 console.warn("Don't know how to parse the directive: " + directive);
@@ -355,7 +367,8 @@ export class OBJLoader_Material {
 
             [directive, ...tokens] = tokens;
             parseMethod.call(this, tokens);
-        }
+		}
+		//@ts-ignore
         this.currentMaterial = null;
     }
 }
@@ -374,7 +387,7 @@ export class OBJLoader_Material {
 		name:string = '';
 		// the list of unique vertex, normal, texture, attributes
 		vertices:number[] = [];			// 顶点
-		vertexNormals = [];	// 法线
+		vertexNormals:number[] = [];	// 法线
 		textures = [];			// UV
 		// the indicies to draw the faces
 		indices:number[] = [];
@@ -553,6 +566,7 @@ export class OBJLoader_Material {
 						// and only the U and V coordinates are given, then we supply
 						// the default value of 0 so that the stride length is correct
 						// when the textures are unpacked below.
+						//@ts-ignore
 						coords.push(0);
 					}
 					textures.push(...coords);
@@ -602,6 +616,7 @@ export class OBJLoader_Material {
 						const hash0 = elements[0] + "," + currentMaterialIndex;
 						const hash = elements[j] + "," + currentMaterialIndex;
 						if (hash in unpacked.hashindices) {
+							//@ts-ignore
 							unpacked.indices[currentObjectByMaterialIndex].push(unpacked.hashindices[hash]);
 						} else {
 							/*
@@ -650,9 +665,12 @@ export class OBJLoader_Material {
 							// Vertex textures
 							if (textures.length) {
 								var stride = options.enableWTextureCoord ? 3 : 2;
+								//@ts-ignore
 								unpacked.textures.push(+textures[(vertex[1] - 1) * stride + 0]);
+								//@ts-ignore
 								unpacked.textures.push(+textures[(vertex[1] - 1) * stride + 1]);
 								if (options.enableWTextureCoord) {
+									//@ts-ignore
 									unpacked.textures.push(+textures[(vertex[1] - 1) * stride + 2]);
 								}
 							}
@@ -663,13 +681,16 @@ export class OBJLoader_Material {
 							// Vertex material indices
 							unpacked.materialIndices.push(currentMaterialIndex);
 							// add the newly created Vertex to the list of indices
+							//@ts-ignore
 							unpacked.hashindices[hash] = unpacked.index;
+							//@ts-ignore
 							unpacked.indices[currentObjectByMaterialIndex].push(unpacked.hashindices[hash]);
 							// increment the counter
 							unpacked.index += 1;
 						}
 						if (j === 3 && quad) {
 							// add v0/t0/vn0 onto the second triangle
+							//@ts-ignore
 							unpacked.indices[currentObjectByMaterialIndex].push(unpacked.hashindices[hash0]);
 						}
 					}
@@ -678,10 +699,14 @@ export class OBJLoader_Material {
 			// 注意由于有重名，下面的this不要删除
 			this.vertices = unpacked.verts;
 			this.vertexNormals = unpacked.norms;
+			//@ts-ignore
 			this.textures = unpacked.textures;
+			//@ts-ignore
 			this.vertexMaterialIndices = unpacked.materialIndices;
+			//@ts-ignore
 			this.indices = options.indicesPerMaterial ? unpacked.indices : unpacked.indices[currentObjectByMaterialIndex];
 
+			//@ts-ignore
 			this.materialNames = materialNamesByIndex;
 			this.materialIndices = materialIndicesByName;
 			this.materialsByIndex = {};
@@ -702,6 +727,7 @@ export class OBJLoader_Material {
 		 */
 		calculateTangentsAndBitangents() {
 			console.assert(
+				//@ts-ignore
 				this.vertices &&
 					this.vertices.length &&
 					this.vertexNormals &&
@@ -898,10 +924,12 @@ export class OBJLoader_Material {
 				var material = mtl.materials[name];
 
 				// Find the material index for this material
+				//@ts-ignore
 				var materialIndex = this.materialIndices[material.name];
 
 				// Put the material into the materialsByIndex object at the right
 				// spot as determined when the obj file was parsed
+				//@ts-ignore
 				this.materialsByIndex[materialIndex] = material;
 			}
 		}

@@ -487,7 +487,7 @@ export async function loadVoxTest(url:string,pos?:Vec3,q?:Quaternion,scale?:Vec3
 
 export function loadVoxel(file:string, pos?:Vec3,q?:Quaternion,scale?:Vec3) {
 	let m2v = new Mesh2Voxel();	
-	m2v.loadObj(file, 0.25, (voxdata: SparseVoxData) => {
+	m2v.loadObj(file, 0.1, (voxdata: SparseVoxData) => {
 		console.time('voxel');
 		
 		let phyvox = new Voxel(voxdata,3);

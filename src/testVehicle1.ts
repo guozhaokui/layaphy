@@ -171,9 +171,10 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 
 	testGround();
 
-	loadVoxel('res/house/house1.obj',new Vec3(-37, -0.5, 45));//, undefined, new Vec3(-1,-1,1));
-
-	//loadVoxTest('res/test/chilun.json');
+	//loadVoxel('res/house/house1.obj',new Vec3(-37, -0.5, 45));//, undefined, new Vec3(-1,-1,1));
+	loadVoxel('res/body1.obj',new Vec3(-37, -0.5, 45));//, undefined, new Vec3(-1,-1,1));
+ 
+	//loadVoxTest('res/test/data.json');
 
 	if(useGamePad)
 		ttt();
@@ -200,10 +201,12 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 		uip.transform.position=uipos;
 
 		// 控制摄像机
+		/*
 		lastTarget.vadd(pos,lastTarget);
 		lastTarget.scale(0.5,lastTarget);
 		camctr.target.setValue(lastTarget.x,lastTarget.y,lastTarget.z);
 		camctr.updateCam(true);
+		*/
 
 		if(useGamePad){
 			let acck=0;
@@ -249,7 +252,7 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 	
 
 	Laya.stage.on(Event.MOUSE_DOWN, null, (e: { stageX: number, stageY: number }) => {
-		mouseDownEmitObj(e.stageX, e.stageY, cam.camera);
+		//mouseDownEmitObj(e.stageX, e.stageY, cam.camera);
 	});
 
 	Laya.stage.on(Event.KEY_DOWN, null, (e: Event) => {
