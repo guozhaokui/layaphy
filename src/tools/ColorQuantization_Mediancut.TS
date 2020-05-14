@@ -203,7 +203,7 @@ export class ColorQuantization_Mediancut {
             var b = ((ic >>> 10) & 0x1f);// 用的直接是555的
             var g = ((ic >>> 5) & 0x1f);
             var r = (ic & 0x1f);
-            var o = colorData[c];
+            var o = (colorData as any)[c];
             var cc: VoxelColor = colors[ci] = new VoxelColor(r, g, b, o);
             cc.w = o[1];
             ci++;

@@ -8,7 +8,7 @@ class Component{
 	sp:Sprite3D;
 }
 
-class Item extends Sprite3D{
+class Item extends Sprite3D{ 
 
 }
 class PhyItem extends Item {

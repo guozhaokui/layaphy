@@ -27,6 +27,7 @@ export class Voxel extends Shape {
 	aabbmin = new Vec3();			// 当前的aabb
 	aabbmax = new Vec3();
 	addToSceTick = -1;  // 
+	/** 没有缩放的时候的格子的大小 */
 	gridw = 0;
 	/** 简化为box时的情况 */
 	box:Box|null = null; 	

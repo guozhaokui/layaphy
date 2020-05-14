@@ -449,10 +449,10 @@ export class Sphere extends Shape {
 	}
 
 	/**
-	 * 
-	 * @param hitpoints 
-	 * @param voxPos 
-	 * @param voxQuat 
+	 * 把 hitpoints 中的碰撞点和法线转换到世界空间
+	 * @param hitpoints 碰撞点数组
+	 * @param voxPos 	vox的位置
+	 * @param voxQuat 	vox的旋转
 	 * @param scale   voxel 的缩放
 	 */
 	private  _voxHitInfoToWorld(hitpoints:HitPointInfoArray,voxPos:Vec3, voxQuat:Quaternion, scale:Vec3|null){
@@ -481,8 +481,16 @@ export class Sphere extends Shape {
 		}		
 	}
 
-	// 球主要检测6个方向是否正面碰撞，非正面碰撞的，每个格子元素用球模拟
-	// hiti 球的碰撞点， hitj voxel的碰撞点
+	/**
+	 * 球和voxel的碰撞检测
+	 * 球主要检测6个方向是否正面碰撞，非正面碰撞的，每个格子元素用球模拟
+	 * @param myPos 
+	 * @param voxel 
+	 * @param voxPos 
+	 * @param voxQuat 
+	 * @param hitpoints 
+	 * @param justtest 
+	 */
 	hitVoxel1(myPos: Vec3, voxel: Voxel, voxPos: Vec3, voxQuat: Quaternion, hitpoints: HitPointInfoArray, justtest: boolean): boolean {
 		//DEBUG
 		//myPos.x = -0.47377423035846794;
@@ -494,7 +502,9 @@ export class Sphere extends Shape {
 		let invScale = voxel.invScale;
 
 		let R = this.radius;
+		/** vox 包围盒的大小 */
 		let voxmin = voxel.voxData.aabbmin;// voxel.aabbmin;  要用原始aabb，因为计算相对
+		/** vox 包围盒的大小 */
 		let voxmax = voxel.voxData.aabbmax;// voxel.aabbmax;
 
 		// 把球转换到voxel空间
@@ -507,23 +517,30 @@ export class Sphere extends Shape {
 		invQ.vmult(sphInVox, sphInVox);
 
 		// 缩放
+		var invsx=1;
+		var invsy=1;
+		var invsz=1;
 		if(invScale){
+			// 在格子空间的位置要考虑缩放
 			sphInVox.vmul(invScale,sphInVox);
-			R/=voxel.maxScale;	// 半径也要修改
+			invsx=invScale.x;
+			invsy=invScale.y;
+			invsz=invScale.z;
+			// R/=voxel.maxScale;	// 半径也要修改 // 为了能处理不均匀缩放，球的半径不缩放，这样就能保证还是一个球，然后只要处理采样voxel的位置就行
 		}
 
 		let gridw = voxel.gridw;
 		let voxr = gridw / 2;
 
 		// 计算球占用的范围
-		let sphminx = sphInVox.x - R;
-		let sphminy = sphInVox.y - R;
-		let sphminz = sphInVox.z - R;
-		let sphmaxx = sphInVox.x + R;
-		let sphmaxy = sphInVox.y + R;
-		let sphmaxz = sphInVox.z + R;
+		let sphminx = sphInVox.x - R*invsx;
+		let sphminy = sphInVox.y - R*invsy;
+		let sphminz = sphInVox.z - R*invsz;
+		let sphmaxx = sphInVox.x + R*invsx;
+		let sphmaxy = sphInVox.y + R*invsy;
+		let sphmaxz = sphInVox.z + R*invsz;
 
-		// 球心所在格子
+		// 球心所在格子。 sphInVox已经是考虑缩放的位置了，所以可以直接除以原始gridw。
 		let cgridx = Math.floor((sphInVox.x - voxmin.x) / gridw);
 		let cgridy = Math.floor((sphInVox.y - voxmin.y) / gridw);
 		let cgridz = Math.floor((sphInVox.z - voxmin.z) / gridw);
@@ -537,8 +554,9 @@ export class Sphere extends Shape {
 		let cgridzvalid = cgridz >= 0 && cgridz < voxszz;
 
 		// 球的包围盒的格子范围
+		/** 球的格子的范围。最小值。下面会进一步缩小这个范围值 */
 		let gridminx = Math.floor((sphminx - voxmin.x) / gridw);
-		if (gridminx >= voxszx) return false;
+		if (gridminx >= voxszx) return false;	// 球的包围盒与vox的包围盒的粗略检测
 		if (gridminx < 0) gridminx = 0;
 
 		let gridminy = Math.floor((sphminy - voxmin.y) / gridw);
@@ -549,6 +567,7 @@ export class Sphere extends Shape {
 		if (gridminz >= voxszz) return false;
 		if (gridminz < 0) gridminz = 0;
 
+		/** 球的最远格子 */
 		let gridmaxx = Math.floor((sphmaxx - voxmin.x) / gridw);
 		if (gridmaxx < 0) return false;
 		if (gridmaxx >= voxszx) gridmaxx = voxszx - 1;
@@ -563,6 +582,8 @@ export class Sphere extends Shape {
 
 		let i = 0;
 
+		// 先只检测轴方向的碰撞。
+
 		// 如果球形已经进入盒子了，找一个最近面出来
 		if (cgridxvalid && cgridyvalid && cgridzvalid && voxel.getVox(cgridx, cgridy, cgridz)) {
 			if (justtest)
@@ -573,12 +594,14 @@ export class Sphere extends Shape {
 			let sphvel = this.body.velocity;
 			//console.log('球进入格子了',sphvel.x,sphvel.y,sphvel.z)
 			// 把球的速度转换到vox空间 
-			if(scale){
-				if(scale.x<0) velInVox.x*=-1;
-				if(scale.y<0) velInVox.y*=-1;
-				if(scale.z<0) velInVox.z*=-1;
-			}
 			invQ.vmult(sphvel, velInVox);
+			if(scale){
+				velInVox.x*=scale.x;
+				velInVox.y*=scale.y;
+				velInVox.z*=scale.z;
+			}
+
+			/** 不参考速度方向，直接比较所有方向找一个最近的 */
 			let NotCheckSphVel = false;
 
 			let mindist = 1e6;
@@ -586,9 +609,9 @@ export class Sphere extends Shape {
 			let dist1 = 0;
 
 			// x正方向
-			if (NotCheckSphVel || velInVox.x <= 0) {
+			if (NotCheckSphVel || velInVox.x <= 0) {	// 如果x速度<0则检查x正方向
 				dist1 = Math.abs(voxmax.x - sphInVox.x);	// 先假设是到aabb的距离
-				if (dist1 < mindist) {
+				if (dist1 < mindist) {	// 要统计最近距离
 					mindist = dist1;
 					mindistid = 0;
 				}
@@ -693,9 +716,14 @@ export class Sphere extends Shape {
 					}
 				}
 			}
+
+			// 已经确定了弹出方向和碰撞深度，下面构造碰撞信息
 			let hitinfo = hitpoints.getnew();
+			/** posi 是球的碰撞点 */
 			let posi = hitinfo.posi;
+			/** posj 是格子的碰撞点 */
 			let posj = hitinfo.posj;
+			/** 碰撞点的格子的法线 */
 			let norm = hitinfo.normal;
 
 			switch (mindistid) {
@@ -731,7 +759,7 @@ export class Sphere extends Shape {
 					break;
 			}
 
-			// 转换到世界空间
+			// 碰撞点要转换到世界空间
 			this._voxHitInfoToWorld(hitpoints, voxPos, voxQuat, scale);
 
 		} else {// 如果球心在外面，先进一步缩小范围
@@ -740,8 +768,10 @@ export class Sphere extends Shape {
 			// 判断x的话，必须yz都在有效范围内，否则不会相交
 			//console.log('waimian')
 			//console.log('spherepos:', myPos.x, myPos.y, myPos.z);
-			if (cgridyvalid && cgridzvalid) {
+			if (cgridyvalid && cgridzvalid) {// yz 在范围内，测试x方向
+				// x正方向
 				for (i = Math.max(cgridx + 1, gridminx); i <= gridmaxx; i++) {//cgridx必须 从有效点开始，但是又不能修改cgridx，因为下面要用，所以用max
+					// 在球的x正方向范围内，如果有数据，表示会碰撞
 					if (voxel.getVox(i, cgridy, cgridz)) {
 						// 添加碰撞信息 注意这时候是voxel空间的
 						let hitinfo = hitpoints.getnew();
@@ -850,6 +880,7 @@ export class Sphere extends Shape {
 			}
 			*/
 
+			// 下面再检测非轴方向的碰撞，这时候就是把范围内的所有的vox当成一个球来算
 			let tmpV = hitVoxelTmpVec2;
 			let hitpos = hitvoxHitPos1;
 			let hitpos1 = hitVoxHitPos2;

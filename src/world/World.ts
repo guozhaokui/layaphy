@@ -18,6 +18,7 @@ import { EventTarget } from '../utils/EventTarget.js';
 import { TupleDictionary } from '../utils/TupleDictionary.js';
 import { Narrowphase } from './Narrowphase.js';
 import { ContactInfo } from '../collision/ContactManager.js';
+import { GridBroadphase1 } from '../collision/GridBroadphase1.js';
 
 class profileData{
     frametm:i32=0;     // 帧时间
@@ -37,7 +38,7 @@ try{
     perfNow = Date.now;
 }
 
-class PhyEvent{
+export class PhyEvent{
     type:string;
     constructor(name:string){
         this.type=name;
@@ -315,7 +316,7 @@ export class World extends EventTarget {
 	private _pause=false;
 
     constructor(options?:any) {
-        super();
+		super();
         options = options || {};
         this.allowSleep = !!options.allowSleep;
         this.quatNormalizeSkip = options.quatNormalizeSkip !== undefined ? options.quatNormalizeSkip : 0;
@@ -490,9 +491,6 @@ export class World extends EventTarget {
         //this.collisionMatrix.setNumObjects(this.bodies.length);
         this.addBodyEvent.body = body;
 		this.idToBodyMap[body.id] = body;
-		if(body.type==BODYTYPE.DYNAMIC){
-			this._noDynamic=false;
-		}
 		this.dispatchEvent(this.addBodyEvent);
     }
 
@@ -679,13 +677,11 @@ export class World extends EventTarget {
      *     world.step(1/60);
      */
     step(dt: number, timeSinceLastCalled: number = 0, maxSubSteps: number = 10) {
-		if(this._noDynamic)
-			return;
 		if(this.phyRender){
 			this.phyRender.stepStart();
 		}
 		if(this._pause)
-		return;
+			return;
 	
         if (timeSinceLastCalled === 0) { // Fixed, simple stepping
             this.internalStep(dt);
@@ -744,7 +740,8 @@ export class World extends EventTarget {
             profilingStart = perfNow();
         }
 
-        // Add gravity to all objects
+		// Add gravity to all objects
+		// TODO 这里要优化
         for (i = 0; i !== N; i++) {
             var bi = bodies[i];
 			if ( bi.enable) {

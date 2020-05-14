@@ -216,6 +216,7 @@ test('raycastAny', () => {
 
 });
 
+/*
 test('collisionMatrix', () => {
     function testCollisionMatrix(CollisionMatrix:typeof ArrayCollisionMatrix|typeof ObjectCollisionMatrix) {
         const test_configs:{positions:number[][],colliding:{[key:string]:boolean}}[] = [
@@ -305,3 +306,4 @@ test('collisionMatrix', () => {
     testCollisionMatrix(ArrayCollisionMatrix);
     testCollisionMatrix(ObjectCollisionMatrix);
 });
+*/

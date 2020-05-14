@@ -172,7 +172,7 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 	testGround();
 
 	//loadVoxel('res/house/house1.obj',new Vec3(-37, -0.5, 45));//, undefined, new Vec3(-1,-1,1));
-	loadVoxel('res/body1.obj',new Vec3(-37, -0.5, 45));//, undefined, new Vec3(-1,-1,1));
+	loadVoxel('res/body1.obj',new Vec3(-37, -0.5, 45), undefined, new Vec3(1,5,1));//, undefined, new Vec3(-1,-1,1));
  
 	//loadVoxTest('res/test/data.json');
 
@@ -252,7 +252,7 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 	
 
 	Laya.stage.on(Event.MOUSE_DOWN, null, (e: { stageX: number, stageY: number }) => {
-		//mouseDownEmitObj(e.stageX, e.stageY, cam.camera);
+		mouseDownEmitObj(e.stageX, e.stageY, cam.camera);
 	});
 
 	Laya.stage.on(Event.KEY_DOWN, null, (e: Event) => {

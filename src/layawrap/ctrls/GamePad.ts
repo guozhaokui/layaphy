@@ -86,7 +86,7 @@ function removegamepad(gamepad: Gamepad) {
 
 window.addEventListener("gamepadconnected", (e:GamepadEvent)=>{
     addgamepad(e.gamepad);
-});
+} );
 
 window.addEventListener("gamepaddisconnected", (e: GamepadEvent)=>{
     removegamepad(e.gamepad);

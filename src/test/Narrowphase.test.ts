@@ -19,7 +19,7 @@ test('sphereSphere',()=>{
     const bodyB = new Body(1);
     bodyB.addShape(sphereShape);
 
-    cg.currentContactMaterial = new ContactMaterial(null,null,0,0);
+    (cg as any).currentContactMaterial = new ContactMaterial(null,null,0,0);
     cg.result = result;
     cg.sphereSphere(
         sphereShape,
@@ -41,7 +41,7 @@ test('sphereHeightfield',()=>{
     const result:ContactEquation[] = [];
     const hfShape = createHeightfield();
     const sphereShape = new Sphere(0.1);
-    cg.currentContactMaterial = new ContactMaterial(null,null,0,0);
+    cg.test_setContactMtl( new ContactMaterial(null,null,0,0));
     cg.result = result;
     cg.sphereHeightfield(
         sphereShape,

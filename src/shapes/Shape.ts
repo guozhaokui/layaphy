@@ -26,7 +26,7 @@ export class HitPointInfo{
     normal=new Vec3();
 }
 
-//为了重用提高效率
+//HitPointInfo池子，为了重用提高效率
 export class HitPointInfoArray{
 	data:HitPointInfo[]=[];
 	private _length=0;

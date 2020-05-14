@@ -79,8 +79,8 @@ function scangamepads() {
 }
 
 export function ttt() {
-    window.addEventListener("gamepadconnected", connecthandler);
-    window.addEventListener("gamepaddisconnected", disconnecthandler);
+    window.addEventListener("gamepadconnected", connecthandler as EventListener);
+    window.addEventListener("gamepaddisconnected", disconnecthandler as EventListener);
 
     if (!haveEvents) {
         setInterval(scangamepads, 500);

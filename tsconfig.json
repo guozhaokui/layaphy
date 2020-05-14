@@ -7,7 +7,8 @@
         "noImplicitThis": true,
         "strictNullChecks": true,
         "strictFunctionTypes": true,
-        "preserveConstEnums": false,
+		"preserveConstEnums": false,
+		"allowJs": false,
         "outDir": "bin/js",
         "baseUrl": "bin/laya"
     },"exclude": [

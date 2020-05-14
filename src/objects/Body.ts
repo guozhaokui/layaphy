@@ -840,9 +840,6 @@ export class Body extends EventTarget {
                 I.z > 0 && !fixed ? 1.0 / I.z : 0
             );
 			this.updateInertiaWorld(true);
-			if(this.world && this.type==BODYTYPE.DYNAMIC){
-				this.world._noDynamic=false;
-			}
         }
     }
 

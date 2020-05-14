@@ -99,6 +99,9 @@ export class Narrowphase {
 		shapeChecks[SHAPETYPE.SPHERE | SHAPETYPE.HEIGHTFIELD] = this.sphereHeightfield;
     }
 
+	test_setContactMtl(mtl:ContactMaterial){
+		this.currentContactMaterial=mtl;
+	}
     /**
      * Make a contact object, by using the internal pool or creating a new one.
      */
