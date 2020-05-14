@@ -404,6 +404,12 @@ export class Box extends Shape implements MinkowskiShape {
      */
 	hitVoxel(myPos: Vec3, myQ:Quaternion, voxel:Voxel, voxPos: Vec3, voxQuat: Quaternion, hitpoints:HitPointInfo[], justtest: boolean): boolean {
 		/*
+			实现方法：
+				如果体素比box大，则用boxbox的方法
+				否则
+					各个方向统计最深的体素，得到最多6个碰撞点
+		*/
+		/*
         // 把voxel转换到box空间
         let rPos = hitVoxelTmpVec1;
         let rMat = hitVoxelTmpMat;

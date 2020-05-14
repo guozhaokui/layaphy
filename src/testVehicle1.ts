@@ -19,6 +19,21 @@ import { Box } from "./shapes/Box";
 import { getGamePadStatus } from "./layawrap/ctrls/GamePad";
 import { ttt, updateStatus } from "./layawrap/ctrls/GamePadTest";
 import { Vector3 } from "laya/d3/math/Vector3";
+import { Voxel } from "./shapes/Voxel";
+import { SparseVoxData } from "./shapes/VoxelData";
+import { Body } from "./objects/Body";
+import { World } from "./world/World";
+import { Sphere } from "./shapes/Sphere";
+import { Narrowphase } from "./world/Narrowphase";
+import { ContactEquation } from "./equations/ContactEquation";
+import { FrictionEquation } from "./equations/FrictionEquation";
+import { test_sphere_vox } from "./testCase";
+
+
+// TEST
+
+test_sphere_vox();
+// TEST
 
 /**
  * 测试盒子可以被推走，被抬起
@@ -172,7 +187,7 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 	testGround();
 
 	//loadVoxel('res/house/house1.obj',new Vec3(-37, -0.5, 45));//, undefined, new Vec3(-1,-1,1));
-	loadVoxel('res/body1.obj',new Vec3(-37, -0.5, 45), undefined, new Vec3(1,5,1));//, undefined, new Vec3(-1,-1,1));
+	loadVoxel('res/body1.obj',new Vec3(-37, -0.5, 45), undefined, new Vec3(1,2,1));//, undefined, new Vec3(-1,-1,1));
  
 	//loadVoxTest('res/test/data.json');
 
@@ -271,3 +286,4 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 	}, 1000);
 	//b.phyBody.velocity=new Vec3(-1,0,0);
 }
+

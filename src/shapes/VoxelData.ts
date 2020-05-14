@@ -68,7 +68,7 @@ export function hashSparseVox(vox: SparseVoxData): hashData[][] {
 export class SparseVoxData {
 	data: voxdata[];
 	dataLod: voxdata[][] = [];
-	gridsz: f32;     // 每个格子的大小。单位是米
+	private gridsz: f32;     // 每个格子的大小。单位是米
 	dataszx: i32;    // x方向多少个格子
 	dataszy: i32;
 	dataszz: i32;

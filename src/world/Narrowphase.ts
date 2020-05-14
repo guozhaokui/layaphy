@@ -1243,7 +1243,7 @@ export class Narrowphase {
 		voxel.updateAABB();
 		//TEMP
 		let hitpoints = sphereVoxel_hitPoints;
-        let hit = sphere.hitVoxel1(pos1,voxel,pos2,q2,hitpoints,justTest);
+        let hit = sphere.hitVoxel(pos1,voxel,pos2,q2,hitpoints,justTest);
         if(hit){
 			if( justTest) return true;
 			let hl = hitpoints.length;

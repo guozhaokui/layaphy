@@ -395,58 +395,6 @@ export class Sphere extends Shape {
 		return deep;
 	}
 
-	hitVoxel(myPos: Vec3, voxel: Voxel, voxPos: Vec3, voxQuat: Quaternion, hitpoints: HitPointInfo[], justtest: boolean): boolean {
-		// 只需与外壳
-		/**
-		 * 与所有的格子比较，取正的最小距离，法线是当前距离的法线
-		 * 由于voxel可能是凹的，可能会有多个点
-		 */
-		// 把voxel转换到sphere空间
-		let rPos = hitVoxelTmpVec1;
-		voxPos.vsub(myPos, rPos);
-
-		/*
-		// 先用最笨的方法验证流程
-		let voxdt = voxel.voxData.data;
-		if(!voxdt)
-			return false;
-		let gridw = voxel.gridw;//.voxData.gridsz;
-		let r = gridw / 2;
-		let min = voxel.voxData.aabbmin;    //原始包围盒
-		//let max = voxel.voxData.aabbmax;
-		let tmpV = new Vec3();  //xyz格子坐标
-		let hitpos = new Vec3();
-		let hitpos1 = new Vec3();
-		let hitnorm = new Vec3();
-		let hit = false;
-
-		for (let i = 0, sz = voxdt.length; i < sz; i++) {
-			let dt = voxdt[i];
-			// 把xyz映射到box空间
-			tmpV.set(dt.x + 0.5, dt.y + 0.5, dt.z + 0.5);// 在格子的中心
-			min.addScaledVector(gridw, tmpV, tmpV);// tmpV = min + (vox.xyz+0.5)*gridw
-			//tmpV现在是在vox空间内的一个点
-			voxQuat.vmult(tmpV, tmpV);//TODO 直接用矩阵的方向
-			tmpV.vadd(voxPos, tmpV);
-			//tmpV现在是box空间的点了，计算碰撞信息
-			// 这里的法线是推开自己的
-			let deep = Sphere.SpherehitSphere(this.radius, myPos, r, tmpV, hitpos, hitnorm, hitpos1, justtest);
-			if (deep < 0)
-				continue;
-			if (justtest)
-				return true;
-			//转换回世界空间
-			let hi = new HitPointInfo();
-			hi.posi.copy(hitpos);
-			hi.posj.copy(hitpos1);
-			hi.normal.copy(hitnorm);
-			hitpoints.push(hi);
-			hit = true;
-		}
-		return hit;
-		*/
-		return false;
-	}
 
 	/**
 	 * 把 hitpoints 中的碰撞点和法线转换到世界空间
@@ -491,7 +439,7 @@ export class Sphere extends Shape {
 	 * @param hitpoints 
 	 * @param justtest 
 	 */
-	hitVoxel1(myPos: Vec3, voxel: Voxel, voxPos: Vec3, voxQuat: Quaternion, hitpoints: HitPointInfoArray, justtest: boolean): boolean {
+	hitVoxel(myPos: Vec3, voxel: Voxel, voxPos: Vec3, voxQuat: Quaternion, hitpoints: HitPointInfoArray, justtest: boolean): boolean {
 		//DEBUG
 		//myPos.x = -0.47377423035846794;
 		//myPos.y = -0.028011225545816587;
@@ -502,9 +450,9 @@ export class Sphere extends Shape {
 		let invScale = voxel.invScale;
 
 		let R = this.radius;
-		/** vox 包围盒的大小 */
+		/** vox 原始包围盒的大小 */
 		let voxmin = voxel.voxData.aabbmin;// voxel.aabbmin;  要用原始aabb，因为计算相对
-		/** vox 包围盒的大小 */
+		/** vox 原始包围盒的大小 */
 		let voxmax = voxel.voxData.aabbmax;// voxel.aabbmax;
 
 		// 把球转换到voxel空间
@@ -516,6 +464,9 @@ export class Sphere extends Shape {
 		voxQuat.conjugate(invQ);
 		invQ.vmult(sphInVox, sphInVox);
 
+		let gridw = voxel.gridw;
+		let voxr = gridw / 2;
+		var maxvoxr = voxr*voxel.maxScale;
 		// 缩放
 		var invsx=1;
 		var invsy=1;
@@ -528,9 +479,6 @@ export class Sphere extends Shape {
 			invsz=invScale.z;
 			// R/=voxel.maxScale;	// 半径也要修改 // 为了能处理不均匀缩放，球的半径不缩放，这样就能保证还是一个球，然后只要处理采样voxel的位置就行
 		}
-
-		let gridw = voxel.gridw;
-		let voxr = gridw / 2;
 
 		// 计算球占用的范围
 		let sphminx = sphInVox.x - R*invsx;
@@ -585,6 +533,7 @@ export class Sphere extends Shape {
 		// 先只检测轴方向的碰撞。
 
 		// 如果球形已经进入盒子了，找一个最近面出来
+		// 有个问题是出来以后其实还是有可能处于碰撞状态的。不过这个可能可以通过下一帧解决
 		if (cgridxvalid && cgridyvalid && cgridzvalid && voxel.getVox(cgridx, cgridy, cgridz)) {
 			if (justtest)
 				return true;
@@ -766,173 +715,148 @@ export class Sphere extends Shape {
 			// 注意这时候包围盒检测已经通过了，所以不用再做包围盒相关检测
 			//maxx
 			// 判断x的话，必须yz都在有效范围内，否则不会相交
-			//console.log('waimian')
-			//console.log('spherepos:', myPos.x, myPos.y, myPos.z);
-			if (cgridyvalid && cgridzvalid) {// yz 在范围内，测试x方向
-				// x正方向
-				for (i = Math.max(cgridx + 1, gridminx); i <= gridmaxx; i++) {//cgridx必须 从有效点开始，但是又不能修改cgridx，因为下面要用，所以用max
-					// 在球的x正方向范围内，如果有数据，表示会碰撞
-					if (voxel.getVox(i, cgridy, cgridz)) {
-						// 添加碰撞信息 注意这时候是voxel空间的
-						let hitinfo = hitpoints.getnew();
-						hitinfo.posi.set(sphmaxx, sphInVox.y, sphInVox.z);	// 球的碰撞点
-						hitinfo.posj.set(gridw * i + voxmin.x, sphInVox.y, sphInVox.z);
-						hitinfo.normal.set(-1, 0, 0);	// 推开球
-						gridmaxx = i - 1;
-						if (justtest) return true;
-						break;
+
+			// 根据vox和球的比例，采用简单的遍历球的方法或者只处理正面的方法。
+			// 如果格子很大，则只处理正面的方法就够了。如果格子很小，则遍历覆盖的格子
+			// 对于缩放变形很大的格子不能用遍历格子用球模拟的方法，会有严重错误
+			if(maxvoxr>R/2){	// 格子和R的比例的值可能需要调整。
+				if (cgridyvalid && cgridzvalid) {// yz 在范围内，测试x方向
+					// x正方向
+					for (i = Math.max(cgridx + 1, gridminx); i <= gridmaxx; i++) {//cgridx必须 从有效点开始，但是又不能修改cgridx，因为下面要用，所以用max
+						// 在球的x正方向范围内，如果有数据，表示会碰撞
+						if (voxel.getVox(i, cgridy, cgridz)) {
+							// 添加碰撞信息 注意这时候是voxel空间的
+							let hitinfo = hitpoints.getnew();
+							hitinfo.posi.set(sphmaxx, sphInVox.y, sphInVox.z);	// 球的碰撞点
+							hitinfo.posj.set(gridw * i + voxmin.x, sphInVox.y, sphInVox.z);
+							hitinfo.normal.set(-1, 0, 0);	// 推开球
+							gridmaxx = i - 1;	// 现在没什么用了
+							if (justtest) return true;
+							break;
+						}
 					}
-				}
-				//minx
-				for (i = Math.min(cgridx - 1, gridmaxx); i >= gridminx; i--) {
-					if (voxel.getVox(i, cgridy, cgridz)) {
-						let hitinfo = hitpoints.getnew();
-						hitinfo.posi.set(sphminx, sphInVox.y, sphInVox.z);	// 球的碰撞点
-						hitinfo.posj.set(gridw * (i + 1) + voxmin.x, sphInVox.y, sphInVox.z);
-						hitinfo.normal.set(1, 0, 0);
-						gridminx = i + 1;
-						if (justtest) return true;
-						break;
-					}
-				}
-			}
-
-			//maxy
-			if (cgridxvalid && cgridzvalid) {
-				for (i = Math.max(cgridy + 1, gridminy); i <= gridmaxy; i++) {
-					if (voxel.getVox(cgridx, i, cgridz)) {
-						let hitinfo = hitpoints.getnew();
-						hitinfo.posi.set(sphInVox.x, sphmaxy, sphInVox.z);	// 球的碰撞点
-						hitinfo.posj.set(sphInVox.x, gridw * i + voxmin.y, sphInVox.z);
-						hitinfo.normal.set(0, -1, 0);
-						gridmaxy = i - 1;
-						if (justtest) return true;
-						break;
-					}
-				}
-				//miny
-				for (i = Math.min(cgridy - 1, gridmaxy); i >= gridminy; i--) {
-					if (voxel.getVox(cgridx, i, cgridz)) {
-						let hitinfo = hitpoints.getnew();
-						hitinfo.posi.set(sphInVox.x, sphminy, sphInVox.z);	// 球的碰撞点
-						hitinfo.posj.set(sphInVox.x, gridw * (i + 1) + voxmin.y, sphInVox.z);
-						hitinfo.normal.set(0, 1, 0);
-						gridminy = i + 1;
-						if (justtest) return true;
-						break;
-					}
-				}
-			}
-
-			if (cgridxvalid && cgridyvalid) {
-				//maxz
-				for (i = Math.max(cgridz + 1, gridminz); i <= gridmaxz; i++) {
-					if (voxel.getVox(cgridx, cgridy, i)) {
-						let hitinfo = hitpoints.getnew();
-						hitinfo.posi.set(sphInVox.x, sphInVox.y, sphmaxz);	// 球的碰撞点
-						hitinfo.posj.set(sphInVox.x, sphInVox.y, gridw * i + voxmin.z);
-						hitinfo.normal.set(0, 0, -1);
-						gridmaxz = i - 1;
-						if (justtest) return true;
-						break;
-					}
-				}
-
-				//minz 
-				for (i = Math.min(cgridz - 1, gridmaxz); i >= gridminz; i--) {
-					if (voxel.getVox(cgridx, cgridy, i)) {
-						let hitinfo = hitpoints.getnew();
-						hitinfo.posi.set(sphInVox.x, sphInVox.y, sphminz);	// 球的碰撞点
-						hitinfo.posj.set(sphInVox.x, sphInVox.y, gridw * (i + 1) + voxmin.z);
-						hitinfo.normal.set(0, 0, 1);
-						gridminz = i + 1;
-						if (justtest) return true;
-						break;
-					}
-				}
-			}
-
-			// 先把上面的碰撞转换到世界空间，因为下面用的是球的碰撞，都是在世界空间进行的
-			this._voxHitInfoToWorld(hitpoints, voxPos, voxQuat, scale);
-			/*
-			let hl = hitpoints.length;
-			for (i = 0; i < hl; i++) {
-				let hi = hitpoints.data[i];
-				voxQuat.vmult(hi.posi, hi.posi); 
-				if(scale){
-					hi.posi.vmul(scale,hi.posi);
-				}
-				voxPos.vadd(hi.posi, hi.posi);
-
-				voxQuat.vmult(hi.posj, hi.posj); 
-				if(scale){
-					hi.posj.vmul(scale,hi.posj);
-				}
-				voxPos.vadd(hi.posj, hi.posj);
-
-				voxQuat.vmult(hi.normal, hi.normal);
-				// 法线不用缩放,除非有镜像
-				if(scale) {
-					if(scale.x<0) hi.normal.x*=-1;
-					if(scale.y<0) hi.normal.y*=-1;
-					if(scale.z<0) hi.normal.z*=-1;
-				}
-			}
-			*/
-
-			// 下面再检测非轴方向的碰撞，这时候就是把范围内的所有的vox当成一个球来算
-			let tmpV = hitVoxelTmpVec2;
-			let hitpos = hitvoxHitPos1;
-			let hitpos1 = hitVoxHitPos2;
-			let hitnorm = hitVoxHitNorm;
-			if(scale){
-				// 要在世界空间碰撞，恢复一些数据
-				R = this.radius;	 
-				voxr = gridw / 2 * voxel.maxScale;
-			}
-			// 把缩小后的范围中的所有的格子当做球来处理
-			for (let z = gridminz; z <= gridmaxz; z++) {
-				for (let y = gridminy; y <= gridmaxy; y++) {
-					for (let x = gridminx; x <= gridmaxx; x++) {
-						//TODO 上面检查的几个点就不用做了
-						if (voxel.getVox(x, y, z)) {
-							// 把xyz映射到box空间
-							tmpV.set(x + 0.5, y + 0.5, z + 0.5);// 在格子的中心
-							voxmin.addScaledVector(gridw, tmpV, tmpV);// tmpV = min + (vox.xyz+0.5)*gridw
-							if(scale){
-								tmpV.vmul(scale, tmpV);	//缩放
-							}
-							//tmpV现在是在vox空间内的一个点
-							voxQuat.vmult(tmpV, tmpV);//TODO 直接用矩阵的方向
-							tmpV.vadd(voxPos, tmpV);
-							//tmpV现在是世界空间的点了，计算碰撞信息
-							// 这里的法线是推开自己的
-							let deep = Sphere.SpherehitSphere(R, myPos, voxr, tmpV, hitpos, hitnorm, hitpos1, justtest);
-							if (deep < 0)
-								continue;
-							if (justtest)
-								return true;
-							let hi = hitpoints.getnew();
-							hi.posi.copy(hitpos);
-							hi.posj.copy(hitpos1);
-							hi.normal.copy(hitnorm);
+					//minx
+					for (i = Math.min(cgridx - 1, gridmaxx); i >= gridminx; i--) {
+						if (voxel.getVox(i, cgridy, cgridz)) {
+							let hitinfo = hitpoints.getnew();
+							hitinfo.posi.set(sphminx, sphInVox.y, sphInVox.z);	// 球的碰撞点
+							hitinfo.posj.set(gridw * (i + 1) + voxmin.x, sphInVox.y, sphInVox.z);
+							hitinfo.normal.set(1, 0, 0);
+							gridminx = i + 1;
+							if (justtest) return true;
+							break;
 						}
 					}
 				}
+	
+				//maxy
+				if (cgridxvalid && cgridzvalid) {
+					for (i = Math.max(cgridy + 1, gridminy); i <= gridmaxy; i++) {
+						if (voxel.getVox(cgridx, i, cgridz)) {
+							let hitinfo = hitpoints.getnew();
+							hitinfo.posi.set(sphInVox.x, sphmaxy, sphInVox.z);	// 球的碰撞点
+							hitinfo.posj.set(sphInVox.x, gridw * i + voxmin.y, sphInVox.z);
+							hitinfo.normal.set(0, -1, 0);
+							gridmaxy = i - 1;
+							if (justtest) return true;
+							break;
+						}
+					}
+					//miny
+					for (i = Math.min(cgridy - 1, gridmaxy); i >= gridminy; i--) {
+						if (voxel.getVox(cgridx, i, cgridz)) {
+							let hitinfo = hitpoints.getnew();
+							hitinfo.posi.set(sphInVox.x, sphminy, sphInVox.z);	// 球的碰撞点
+							hitinfo.posj.set(sphInVox.x, gridw * (i + 1) + voxmin.y, sphInVox.z);
+							hitinfo.normal.set(0, 1, 0);
+							gridminy = i + 1;
+							if (justtest) return true;
+							break;
+						}
+					}
+				}
+	
+				if (cgridxvalid && cgridyvalid) {
+					//maxz
+					for (i = Math.max(cgridz + 1, gridminz); i <= gridmaxz; i++) {
+						if (voxel.getVox(cgridx, cgridy, i)) {
+							let hitinfo = hitpoints.getnew();
+							hitinfo.posi.set(sphInVox.x, sphInVox.y, sphmaxz);	// 球的碰撞点
+							hitinfo.posj.set(sphInVox.x, sphInVox.y, gridw * i + voxmin.z);
+							hitinfo.normal.set(0, 0, -1);
+							gridmaxz = i - 1;
+							if (justtest) return true;
+							break;
+						}
+					}
+	
+					//minz 
+					for (i = Math.min(cgridz - 1, gridmaxz); i >= gridminz; i--) {
+						if (voxel.getVox(cgridx, cgridy, i)) {
+							let hitinfo = hitpoints.getnew();
+							hitinfo.posi.set(sphInVox.x, sphInVox.y, sphminz);	// 球的碰撞点
+							hitinfo.posj.set(sphInVox.x, sphInVox.y, gridw * (i + 1) + voxmin.z);
+							hitinfo.normal.set(0, 0, 1);
+							gridminz = i + 1;
+							if (justtest) return true;
+							break;
+						}
+					}
+				}
+	
+				// 先把上面的碰撞转换到世界空间，因为下面用的是球的碰撞，都是在世界空间进行的
+				this._voxHitInfoToWorld(hitpoints, voxPos, voxQuat, scale);
+	
+			}else{
+				// 遍历重合格子处理，这时候就是把范围内的所有的vox当成一个球来算
+				let curVoxOri = hitVoxelTmpVec2;
+				let hitpos = hitvoxHitPos1;
+				let hitpos1 = hitVoxHitPos2;
+				let hitnorm = hitVoxHitNorm;
+
+				// 根据球的中心位置来确定方向。注意可能左右都有碰撞
+				// TODO 只检测外层
+				for (let z = gridminz; z <= gridmaxz; z++) {
+					for (let y = gridminy; y <= gridmaxy; y++) {
+						for (let x = gridminx; x <= gridmaxx; x++) {
+							if (voxel.getVox(x, y, z)) {
+	
+								// 把xyz转到世界空间
+								curVoxOri.set(x + 0.5, y + 0.5, z + 0.5);// 在格子的中心
+								voxmin.addScaledVector(gridw, curVoxOri, curVoxOri);// tmpV = min + (vox.xyz+0.5)*gridw
+								if(scale){
+									curVoxOri.vmul(scale, curVoxOri);	//缩放
+								}
+								//curVoxOri现在是在vox空间内的一个点
+								voxQuat.vmult(curVoxOri, curVoxOri);//TODO 直接用矩阵的方向
+								curVoxOri.vadd(voxPos, curVoxOri);
+								//tmpV现在是世界空间的点了，计算碰撞信息
+	
+								// 这里的法线是推开自己的
+								let deep = Sphere.SpherehitSphere(R, myPos, voxr, curVoxOri, hitpos, hitnorm, hitpos1, justtest);
+								if (deep < 0)
+									continue;
+								if (justtest)
+									return true;
+								let hi = hitpoints.getnew();
+								hi.posi.copy(hitpos);
+								hi.posj.copy(hitpos1);
+								hi.normal.copy(hitnorm);
+							}
+						}
+					}
+				}			
 			}
+
 		}
 
 		//debug
 		if (hitpoints.length > 0) {
-			//console.log('hit num=', hitpoints.length);
-			/*
+			console.log('hit num=', hitpoints.length);
+			
 			for (let i = 0; i < hitpoints.length; i++) {
 				let hi = hitpoints.data[i];
-				if (hi.posi.x < voxmin.x) {
-					debugger;
-				}
 			}
-			*/
 		}
 		//debug
 
