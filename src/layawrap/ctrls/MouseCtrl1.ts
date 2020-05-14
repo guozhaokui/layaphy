@@ -129,10 +129,14 @@ export class MouseCtrl1 extends Script3D {
     }
 
     private onMouseWheelHandler(e: Event): void {
-        if (e.delta > 0)
+        if (e.delta > 0){
             this._dist /= 1.2;
-        else
+            this.camera.orthographicVerticalSize/=1.2;
+        }
+        else{
             this._dist *= 1.2;
+            this.camera.orthographicVerticalSize*=1.2;
+        }
         if (this._dist < this.minDist) this._dist = this.minDist;
         if (this._dist > this.maxDist) this._dist = this.maxDist;
         this.changed = true;
@@ -195,6 +199,15 @@ export class MouseCtrl1 extends Script3D {
         mat[14] = this.target.z;
         this.camera.transform.worldMatrix = this.camWorldMatrix;
         this.owner.event("scrollView");
+    }
+
+    toggleOrth(){
+        if(this.camera.orthographic){
+            this.camera.orthographic=false;
+        }else{
+            this.camera.orthographic=true;
+            //this.camera.orthographicVerticalSize=30;        
+        }
     }
 
     topView(): void {
@@ -260,6 +273,9 @@ export class MouseCtrl1 extends Script3D {
                 break;
             case Keyboard.NUMPAD_3:
                 this.leftView();
+                break;
+            case Keyboard.NUMPAD_5:
+                this.toggleOrth();
                 break;
             case Keyboard.NUMPAD_7:
                 this.topView();
@@ -331,6 +347,7 @@ export class MouseCtrl1 extends Script3D {
 
         // 如果主要方向是朝向地面，就特殊处理。 这样可以避免相交到一些太远的点
         if (this.hitplaneAsTarget) {
+            /*
             if ((zy > 0.1 && posy > 0) || (zy < -0.1 && posy < 0)) {	// dot(0,1,0)
                 var t = posy / zy;	// 距离就是时间
                 if (t > 0) {
@@ -343,6 +360,7 @@ export class MouseCtrl1 extends Script3D {
                     this.target.z = this.hitGroundZ;
                 }
             }
+            */
         }
         this.startDist = this._dist;	// 上面可能修改了，所以要放到这里。
     }
