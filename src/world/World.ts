@@ -234,7 +234,10 @@ export class World extends EventTarget {
     /**
      * @property bodies
      */
-    bodies: Body[] = [];
+	bodies: Body[] = [];
+	
+	/** 处于激活状态的body。例如回调就是基于这个的 */
+	activeBodis:Body[] = [];
 
     /**
      * The solver algorithm to use. Default is GSSolver
@@ -995,7 +998,7 @@ export class World extends EventTarget {
 			// 唤醒
             if (bi._wakeUpAfterNarrowphase) {
                 bi.wakeUp();
-                bi._wakeUpAfterNarrowphase = false;
+                bi._wakeUpAfterNarrowphase = false;	// 重复了
             }
 		}
 		
