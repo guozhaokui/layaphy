@@ -100,6 +100,13 @@ export class PhyCharactorCtrl extends Component implements ICharactorCtrl{
 		body.dbgShow=true;
 		let h = this.stepHeight=0.5;
 		body.addShape( new Sphere(h));
+		//TODO 改成不用刚体的
+		/*
+		body.collisionResponse=false; 
+		body.addEventListener(Body.EVENT_COLLIDE_ENTER,()=>{
+			debugger;
+		});
+		*/
 		/*
 		body.addShape( new Sphere(0.5),new Vec3(0,0.8,0));
 		body.addShape( new Sphere(0.5),new Vec3(0,1.6,0));
