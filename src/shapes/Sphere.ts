@@ -719,7 +719,7 @@ export class Sphere extends Shape {
 			// 根据vox和球的比例，采用简单的遍历球的方法或者只处理正面的方法。
 			// 如果格子很大，则只处理正面的方法就够了。如果格子很小，则遍历覆盖的格子
 			// 对于缩放变形很大的格子不能用遍历格子用球模拟的方法，会有严重错误
-			if(maxvoxr>R/2){	// 格子和R的比例的值可能需要调整。
+			if(maxvoxr>R/6){	// 格子和R的比例的值可能需要调整。当比例差不多（例如两倍）的时候，用格子非常不准，例如人无法在格子地面上站住
 				if (cgridyvalid && cgridzvalid) {// yz 在范围内，测试x方向
 					// x正方向
 					for (i = Math.max(cgridx + 1, gridminx); i <= gridmaxx; i++) {//cgridx必须 从有效点开始，但是又不能修改cgridx，因为下面要用，所以用max
