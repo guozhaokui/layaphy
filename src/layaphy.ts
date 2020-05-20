@@ -18,12 +18,13 @@ import { testBullet } from "./TestBullet";
 import { DefaultMaterial } from "./layawrap/debugger/DefaultMtl";
 import { loadEnvTexture, loadLUTTex } from "./layawrap/debugger/envTexMgr";
 import { Matrix4x4 } from "laya/d3/math/Matrix4x4";
+import { Main } from "./TestTriMesh";
 //import { Main } from "./testEditor";
 //import { Main } from "./testVehicle1";
 //import { Main } from "./testVehicle";
 //import { Main } from "./testGridBroad";
 //import { Main } from "./TestEPA";
-import { Main } from "./TestCharCtrl";
+//import { Main } from "./TestCharCtrl";
 //import { Main } from "./testBoxError";
 //import { Main } from "./testDomino";
 //import { Main } from "./TestSpider";
@@ -37,6 +38,7 @@ import { Main } from "./TestCharCtrl";
 //let PhyBody: typeof BtBody | typeof CannonBody;
 // Determine quaternion from roll, pitch, and yaw euler angles: http://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
 // just using roll and pitch here
+
 
 function EulerToQuat(phi:number, theta:number, psi:number, q:Quaternion) {
 	var c = Math.cos, s = Math.sin, f=phi, t=theta, p=psi;		

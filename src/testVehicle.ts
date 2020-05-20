@@ -100,7 +100,7 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 	//createJoint();
 
 	Laya.stage.on(Event.MOUSE_DOWN, null, (e: { stageX: number, stageY: number }) => {
-		mouseDownEmitObj(e.stageX, e.stageY,cam.camera);
+		mouseDownEmitObj(e.stageX, e.stageY,cam.camera,false,null);
 	});
 
 	Laya.stage.on(Event.KEY_DOWN, null, (e: Event) => {

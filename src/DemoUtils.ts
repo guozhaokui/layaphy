@@ -407,7 +407,7 @@ export function loadObj(o: Object[],world:World) {
 let emitPos = new Vec3();
 let emitDir = new Vec3();
 
-export function mouseDownEmitObj(scrx: number, scry: number, cam:Camera, lockEmit:boolean=false){
+export function mouseDownEmitObj(scrx: number, scry: number, cam:Camera, lockEmit:boolean=false, phymtl:Material|null=null){
 	let worlde = cam.transform.worldMatrix.elements;
 	let stpos = new Vec3(worlde[12], worlde[13], worlde[14]);
 	let dir = new Vec3(worlde[8], worlde[9], worlde[10]);
@@ -430,6 +430,7 @@ export function mouseDownEmitObj(scrx: number, scry: number, cam:Camera, lockEmi
 	
 	dir.set(emitDir.x,emitDir.y,emitDir.z);
 	let sp = addSphere(.3, stpos.x, stpos.y, stpos.z);
+	//let sp = addBox(new Vec3(1,1,1), stpos,1,phymtl as Material);
 	//sp.setMaterial(phySph);
 	let v = 20;
 	setTimeout(() => {

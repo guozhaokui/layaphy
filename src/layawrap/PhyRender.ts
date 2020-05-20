@@ -18,6 +18,7 @@ import { Voxel } from "../shapes/Voxel";
 import {World, IPhyRender, setPhyRender } from "../world/World";
 import { Box } from "../shapes/Box";
 import { Sphere } from "../shapes/Sphere";
+import { Trimesh } from "../shapes/Trimesh";
 
 let col1 = new Color();
 let p1 = new Vector3();
@@ -416,6 +417,26 @@ export class PhyRender extends IPhyRender {
 			case SHAPETYPE.HEIGHTFIELD:
 				break;
 			case SHAPETYPE.TRIMESH:
+				let tri = shape as Trimesh;
+				let vpos = tri.vertices;
+				let ind = tri.indices;
+				var facenum = ind.length/3;
+				for(let i=0; i<facenum; i++){
+					let p1 = ind[i*3]*3;
+					let p2 = ind[i*3+1]*3;
+					let p3 = ind[i*3+2]*3;
+					let v1 = new Vec3(vpos[p1],vpos[p1+1],vpos[p1+2]);
+					this.transVec3(v1,pos,quat,v1);
+					let v2 = new Vec3(vpos[p2],vpos[p2+1],vpos[p2+2]);
+					this.transVec3(v2,pos,quat,v2);
+					let v3 = new Vec3(vpos[p3],vpos[p3+1],vpos[p3+2]);
+					this.transVec3(v3,pos,quat,v3);
+
+					this.addSegV3(v1,v2,color);
+					this.addSegV3(v2,v3,color);
+					this.addSegV3(v1,v3,color);
+
+				}
 				break;
 			case SHAPETYPE.VOXEL:
 				{

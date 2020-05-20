@@ -475,6 +475,7 @@ export class Narrowphase {
         normal.set(0, 0, 1);
         planeQuat.vmult(normal, normal); // Turn normal according to plane
 
+		let hit=false;
         for (let i = 0; i < trimeshShape.vertices.length / 3; i++) {
 
             // Get world vertex from trimesh
@@ -513,11 +514,12 @@ export class Narrowphase {
 
                 // Store result
                 this.result.push(r);
-                this.createFrictionEquationsFromContact(r, this.frictionResult);
+				this.createFrictionEquationsFromContact(r, this.frictionResult);
+				hit=true;
             }
-            return true;
+            //return true;
         }
-        return false;
+        return  hit;//false;
     }
 
 	/**

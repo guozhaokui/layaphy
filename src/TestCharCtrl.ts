@@ -34,7 +34,7 @@ let phymtl1 = new Material();
 let phymtl2 = new Material('sce',0,1);
 let phymtl3 = new Material();
 let phySph = new Material('sph',0,0.1);
-let cmtl1 = new ContactMaterial(phymtl1, phymtl2, 0.001, .2);
+let cmtl1 = new ContactMaterial(phymtl1, phymtl2, 0.1, .0);
 let cmtl2 = new ContactMaterial(phymtl1, phymtl3, 0, 0);
 let cmtl3 = new ContactMaterial(phySph, phymtl2, 0, 1);
 let cam:MouseCtrl1;
@@ -119,7 +119,7 @@ function dokey(e: Event, down: boolean) {
 
 function test(mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 	Laya.stage.on(Event.MOUSE_DOWN, null, (e: { stageX: number, stageY: number }) => {
-		mouseDownEmitObj(e.stageX,e.stageY,cam.camera,lockEmit);
+		mouseDownEmitObj(e.stageX,e.stageY,cam.camera,lockEmit, phymtl1);
 	});
 
 	Laya.stage.on(Event.MOUSE_MOVE, null, (e:Event)=>{

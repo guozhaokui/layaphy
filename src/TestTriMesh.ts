@@ -12,6 +12,12 @@ import { PhyRender } from "./layawrap/PhyRender";
 import { ContactMaterial } from "./material/ContactMaterial";
 import { Material } from "./material/Material";
 import { Vec3 } from "./math/Vec3";
+import { Body } from "./objects/Body";
+import { Trimesh } from "./shapes/Trimesh";
+import { Sprite3D } from "laya/d3/core/Sprite3D";
+import { CannonBody } from "./layawrap/CannonBody";
+import { Plane } from "./shapes/Plane";
+import { Quaternion } from "./math/Quaternion";
 
 /**
  * 测试盒子可以被推走，被抬起
@@ -46,8 +52,8 @@ function rand(a: number, b: number) {
 function testGround() {
 	world.world.gravity.set(0, -11, 0);
 	//plane
-	let p =addBox(new Vec3(100,100,100), new Vec3(0,-50,0),0,phymtl1);
-	/*
+	//let p =addBox(new Vec3(100,100,100), new Vec3(0,-50,0),0,phymtl1);
+	
 	let plane = new Sprite3D();
     let planephy = plane.addComponent(CannonBody) as CannonBody;
     planephy.setMaterial(phymtl1);
@@ -56,7 +62,7 @@ function testGround() {
     shapeq.setFromAxisAngle(new Vec3(1, 0, 0), -Math.PI / 2);
     planephy.addShape(new Plane(), new Vector3(), shapeq);  // laya的plane是向上(y)的，cannon的plane是向前（后？）的
 	planephy.setMass(0);
-	*/
+	
 
 
 	//let ch1 = addBox(new Vec3(1, 2, 1), new Vec3(0, 1, 0), 1, phymtl1);
@@ -105,6 +111,13 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 	initPhy(sce);
 
 	testGround();
+
+	let body1 = new Body(1);
+	let tri = new Trimesh([0,1,0, 0,0,-1, -1,0,1, 1,0,1 ],[0,1,2, 0,2,3, 0,3,1, 3,2,1]);
+	body1.addShape(tri);
+	body1.setPos(0,10,0);
+	let world = CannonWorld.inst.world;
+	world.addBody(body1);
 
 	Laya.stage.on(Event.MOUSE_DOWN, null, (e: { stageX: number, stageY: number }) => {
 		mouseDownEmitObj(e.stageX,e.stageY,cam.camera);
