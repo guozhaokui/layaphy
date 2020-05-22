@@ -19,6 +19,7 @@ import { TupleDictionary } from '../utils/TupleDictionary.js';
 import { Narrowphase } from './Narrowphase.js';
 import { ContactInfo } from '../collision/ContactManager.js';
 import { GridBroadphase1 } from '../collision/GridBroadphase1.js';
+import { GridBroadphase } from '../collision/GridBroadphase.js';
 
 class profileData{
     frametm:i32=0;     // 帧时间
@@ -339,7 +340,11 @@ export class World extends EventTarget {
     }
     get phyRender(){
         return this._phyRender;
-    }
+	}
+	
+	enableFriction(b:boolean){
+		this.narrowphase.enableFriction(b);
+	}
     /**
      * 接触事件
      */

@@ -32,7 +32,7 @@ var shapeChecks: checkFunc[] = [];
 let sphereVoxel_hitPoints = new HitPointInfoArray();
 sphereVoxel_hitPoints.reserve(32);
 
-export var enableFriction = true;
+var _enableFriction = true;
 
 /**
  * Helper class for the World. Generates ContactEquations.
@@ -133,13 +133,16 @@ export class Narrowphase {
         return c;
     }
 
+	enableFriction(b:boolean){
+		_enableFriction=b;
+	}
 	/**
 	 * 根据contact创建摩擦约束。每个contact会创建两个摩擦约束，在tangent的两个方向
 	 * @param contactEq 
 	 * @param outArray 
 	 */
     createFrictionEquationsFromContact(contactEq: ContactEquation, outArray: FrictionEquation[]) {
-		if(!enableFriction)
+		if(!_enableFriction)
 			return;
         const bodyA = contactEq.bi;
         const bodyB = contactEq.bj;

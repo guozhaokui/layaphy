@@ -429,8 +429,8 @@ export function mouseDownEmitObj(scrx: number, scry: number, cam:Camera, lockEmi
 	}
 	
 	dir.set(emitDir.x,emitDir.y,emitDir.z);
-	let sp = addSphere(.3, stpos.x, stpos.y, stpos.z);
-	//let sp = addBox(new Vec3(1,1,1), stpos,1,phymtl as Material);
+	//let sp = addSphere(.3, stpos.x, stpos.y, stpos.z);
+	let sp = addBox(new Vec3(1,1,1), stpos,1,phymtl as Material);
 	//sp.setMaterial(phySph);
 	let v = 20;
 	setTimeout(() => {
