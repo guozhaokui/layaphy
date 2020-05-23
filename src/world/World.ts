@@ -230,7 +230,7 @@ export class World extends EventTarget {
     /**
      * The broadphase algorithm to use. Default is NaiveBroadphase
      */
-    broadphase: Broadphase = new NaiveBroadphase();// new GridBroadphase(); Grid的有问题
+    broadphase: Broadphase = new GridBroadphase1();// new NaiveBroadphase();// new GridBroadphase(); Grid的有问题
 
     /**
      * @property bodies
