@@ -8,6 +8,7 @@ import { Box } from '../shapes/Box.js';
 import { Shape } from '../shapes/Shape.js';
 import { EventTarget } from '../utils/EventTarget.js';
 import { World } from '../world/World.js';
+import { gridInfo } from '../collision/GridBroadphase1.js';
 
 export interface BodyInitOptions {
     position?: Vec3;
@@ -297,7 +298,7 @@ export class Body extends EventTarget {
      * World space bounding box of the body and its shapes.
      */
     aabb = new AABB();
-    aabbNeedsUpdate = true;
+    private _aabbNeedsUpdate = true;
 
     /**
      * Total bounding radius of the Body including its shapes, relative to body.position.
@@ -320,6 +321,9 @@ export class Body extends EventTarget {
 
 	/** 控制是否显示包围盒 */
 	dbgShow=true;	
+
+	/** 格子管理相关信息。以后拿出去 */
+	gridinfo:gridInfo|null=null;
 
     constructor(mass: number = 1, shape: Shape|null = null, pos:Vec3|null=null, options?: BodyInitOptions) {
         super();
@@ -391,6 +395,13 @@ export class Body extends EventTarget {
 	setPos(x:number, y:number, z:number):void{
 		this.position.set(x,y,z);
 		this.aabbNeedsUpdate=true;
+	}
+
+	set aabbNeedsUpdate(b:boolean){
+		this._aabbNeedsUpdate=b;
+	}
+	get aabbNeedsUpdate(){
+		return this._aabbNeedsUpdate;
 	}
 
 	setScale(x:number,y:number, z:number):void{

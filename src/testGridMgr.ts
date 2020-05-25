@@ -55,11 +55,17 @@ function initPhy(scene: Scene3D) {
 	//添加随机对象
 	let maxnum=3000;
 	for(let i=0; i<maxnum; i++){
-		let b = new Body(1);
+		let b:Body;
+		if(Math.random()<0.5){
+			b = new Body(1);
+		}else{
+			b = new Body(0);
+		}
 		b.addShape( new Sphere(1));//, new Vec3());
 		b.setPos(Math.random()*1000, Math.random()*100, Math.random()*1000);
 		world.addBody(b);
 	}
+	
 }
 
 function dokey(e: Event, down: boolean) {

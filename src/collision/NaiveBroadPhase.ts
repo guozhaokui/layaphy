@@ -34,6 +34,7 @@ export class NaiveBroadphase extends Broadphase {
                     continue;
                 }
 
+				// 这里会更新AABB包围盒
                 this.intersectionTest(bi, bj, pairs1, pairs2);
             }
         }

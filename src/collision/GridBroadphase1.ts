@@ -1,7 +1,7 @@
 import {Broadphase} from './Broadphase.js';
 import {Vec3} from '../math/Vec3.js';
 import {World, AddBodyEvent, RemoveBodyEvent} from '../world/World.js';
-import {Body} from '../objects/Body.js';
+import {Body, BODYTYPE} from '../objects/Body.js';
 import { AABB } from './AABB.js';
 
 
@@ -10,6 +10,16 @@ class Area{
 }
 
 class NullArea{
+}
+
+export class gridInfo{
+	//udpateAABB=false;
+	needUpdate=true;
+	grids:number[]|null=null;
+	sys:GridBroadphase1;
+	onNeedUpdate(){
+		//
+	}
 }
 
 /**
@@ -24,11 +34,14 @@ export class GridBroadphase1 extends Broadphase {
     ny = 10;
     nz = 10;
     aabbMin = new Vec3(100, 100, 100);
-    aabbMax = new Vec3(-100, -100, -100);
-    bins:Body[][] = [];
+	aabbMax = new Vec3(-100, -100, -100);
+	uninitedBodies:Body[]=[];
 
-    // bins 数组中的每个数组的长度
-    binLengths:number[] = [];//Rather than continually resizing arrays (thrashing the memory), just record length and allow them to grow
+	private sleepyListener:EventListener;
+	private sleepListener:EventListener;
+	private awakeListener:EventListener;
+	private addBodyListener:EventListener;
+	private removeBodyListener:EventListener;
 
     constructor(aabbMin?: Vec3, aabbMax?: Vec3, nx:i32=10, ny:i32=10, nz:i32=10) {
         super();
@@ -40,50 +53,86 @@ export class GridBroadphase1 extends Broadphase {
         const nbins = this.nx * this.ny * this.nz;
         if (nbins <= 0) {
             throw "GridBroadphase: Each dimension's n must be >0";
-        }
-        this.bins.length = nbins;
-        this.binLengths.length = nbins;
-        for (let i = 0; i < nbins; i++) {
-            this.bins[i] = [];
-            this.binLengths[i] = 0;
-        }
+		}
+		
+		this.sleepyListener = this.onSleepyEvent.bind(this);
+		this.sleepListener = this.onSleepEvent.bind(this);
+		this.awakeListener = this.onWakeupEvent.bind(this);
+		this.addBodyListener = this.onAddBody.bind(this);
+		this.removeBodyListener = this.onRemoveBody.bind(this);
     }
 
 	setWorld(world: World) {
-		world.addEventListener('addBody',(e:AddBodyEvent)=>{
-			debugger;
-		});
-		world.addEventListener('removeBody',(e:RemoveBodyEvent)=>{
-			debugger;
-		});
-
-		//world.removeEventListener()
+		world.addEventListener('addBody',this.addBodyListener);
+		world.addEventListener('removeBody',this.removeBodyListener);
+		world.addEventListener(Body.sleepEvent.type, this.sleepListener);
+		world.addEventListener(Body.sleepyEvent.type,this.sleepyListener);
+		world.addEventListener(Body.wakeupEvent.type, this.awakeListener);
 	}
 
+	onAddBody(e:AddBodyEvent){
+		// 注意type可能会变
+		// 刚添加进去的时候可能还没有设置位置，aabb是不对的
+		let b = e.body;
+		if(b && !b?.gridinfo){
+			b.gridinfo =new gridInfo();
+			b.gridinfo.sys = this;
+			this.uninitedBodies.push(b);
+		}
+
+		b?.aabb;
+		switch(b?.type){
+			case BODYTYPE.STATIC:
+				break;
+			case BODYTYPE.DYNAMIC:
+				break;
+			case BODYTYPE.KINEMATIC:
+				break;
+		}
+	}
+
+	onRemoveBody(e:RemoveBodyEvent){
+		let b = e.body;
+	}
+
+	onSleepEvent(){
+
+	}
+	onSleepyEvent(){
+
+	}
+	onWakeupEvent(){
+
+	}
+
+	onBodyMoved(b:Body){
+
+	}
+
+	updateAllDynaBody(){
+
+	}
 	aabbQuery(world: World, aabb: AABB, result: Body[]): Body[] {
-		// 没实现，下面的是naive的
+		throw 'NI';
+	}
 
-        let bodies = world.bodies;
-        for (let i = 0; i < bodies.length; i++) {
-            const b = bodies[i];
+	updateBody(b:Body){
 
-            if (b.aabbNeedsUpdate) {
-                b.updateAABB();
-            }
-
-            // Ugly hack until Body gets aabb
-            if (b.aabb.overlaps(aabb)) {
-                result.push(b);
-            }
-        }
-
-        return result;
 	}
 
     /**
 	 * 
      */
     collisionPairs(world: World, pairs1: Body[], pairs2: Body[]) {
+		// 
+		let uninited:Body[] = this.uninitedBodies;
+		uninited.forEach( (b:Body)=>{
+			this.updateBody(b);
+		});
+		uninited.length=0;
+		// 根据动态对象得到所有的动态格子
+		// 
+
         const N = world.numObjects();
         const bodies = world.bodies;
         var max = this.aabbMax;
