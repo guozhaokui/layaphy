@@ -53,7 +53,7 @@ function initPhy(scene: Scene3D) {
 	world.addBody(bp);
 
 	//添加随机对象
-	let maxnum=3000;
+	let maxnum=30;
 	for(let i=0; i<maxnum; i++){
 		let b:Body;
 		if(Math.random()<0.5){
