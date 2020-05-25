@@ -399,6 +399,9 @@ export class Body extends EventTarget {
 
 	set aabbNeedsUpdate(b:boolean){
 		this._aabbNeedsUpdate=b;
+		if(b && this.gridinfo){
+			this.gridinfo.onNeedUpdate();
+		}
 	}
 	get aabbNeedsUpdate(){
 		return this._aabbNeedsUpdate;
