@@ -9,6 +9,8 @@ import { ContactEquation } from "./equations/ContactEquation";
 import { FrictionEquation } from "./equations/FrictionEquation";
 import { GridBroadphase } from "./collision/GridBroadphase";
 import { Box } from "./shapes/Box";
+import { NaiveBroadphase } from "./collision/NaiveBroadPhase";
+import { RaycastResult } from "./collision/RaycastResult";
 
 
 // 测试例子，以后放到test中
@@ -57,4 +59,14 @@ export function test_gridbroadphase1(){
 	let p2:Body[]=[];
 	broadphase.collisionPairs(world, p1, p2);
 	debugger;
+}
+
+export function test_raycastInner(){
+	let world = new World();
+	let broadphase:NaiveBroadphase = new NaiveBroadphase();
+	world.broadphase = broadphase;
+	
+	let result = new RaycastResult();
+	world.raycastAny( new Vec3(), new Vec3(),{},result);
+	
 }
