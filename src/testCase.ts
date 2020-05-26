@@ -65,8 +65,11 @@ export function test_raycastInner(){
 	let world = new World();
 	let broadphase:NaiveBroadphase = new NaiveBroadphase();
 	world.broadphase = broadphase;
+
+	let b1 = new Body(0, new Sphere(1));
+	world.addBody(b1);
 	
 	let result = new RaycastResult();
-	world.raycastAny( new Vec3(), new Vec3(),{},result);
-	
+	world.raycastAny( new Vec3(0,0,0), new Vec3(0,-10,0),{},result);
+	debugger;
 }

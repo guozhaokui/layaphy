@@ -13,11 +13,12 @@ import { Vec3 } from "./math/Vec3";
 import { Body } from "./objects/Body";
 import { Plane } from "./shapes/Plane";
 import { Sphere } from "./shapes/Sphere";
-import { test_gridbroadphase1 } from "./testCase";
+import { test_gridbroadphase1, test_raycastInner } from "./testCase";
 import { getPhyRender, IPhyRender } from "./world/World";
 
 
-test_gridbroadphase1();
+//test_gridbroadphase1();
+test_raycastInner();
 
 var sce3d: Scene3D;
 var mtl1: BlinnPhongMaterial;

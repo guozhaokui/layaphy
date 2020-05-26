@@ -75,6 +75,11 @@ export class Ray {
      */
 	hasHit = false;
 
+	/**
+	 * 不检查背面
+	 */
+	ignoreBack=true;
+
     /**
      * Current, user-provided result callback. Will be used if mode is Ray.ALL.
      */
@@ -347,6 +352,14 @@ export class Ray {
 		}
 	}
 
+	/**
+	 * 射线与球的碰撞
+	 * @param shape 
+	 * @param quat 
+	 * @param position 
+	 * @param body 
+	 * @param reportedShape 
+	 */
 	intersectSphere(shape: Sphere, quat: Quaternion, position: Vec3, body: Body, reportedShape: Shape) {
 		const from = this.from;
 		const to = this.to;
@@ -361,6 +374,8 @@ export class Ray {
 		const intersectionPoint = Ray_intersectSphere_intersectionPoint;
 		const normal = Ray_intersectSphere_normal;
 
+		let dir = this._direction;
+		
 		if (delta < 0) {
 			// No intersection
 			return;
@@ -381,8 +396,12 @@ export class Ray {
 			if (d1 >= 0 && d1 <= 1) {
 				from.lerp(to, d1, intersectionPoint);
 				intersectionPoint.vsub(position, normal);
-				normal.normalize();
-				this.reportIntersection(normal, intersectionPoint, reportedShape, body, -1);
+				if(this.ignoreBack && dir.x*normal.x+dir.y*normal.y+dir.z*normal.z>0){
+					//同向，忽略
+				}else{
+					normal.normalize();
+					this.reportIntersection(normal, intersectionPoint, reportedShape, body, -1);
+				}
 			}
 
 			if (this.result._shouldStop) {
@@ -392,8 +411,12 @@ export class Ray {
 			if (d2 >= 0 && d2 <= 1) {
 				from.lerp(to, d2, intersectionPoint);
 				intersectionPoint.vsub(position, normal);
-				normal.normalize();
-				this.reportIntersection(normal, intersectionPoint, reportedShape, body, -1);
+				if(this.ignoreBack && dir.x*normal.x+dir.y*normal.y+dir.z*normal.z>0){
+
+				}else{
+					normal.normalize();
+					this.reportIntersection(normal, intersectionPoint, reportedShape, body, -1);
+				}
 			}
 		}
 	}
