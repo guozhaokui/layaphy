@@ -102,14 +102,14 @@ export abstract class Broadphase {
      * Removes duplicate pairs from the pair arrays.
      */
     makePairsUnique(pairs1: Body[], pairs2: Body[]) {
-        const t = Broadphase_makePairsUnique_temp;
+        let t:{[key:string]:int} = {};
         const p1 = Broadphase_makePairsUnique_p1;
         const p2 = Broadphase_makePairsUnique_p2;
 		const N = pairs1.length;
 		let keys = Broadphase_makePairsUnique_keys;
 
 		// 先把原始的保存到p1,p2
-        for (var i = 0; i !== N; i++) {
+        for (let i = 0; i !== N; i++) {
             p1[i] = pairs1[i];
             p2[i] = pairs2[i];
         }
@@ -118,10 +118,10 @@ export abstract class Broadphase {
         pairs1.length = 0;
         pairs2.length = 0;
 
-        for (var i:i32 = 0; i < N; i++) {
+        for (let i:i32 = 0; i < N; i++) {
             const id1 = p1[i].id;
             const id2 = p2[i].id;
-			var key = id1 < id2 ? `${id1},${id2}` : `${id2},${id1}`;
+			let key = id1 < id2 ? `${id1},${id2}` : `${id2},${id1}`;
 			// 通过key的方式冲掉已有的
 			if(t[key]==undefined){
             	t[key] = i;
@@ -129,14 +129,13 @@ export abstract class Broadphase {
 			}
         }
 
-        for (var i = 0; i < keys.length; i++) {
-            let key = keys.pop() as string;
+        for (let i = 0,l = keys.length; i < l; i++) {
+            let key = keys[i];
             const pairIndex = t[key] as i32;
             pairs1.push(p1[pairIndex]);
             pairs2.push(p2[pairIndex]);
-            delete t[key];
+            //delete t[key];
 		}
-
 		keys.length=0;
     }
 
@@ -177,7 +176,7 @@ var  Broadphase_collisionPairs_r = new Vec3();
 //const Broadphase_collisionPairs_quat = new Quaternion();
 //const Broadphase_collisionPairs_relpos = new Vec3();
 
-var Broadphase_makePairsUnique_temp:{[key:string]:i32|string[]} = {};
+var Broadphase_makePairsUnique_temp:{[key:string]:i32} = {};
 var Broadphase_makePairsUnique_p1: Body[] = [];
 var Broadphase_makePairsUnique_p2: Body[] = [];
 var Broadphase_makePairsUnique_keys:string[]=[];

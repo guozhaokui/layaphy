@@ -204,16 +204,16 @@ export class GridBroadphase extends Broadphase {
         }
 
         // Check each bin
-        for (var i = 0; i !== Nbins; i++) {
+        for (var i = 0; i < Nbins; i++) {
             const binLength = binLengths[i];
             //Skip bins with no potential collisions
             if (binLength > 1) {
                 const bin = bins[i];
 
                 // Do N^2 broadphase inside
-                for (var xi = 0; xi !== binLength; xi++) {
+                for (var xi = 0; xi < binLength; xi++) {
 					var bi = bin[xi];
-                    for (var yi = 0; yi !== xi; yi++) {
+                    for (var yi = xi+1; yi <binLength; yi++) {
                         const bj = bin[yi];
                         if (this.needBroadphaseCollision(bi, bj)) {
                             this.intersectionTest(bi, bj, pairs1, pairs2);
@@ -237,7 +237,7 @@ export class GridBroadphase extends Broadphase {
 
 		this.makePairsUnique(pairs1, pairs2);
 
-		console.log('result',pairs2.length);
+		//console.log('result',pairs2.length);
     }
 }
 
