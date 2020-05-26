@@ -6,13 +6,17 @@ import {Body} from '../objects/Body.js';
 import {Sphere} from '../shapes/Sphere.js';
 import {Plane} from '../shapes/Plane.js';
 
+/**
+ * 问题：
+ * 	需要预先设置包围盒，超出包围盒的不算
+ */
 
 export class GridBroadphase extends Broadphase {
     nx = 10;
     ny = 10;
     nz = 10;
-    aabbMin = new Vec3(100, 100, 100);
-    aabbMax = new Vec3(-100, -100, -100);
+    aabbMin = new Vec3(-1000, -1000, -1000);
+    aabbMax = new Vec3(1000, 1000, 1000);
     bins:Body[][] = [];
 
     // bins 数组中的每个数组的长度
@@ -94,6 +98,16 @@ export class GridBroadphase extends Broadphase {
 
         const ceil = Math.ceil;
 
+		/**
+		 * 
+		 * @param x0 min
+		 * @param y0 
+		 * @param z0 
+		 * @param x1 max
+		 * @param y1 
+		 * @param z1 
+		 * @param bi 
+		 */
         function addBoxToBins(x0:number, y0:number, z0:number, x1:number, y1:number, z1:number, bi:Body) {
             let xoff0 = ((x0 - xmin) * xmult) | 0;
             let yoff0 = ((y0 - ymin) * ymult) | 0;
@@ -130,7 +144,7 @@ export class GridBroadphase extends Broadphase {
         for (var i = 0; i !== N; i++) {
             var bi = bodies[i];
             const si = bi.shapes[0];//TODO 原来是 bi.shape
-
+			
             switch (si.type) {
                 case SPHERE:
                     // Put in bin
@@ -198,8 +212,7 @@ export class GridBroadphase extends Broadphase {
 
                 // Do N^2 broadphase inside
                 for (var xi = 0; xi !== binLength; xi++) {
-                    //@ts-ignore
-                    var bi = bin[xi];
+					var bi = bin[xi];
                     for (var yi = 0; yi !== xi; yi++) {
                         const bj = bin[yi];
                         if (this.needBroadphaseCollision(bi, bj)) {
@@ -222,7 +235,9 @@ export class GridBroadphase extends Broadphase {
         //		}
         //	}
 
-        this.makePairsUnique(pairs1, pairs2);
+		this.makePairsUnique(pairs1, pairs2);
+
+		console.log('result',pairs2.length);
     }
 }
 

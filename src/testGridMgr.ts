@@ -1,29 +1,23 @@
 import { Laya } from "Laya";
 import { BlinnPhongMaterial } from "laya/d3/core/material/BlinnPhongMaterial";
-import { MeshSprite3D } from "laya/d3/core/MeshSprite3D";
 import { Scene3D } from "laya/d3/core/scene/Scene3D";
-import { Vector3 } from "laya/d3/math/Vector3";
-import { PrimitiveMesh } from "laya/d3/resource/models/PrimitiveMesh";
 import { Event } from "laya/events/Event";
-import { JSONLoader, mouseDownEmitObj, nodeProxy, raycast, ZupPos2Yup, ZupQuat2Yup } from "./DemoUtils";
-import { CannonBody } from "./layawrap/CannonBody";
+import { mouseDownEmitObj } from "./DemoUtils";
 import { CannonWorld } from "./layawrap/CannonWorld";
 import { MouseCtrl1 } from "./layawrap/ctrls/MouseCtrl1";
-import { createTerrainMesh } from "./layawrap/debugger/PhyMesh";
-import { PhyMeshSprite } from "./layawrap/debugger/PhyMeshSprite";
-import { PhyCharactorCtrl } from "./layawrap/PhyCharactorCtrl";
 import { PhyRender } from "./layawrap/PhyRender";
 import { ContactMaterial } from "./material/ContactMaterial";
 import { Material } from "./material/Material";
 import { Quaternion } from "./math/Quaternion";
 import { Vec3 } from "./math/Vec3";
-import { Box } from "./shapes/Box";
-import { Heightfield } from "./shapes/Heightfield";
-import { Mesh2Voxel } from "./tools/Mesh2Voxel";
-import { getPhyRender, IPhyRender } from "./world/World";
 import { Body } from "./objects/Body";
 import { Plane } from "./shapes/Plane";
 import { Sphere } from "./shapes/Sphere";
+import { test_gridbroadphase1 } from "./testCase";
+import { getPhyRender, IPhyRender } from "./world/World";
+
+
+test_gridbroadphase1();
 
 var sce3d: Scene3D;
 var mtl1: BlinnPhongMaterial;
@@ -50,9 +44,11 @@ function initPhy(scene: Scene3D) {
 
 	let bp = new Body(0);
 	bp.addShape( new Plane(),new Vec3(), (new Quaternion()).setFromEuler(-Math.PI/2,0,0,'XYZ'))
+	//bp.addShape( new Box( new Vec3(100,10,100)));
 	world.addBody(bp);
 
 	//添加随机对象
+	return;
 	let maxnum=30;
 	for(let i=0; i<maxnum; i++){
 		let b:Body;
@@ -78,9 +74,11 @@ function dokey(e: Event, down: boolean) {
 		case 'Z':
 			break;
 		case 'R':{
+			/*
 			raycast(world.world,cam.camera,(pt:Vec3, norm:Vec3)=>{
 				phyr.addPersistPoint( pt);
 			});
+			*/
 		}
 			break;
 		case 'P':

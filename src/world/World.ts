@@ -1,6 +1,7 @@
 
 import { Broadphase } from '../collision/Broadphase.js';
-import { NaiveBroadphase } from '../collision/NaiveBroadphase.js';
+import { ContactInfo } from '../collision/ContactManager.js';
+import { GridBroadphase1 } from '../collision/GridBroadphase1.js';
 import { Ray, RayMode } from '../collision/Ray.js';
 import { RaycastResult } from '../collision/RaycastResult.js';
 import { Constraint } from '../constraints/Constraint.js';
@@ -17,8 +18,6 @@ import { Solver } from '../solver/Solver.js';
 import { EventTarget } from '../utils/EventTarget.js';
 import { TupleDictionary } from '../utils/TupleDictionary.js';
 import { Narrowphase } from './Narrowphase.js';
-import { ContactInfo } from '../collision/ContactManager.js';
-import { GridBroadphase1 } from '../collision/GridBroadphase1.js';
 import { GridBroadphase } from '../collision/GridBroadphase.js';
 
 class profileData{
@@ -230,7 +229,7 @@ export class World extends EventTarget {
     /**
      * The broadphase algorithm to use. Default is NaiveBroadphase
      */
-    broadphase: Broadphase = new GridBroadphase1();// new NaiveBroadphase();// new GridBroadphase(); Grid的有问题
+    broadphase: Broadphase = new GridBroadphase();//new GridBroadphase1();// new NaiveBroadphase();// new GridBroadphase(); Grid的有问题
 
     /**
      * @property bodies
@@ -460,20 +459,6 @@ export class World extends EventTarget {
      */
     numObjects() {
         return this.bodies.length;
-    }
-
-    /**
-     * Store old collision state info
-     * @method collisionMatrixTick
-     */
-    collisionMatrixTick() {
-        //var temp = this.collisionMatrixPrevious;
-        //this.collisionMatrixPrevious = this.collisionMatrix;
-        //this.collisionMatrix = temp;
-        //this.collisionMatrix.reset();
-
-        //this.bodyOverlapKeeper.tick();
-        //this.shapeOverlapKeeper.tick();
     }
 
     /**
@@ -795,9 +780,10 @@ export class World extends EventTarget {
         this.broadphase.collisionPairs(this, p1, p2);
         if (doProfiling) { profile.broadphase = perfNow() - profilingStart; }   // 宽阶段的时间
 
-        // Remove constrained pairs with collideConnected == false
+		// Remove constrained pairs with collideConnected == false
+		// 约束的两个对象如果不进行碰撞检测，就要从p1p2列表中删除
         // TODO 这个方式是不是不太效率啊
-        var Nconstraints = constraints.length;
+		var Nconstraints = constraints.length;
         for (i = 0; i !== Nconstraints; i++) {
             let c = constraints[i];
             if (!c.collideConnected) {
@@ -810,8 +796,6 @@ export class World extends EventTarget {
                 }
             }
         }
-
-        this.collisionMatrixTick();
 
         // Generate contacts
         if (doProfiling) { profilingStart = perfNow(); }
@@ -832,11 +816,13 @@ export class World extends EventTarget {
         }
         this.frictionEquations.length = 0;
 
-        this.narrowphase.getContacts(p1,p2,this,contacts,
-            oldcontacts, // To be reused
-            this.frictionEquations,
-            frictionEquationPool
-        );
+		if(p1.length>0){
+			this.narrowphase.getContacts(p1,p2,this,contacts,
+				oldcontacts, // To be reused
+				this.frictionEquations,
+				frictionEquationPool
+			);
+		}
 
         if (doProfiling) {
             profile.narrowphase = perfNow() - profilingStart;  // 窄阶段的时间

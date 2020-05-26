@@ -7,6 +7,8 @@ import { Vec3 } from "./math/Vec3";
 import { Narrowphase } from "./world/Narrowphase";
 import { ContactEquation } from "./equations/ContactEquation";
 import { FrictionEquation } from "./equations/FrictionEquation";
+import { GridBroadphase } from "./collision/GridBroadphase";
+import { Box } from "./shapes/Box";
 
 
 // 测试例子，以后放到test中
@@ -35,5 +37,24 @@ export function test_sphere_vox(){
 	// 不均匀缩放
 	//voxbody.addEventListener('',()=>{});
 	//world.step(1/60);
+	debugger;
+}
+
+export function test_gridbroadphase1(){
+	let world = new World();
+	let broadphase:GridBroadphase = world.broadphase = new GridBroadphase();
+	
+	let b1 = new Body( 1, new Box(new Vec3(1,1,1)));
+	world.addBody(b1);
+
+	let b2 = new Body( 1, new Box( new Vec3(1,1,1)));
+	world.addBody(b2);
+
+	let b3 = new Body( 1, new Box( new Vec3(1,1,1)));
+	world.addBody(b3);
+
+	let p1:Body[]=[];
+	let p2:Body[]=[];
+	broadphase.collisionPairs(world, p1, p2);
 	debugger;
 }

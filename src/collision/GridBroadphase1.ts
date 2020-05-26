@@ -12,13 +12,15 @@ class OneGrid{
 	bodies:Body[];
 }
 
+var gridid:int[] = [];
+
 export class gridInfo{
 	//udpateAABB=false;
 	body:Body;
-	/** 处于静态的时候，记录所占用的格子，用于清理 */
-	grids:number[]|null=null;
+	/** 处于静态的时候，记录所占用的格子，用于清理。由于边界会调整，所以用格子对象而不是id */
+	grids:OneGrid[]|null=null;
 	sys:GridBroadphase1;
-	/** 在活动列表的位置，用于快速移除 */
+	/** 在活动列表的位置，用于快速移除,-1表示不在活动列表中 */
 	activeid=-1; 	
 	private sleepListener:EventListener;
 	private awakeListener:EventListener;
@@ -54,22 +56,37 @@ export class gridInfo{
  * 
  */
 export class GridBroadphase1 extends Broadphase {
+	// 超过最大范围就不管了，防止出现一个body不断下落导致的范围越来越大的问题。
+	static MaxValue = 1e6;	//1e6如果用八叉树的话是20层
+	static MinValue = -1e6;
+
 	/** 格子大小 */
+	gridsz=10;
+
+	//当前包围盒
+	min=new Vec3(-100,-100,-100);
+	max=new Vec3(100,100,100);
+
     nx = 10;
     ny = 10;
 	nz = 10;
 
+	/** 新加入的都作为uninitedbody，一旦更新一次以后，就从这里删掉了 */
 	uninitedBodies:Body[]=[];
+
 	activeBodies:Body[]=[];
 
 	/** 静态对象或者sleep的对象占的格子 */
 	//staticGrid:[]=[];
-	staticGrid:Map<number,OneGrid>=new Map();
+	private staticGrid:Map<number,OneGrid>=new Map();
 	/** 动态对象占的格子 */
 	//dynamicGrid:[]=[];
-	dynamicGrid:Map<number,OneGrid>=new Map();
+	private dynamicGrid:Map<number,OneGrid>=new Map();
 
-	private activeGrid:[];
+	/** temp 以后分开 */
+	private grids:OneGrid[]=[];
+
+	private activeGrid:[]=[];
 
 	private addBodyListener:EventListener;
 	private removeBodyListener:EventListener;
@@ -79,10 +96,18 @@ export class GridBroadphase1 extends Broadphase {
         this.nx = nx;
         this.ny = ny;
         this.nz = nz;
-        const nbins = this.nx * this.ny * this.nz;
+		const nbins = this.nx * this.ny * this.nz;
+		this.grids.length=nbins;
+		
 		
 		this.addBodyListener = this.onAddBody.bind(this);
 		this.removeBodyListener = this.onRemoveBody.bind(this);
+	}
+
+	/** 更新过程中发现需要调整边界了 */
+	resetBBX(xmin:number,ymin:number,zmin:number, xmax:number,ymax:number,zmax:number){
+		this.min.set(xmin,ymin,zmin);
+		this.max.set(xmax,ymax,zmax);
 	}
 	
 	/**
@@ -94,6 +119,16 @@ export class GridBroadphase1 extends Broadphase {
 	getGrid(x:int,y:int,z:int):OneGrid{
 		//TODO
 		throw 'NI'
+	}
+
+	getGridByPos(x:number,y:number,z:number){
+		let gridsz = this.gridsz;
+		Math.floor(x/gridsz); Math.floor(y/gridsz); Math.floor(z/gridsz);
+		this.nx;
+	}
+
+	private autoCalcGridsz(){
+
 	}
 
 	/**
@@ -117,17 +152,8 @@ export class GridBroadphase1 extends Broadphase {
 		let b = e.body;
 		if(b && !b?.gridinfo){
 			b.gridinfo =new gridInfo(b,this);
+			// 新加入的都作为uninitedbody，一旦更新一次以后，就从这里删掉了
 			this.uninitedBodies.push(b);
-		}
-
-		//b?.aabb;
-		switch(b?.type){
-			case BODYTYPE.STATIC:
-				break;
-			case BODYTYPE.DYNAMIC:
-				break;
-			case BODYTYPE.KINEMATIC:
-				break;
 		}
 	}
 
@@ -136,8 +162,11 @@ export class GridBroadphase1 extends Broadphase {
 	}
 
 	onBodySleep(b:Body){
+		this.deactiveBody(b);
 	}
+	/** body状态改变，从静态列表中删除 */
 	onBodyWakeup(b:Body){
+		this.activeBody(b);
 	}
 
 	onBodyMoved(b:Body){
@@ -148,12 +177,14 @@ export class GridBroadphase1 extends Broadphase {
 		let acts = this.activeBodies;
 		let gridinfo = b.gridinfo;
 		if(gridinfo){
-			if(gridinfo.grids){
-				// 这表示原来是静止的，已经记录在静止数组中了
+			if(gridinfo.activeid<0){
+				// 这表示原来是静止的,已经记录在静止数组中了。或者是第一次加入
 				//  从静止数组中删除这个body
+				if(gridinfo.grids){
+					// 清理自己记录的格子信息
+					gridinfo.grids=null;
+				}
 				// TODO
-				// 清理自己记录的格子信息
-				gridinfo.grids=null;
 				gridinfo.activeid = acts.length;
 				// 添加到活动列表中
 				acts.push(b);
@@ -189,38 +220,91 @@ export class GridBroadphase1 extends Broadphase {
 		}
 	}
 
+	private updateWorldBBX(bmin:Vec3,bmax:Vec3,wmin:Vec3,wmax:Vec3){
+		// 加最大值限制会不会有问题呢
+		if(bmin.x<wmin.x && bmin.x>GridBroadphase1.MinValue) wmin.x=bmin.x;
+		if(bmin.y<wmin.y && bmin.y>GridBroadphase1.MinValue) wmin.y=bmin.y;
+		if(bmin.z<wmin.z && bmin.z>GridBroadphase1.MinValue) wmin.z=bmin.z;
+		if(bmax.x>wmax.x && bmax.x<GridBroadphase1.MaxValue) wmax.x=bmax.x;
+		if(bmax.y>wmax.y && bmax.y<GridBroadphase1.MaxValue) wmax.y=bmax.y;
+		if(bmax.z>wmax.z && bmax.z<GridBroadphase1.MaxValue) wmax.z=bmax.z;
+	}
+
 	/** 根据动态对象，得到需要计算的格子，然后与静态格子 */
 	updateAllDynaBody(){
 		let activeGrid = this.activeGrid;
 		activeGrid.length=0;
 
+		let wmin = this.min;
+		let wmax = this.max;
 		let acts = this.activeBodies;
 		for( let i=0,l=acts.length; i<l; i++){
 			let ab = acts[i];
+			ab.updateAABB();
+			let min = ab.aabb.lowerBound;
+			let max = ab.aabb.upperBound;
 			//TODO 计算ab所占格子,填充到activegrid中
+			// 更新包围盒
+			this.updateWorldBBX(min,max,wmin,wmax);
+			//temp
+			this.updateBody(ab);
 		}
 	}
+	
 	aabbQuery(world: World, aabb: AABB, result: Body[]): Body[] {
 		throw 'NI';
 	}
 
+	//TEST 统一添加
 	updateBody(b:Body){
-
+		let cgrid = this.grids;
+		
 	}
 
     /**
 	 * 
      */
     collisionPairs1(world: World, pairs1: Body[], pairs2: Body[]) {
+		let wmin = this.min;
+		let wmax = this.max;
+		let bbxchanged=true;
 		// 
 		let uninited:Body[] = this.uninitedBodies;
-		uninited.forEach( (b:Body)=>{
-			this.updateBody(b);
-		});
+		for( let i=0,len=uninited.length; i<len; i++){
+			let b = uninited[i];
+			b.updateAABB();
+			let min = b.aabb.lowerBound;
+			let max = b.aabb.upperBound;
+			//this.updateBody(b);
+			switch(b.type){
+				case BODYTYPE.STATIC:
+					// add static TODO
+					this.updateBody(b);
+					// 更新包围盒。 动态的会在下面更新
+					this.updateWorldBBX(min,max,wmin,wmax);
+					break;
+				case BODYTYPE.DYNAMIC:
+				case BODYTYPE.KINEMATIC:
+					this.activeBody(b);
+				break;
+			}
+		}
+
 		uninited.length=0;
 		// 根据动态对象得到所有的动态格子
-		// 
 		this.updateAllDynaBody();
+
+		let worldxs = wmax.x-wmin.x;
+		let worldys = wmax.y-wmin.y;
+		let worldzs = wmax.z-wmin.z;
+		let gridsz = this.gridsz;
+		let xn = Math.ceil(worldxs/gridsz);
+		let yn = Math.ceil(worldys/gridsz);
+		let zn = Math.ceil(worldzs/gridsz);
+
+
+		console.log('worldinfo min,max',wmin,wmax,worldxs,worldys,worldzs);
+
 		let activegrid = this.activeGrid;
 		// TODO activegrid中的所有做检测
 		
@@ -231,6 +315,9 @@ export class GridBroadphase1 extends Broadphase {
      * Get all the collision pairs in the physics world
      */
     collisionPairs(world:World, pairs1:Body[], pairs2:Body[]) {
+		//TEST
+		this.collisionPairs1(world,pairs1,pairs2);
+		//TESt
         const bodies = world.bodies;
         const n = bodies.length;
         let i:number;
