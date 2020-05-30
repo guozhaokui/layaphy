@@ -738,9 +738,6 @@ export class World extends EventTarget {
         for (i = 0; i !== N; i++) {
             var bi = bodies[i];
 			if ( bi.enable) {
-				if(bi.type!=BODYTYPE.STATIC)
-					bi.contact.newTick();
-
 				//temp
 				if(bi.preCollision){
 					bi.preCollision();
@@ -1089,7 +1086,7 @@ export class World extends EventTarget {
 		let tbodies = bodies.concat();
         for (i = 0; i !== N; i++) {
 			var bi = tbodies[i];
-			if(bi.type!=BODYTYPE.STATIC){//TRIGGER怎么办
+			//if(bi.type!=BODYTYPE.STATIC){//TRIGGER怎么办
 				// 发送事件
 				let cs = bi.contact;
 				for( let ei=0; ei<cs.addlen; ei++){// enter事件
@@ -1106,8 +1103,10 @@ export class World extends EventTarget {
 					exitEvt.otherBody=c.body;
 					exitEvt.contact=c;
 					bi.dispatchEvent(exitEvt);
-				}
-			}
+                }
+                
+                cs.newTick();
+			//}
 		}
 		
         if(this.phyRender){
