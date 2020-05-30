@@ -49,6 +49,7 @@ export class ContactInfoMgr{
 	 * 通知与b发生碰撞了， 这个函数维护remove列表，
 	 * 如果与b碰撞了，必须把上次记录的所有的与b相关的碰撞信息都从removed列表中移除
 	 * @param b 
+	 * @return 是否找到了b
 	 */
 	private hitBody(b:Body):boolean{
 		let sz = this.removedLen;
@@ -133,6 +134,14 @@ export class ContactInfoMgr{
 		*/
 	}
 
+	/**
+	 * 添加碰撞信息。
+	 * @param other 
+	 * @param hitpos 	trigger的话是null
+	 * @param hitnorm 	trigger的话是null
+	 * @param shapei 
+	 * @param shapej 
+	 */
 	private _addC(other:Body, hitpos:Vec3|null, hitnorm:Vec3|null, shapei:Shape|null, shapej:Shape|null){
 		// 添加全部碰撞信息
 		let addall:ContactInfo;

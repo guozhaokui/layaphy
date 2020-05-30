@@ -438,6 +438,8 @@ export class Sphere extends Shape {
 	 * @param voxQuat 
 	 * @param hitpoints 
 	 * @param justtest 
+	 * 
+	 * TODO 只与表面的vox检测就行，表面的满足了，内部的一定满足
 	 */
 	hitVoxel(myPos: Vec3, voxel: Voxel, voxPos: Vec3, voxQuat: Quaternion, hitpoints: HitPointInfoArray, justtest: boolean): boolean {
 		//DEBUG
