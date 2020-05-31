@@ -123,7 +123,7 @@ export class Sphere extends Shape {
 		if (otherhitpos) {
 			otherhitpos.set(p2.x + nx * r2, p2.y + ny * r2, p2.z + nz * r2);
 		}
-		return d;
+		return deep;
 	}
 
 	/**
@@ -816,6 +816,15 @@ export class Sphere extends Shape {
 				let hitpos1 = hitVoxHitPos2;
 				let hitnorm = hitVoxHitNorm;
 
+				function voxhitsphere(R:number,sphPos:Vec3, voxr:number, voxpos:Vec3){
+
+				}
+
+				// 如果vox是静态对象，可以合并为一个等价点
+				let nx=0,px=0;
+				let ny=0,py=0;
+				let nz=0,pz=0;
+
 				// 根据球的中心位置来确定方向。注意可能左右都有碰撞
 				// TODO 只检测外层
 				for (let z = gridminz; z <= gridmaxz; z++) {
@@ -840,6 +849,15 @@ export class Sphere extends Shape {
 									continue;
 								if (justtest)
 									return true;
+								//统计
+								let hx = hitnorm.x*deep;
+								let hy = hitnorm.y*deep;
+								let hz = hitnorm.z*deep;
+								if(hx>px)px=hx;if(hx<nx)nx=hx;
+								if(hy>py)py=hy;if(hy<ny)ny=hy;
+								if(hz>pz)pz=hz;if(hz<nz)nz=hz;
+
+								// 
 								let hi = hitpoints.getnew();
 								hi.posi.copy(hitpos);
 								hi.posj.copy(hitpos1);
