@@ -2,7 +2,7 @@ import { Laya } from "Laya";
 import { BlinnPhongMaterial } from "laya/d3/core/material/BlinnPhongMaterial";
 import { Scene3D } from "laya/d3/core/scene/Scene3D";
 import { Event } from "laya/events/Event";
-import { addSphere, createVoxelBox, mouseDownEmitObj } from "./DemoUtils";
+import { addSphere, createVoxelBox, mouseDownEmitObj, addBox } from "./DemoUtils";
 import { CannonWorld } from "./layawrap/CannonWorld";
 import { MouseCtrl1 } from "./layawrap/ctrls/MouseCtrl1";
 import { PhyRender } from "./layawrap/PhyRender";
@@ -45,6 +45,11 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 
 	createVoxelBox(100,100,100,0.01, new Vec3(0,0,0)); 
 	addSphere(0.5,0.5,2,0.5);
+	/*
+	这个组合也会有错误的摩擦力
+	addBox(new Vec3(2,2,2), new Vec3(),0,new Material());
+	addSphere(0.5,0.5,2,0.5);
+	*/
 	Laya.stage.on(Event.MOUSE_DOWN, null, (e: { stageX: number, stageY: number }) => {
 		mouseDownEmitObj(e.stageX, e.stageY, cam.camera);
 	});
