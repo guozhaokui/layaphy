@@ -900,6 +900,7 @@ export class Sphere extends Shape {
 		}
 
 		//debug
+		/*
 		if (hitpoints.length > 0) {
 			console.log('hit num=', hitpoints.length);
 			
@@ -907,6 +908,7 @@ export class Sphere extends Shape {
 				let hi = hitpoints.data[i];
 			}
 		}
+		*/
 		//debug
 
 		return hitpoints.length > 0;
