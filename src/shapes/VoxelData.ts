@@ -272,29 +272,29 @@ export class VoxelBitData {
 }
 
 export interface CubeModule{
-	centerVec:Vec3;
-	cubePoint:Vec3;
-	current:Vec3;
-	dCollisionPoint:Vec3;
-	dMax:Vec3;
+	//centerVec:Vec3;
+	//cubePoint:Vec3;
+	//current:Vec3;
+	//dCollisionPoint:Vec3;
+	//dMax:Vec3;
 	//dStart:Vec3; private
-	max:Vec3;
-	min:Vec3;
-	temporaryMax:Vec3;
-	temporaryMni:Vec3;
+	//max:Vec3;
+	//min:Vec3;
+	//temporaryMax:Vec3;
+	//temporaryMni:Vec3;
 	_data:Uint8Array;//  按照bit紧密排列的数据，并没有做任何对齐
 	// 原点在格子的位置，所以bbxmin = {-dx,-dy,-dz}
 	_dx:int;
 	_dy:int;
 	_dz:int;
-	_isYHave:boolean;
+	//_isYHave:boolean;
 	//数据的大小。_lx*_ly*lz/8=_data.length
 	_lx:int;			
 	_ly:int;
 	_lz:int;
 
 	/** xyz是否有数据 */
-	find(x:int,y:int,z:int):int;
+	//find(x:int,y:int,z:int):int;
 }
 
 export interface IOrigVoxData{

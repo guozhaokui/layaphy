@@ -9,7 +9,7 @@ import {Body} from '../objects/Body.js';
 export class FrictionEquation extends Equation {
     ri = new Vec3();	//质心到碰撞点
     rj = new Vec3();	//质心到碰撞点
-    t = new Vec3();     //tangent
+    t = new Vec3();     //tangent。 根据法线计算的。
 
     /**
      * 

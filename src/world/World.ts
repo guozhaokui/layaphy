@@ -1,7 +1,6 @@
 
 import { Broadphase } from '../collision/Broadphase.js';
 import { ContactInfo } from '../collision/ContactManager.js';
-import { GridBroadphase1 } from '../collision/GridBroadphase1.js';
 import { Ray, RayMode } from '../collision/Ray.js';
 import { RaycastResult } from '../collision/RaycastResult.js';
 import { Constraint } from '../constraints/Constraint.js';
@@ -18,7 +17,9 @@ import { Solver } from '../solver/Solver.js';
 import { EventTarget } from '../utils/EventTarget.js';
 import { TupleDictionary } from '../utils/TupleDictionary.js';
 import { Narrowphase } from './Narrowphase.js';
+import { GridBroadphase1 } from '../collision/GridBroadphase1.js';
 import { GridBroadphase } from '../collision/GridBroadphase.js';
+import { NaiveBroadphase } from '../collision/NaiveBroadPhase.js';
 
 class profileData{
     frametm:i32=0;     // 帧时间
@@ -229,7 +230,7 @@ export class World extends EventTarget {
     /**
      * The broadphase algorithm to use. Default is NaiveBroadphase
      */
-    broadphase: Broadphase = new GridBroadphase();//new GridBroadphase1();// new NaiveBroadphase();// new GridBroadphase(); Grid的有问题
+    broadphase: Broadphase = new NaiveBroadphase();// new NaiveBroadphase();// new GridBroadphase(); Grid的有问题
 
     /**
      * @property bodies

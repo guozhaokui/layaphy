@@ -22,7 +22,7 @@ import { PointToPointConstraint } from "./constraints/PointToPointConstraint";
 import { ConeTwistConstraint } from "./constraints/ConeTwistConstraint";
 import { Mat3 } from "./math/Mat3";
 import { Body } from "./objects/Body";
-import { SparseVoxData } from "./shapes/VoxelData";
+import { SparseVoxData, CubeModule } from "./shapes/VoxelData";
 import { Voxel } from "./shapes/Voxel";
 import { createVoxMesh } from "./layawrap/debugger/PhyMesh";
 import { PhyMeshSprite } from "./layawrap/debugger/PhyMeshSprite";
@@ -429,8 +429,8 @@ export function mouseDownEmitObj(scrx: number, scry: number, cam:Camera, lockEmi
 	}
 	
 	dir.set(emitDir.x,emitDir.y,emitDir.z);
-	//let sp = addSphere(.3, stpos.x, stpos.y, stpos.z);
-	let sp = addBox(new Vec3(1,1,1), stpos,1,phymtl as Material);
+	let sp = addSphere(.3, stpos.x, stpos.y, stpos.z);
+	//let sp = addBox(new Vec3(1,1,1), stpos,1,phymtl as Material);
 	//sp.setMaterial(phySph);
 	let v = 20;
 	setTimeout(() => {
@@ -439,6 +439,50 @@ export function mouseDownEmitObj(scrx: number, scry: number, cam:Camera, lockEmi
 	}, 11000);
 	sp.setVel(dir.x * v, dir.y * v, dir.z * v);
 
+}
+
+
+export function createVoxelBox(xs:int,ys:int,zs:int,scale=1,pos?:Vec3,q?:Quaternion){
+	let voxdata:CubeModule={
+		_data:new Uint8Array(xs*ys*zs/8),
+		_lx:xs,
+		_ly:ys,
+		_lz:zs,
+		_dx:0,
+		_dy:0,
+		_dz:0
+	};
+	voxdata._data.fill(0xff);
+	let phyvox = new Voxel(voxdata,1);
+	let dt = phyvox.bitDataLod[0];
+
+	let min = dt.min as any as Vector3;
+	let max = dt.max as any as Vector3;
+	let mesh = createVoxMesh(
+		{ get: function (x: int, y: int, z: int) { return dt.getBit(x, y, z); } }, 
+		dt.xs * 2, dt.ys * 2, dt.zs * 2, 
+		dt.rx, dt.ry, dt.rz, min, max);// PrimitiveMesh.createQuad(10,10) ;//PrimitiveMesh.createBox(1,1,1);		
+	let vox = new PhyMeshSprite(mesh, min, max);
+	//vox.createMesh();
+	scene.addChild(vox);
+	vox.transform.localPosition.setValue(0, 0, 0);
+	var phy =  new CannonBody();// vox.addComponent(CannonBody) as CannonBody;
+	phy.renderobj=vox;
+	phy.phyBody.dbgShow=true;
+	if(scale){
+		phy.phyBody.setScale(scale,scale,scale);
+		vox.transform.scale =  new Vector3(scale,scale,scale);
+	}
+	phy.addShape(phyvox);
+	if(pos){
+		phy.phyBody.setPos(pos.x,pos.y,pos.z);
+	}
+	
+	if(q){
+		phy.phyBody.quaternion.copy(q);
+	}
+
+	phy.setMass(0);
 }
 
 /**

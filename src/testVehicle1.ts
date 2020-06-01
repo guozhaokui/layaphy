@@ -5,7 +5,7 @@ import { Scene3D } from "laya/d3/core/scene/Scene3D";
 import { PrimitiveMesh } from "laya/d3/resource/models/PrimitiveMesh";
 import { Sprite } from "laya/display/Sprite";
 import { Event } from "laya/events/Event";
-import { addBox, JSONLoader, mouseDownEmitObj, nodeProxy, ZupPos2Yup, ZupQuat2Yup, loadVoxel, loadVoxTest } from "./DemoUtils";
+import { addBox, JSONLoader, mouseDownEmitObj, nodeProxy, ZupPos2Yup, ZupQuat2Yup, loadVoxel, loadVoxTest, createVoxelBox, addSphere } from "./DemoUtils";
 import { CannonBody } from "./layawrap/CannonBody";
 import { CannonWorld } from "./layawrap/CannonWorld";
 import { MouseCtrl1 } from "./layawrap/ctrls/MouseCtrl1";
@@ -32,7 +32,7 @@ import { test_sphere_vox } from "./testCase";
 
 // TEST
 
-test_sphere_vox();
+//test_sphere_vox();
 // TEST
 
 /**
@@ -169,7 +169,7 @@ class NodeLoaderProxy implements nodeProxy{
 var useGamePad=false;
 export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 	camctr = cam;
-	cam.dist = 20;
+	cam.dist = 10;
 	sce3d = sce;
 	mtl1 = mtl;
 	//mtl.renderMode = BlinnPhongMaterial.RENDERMODE_TRANSPARENT;
@@ -187,8 +187,11 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 	testGround();
 
 	//loadVoxel('res/house/house1.obj',new Vec3(-37, -0.5, 45));//, undefined, new Vec3(-1,-1,1));
-	loadVoxel('res/body1.obj',new Vec3(-37, -0.5, 45), undefined, new Vec3(1,2,1));//, undefined, new Vec3(-1,-1,1));
+	loadVoxel('res/body1.obj',new Vec3(-37, -0.5, 45), undefined, new Vec3(.1,.2,.1));//, undefined, new Vec3(-1,-1,1));
  
+	createVoxelBox(100,100,100,0.01, new Vec3(0,0,0)); 
+	addSphere(0.5,0.5,2,0.5);
+
 	//loadVoxTest('res/test/data.json');
 
 	if(useGamePad)

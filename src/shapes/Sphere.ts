@@ -826,7 +826,7 @@ export class Sphere extends Shape {
 				let nz=0,pz=0;
 
 				// 根据球的中心位置来确定方向。注意可能左右都有碰撞
-				// TODO 只检测外层
+				// TODO 只检测外层。 在越来越远的方向一旦有碰撞了下面的就不用检测了
 				for (let z = gridminz; z <= gridmaxz; z++) {
 					for (let y = gridminy; y <= gridmaxy; y++) {
 						for (let x = gridminx; x <= gridmaxx; x++) {
@@ -844,7 +844,7 @@ export class Sphere extends Shape {
 								//tmpV现在是世界空间的点了，计算碰撞信息
 	
 								// 这里的法线是推开自己的
-								let deep = Sphere.SpherehitSphere(R, myPos, voxr, curVoxOri, hitpos, hitnorm, hitpos1, justtest);
+								let deep = Sphere.SpherehitSphere(R, myPos, maxvoxr, curVoxOri, hitpos, hitnorm, hitpos1, justtest);
 								if (deep < 0)
 									continue;
 								if (justtest)
@@ -858,14 +858,43 @@ export class Sphere extends Shape {
 								if(hz>pz)pz=hz;if(hz<nz)nz=hz;
 
 								// 
+								/*
 								let hi = hitpoints.getnew();
 								hi.posi.copy(hitpos);
 								hi.posj.copy(hitpos1);
 								hi.normal.copy(hitnorm);
+								*/
 							}
 						}
 					}
 				}			
+
+				// 计算等价碰撞
+				let fx = px+nx;
+				let fy = py+ny;
+				let fz = pz+nz;
+				// 太小的认为是误差
+				if(Math.abs(fx)<1e-4)fx=0;
+				if(Math.abs(fy)<1e-4)fy=0;
+				if(Math.abs(fz)<1e-4)fz=0;
+
+				/* 
+				 模拟一个等价碰撞，假设是与一个点碰撞，这个点是静态的不可动，所以碰撞点的效果是把球往normal方向拉动deep
+				       |-------------R----------|
+				                        deep
+				 mypos +-------------|<---------|
+								  otherhit     myHit
+				 对方碰撞点和对方位置重合
+				*/
+				if(fx!=0||fy!=0||fz!=0){
+					let hi = hitpoints.getnew();
+					let len = Math.sqrt( fx*fx+fy*fy+fz*fz);
+					let nx = fx/len,ny=fy/len,nz=fz/len;
+					let posi = hi.posi;
+					posi.set(myPos.x-R*nx,myPos.y-R*ny,myPos.z-R*nz);	// 当前位置 沿着法线反向移动R
+					hi.posj.set(posi.x+fx,posi.y+fy,posi.z+fz);			// posi 加上碰撞深度
+					hi.normal.set(nx,ny,nz);
+				}
 			}
 
 		}
