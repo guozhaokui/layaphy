@@ -15,10 +15,11 @@ import { Plane } from "./shapes/Plane";
 import { Sphere } from "./shapes/Sphere";
 import { test_gridbroadphase1, test_raycastInner } from "./testCase";
 import { getPhyRender, IPhyRender } from "./world/World";
+import { GridBroadphase1 } from "./collision/GridBroadphase1";
 
 
 //test_gridbroadphase1();
-test_raycastInner();
+//test_raycastInner();
 
 var sce3d: Scene3D;
 var mtl1: BlinnPhongMaterial;
@@ -38,6 +39,7 @@ let lockEmit = false;
 
 function initPhy(scene: Scene3D) {
 	let world = (scene.addComponent(CannonWorld) as CannonWorld).world;
+	world.broadphase = new GridBroadphase1();
 	world.gravity.set(0, -10, 0);
 	(window as any).phyr = new PhyRender(scene, world);
 	world.addContactMaterial(cmtl1).addContactMaterial(cmtl2).addContactMaterial(cmtl3);
@@ -49,7 +51,6 @@ function initPhy(scene: Scene3D) {
 	world.addBody(bp);
 
 	//添加随机对象
-	return;
 	let maxnum=30;
 	for(let i=0; i<maxnum; i++){
 		let b:Body;

@@ -8,7 +8,7 @@ import { Box } from '../shapes/Box.js';
 import { Shape } from '../shapes/Shape.js';
 import { EventTarget } from '../utils/EventTarget.js';
 import { World } from '../world/World.js';
-import { gridInfo } from '../collision/GridBroadphase1.js';
+import { GridInfo } from '../collision/GridBroadphase1.js';
 
 export interface BodyInitOptions {
     position?: Vec3;
@@ -323,7 +323,7 @@ export class Body extends EventTarget {
 	dbgShow=true;	
 
 	/** 格子管理相关信息。以后拿出去 */
-	gridinfo:gridInfo|null=null;
+	gridinfo:GridInfo|null=null;
 
     constructor(mass: number = 1, shape: Shape|null = null, pos:Vec3|null=null, options?: BodyInitOptions) {
         super();
