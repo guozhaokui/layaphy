@@ -1,6 +1,6 @@
 
 import { Broadphase } from '../collision/Broadphase.js';
-import { ContactInfo } from '../collision/ContactManager.js';
+import { ContactInfo, ContactInfoMgr } from '../collision/ContactManager.js';
 import { Ray, RayMode } from '../collision/Ray.js';
 import { RaycastResult } from '../collision/RaycastResult.js';
 import { Constraint } from '../constraints/Constraint.js';
@@ -230,7 +230,9 @@ export class World extends EventTarget {
     /**
      * The broadphase algorithm to use. Default is NaiveBroadphase
      */
-    broadphase: Broadphase = new NaiveBroadphase();// new NaiveBroadphase();// new GridBroadphase(); Grid的有问题
+	_broadphase: Broadphase = new NaiveBroadphase();// new NaiveBroadphase();// new GridBroadphase(); Grid的有问题
+	get broadphase(){return this._broadphase;}
+	set broadphase(b:Broadphase){ this._broadphase=b; b.setWorld(this);}
 
     /**
      * @property bodies
@@ -967,8 +969,14 @@ export class World extends EventTarget {
 				*/
             //}
 
-			bi.type!=BODYTYPE.STATIC && bi.contact.addContact(bi,c)
-			bj.type!=BODYTYPE.STATIC && bj.contact.addContact(bj,c);
+			if(bi.type!=BODYTYPE.STATIC){
+				if(!bi.contact)bi.contact = new ContactInfoMgr();
+				bi.contact.addContact(bi,c)
+			} 
+			if(bj.type!=BODYTYPE.STATIC){
+				if(!bj.contact)bj.contact=new ContactInfoMgr();
+				bj.contact.addContact(bj,c);
+			} 
             //this.bodyOverlapKeeper.set(bi.id, bj.id);
             //this.shapeOverlapKeeper.set(si.id, sj.id);
         }//for each contacts
@@ -1090,23 +1098,25 @@ export class World extends EventTarget {
 			//if(bi.type!=BODYTYPE.STATIC){//TRIGGER怎么办
 				// 发送事件
 				let cs = bi.contact;
-				for( let ei=0; ei<cs.addlen; ei++){// enter事件
-					let c = cs.added[ei];
-					let entEvt = collideEnterEvt;
-					entEvt.otherBody=c.body;
-					entEvt.contact=c;
-					bi.dispatchEvent(entEvt);
-				}
+				if(cs){
+					for( let ei=0; ei<cs.addlen; ei++){// enter事件
+						let c = cs.added[ei];
+						let entEvt = collideEnterEvt;
+						entEvt.otherBody=c.body;
+						entEvt.contact=c;
+						bi.dispatchEvent(entEvt);
+					}
 
-				for(let ri=0; ri<cs.removedLen; ri++){// exit事件
-					let c = cs.removed[ri];
-					let exitEvt = collideExitEvt;
-					exitEvt.otherBody=c.body;
-					exitEvt.contact=c;
-					bi.dispatchEvent(exitEvt);
-                }
-                
-                cs.newTick();
+					for(let ri=0; ri<cs.removedLen; ri++){// exit事件
+						let c = cs.removed[ri];
+						let exitEvt = collideExitEvt;
+						exitEvt.otherBody=c.body;
+						exitEvt.contact=c;
+						bi.dispatchEvent(exitEvt);
+					}
+					
+					cs.newTick();
+				}
 			//}
 		}
 		

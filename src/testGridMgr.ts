@@ -50,8 +50,19 @@ function initPhy(scene: Scene3D) {
 	//bp.addShape( new Box( new Vec3(100,10,100)));
 	world.addBody(bp);
 
+	let b = new Body(1);
+	b.addShape( new Sphere(1));//, new Vec3());
+	b.setPos(0,1,0);
+	//world.addBody(b);
+
+	b = new Body(1);
+	b.addShape( new Sphere(1));//, new Vec3());
+	b.setPos(1.5,1,0);
+	world.addBody(b);	
+	//return;
+
 	//添加随机对象
-	let maxnum=30;
+	let maxnum=3000;
 	for(let i=0; i<maxnum; i++){
 		let b:Body;
 		if(Math.random()<0.5){
@@ -124,5 +135,6 @@ async function start(sce: Scene3D, mtl: BlinnPhongMaterial, camctrl: MouseCtrl1)
 }
 
 export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, camctrl: MouseCtrl1) {
+	//return;
 	start(sce,mtl,camctrl);
 }

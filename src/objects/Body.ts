@@ -314,7 +314,7 @@ export class Body extends EventTarget {
 	userData:any=null;  // 保存游戏逻辑对象
 	dbgData:any=null;
 
-	contact = new ContactInfoMgr();
+	contact:ContactInfoMgr|null = null;// new ContactInfoMgr(); 如果有很多不发生碰撞的静态对象，null可以减少内存
 
 	/** 每个刚体自定义的重力，设置以后，不再受到全局重力影响 */
 	bodyGravity:Vec3|null=null; 
@@ -785,6 +785,7 @@ export class Body extends EventTarget {
 	getContactNormal(norm:Vec3){
 		norm.set(0,0,0);
 		let contact = this.contact;
+		if(!contact)return;
 		let n =contact.allcLen; 
 		if(n<=0)
 			return;

@@ -11,6 +11,8 @@ import { GridBroadphase } from "./collision/GridBroadphase";
 import { Box } from "./shapes/Box";
 import { NaiveBroadphase } from "./collision/NaiveBroadPhase";
 import { RaycastResult } from "./collision/RaycastResult";
+import { GridBroadphase1 } from "./collision/GridBroadphase1";
+import { Plane } from "./shapes/Plane";
 
 
 // 测试例子，以后放到test中
@@ -42,7 +44,7 @@ export function test_sphere_vox(){
 	debugger;
 }
 
-export function test_gridbroadphase1(){
+export function test_gridbroadphase(){
 	let world = new World();
 	let broadphase:GridBroadphase = world.broadphase = new GridBroadphase();
 	
@@ -59,6 +61,67 @@ export function test_gridbroadphase1(){
 	let p2:Body[]=[];
 	broadphase.collisionPairs(world, p1, p2);
 	debugger;
+}
+
+// 格子管理的测试
+export function test_gridbroadphase1(){
+	function testSimple(){
+		let world = new World();
+		let broadphase:GridBroadphase1 = world.broadphase = new GridBroadphase1();
+
+		let b1 = new Body( 1, new Box(new Vec3(1,1,1)));
+		world.addBody(b1);
+		let b2 = new Body( 1, new Box( new Vec3(1,1,1)));
+		world.addBody(b2);
+		let b3 = new Body( 1, new Box( new Vec3(1,1,1)));
+		world.addBody(b3);
+	
+		let p1:Body[]=[];
+		let p2:Body[]=[];
+		broadphase.collisionPairs(world, p1, p2);
+		let ok = p1[0].id==0 && p2[0].id==1 &&
+		p1[1].id==0 && p2[1].id==2 &&
+		p1[2].id==1 && p2[2].id==2;
+	}
+
+	function testBigBody(){
+		let world = new World();
+		let broadphase:GridBroadphase1 = world.broadphase = new GridBroadphase1();
+		
+		let b1 = new Body( 1, new Box(new Vec3(1,1,1)));
+		world.addBody(b1);
+		let b2 = new Body( 1, new Box( new Vec3(1,1,1)));
+		world.addBody(b2);
+		let b3 = new Body(0, new Plane());
+		world.addBody(b3);
+
+		let p1:Body[]=[];
+		let p2:Body[]=[];
+		broadphase.collisionPairs(world, p1, p2);
+		debugger;
+	}
+
+	function testManyBodies(){
+		let world = new World();
+		let broadphase:GridBroadphase1 = world.broadphase = new GridBroadphase1();
+
+		for(let i=0; i<1000; i++){
+			let b = new Body(0, new Box(new Vec3(1,1,1)));
+			world.addBody(b);
+			b.setPos( Math.random()*1000-500, Math.random()*1000-500,Math.random()*1000-500);
+		}
+
+		let dyna = new Body(1, new Box(new Vec3(1,1,1)));
+		world.addBody(dyna);
+		let p1:Body[]=[];
+		let p2:Body[]=[];
+		broadphase.collisionPairs(world,p1,p2);
+		debugger;
+	}
+
+	//testSimple();
+	//testBigBody();
+	testManyBodies();
 }
 
 export function test_raycastInner(){

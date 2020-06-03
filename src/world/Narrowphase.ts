@@ -21,6 +21,7 @@ import { Voxel } from '../shapes/Voxel.js';
 import { Vec3Pool } from '../utils/Vec3Pool.js';
 import { World } from './World.js';
 import { Material } from '../material/Material.js';
+import { ContactInfoMgr } from '../collision/ContactManager.js';
 
 //declare type anyShape=Box|Sphere|Capsule|Voxel|ConvexPolyhedron|Heightfield|Trimesh;
 interface checkFunc {
@@ -408,6 +409,8 @@ export class Narrowphase {
                             // Register overlap
                             //world.shapeOverlapKeeper.set(si.id, sj.id);
 							//world.bodyOverlapKeeper.set(bi.id, bj.id);
+							if(!bi.contact) bi.contact=new ContactInfoMgr();
+							if(!bj.contact) bj.contact=new ContactInfoMgr();
 							bi.type!=BODYTYPE.STATIC && bi.contact.addTriggerContact(bj,si,sj)
 							bj.type!=BODYTYPE.STATIC && bj.contact.addTriggerContact(bi,sj,si);							
                         }

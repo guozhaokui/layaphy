@@ -190,7 +190,7 @@ export class PhyCharactorCtrl extends Component implements ICharactorCtrl{
 		let body = this.phyBody;
 		let c = colEvt.contact;
 		let vel = body.velocity.length();
-		if(body.contact.allcLen>0 || vel<6){
+		if(body.contact && body.contact.allcLen>0 || vel<6){
 			//body.velocity.set(0,0,0);
 		}
 		//this.state=1;
@@ -298,7 +298,7 @@ export class PhyCharactorCtrl extends Component implements ICharactorCtrl{
 		let contact = body.contact;
 		let phyr = (body.world as World).phyRender;
 		//v.copy(this.lastVel);
-		if( contact.allcLen>0){
+		if( contact && contact.allcLen>0){
 			//v.set(0,0,0);
 			for(let i=0; i<contact.allcLen; i++){
 				let c = contact.allc[i];
