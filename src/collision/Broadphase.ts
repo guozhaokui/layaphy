@@ -155,11 +155,16 @@ export abstract class Broadphase {
 	
 	hasRayQuery(){
 		return false;
-	}
-	/**
-	 * 为了优化提供一个rayQuery接口，如果
-	 */
-	rayQuery(){
+    }
+    
+    /**
+     * 为了优化提供一个rayQuery接口，如果
+     * @param world 
+     * @param from 
+     * @param to 
+     * @param gridcb  每个格子的回调。函数传入当前格子的body列表，返回值为true表示希望停止前进
+     */
+	rayQuery(world:World, from:Vec3, to:Vec3, gridcb:(dt:Body[])=>boolean){
 
 	}
 

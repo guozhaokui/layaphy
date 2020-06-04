@@ -35,6 +35,63 @@ export interface hitworldOptions{
 	to?:Vec3;
 	callback?:()=>void
 }
+
+/**
+ * 为了节省内存，Body中保存一个通用的rundata。可能很多地方需要使用，因此需要一个stack以便修改恢复
+ */
+class BodyRunDataStack{
+	static rundataStack:any[]=[];	// body, data, body, data, ...
+	/** 当前开始的位置，恢复的时候就是到这里 */
+	curStackBase=0;	
+	// 为了避免不断push，用len和ptr来维护栈。只增不减
+	curStackPtr=0;
+
+	startFrame(){
+		let stack = BodyRunDataStack.rundataStack;
+		if(this.curStackPtr>= stack.length){
+			stack.push(this.curStackBase);	// 记录上次的base
+		}else{
+			stack[this.curStackPtr]=this.curStackBase;
+		}
+		this.curStackPtr++;
+		this.curStackBase = this.curStackPtr;
+	}
+
+	pushBody(b:Body){
+		let stack = BodyRunDataStack.rundataStack;
+		if(this.curStackPtr+2>= stack.length){
+			stack.length+=16;
+			stack.push(b,b.runData);	
+			this.curStackPtr+=2;
+		}else{
+			stack[this.curStackPtr++]=b;
+			stack[this.curStackPtr++]=b.runData;
+		}
+	}
+	/**
+	 * 恢复到curStackBase开始的地方
+	 */
+	ret(){
+		let st = this.curStackBase;
+		if(st==0)return;
+		let ed = this.curStackPtr;
+		let stack = BodyRunDataStack.rundataStack;
+		// 恢复body数据
+		for(let i=st; i<ed; ){
+			let b:Body = stack[i++];
+			let rundata = stack[i++];
+			b.runData=rundata;
+		}
+
+		// 恢复stackbase
+		this.curStackBase = stack[st-1];
+		this.curStackPtr = st-1;
+
+	}
+}
+
+var gRunDataStack = new BodyRunDataStack();
+
 /**
  * A line in 3D space that intersects bodies and return points.
  */
@@ -44,6 +101,8 @@ export class Ray {
 	_direction = new Vec3();
 	/** 超过这么长就要分段进行了 */
 	static StepLen=50;
+	static checkid=0;
+	static bodyRunDataStack:[]=[];
 
     /**
      * The precision of the ray. Used when checking parallelity etc.
@@ -97,7 +156,7 @@ export class Ray {
      */
 	intersectWorld(world: World, options:hitworldOptions ) {
 		this.mode = options.mode || RayMode.ANY;
-		this.result = options.result || new RaycastResult();
+		let result = this.result = options.result || new RaycastResult();
 		this.skipBackfaces = !!options.skipBackfaces;
 		this.collisionFilterMask = typeof (options.collisionFilterMask) !== 'undefined' ? options.collisionFilterMask : -1;
 		this.collisionFilterGroup = typeof (options.collisionFilterGroup) !== 'undefined' ? options.collisionFilterGroup : -1;
@@ -110,11 +169,41 @@ export class Ray {
 		this.callback = options.callback || (() => { });
 		this.hasHit = false;
 
-		this.result.reset();
+		result.reset();
 		this._updateDirection();
 		tmpArray.length = 0;
 
 		this.getAABB(tmpAABB);
+		let broadphase = world.broadphase;
+		if(broadphase.hasRayQuery()){
+			let checkid = Ray.checkid++;
+			gRunDataStack.startFrame();
+			// 一个格子一个格子的前进检测
+			broadphase.rayQuery(world,this.from,this.to,(bodies:Body[])=>{
+				for (let i = 0, l = bodies.length; !result._shouldStop && i < l; i++) {
+					let body = bodies[i];
+					// 检查是否已经判断过了
+					if(body.runData==checkid){
+						continue;
+					}
+					// 记录修改rundata的body
+					gRunDataStack.pushBody(body); 
+					body.runData=checkid;
+					// 碰撞检测
+					this.intersectBody(body);
+					if(result._shouldStop)
+						return true;
+				}
+				return result._shouldStop;
+			});
+			// 恢复body的rundata
+			gRunDataStack.ret();
+		}else{
+			world.broadphase.aabbQuery(world, tmpAABB, tmpArray);
+			this.intersectBodies(tmpArray);
+		}
+		return this.hasHit;
+
 	//TODO 这里是错的
 		// 如果包围盒太大，为了提高效率，需要分段
 		let dx = tmpAABB.upperBound.x-tmpAABB.lowerBound.x;

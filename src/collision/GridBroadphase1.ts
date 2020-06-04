@@ -509,6 +509,8 @@ export class GridBroadphase1 extends Broadphase {
 
 	// ============== BroadPhase 接口 ===================
 
+	hasRayQuery(){return true;}
+
 	aabbQuery(world: World, aabb: AABB, result: Body[]): Body[] {
 		let min = aabb.lowerBound;
 		let max = aabb.upperBound;

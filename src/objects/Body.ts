@@ -257,15 +257,10 @@ export class Body extends EventTarget {
     shapeOrientations:(Quaternion|null)[] = [];
 
     inertia = new Vec3();
-
     invInertia = new Vec3();
-
     invInertiaWorld = new Mat3();
-
     invMassSolve = 0;
-
     invInertiaSolve = new Vec3();
-
     invInertiaWorldSolve = new Mat3();
 
     /**
@@ -312,7 +307,6 @@ export class Body extends EventTarget {
 	kinematicUsePos=false;
 
 	userData:any=null;  // 保存游戏逻辑对象
-	dbgData:any=null;
 
 	contact:ContactInfoMgr|null = null;// new ContactInfoMgr(); 如果有很多不发生碰撞的静态对象，null可以减少内存
 
@@ -323,7 +317,10 @@ export class Body extends EventTarget {
 	dbgShow=true;	
 
 	/** 格子管理相关信息。以后拿出去 */
-	gridinfo:GridInfo|null=null;
+    gridinfo:GridInfo|null=null;
+    
+    /** 运行时数据，不可持久保存，可以优化一些算法，例如重复检测判断 */
+    runData:any=null;
 
     constructor(mass: number = 1, shape: Shape|null = null, pos:Vec3|null=null, options?: BodyInitOptions) {
         super();
