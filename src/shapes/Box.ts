@@ -43,7 +43,7 @@ export function quat_AABBExt_mult(q:Quaternion, v:Vec3, target = new Vec3()) {
 }    
 
 function _ptInBox(pt: Vec3, min: Vec3, max: Vec3) {
-	return (pt.x >= min.x && pt.y < max.x &&
+	return (pt.x >= min.x && pt.x < max.x &&
 		pt.y >= min.y && pt.y < max.y &&
 		pt.z >= min.z && pt.z < max.z);
 }
