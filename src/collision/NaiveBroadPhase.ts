@@ -47,7 +47,10 @@ export class NaiveBroadphase extends Broadphase {
     aabbQuery( world:World, aabb:AABB, result:Body[] = []) {
         let bodies = world.bodies;
         for (let i = 0; i < bodies.length; i++) {
-            const b = bodies[i];
+			const b = bodies[i];
+			// 忽略enable=false的
+			if(!b.enable)
+				continue;
 
             if (b.aabbNeedsUpdate) {
                 b.updateAABB();
