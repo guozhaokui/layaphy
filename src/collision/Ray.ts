@@ -42,6 +42,8 @@ export class Ray {
 	from = new Vec3();
 	to = new Vec3();
 	_direction = new Vec3();
+	/** 超过这么长就要分段进行了 */
+	static StepLen=50;
 
     /**
      * The precision of the ray. Used when checking parallelity etc.
@@ -110,12 +112,37 @@ export class Ray {
 
 		this.result.reset();
 		this._updateDirection();
+		tmpArray.length = 0;
 
 		this.getAABB(tmpAABB);
-		tmpArray.length = 0;
-		world.broadphase.aabbQuery(world, tmpAABB, tmpArray);
-		this.intersectBodies(tmpArray);
+	//TODO 这里是错的
+		// 如果包围盒太大，为了提高效率，需要分段
+		let dx = tmpAABB.upperBound.x-tmpAABB.lowerBound.x;
+		let dy = tmpAABB.upperBound.y-tmpAABB.lowerBound.y;
+		let dz = tmpAABB.upperBound.z-tmpAABB.lowerBound.z;
+		let steplen = Ray.StepLen;
+		let curMin = intersectworld_curAABB.lowerBound;
+		let curMax = intersectworld_curAABB.upperBound;
+		if(dx>steplen || dy>steplen || dz>steplen){
+			let maxl = Math.max(dx,dy,dz);
+			let segn = Math.ceil(maxl/steplen);
+			let stepx = dx/segn;
+			let stepy = dy/segn;
+			let stepz = dz/segn;			
+			curMax.copy(tmpAABB.lowerBound);
+			for(let i=0; i<segn; i++){
+				curMin.copy(curMax);
+				curMax.set(curMin.x+stepx,curMin.y+stepy,curMin.z+stepz);
+				world.broadphase.aabbQuery(world, intersectworld_curAABB, tmpArray);
+				this.intersectBodies(tmpArray);
+				if(this.result._shouldStop)
+					break;
+			}
 
+		}else{
+			world.broadphase.aabbQuery(world, tmpAABB, tmpArray);
+			this.intersectBodies(tmpArray);
+		}
 		return this.hasHit;
 	}
 
@@ -878,3 +905,7 @@ function distanceFromIntersection(from: Vec3, direction: Vec3, position: Vec3) {
 	return distance;
 }
 
+
+var intersectworld_curFrom:Vec3 = new Vec3();
+var intersectworld_curTo:Vec3 = new Vec3();
+var intersectworld_curAABB = new AABB();

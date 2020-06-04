@@ -4,6 +4,7 @@ import {World, AddBodyEvent, RemoveBodyEvent} from '../world/World.js';
 import {Body, BODYTYPE} from '../objects/Body.js';
 import { AABB } from './AABB.js';
 import { PhyRender } from '../layawrap/PhyRender.js';
+import { Box } from '../shapes/Box.js';
 
 /**
  * 在Body身上记录grid相关的信息。
@@ -154,6 +155,61 @@ class GridMgr{
 
 	remove(b:GridInfo){
 		GridMgr.cleanGridInfo(b);
+	}
+
+
+	rayQuery(from:Vec3, to:Vec3, result:Body[]){
+		let min = this.min;
+		let max = this.max;
+		let w = this.gridw;
+
+	}
+
+	/**
+	 * 根据一个aabb来查询可能遇到的body。
+	 * 注意如果aabb很大的话，这个效率会非常低，例如长距射线检测，这种情况要用rayQuery
+	 * 
+	 * @param aabbmin 
+	 * @param aabbmax 
+	 * @param result 
+	 */
+	aabbQuery(aabbmin:Vec3,aabbmax:Vec3, result:Body[]){
+		let nx=this.nx;
+		let ny=this.ny;
+		let nz=this.nz;
+		let nxy=nx*ny;
+		let maxx = nx-1;
+		let maxy=ny-1;
+		let maxz=nz-1;
+
+		let min = this.min;
+		let max = this.max;
+		let grids = this.grids;
+		let w = this.gridw;
+		let xs=((aabbmin.x-min.x)/w)|0; if(xs<0)xs=0; if(xs>maxx)xs=maxx;
+		let ys=((aabbmin.y-min.y)/w)|0; if(ys<0)ys=0; if(ys>maxy)ys=maxy;
+		let zs=((aabbmin.z-min.z)/w)|0; if(zs<0)zs=0; if(zs>maxz)zs=maxz;
+		let xe=Math.ceil((aabbmax.x-min.x)/w); if(xe<0)xe=0; if(xe>maxx)xe=maxx;
+		let ye=Math.ceil((aabbmax.y-min.y)/w);	if(ye<0)ye=0; if(ye>maxy)ye=maxy;
+		let ze=Math.ceil((aabbmax.z-min.z)/w); if(ze<0)ze=0; if(ze>maxz)ze=maxz;
+		/** 避免重复添加 */
+		let uniqueBody=[];
+		for(let z=zs; z<=ze; z++){
+			for(let y=ys; y<=ye; y++){
+				for(let x=xs; x<=xe; x++){
+					let id = x+y*nx+z*nxy;
+					let cgrid = grids[id];
+					if(!cgrid) continue;
+					for(let k=0,bl=cgrid.length; k<bl; k++){
+						let cb = cgrid[k].body;
+						if(!uniqueBody[cb.id]){
+							uniqueBody[cb.id]=1;
+							result.push(cb);
+						}
+					}
+				}
+			}
+		}
 	}
 }
 
@@ -454,7 +510,24 @@ export class GridBroadphase1 extends Broadphase {
 	// ============== BroadPhase 接口 ===================
 
 	aabbQuery(world: World, aabb: AABB, result: Body[]): Body[] {
-		throw 'NI';
+		let min = aabb.lowerBound;
+		let max = aabb.upperBound;
+		result.length=0;
+		// dynamic
+		this.dynaGrid.aabbQuery(min,max,result);
+		// static
+		this.staticGrid.aabbQuery(min,max,result);
+		// big obj
+		let bigs = this.bigBodies;
+		let bignum = bigs.length;
+		for(let i=0; i<bignum; i++){
+			let bigb = bigs[i];
+			bigb.aabbNeedsUpdate && bigb.updateAABB();
+			if(aabb.overlaps(bigb.aabb)){
+				result.push(bigb);
+			}
+		}
+		return result;
 	}
 
 	/**

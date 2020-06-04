@@ -151,7 +151,17 @@ export abstract class Broadphase {
     aabbQuery(world: World, aabb: AABB, result: Body[]): Body[] {
         console.warn('.aabbQuery is not implemented in this Broadphase subclass.');
         return [];
-    }
+	}
+	
+	hasRayQuery(){
+		return false;
+	}
+	/**
+	 * 为了优化提供一个rayQuery接口，如果
+	 */
+	rayQuery(){
+
+	}
 
 	sphereQuery(world:World, pos:Vec3, radius:number,result:Body[]):Body[]{
 		console.warn('.sphereQuery is not implemented in this Broadphase subclass.');
