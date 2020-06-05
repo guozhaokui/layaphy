@@ -50,11 +50,9 @@ export class BodyRunDataStack{
 	startFrame(){
 		let stack = BodyRunDataStack.rundataStack;
 		if(this.curStackPtr>= stack.length){
-			stack.push(this.curStackBase);	// 记录上次的base
-		}else{
-			stack[this.curStackPtr]=this.curStackBase;
+			stack.length+=4;
 		}
-		this.curStackPtr++;
+		stack[this.curStackPtr++]=this.curStackBase;
 		this.curStackBase = this.curStackPtr;
 	}
 
@@ -62,12 +60,9 @@ export class BodyRunDataStack{
 		let stack = BodyRunDataStack.rundataStack;
 		if(this.curStackPtr+2>= stack.length){
 			stack.length+=16;
-			stack.push(b,b.runData);	
-			this.curStackPtr+=2;
-		}else{
-			stack[this.curStackPtr++]=b;
-			stack[this.curStackPtr++]=b.runData;
 		}
+		stack[this.curStackPtr++]=b;
+		stack[this.curStackPtr++]=b.runData;
 	}
 	/**
 	 * 恢复到curStackBase开始的地方
