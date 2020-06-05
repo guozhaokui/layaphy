@@ -95,6 +95,7 @@ export class Ray {
 	from = new Vec3();
 	to = new Vec3();
 	_direction = new Vec3();
+	ignoreTrigger=true;
 	/** 超过这么长就要分段进行了 */
 	static StepLen=50;
 	static checkid=0;
@@ -194,6 +195,8 @@ export class Ray {
 		}
 		
 		if(!body.enableRayTest)
+			return;
+		if( this.ignoreTrigger && body.isTrigger)
 			return;
 		const checkCollisionResponse = this.checkCollisionResponse;
 
