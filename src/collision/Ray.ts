@@ -13,6 +13,7 @@ import { Voxel } from '../shapes/Voxel.js';
 import { World } from '../world/World.js';
 import { AABB } from './AABB.js';
 import { RaycastResult } from './RaycastResult.js';
+import { GridBroadphase1 } from './GridBroadphase1.js';
 
 var tmpVec1 = new Vec3();
 var tmpVec2 = new Vec3();
@@ -39,7 +40,7 @@ export interface hitworldOptions{
 /**
  * 为了节省内存，Body中保存一个通用的rundata。可能很多地方需要使用，因此需要一个stack以便修改恢复
  */
-class BodyRunDataStack{
+export class BodyRunDataStack{
 	static rundataStack:any[]=[];	// body, data, body, data, ...
 	/** 当前开始的位置，恢复的时候就是到这里 */
 	curStackBase=0;	
@@ -90,7 +91,7 @@ class BodyRunDataStack{
 	}
 }
 
-var gRunDataStack = new BodyRunDataStack();
+export var gRunDataStack = new BodyRunDataStack();
 
 /**
  * A line in 3D space that intersects bodies and return points.
@@ -171,64 +172,20 @@ export class Ray {
 
 		result.reset();
 		this._updateDirection();
-		tmpArray.length = 0;
 
-		this.getAABB(tmpAABB);
 		let broadphase = world.broadphase;
 		if(broadphase.hasRayQuery()){
 			let checkid = Ray.checkid++;
+			// 下面会修改rundata数据，所以启用新的frame。之所以没有放在下面的rayIntersect中，是因为那里到处都是return
 			gRunDataStack.startFrame();
-			// 一个格子一个格子的前进检测
-			broadphase.rayQuery(world,this.from,this.to,(bodies:Body[])=>{
-				for (let i = 0, l = bodies.length; !result._shouldStop && i < l; i++) {
-					let body = bodies[i];
-					// 检查是否已经判断过了
-					if(body.runData==checkid){
-						continue;
-					}
-					// 记录修改rundata的body
-					gRunDataStack.pushBody(body); 
-					body.runData=checkid;
-					// 碰撞检测
-					this.intersectBody(body);
-					if(result._shouldStop)
-						return true;
-				}
-				return result._shouldStop;
-			});
+			(broadphase as GridBroadphase1).rayIntersect(this,gRunDataStack, checkid);
 			// 恢复body的rundata
 			gRunDataStack.ret();
+			if(result._shouldStop)
+				return true;
 		}else{
-			world.broadphase.aabbQuery(world, tmpAABB, tmpArray);
-			this.intersectBodies(tmpArray);
-		}
-		return this.hasHit;
-
-	//TODO 这里是错的
-		// 如果包围盒太大，为了提高效率，需要分段
-		let dx = tmpAABB.upperBound.x-tmpAABB.lowerBound.x;
-		let dy = tmpAABB.upperBound.y-tmpAABB.lowerBound.y;
-		let dz = tmpAABB.upperBound.z-tmpAABB.lowerBound.z;
-		let steplen = Ray.StepLen;
-		let curMin = intersectworld_curAABB.lowerBound;
-		let curMax = intersectworld_curAABB.upperBound;
-		if(dx>steplen || dy>steplen || dz>steplen){
-			let maxl = Math.max(dx,dy,dz);
-			let segn = Math.ceil(maxl/steplen);
-			let stepx = dx/segn;
-			let stepy = dy/segn;
-			let stepz = dz/segn;			
-			curMax.copy(tmpAABB.lowerBound);
-			for(let i=0; i<segn; i++){
-				curMin.copy(curMax);
-				curMax.set(curMin.x+stepx,curMin.y+stepy,curMin.z+stepz);
-				world.broadphase.aabbQuery(world, intersectworld_curAABB, tmpArray);
-				this.intersectBodies(tmpArray);
-				if(this.result._shouldStop)
-					break;
-			}
-
-		}else{
+			tmpArray.length = 0;
+			this.getAABB(tmpAABB);
 			world.broadphase.aabbQuery(world, tmpAABB, tmpArray);
 			this.intersectBodies(tmpArray);
 		}

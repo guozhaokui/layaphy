@@ -5,6 +5,7 @@ import {Body, BODYTYPE} from '../objects/Body.js';
 import { AABB } from './AABB.js';
 import { PhyRender } from '../layawrap/PhyRender.js';
 import { Box } from '../shapes/Box.js';
+import { Ray, BodyRunDataStack, RayMode } from './Ray.js';
 
 /**
  * 在Body身上记录grid相关的信息。
@@ -20,7 +21,7 @@ export class GridInfo{
 	grids:GridInfo[][]|null=null;
 	sys:GridBroadphase1;		//TODO 去掉这个，节省内存
 	/** 在活动列表的位置，用于快速移除,-1表示不在活动列表中 */
-	activeid=-1; 	
+	activeid=-1; 	// -1表示静态， -2表示大模型
 	private sleepListener:EventListener;
 	private awakeListener:EventListener;
 	constructor(body:Body,sys:GridBroadphase1){
@@ -157,14 +158,6 @@ class GridMgr{
 		GridMgr.cleanGridInfo(b);
 	}
 
-
-	rayQuery(from:Vec3, to:Vec3, result:Body[]){
-		let min = this.min;
-		let max = this.max;
-		let w = this.gridw;
-
-	}
-
 	/**
 	 * 根据一个aabb来查询可能遇到的body。
 	 * 注意如果aabb很大的话，这个效率会非常低，例如长距射线检测，这种情况要用rayQuery
@@ -244,7 +237,7 @@ export class GridBroadphase1 extends Broadphase {
 	static bigBodySize=1000;	// 超过这个值的算作超大对象
 
 	/** 格子大小 */
-	gridsz=10;
+	gridsz=20;
 
 	//当前包围盒
 	min=new Vec3(-1000,-1000,-1000);
@@ -261,9 +254,9 @@ export class GridBroadphase1 extends Broadphase {
 	activeBodies:GridInfo[]=[];
 
 	/** 静态对象或者sleep的对象占的格子 */
-	private staticGrid = new GridMgr(this.min,this.max,this.gridsz,false);
+	private staticGrid:GridMgr; 
 	/** 动态对象占的格子 */
-	private dynaGrid = new GridMgr(this.min,this.max,this.gridsz,true);
+	private dynaGrid:GridMgr;
 
 	/** 超大模型。这个模型放到格子中占用的格子太多，所以单独处理 */
 	private bigBodies:Body[]=[];
@@ -280,7 +273,8 @@ export class GridBroadphase1 extends Broadphase {
         this.ny = ny;
 		this.nz = nz;
 		this.gridsz = (this.max.x-this.min.x)/nx;
-		
+		this.staticGrid = new GridMgr(this.min,this.max,this.gridsz,false);
+		this.dynaGrid = new GridMgr(this.min,this.max,this.gridsz,true);
 		this.addBodyListener = this.onAddBody.bind(this);
 		this.removeBodyListener = this.onRemoveBody.bind(this);
 	}
@@ -440,7 +434,9 @@ export class GridBroadphase1 extends Broadphase {
 		if(bmax.x-bmin.x>bigsize ||
 			bmax.y-bmin.y>bigsize ||
 			bmax.z-bmin.z>bigsize){
-				this.bigBodies.push(b.body);
+				if(b.activeid!=-2)
+					this.bigBodies.push(b.body);
+				b.activeid=-2;
 			}else{
 				this.staticGrid.add(b);
 			}		
@@ -510,6 +506,166 @@ export class GridBroadphase1 extends Broadphase {
 	// ============== BroadPhase 接口 ===================
 
 	hasRayQuery(){return true;}
+
+
+	rayIntersectGrids(ray:Ray, grids: GridInfo[], rundataStack:BodyRunDataStack,checkid:int):boolean {
+		// 注意ray必须已经reset了
+		for (let i = 0, l = grids.length; i < l; i++) {
+			let cb = grids[i].body;
+			if(!cb.enable) continue;
+			// 已经检查了
+			if(cb.runData==checkid) continue;
+			// 记录修改rundata的body
+			cb.runData=checkid;
+			rundataStack.pushBody(cb); 
+
+			cb.aabbNeedsUpdate && cb.updateAABB();
+			ray.intersectBody(cb);
+			if(ray.result._shouldStop)
+				return true;
+		}
+		return ray.result.hasHit;
+	}	
+
+	/**
+	 * 不能单独调用。只允许Ray调用。这里没有对ray执行reset
+	 * @param world 
+	 * @param ray 
+	 */
+	rayIntersect( ray:Ray, rundatastack:BodyRunDataStack, checkid:int):boolean{
+		let min = this.min;
+		let max = this.max;
+		let w = this.gridsz;
+
+		//先用包围盒裁剪
+		let nst = rayQuery_tmpV1;
+		let ned = rayQuery_tmpV2;
+
+		let from = ray.from;
+		let to = ray.to;
+		if (!Box.rayHitBox(from, to, min, max, nst, ned))
+			return false;
+
+		//debug
+		//let phyr =  getPhyRender();
+		//let wpos = new Vec3();
+		//phyr.addPersistPoint( this.pointToWorld(nst, wpos));
+		//phyr.addPersistPoint( this.pointToWorld(ned,wpos));
+		//debug
+
+		//dir
+		let nx = ned.x - nst.x;
+		let ny = ned.y - nst.y;
+		let nz = ned.z - nst.z;
+		let len = Math.sqrt(nx * nx + ny * ny + nz * nz);	// voxel中没有 sqrt 是为什么
+		let dirx = nx / len;
+		let diry = ny / len;
+		let dirz = nz / len;
+
+		// 起点格子
+		let x0 = ((nst.x - min.x) / w) | 0;	// 不可能<0所以可以直接 |0
+		let y0 = ((nst.y - min.y) / w) | 0;
+		let z0 = ((nst.z - min.z) / w) | 0;
+
+		// 终点格子
+		let x1 = ((ned.x - min.x) / w) | 0;
+		let y1 = ((ned.y - min.y) / w) | 0;
+		let z1 = ((ned.z - min.z) / w) | 0;
+
+		// 由于点可能在边缘，因此有可能正好超出，做一下保护
+		let sizex = this.nx;
+		let sizey = this.ny;
+		let sizexy=sizex*sizey
+		let maxx = this.nx-1;
+		let maxy = this.ny-1;
+		let maxz = this.nz-1;
+
+		if(x0>maxx) x0=maxx;
+		if(x1>maxx) x1=maxx;
+		if(y0>maxy) y0=maxy;
+		if(y1>maxy) y1=maxy;
+		if(z0>maxz) z0=maxz;
+		if(z1>maxz) z1=maxz;
+
+		//确定前进方向
+		let sx = x1 > x0 ? 1 : x1 < x0 ? -1 : 0;
+		let sy = y1 > y0 ? 1 : y1 < y0 ? -1 : 0;
+		let sz = z1 > z0 ? 1 : z1 < z0 ? -1 : 0;
+
+		// 从开始到结束的长度
+		let fdx = Math.abs(ned.x - nst.x);
+		let fdy = Math.abs(ned.y - nst.y);
+		let fdz = Math.abs(ned.z - nst.z);
+
+		let absdirx = Math.abs(dirx);
+		let absdiry = Math.abs(diry);
+		let absdirz = Math.abs(dirz);
+
+		let t = Math.sqrt((fdx * fdx + fdy * fdy + fdz * fdz)/(absdirx*absdirx+absdiry*absdiry+absdirz*absdirz));//其实也可以判断x,y,z但是由于不知道方向，所以把复杂的事情留到循环外面
+		// 每经过一个格子需要的时间
+		let xt = absdirx > 1e-6 ? w / absdirx : 10000;
+		let yt = absdiry > 1e-6 ? w / absdiry : 10000;
+		let zt = absdirz > 1e-6 ? w / absdirz : 10000;
+
+		//由于起点不在0,0,0因此需要计算到下一个面的时间，第一次需要计算，以后直接加就行
+		let maxX = (1 - (nst.x % w) / w) * xt;
+		let maxY = (1 - (nst.y % w) / w) * yt;
+		let maxZ = (1 - (nst.z % w) / w) * zt;
+
+		let cx = x0;
+		let cy = y0;
+		let cz = z0;
+		let end = false;
+		let staticGrid = this.staticGrid;
+		let dynamicGrid = this.dynaGrid;
+		while (!end) {
+			let id = cx+cy*sizex+cz*sizexy;
+			let sbodies = dynamicGrid.grids[id];
+			if(sbodies){
+				this.rayIntersectGrids(ray,sbodies, rundatastack,checkid);
+				if(ray.result._shouldStop)
+					return true;
+			}
+			let dbodies = staticGrid.grids[id];
+			if(dbodies){
+				this.rayIntersectGrids(ray,dbodies,rundatastack,checkid);
+				if(ray.result._shouldStop)
+					return true;
+			}
+
+			// 要求最近点的话，如果当前格子有碰撞，则没有必要继续下面的格子了。不过还要继续检测大对象
+			if(ray.mode==RayMode.CLOSEST && ray.result.hasHit)
+				break;
+
+			//取穿过边界用的时间最少的方向，前进一格
+			//同时更新当前方向的边界
+			if (maxX <= maxY && maxX <= maxZ) {//x最小，表示最先遇到x面
+				end = maxX > t || cx==x1;  //先判断end。否则加了delta之后可能还没有完成就end了
+				cx += sx;
+				maxX += xt;
+			} else if (maxY <= maxX && maxY <= maxZ) {//y最小
+				end = maxY > t || cy==y1;
+				cy += sy;
+				maxY += yt;
+			} else {	// z最小
+				end = maxZ > t || cz==z1;
+				cz += sz;
+				maxZ += zt;
+			}
+		}
+		// big body
+		let bigs = this.bigBodies;
+		let bignum = bigs.length;
+		for(let i=0; i<bignum; i++){
+			let bigb = bigs[i];
+			bigb.aabbNeedsUpdate && bigb.updateAABB();
+			ray.intersectBody(bigb);
+			if(ray.result._shouldStop)
+				return true;
+		}
+		return ray.result.hasHit
+	}
+
 
 	aabbQuery(world: World, aabb: AABB, result: Body[]): Body[] {
 		let min = aabb.lowerBound;
@@ -683,3 +839,6 @@ export class GridBroadphase1 extends Broadphase {
 	}
 
 }
+
+var rayQuery_tmpV1=new Vec3();
+var rayQuery_tmpV2=new Vec3();

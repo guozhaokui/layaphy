@@ -106,7 +106,7 @@ export default {
         name:'cannon',
 		//intro:'window.Laya=window.Laya||exports||{};\n',
 		//outro:layaexpreplace
-		outro:'exports.version="'+(new Date())+'"'
+		outro:'exports.version="'+(new Date())+'";window.cannon=exports;'
         //indent: false
 	},
 	external:['Laya'],

@@ -2,7 +2,7 @@ import { Laya } from "Laya";
 import { BlinnPhongMaterial } from "laya/d3/core/material/BlinnPhongMaterial";
 import { Scene3D } from "laya/d3/core/scene/Scene3D";
 import { Event } from "laya/events/Event";
-import { mouseDownEmitObj } from "./DemoUtils";
+import { mouseDownEmitObj, raycast } from "./DemoUtils";
 import { CannonWorld } from "./layawrap/CannonWorld";
 import { MouseCtrl1 } from "./layawrap/ctrls/MouseCtrl1";
 import { PhyRender } from "./layawrap/PhyRender";
@@ -14,7 +14,7 @@ import { Body } from "./objects/Body";
 import { Plane } from "./shapes/Plane";
 import { Sphere } from "./shapes/Sphere";
 import { test_gridbroadphase1, test_raycastInner } from "./testCase";
-import { getPhyRender, IPhyRender } from "./world/World";
+import { getPhyRender, IPhyRender, World } from "./world/World";
 import { GridBroadphase1 } from "./collision/GridBroadphase1";
 
 
@@ -23,7 +23,7 @@ import { GridBroadphase1 } from "./collision/GridBroadphase1";
 
 var sce3d: Scene3D;
 var mtl1: BlinnPhongMaterial;
-var world: CannonWorld;
+var world: World;
 let phymtl1 = new Material();
 let phymtl2 = new Material('sce',0,1);
 let phymtl3 = new Material();
@@ -38,7 +38,7 @@ let phyr: IPhyRender;
 let lockEmit = false;
 
 function initPhy(scene: Scene3D) {
-	let world = (scene.addComponent(CannonWorld) as CannonWorld).world;
+	world = (scene.addComponent(CannonWorld) as CannonWorld).world;
 	world.broadphase = new GridBroadphase1();
 	world.gravity.set(0, -10, 0);
 	(window as any).phyr = new PhyRender(scene, world);
@@ -59,7 +59,6 @@ function initPhy(scene: Scene3D) {
 	b.addShape( new Sphere(1));//, new Vec3());
 	b.setPos(1.5,1,0);
 	world.addBody(b);	
-	//return;
 
 	//添加随机对象
 	let maxnum=3000;
@@ -87,16 +86,14 @@ function dokey(e: Event, down: boolean) {
 		case 'Z':
 			break;
 		case 'R':{
-			/*
-			raycast(world.world,cam.camera,(pt:Vec3, norm:Vec3)=>{
+			raycast(world,cam.camera,(pt:Vec3, norm:Vec3)=>{
 				phyr.addPersistPoint( pt);
 			});
-			*/
 		}
 			break;
 		case 'P':
 			if (down)
-				world.world.pause();
+				world.pause();
 			break;
 		case 'L': // 锁定发射位置和方向
 			if(!down)
