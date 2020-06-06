@@ -49,6 +49,7 @@ export class GridInfo{
 }
 
 class GridMgr{
+	objnum=0;
 	/** 记录对象列表 */
 	grids:GridInfo[][]=[];
 	/** 添加到活动列表的时间。用来快速判断是否重复添加 */	
@@ -81,26 +82,34 @@ class GridMgr{
 		this.activeGrids.length=0;
 	}
 
+	/**
+	 * 清理。目前只有动态对象格子用到
+	 */
 	newTick(){
 		this.tick++;
 		this.activeGrids.length=0;
+		this.objnum=0;
 	}
 
-	static cleanGridInfo(b:GridInfo){
+	static cleanGridInfo(b:GridInfo):boolean{
+		let find=false;
 		if(b.grids){
 			// 清理自己记录的格子信息
 			b.grids.forEach( (g:GridInfo[])=>{
 				let pos = g.indexOf(b);
 				if(pos>=0){
+					find=true;
 					g[pos]=g[g.length-1];
 					g.pop();
 				}
 			});
 			b.grids=null;
 		}
+		return find;
 	}
 
 	add(b:GridInfo){
+		this.objnum++;
 		// 先清理b原来的记录
 		if(b.grids && b.grids.length)
 			GridMgr.cleanGridInfo(b);
@@ -155,7 +164,9 @@ class GridMgr{
 	}
 
 	remove(b:GridInfo){
-		GridMgr.cleanGridInfo(b);
+		if(GridMgr.cleanGridInfo(b)){
+			this.objnum--;
+		}
 	}
 
 	/**
@@ -234,14 +245,19 @@ export class GridBroadphase1 extends Broadphase {
 	// 超过最大范围就不管了，防止出现一个body不断下落导致的范围越来越大的问题。
 	static MaxValue = 1e6;	//1e6如果用八叉树的话是20层
 	static MinValue = -1e6;
-	static bigBodySize=1000;	// 超过这个值的算作超大对象
+	static bigBodySize=1000;	// 超过这个值的算作超大对象。这个会动态改变
 
+	objnum=0;
 	/** 格子大小 */
 	gridsz=20;
 
 	//当前包围盒
 	min=new Vec3(-1000,-1000,-1000);
 	max=new Vec3(1000,1000,1000);
+
+	// 场景中的对象实际占用的空间
+	objsMin = new Vec3(10000,10000,10000);
+	objsMax = new Vec3(-10000,-10000,-10000);
 
     nx = 10;
     ny = 10;
@@ -258,8 +274,8 @@ export class GridBroadphase1 extends Broadphase {
 	/** 动态对象占的格子 */
 	private dynaGrid:GridMgr;
 
-	/** 超大模型。这个模型放到格子中占用的格子太多，所以单独处理 */
-	private bigBodies:Body[]=[];
+	/** 不归格子管理的模型，例如超大模型，距离太远的模型。这些模型放到格子中占用的格子太多，或者导致空间太大，所以单独处理 */
+	private otherBodies:Body[]=[];
 
 	/** 有活动对象的格子 */
 	//private activeGrids:[]=[];
@@ -273,15 +289,24 @@ export class GridBroadphase1 extends Broadphase {
         this.ny = ny;
 		this.nz = nz;
 		this.gridsz = (this.max.x-this.min.x)/nx;
+		GridBroadphase1.bigBodySize = this.gridsz*40;
 		this.staticGrid = new GridMgr(this.min,this.max,this.gridsz,false);
 		this.dynaGrid = new GridMgr(this.min,this.max,this.gridsz,true);
 		this.addBodyListener = this.onAddBody.bind(this);
 		this.removeBodyListener = this.onRemoveBody.bind(this);
+		// debug info
+		let win = window as any;
+		if(!win.wuli) win.wuli={};
+		if(win.wuli){
+			win.wuli.gridmgr=this;
+		}
 	}
 
 	//============== body的维护部分 ================
 
 	onAddBody(e:AddBodyEvent){
+		this.objnum++;
+
 		let b = e.body;
 		if(!b) return;
 		// 注意type可能会变
@@ -290,6 +315,7 @@ export class GridBroadphase1 extends Broadphase {
 	}
 
 	onRemoveBody(e:RemoveBodyEvent){
+		this.objnum--;
 		let b = e.body;
 		if(!b)return;
 		// 先从未处理列表中删除
@@ -302,26 +328,30 @@ export class GridBroadphase1 extends Broadphase {
 			// 未处理列表没有，则要从格子中删除
 			let ginfo = b.gridinfo;
 			if(!ginfo)return;
-			if(ginfo.activeid>=0)
+			if(ginfo.activeid>=0){
+				// 从动态对象删除
+				this.removeFromActiveBody(b);
 				this.dynaGrid.remove(ginfo);
+			}
 			else this.staticGrid.remove(ginfo);
+
+			// 在其他对象列表中么
+			pos = this.otherBodies.indexOf(b);
+			if(pos>=0){
+				this.otherBodies[pos]=this.otherBodies[this.otherBodies.length-1];
+				this.otherBodies.pop();
+				return;
+			}
 		}
 
-		// 在大对象列表中么
-		pos = this.bigBodies.indexOf(b);
-		if(pos>=0){
-			this.bigBodies[pos]=this.bigBodies[this.bigBodies.length-1];
-			this.bigBodies.pop();
-			return;
-		}
 	}
 
 	/**
 	 * 有的body刚加进来，还没有分配是动态的还是静态的
 	 */
 	private handle_uninitedBody(){
-		let wmin = this.min;
-		let wmax = this.max;
+		let wmin = this.objsMin;
+		let wmax = this.objsMax;
 
 		let uninited:Body[] = this.uninitedBodies;
 		for( let i=0,len=uninited.length; i<len; i++){
@@ -366,48 +396,22 @@ export class GridBroadphase1 extends Broadphase {
 		this.addToDynamic(b);
 	}
 
-	/** 某个body表示自己处于非静止状态 */
-	private activeBody(b:GridInfo){
-		let acts = this.activeBodies;
-		let gridinfo = b;
-		if(b.activeid<0){
-			// 这表示原来是静止的,已经记录在静止数组中了。或者是第一次加入
-			//  从静止数组中删除这个body
-			if(gridinfo.grids){
-				// 清理自己记录的格子信息
-				gridinfo.grids=null;
-			}
-			gridinfo.activeid = acts.length;
-		}else{
-			// 已经是动态的了
-		}
-	}
-
-	private deactiveBody(b:Body){
-		let acts = this.activeBodies;
-		let gridinfo = b.gridinfo;
-		if(gridinfo){
-			if(gridinfo.activeid>=0){
-				// 从活动列表中删除
-				acts[gridinfo.activeid] = acts[acts.length-1];
-				acts.length-=1;
-				// 添加到静态数组中
-				let aabb = b.aabb;
-				aabb.lowerBound;
-				aabb.upperBound;
-				//TODO 负的
-				// TODO 计算所占格子
-			}else{
-				// 已经是静态的了
-			}
-			
-		}else{
-			console.error('err2');
-		}
-	}
-
 	// ============= 格子分配管理==================
 
+	private removeFromActiveBody(b:Body):boolean{
+		//查找并删除
+		let acts = this.activeBodies;
+		let i=0,l = acts.length;
+		for(;i<l; i++){
+			let cg = acts[i];
+			if(cg.body==b){
+				acts[i]=acts[l-1];
+				acts.pop();
+				return true;
+			}
+		}
+		return false;
+	}
 	/**
 	 * 直接加到静态格子中，如果之前是动态的要处理一下
 	 * @param b 
@@ -425,7 +429,15 @@ export class GridBroadphase1 extends Broadphase {
 				console.error('eeee262');
 			}
 			b.activeid=-1;
+		}else if(b.activeid==-2){
+			// 从其他列表中删除
+			this.removeFromOtherBodies(b.body);
+			b.activeid=-1;	// 防止下面走不到
+		}else{
+			// 清理原来的静态信息
+			this.staticGrid.remove(b);
 		}
+
 		// 清理自己记录的格子信息 加入静态
 		let aabb = b.body.aabb;
 		let bmax = aabb.upperBound;
@@ -433,9 +445,9 @@ export class GridBroadphase1 extends Broadphase {
 		let bigsize = GridBroadphase1.bigBodySize;
 		if(bmax.x-bmin.x>bigsize ||
 			bmax.y-bmin.y>bigsize ||
-			bmax.z-bmin.z>bigsize){
+			bmax.z-bmin.z>bigsize || this.outofWorldAABB(aabb)){
 				if(b.activeid!=-2)
-					this.bigBodies.push(b.body);
+					this.otherBodies.push(b.body);
 				b.activeid=-2;
 			}else{
 				this.staticGrid.add(b);
@@ -443,19 +455,68 @@ export class GridBroadphase1 extends Broadphase {
 	}
 
 	/**
+	 * 超出世界格子范围了。这个暂时放到其他中用暴力检测
+	 * @param b 
+	 */
+	private outofWorldAABB(b:AABB):boolean{
+		let min = b.lowerBound;
+		let max = b.upperBound;
+		let wmin = this.min;
+		let wmax = this.max;
+		if(	max.x>wmax.x ||
+			max.y>wmax.y ||
+			max.z>wmax.z ||
+			min.x<wmin.x ||
+			min.y<wmin.y ||
+			min.z<wmin.z
+			) return true;
+		return false;
+	}
+
+	/**
 	 * 添加到动态列表中
 	 * @param b 
 	 */
 	private addToDynamic(b:GridInfo){
+		// 太大的物体还是单独处理吧
+		let aabb = b.body.aabb;
+		let bmax = aabb.upperBound;
+		let bmin = aabb.lowerBound;
+		let bigsize = GridBroadphase1.bigBodySize;
+		if(bmax.x-bmin.x>bigsize ||
+			bmax.y-bmin.y>bigsize ||
+			bmax.z-bmin.z>bigsize || this.outofWorldAABB(aabb)){
+				if(b.activeid!=-2)
+					this.otherBodies.push(b.body);
+				b.activeid=-2;
+				return;
+		}		
+
 		if(b.activeid<0){
-			// 这表示原来是静止的,已经记录在静止数组中了。或者是第一次加入
-			// 加入动态
-			b.activeid=this.activeBodies.length;
-			this.activeBodies.push(b);
+			if(b.activeid==-2){
+				// 从其他列表中删除。既然没有满足上面的条件，说明大小合适
+				this.removeFromOtherBodies(b.body);
+			}else{
+				// 这表示原来是静止的,已经记录在静止数组中了。或者是第一次加入
+				this.staticGrid.remove(b);
+				// 加入动态
+				b.activeid=this.activeBodies.length;
+				this.activeBodies.push(b);
+			}
 		}else{
+			// 已经是动态的了，检查一下
 			if(this.activeBodies[b.activeid]!=b){
 				console.error('eeeee ');
 			}
+		}
+	}
+
+	private removeFromOtherBodies(b:Body){
+		let others = this.otherBodies;
+		let pos = others.indexOf(b);
+		if(pos>=0){
+			others[pos]=others[others.length-1];
+			others.pop();
 		}
 	}
 
@@ -466,23 +527,7 @@ export class GridBroadphase1 extends Broadphase {
 	}
 	
 
-	getGridByPos(x:number,y:number,z:number){
-		let gridsz = this.gridsz;
-		Math.floor(x/gridsz); Math.floor(y/gridsz); Math.floor(z/gridsz);
-		this.nx;
-	}
-
 	private autoCalcGridsz(){
-
-	}
-
-	/**
-	 * 某个grid中的数据没有了
-	 * @param x 
-	 * @param y 
-	 * @param z 
-	 */
-	private clearGrid(x:int,y:int,z:int){
 
 	}
 
@@ -490,8 +535,6 @@ export class GridBroadphase1 extends Broadphase {
 		world.addEventListener('addBody',this.addBodyListener);
 		world.addEventListener('removeBody',this.removeBodyListener);
 	}
-
-
 
 	private updateWorldBBX(bmin:Vec3,bmax:Vec3,wmin:Vec3,wmax:Vec3){
 		// 加最大值限制会不会有问题呢
@@ -502,6 +545,15 @@ export class GridBroadphase1 extends Broadphase {
 		if(bmax.y>wmax.y && bmax.y<GridBroadphase1.MaxValue) wmax.y=bmax.y;
 		if(bmax.z>wmax.z && bmax.z<GridBroadphase1.MaxValue) wmax.z=bmax.z;
 	}
+
+	// ============== 格子策略管理 ===================
+	/**
+	 *  开始用暴力方法
+	 *  满足一定条件之后放到格子中
+	 * 	满足一定条件后修改格子的宽度
+	 *  包围盒变化太大的情况下修改包围盒的大小
+	 */
+
 
 	// ============== BroadPhase 接口 ===================
 
@@ -654,7 +706,7 @@ export class GridBroadphase1 extends Broadphase {
 			}
 		}
 		// big body
-		let bigs = this.bigBodies;
+		let bigs = this.otherBodies;
 		let bignum = bigs.length;
 		for(let i=0; i<bignum; i++){
 			let bigb = bigs[i];
@@ -676,7 +728,7 @@ export class GridBroadphase1 extends Broadphase {
 		// static
 		this.staticGrid.aabbQuery(min,max,result);
 		// big obj
-		let bigs = this.bigBodies;
+		let bigs = this.otherBodies;
 		let bignum = bigs.length;
 		for(let i=0; i<bignum; i++){
 			let bigb = bigs[i];
@@ -735,10 +787,9 @@ export class GridBroadphase1 extends Broadphase {
     /**
 	 * 
      */
-    collisionPairs1(world: World, pairs1: Body[], pairs2: Body[]) {
-		let wmin = this.min;
-		let wmax = this.max;
-		let bbxchanged=true;
+    collisionPairs(world: World, pairs1: Body[], pairs2: Body[]) {
+		let wmin = this.objsMin;
+		let wmax = this.objsMax;
 
 		// 
 		this.handle_uninitedBody();
@@ -748,8 +799,8 @@ export class GridBroadphase1 extends Broadphase {
 		dynaGrid.newTick();
 		dynaGrid.clear();
 
-		let bigs = this.bigBodies;
-		let bignum = this.bigBodies.length;
+		let bigs = this.otherBodies;
+		let bignum = this.otherBodies.length;
 		let acts = this.activeBodies;
 		// 根据动态对象得到所有的动态格子。同时处理大对象
 		for( let i=0,l=acts.length; i<l; i++){
@@ -776,14 +827,14 @@ export class GridBroadphase1 extends Broadphase {
 			}
 		}
 
-		let worldxs = wmax.x-wmin.x;
-		let worldys = wmax.y-wmin.y;
-		let worldzs = wmax.z-wmin.z;
-		let gridsz = this.gridsz;
+		//let worldxs = wmax.x-wmin.x;
+		//let worldys = wmax.y-wmin.y;
+		//let worldzs = wmax.z-wmin.z;
+		//let gridsz = this.gridsz;
 
-		let xn = Math.ceil(worldxs/gridsz);
-		let yn = Math.ceil(worldys/gridsz);
-		let zn = Math.ceil(worldzs/gridsz);
+		//let xn = Math.ceil(worldxs/gridsz);
+		//let yn = Math.ceil(worldys/gridsz);
+		//let zn = Math.ceil(worldzs/gridsz);
 
 		// 处理所有的动态格子
 		let activeids = dynaGrid.activeGrids;
@@ -802,40 +853,20 @@ export class GridBroadphase1 extends Broadphase {
 		this.makePairsUnique(pairs1, pairs2);
 	}
 	
-    /**
-     * Get all the collision pairs in the physics world
-     */
-    collisionPairs(world:World, pairs1:Body[], pairs2:Body[]) {
-		//TEST
-		this.collisionPairs1(world,pairs1,pairs2);
-		return;
-		//TESt
-        const bodies = world.bodies;
-        const n = bodies.length;
-        let i:number;
-        let j:number;
-        let bi:Body;
-        let bj:Body;
-
-        // Naive N^2 ftw!
-        for (i = 0; i !== n; i++) {
-			bi = bodies[i];
-            for (j = 0; j !== i; j++) {
-                bj = bodies[j];
-                if (!this.needBroadphaseCollision(bi, bj)) {
-                    continue;
-                }
-
-				// 这里会更新AABB包围盒
-                this.intersectionTest(bi, bj, pairs1, pairs2);
-            }
-        }
-	}
-	
 	// ============== 调试辅助接口 ==============
 
 	renderGrid(render:PhyRender){
 		//render.addAABB()
+	}
+
+	printDbgInfo(){
+		console.log(`
+	  对象个数:总${this.objnum},静${this.staticGrid.objnum},动${this.dynaGrid.objnum}
+      格子大小:${this.gridsz}
+ 实际对象包围盒:${this.objsMin}, ${this.objsMax}
+   动态对象个数:${this.activeBodies.length}
+不用格子管理的个数:${this.otherBodies.length}
+`);
 	}
 
 }
