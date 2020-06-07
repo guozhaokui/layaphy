@@ -12,11 +12,13 @@ import {Material} from "./material/Material";
 import {Vec3} from "./math/Vec3";
 import {Box} from "./shapes/Box";
 import {Sphere} from "./shapes/Sphere";
+import { addBox, addSphere } from "./DemoUtils";
+import { Body } from "./objects/Body";
 
 var sce3d:Scene3D;
 var mtl1:BlinnPhongMaterial;
 
-
+/*
 function addSphere(mass:number, r: f32, x: f32, y: f32, z: f32): CannonBody {
 	let sph = new MeshSprite3D(PrimitiveMesh.createSphere(r, 32, 32));
     sce3d.addChild(sph);
@@ -38,11 +40,14 @@ class gameBody extends MeshSprite3D{
 		super(PrimitiveMesh.createBox(wx,wy,wz));
 		this.meshRenderer.material = mtl1;
 		//物理组件
-		var rigidBody = this.phybody = this.addComponent(CannonBody) as CannonBody;
+		var rigidBody = this.phybody = new CannonBody();// this.addComponent(CannonBody) as CannonBody;
+		rigidBody.renderobj=this;
+		
 		var boxShape = new Box(new Vec3(wx / 2, wy / 2, wz / 2));
 		//var boxShape=new Sphere(2);
 		rigidBody.addShape(boxShape);
 		rigidBody.setMass(mass);
+		rigidBody.phyBody.linearDamping=0;
 		rigidBody.phyBody.preCollision=this.phystep.bind(this);
 		rigidBody.enablePhy(false);
 	}
@@ -63,7 +68,12 @@ class gameBody extends MeshSprite3D{
 
 	}
 }
-
+*/
+let phymtl1 = new Material();
+let phymtl2 = new Material();
+let phymtl3 = new Material();
+let cmtl1 = new ContactMaterial(phymtl1, phymtl2, 0.5, 0);
+let cmtl2 = new ContactMaterial(phymtl1, phymtl3, 0.5, 1);
 
 function initPhy(scene:Scene3D){
     let phyworld = scene.addComponent(CannonWorld) as CannonWorld;
@@ -72,11 +82,6 @@ function initPhy(scene:Scene3D){
 
     (window as any).phyr = new PhyRender(scene, phyworld.world);
 
-    let phymtl1 = new Material();
-    let phymtl2 = new Material();
-    let phymtl3 = new Material();
-    let cmtl1 = new ContactMaterial(phymtl1, phymtl2, 0.5, 0);
-    let cmtl2 = new ContactMaterial(phymtl1, phymtl3, 0.5, 1);
     phyworld.world.addContactMaterial(cmtl1).addContactMaterial(cmtl2);
 }
 
@@ -86,14 +91,30 @@ export function Main(sce:Scene3D, mtl:BlinnPhongMaterial,cam:MouseCtrl1){
 	mtl1=mtl;
 	//mtl.renderMode=BlinnPhongMaterial.RENDERMODE_TRANSPARENT;
 	initPhy(sce);
-	addSphere(0,50,0,0,0);
+	let p = addSphere(50,0,0,0,0);
+	//addSphere(0,50,0,0,0);
 
 	for(let i=0; i<1000; i++){
+		/*
 		let obj = new gameBody(1,1,2,1);
 		sce.addChild(obj);
 		obj.transform.localPosition = new Vector3(Math.random()*10,Math.random()*100+50,Math.random()*100);
 		obj.enablePhy(true);
 		obj.phybody.setVel(31+Math.random()*20,Math.random()*10,Math.random()*10);
+		*/
+		let bd = addBox(new Vec3(1,1,2),new Vec3(Math.random()*10,Math.random()*100+50,Math.random()*100),1,phymtl1);
+		bd.setVel(31+Math.random()*20,Math.random()*10,Math.random()*10);
+		bd.phyBody.preCollision = function(this:Body){
+			let b = this;
+			let p = b.position;
+			let fdir = new Vector3(0-p.x,0-p.y,0-p.z);
+			Vector3.normalize(fdir,fdir);
+			Vector3.scale(fdir,10,fdir);
+			b.force.x+=fdir.x;
+			b.force.y+=fdir.y;
+			b.force.z+=fdir.z;		
+		}
+	
 	}
 	
 }
