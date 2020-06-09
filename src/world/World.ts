@@ -969,14 +969,14 @@ export class World extends EventTarget {
 				*/
             //}
 
-			if(bi.type!=BODYTYPE.STATIC){
+			//if(bi.type!=BODYTYPE.STATIC){
 				if(!bi.contact)bi.contact = new ContactInfoMgr();
 				bi.contact.addContact(bi,c)
-			} 
-			if(bj.type!=BODYTYPE.STATIC){
+			//} 
+			//if(bj.type!=BODYTYPE.STATIC){
 				if(!bj.contact)bj.contact=new ContactInfoMgr();
 				bj.contact.addContact(bj,c);
-			} 
+			//} 
             //this.bodyOverlapKeeper.set(bi.id, bj.id);
             //this.shapeOverlapKeeper.set(si.id, sj.id);
         }//for each contacts

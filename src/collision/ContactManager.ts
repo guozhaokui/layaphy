@@ -46,7 +46,7 @@ export class ContactInfoMgr{
 	}
 
 	/**
-	 * 通知与b发生碰撞了， 这个函数维护remove列表，
+	 * 通知与b发生碰撞了， 这个函数同时维护remove列表，
 	 * 如果与b碰撞了，必须把上次记录的所有的与b相关的碰撞信息都从removed列表中移除
 	 * @param b 
 	 * @return 是否找到了b
@@ -68,8 +68,17 @@ export class ContactInfoMgr{
 				find=true;
 			}
 		}
+		if(find)
+			return true;
+		// 再检查已经添加的是否存在b。例如一个body的多个shape与b碰撞，可能第一个shape的时候就把b从removed中去掉了
+		sz = this.allcLen;
+		for(let i=0; i<sz; i++){
+			let v = this.allc[i];
+			if(v.body==b)
+				return true;
+		}
 		//console.log('hitbody remove removedlen=',this.removedLen);
-		return find;
+		return false;
 	}
 
 	/**
@@ -143,6 +152,11 @@ export class ContactInfoMgr{
 	 * @param shapej 
 	 */
 	private _addC(other:Body, hitpos:Vec3|null, hitnorm:Vec3|null, shapei:Shape|null, shapej:Shape|null){
+		//如果发生碰撞了，看是否需要从remove中删除
+		// 这个要在修改callc之前，因为内部会检查allc中是否包含other来判断是不是进入。
+
+		let lastC = this.hitBody(other);	
+		
 		// 添加全部碰撞信息
 		let addall:ContactInfo;
 		if(this.allcLen>=this.allc.length){
@@ -158,8 +172,6 @@ export class ContactInfoMgr{
 		if(shapej) addall.othershape=shapej;
 		this.allcLen++;
 
-		//如果发生碰撞了，看是否需要从remove中删除
-		let lastC = this.hitBody(other);	
 		if(!lastC){
 			// 上次没有，所以是新增加的
 			let add:ContactInfo;

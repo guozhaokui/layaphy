@@ -860,12 +860,29 @@ export class GridBroadphase1 extends Broadphase {
 	}
 
 	printDbgInfo(){
+		let stgrid = this.staticGrid.grids;
+		let dynagrid = this.dynaGrid.grids;
+		let stnum=0;
+		let stbodynum=0;
+		for(let gs in stgrid){
+			stnum++;
+			stbodynum+=stgrid[gs].length;
+		}
+		let dynanum=0;
+		let dynabodynum=0;
+		for(let gs in dynagrid){
+			dynanum++;
+			dynabodynum+=dynagrid[gs].length;
+		}
+
 		console.log(`
-	  对象个数:总${this.objnum},静${this.staticGrid.objnum},动${this.dynaGrid.objnum}
-      格子大小:${this.gridsz}
- 实际对象包围盒:${this.objsMin}, ${this.objsMax}
+ 	    对象个数:${this.objnum},${this.staticGrid.objnum},${this.dynaGrid.objnum}
+        格子大小:${this.gridsz}
+  实际对象包围盒:${this.objsMin}, ${this.objsMax}
    动态对象个数:${this.activeBodies.length}
-不用格子管理的个数:${this.otherBodies.length}
+ 不用格子管理的:${this.otherBodies.length}
+   静态格子平均:${(stbodynum/stnum)|0}
+   动态格子平均:${(dynabodynum/dynanum)|0}
 `);
 	}
 
