@@ -127,7 +127,7 @@ export function addCapsule(r: f32, h: f32, x: f32, y: f32, z: f32,randr=false): 
     return phy;
 }
 
-export function addSphere(r: f32, x: f32, y: f32, z: f32): CannonBody {
+export function addSphere(r: f32, x: f32, y: f32, z: f32,mass=1): CannonBody {
 	let sph = new MeshSprite3D(PrimitiveMesh.createSphere(r, 12, 12));
     scene.addChild(sph);
     sph.meshRenderer.material = mtl;
@@ -140,7 +140,7 @@ export function addSphere(r: f32, x: f32, y: f32, z: f32): CannonBody {
 	phy.renderobj=sph;
 	//phy.phyBody.setScale(3,1,1);
     phy.addShape(new Sphere(r));
-    phy.setMass(1);
+    phy.setMass(mass);
     return phy;
 }
 
