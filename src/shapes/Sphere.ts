@@ -3,6 +3,7 @@ import {Vec3} from '../math/Vec3.js';
 import {Shape, SHAPETYPE, HitPointInfo, HitPointInfoArray } from './Shape.js';
 import { Voxel } from './Voxel.js';
 
+/** 从box指向球的向量，球心在box空间的本地位置（反向旋转了） */
 var box_to_sphere = new Vec3();
 var hitbox_tmpVec1 = new Vec3();
 var boxInvQ = new Quaternion();
@@ -268,6 +269,52 @@ export class Sphere extends Shape {
 					// box内部
 					let minidist = 100000;
 					let miniface=-1;
+					// 从6个面中选一个最浅的作为碰撞面
+					// extx - dot(ax_x,box_to_spher)
+					// 根据box_to_spher的朝向判断哪个面
+					// let x= box_to_sphere.x
+					if(false){
+					if(x>0){
+						let dist = half.x-x;
+						if(minidist>dist){
+							minidist=dist;
+							miniface=0;
+						}						
+					}else{
+						let dist = -x-half.x;
+						if(minidist>dist){
+							minidist=dist;
+							miniface=1;
+						}						
+					}
+					if(y>0){
+						let dist = half.y-y;
+						if(minidist>dist){
+							minidist=dist;
+							miniface=2;
+						}						
+					}else{
+						let dist = -y-half.y;
+						if(minidist>dist){
+							minidist=dist;
+							miniface=3;
+						}						
+					}
+					if(z>0){
+						let dist = half.z-z;
+						if(minidist>dist){
+							minidist=dist;
+							miniface=4;
+						}						
+					}else{
+						let dist = -z-half.z;
+						if(minidist>dist){
+							minidist=dist;
+							miniface=5;
+						}						
+					}
+					}else{
+					
 					for(let fi=0; fi<6; fi++){
 						box_to_sphere.vsub(half, extsubpos);
 						let dist = boxFaceDist[fi] = Math.abs( extsubpos.dot(boxFaceNorml[fi]));// dot(ext,norm) - dot(mypos,norm)
@@ -275,6 +322,7 @@ export class Sphere extends Shape {
 							minidist=dist;
 							miniface=fi;
 						}
+					}
 					}
 					if(miniface>=0&&miniface<6){
 						deep = minidist+R;
