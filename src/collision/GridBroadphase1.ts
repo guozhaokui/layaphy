@@ -740,6 +740,21 @@ export class GridBroadphase1 extends Broadphase {
 		return result;
 	}
 
+	sphereQuery(world:World, pos:Vec3, radius:number,result:Body[] = []):Body[]{
+		let bodies = world.bodies;
+		let rr = radius*radius;
+        for (let i = 0; i < bodies.length; i++) {
+            const b = bodies[i];
+
+			// 先用最简单，最不精确的方法做
+			b.position.vsub(pos,tmpVec1);
+			if(tmpVec1.lengthSquared()<rr){
+				result.push(b);
+			}
+        }
+        return result;
+	}		
+
 	/**
 	 * 动态格子内部的互相检测
 	 * @param grid 
@@ -890,3 +905,4 @@ export class GridBroadphase1 extends Broadphase {
 
 var rayQuery_tmpV1=new Vec3();
 var rayQuery_tmpV2=new Vec3();
+var tmpVec1=new Vec3();
