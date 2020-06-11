@@ -283,7 +283,7 @@ export class GridBroadphase1 extends Broadphase {
 	private addBodyListener:EventListener;
 	private removeBodyListener:EventListener;
 
-    constructor(nx:i32=50, ny:i32=50, nz:i32=50) {
+    constructor(nx:i32=100, ny:i32=100, nz:i32=100) {
         super();
         this.nx = nx;
         this.ny = ny;

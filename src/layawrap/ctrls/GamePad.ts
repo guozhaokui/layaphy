@@ -83,7 +83,7 @@ function removegamepad(gamepad: Gamepad) {
     delete controllers[gamepad.index];
 }
 
-
+/*
 window.addEventListener("gamepadconnected", (e:GamepadEvent)=>{
     addgamepad(e.gamepad);
 } );
@@ -91,7 +91,7 @@ window.addEventListener("gamepadconnected", (e:GamepadEvent)=>{
 window.addEventListener("gamepaddisconnected", (e: GamepadEvent)=>{
     removegamepad(e.gamepad);
 });
-
+*/
 var KeyMap = {
     'axis0': {},
     'axis1': {}

@@ -45,6 +45,7 @@ export async function loadBullet(wasm:string):Promise<BulletExport> {
         }
     });
     //console.log(obj.instance.exports.test());  // "3"  
+    //@ts-ignore
     let bulletExp = obj.instance.exports as BulletExport;
     Object.assign(bullet,bulletExp);
     bullet.mem = mem;
