@@ -1,11 +1,12 @@
 import { Script3D } from "laya/d3/component/Script3D";
 import {World} from "../world/World";
 import {CannonBody} from "./CannonBody";
+import { Body } from "../objects/Body";
 
 export class CannonWorld extends Script3D{
     world = new World();
     static inst:CannonWorld;
-
+	dummyBody = new Body(0);
     constructor(){
         super();
         CannonWorld.inst=this;
@@ -15,7 +16,8 @@ export class CannonWorld extends Script3D{
     
         world.gravity.set(0,-10,0);
         world.allowSleep=true;
-        world.stepnumber=1;
+		world.stepnumber=1;
+		this.world.addBody(this.dummyBody);
     }
 
     onUpdate(){

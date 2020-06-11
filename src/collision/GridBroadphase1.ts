@@ -740,6 +740,21 @@ export class GridBroadphase1 extends Broadphase {
 		return result;
 	}
 
+	sphereQuery(world:World, pos:Vec3, radius:number,result:Body[] = []):Body[]{
+		let bodies = world.bodies;
+		let rr = radius*radius;
+        for (let i = 0; i < bodies.length; i++) {
+            const b = bodies[i];
+
+			// 先用最简单，最不精确的方法做
+			b.position.vsub(pos,tmpVec1);
+			if(tmpVec1.lengthSquared()<rr){
+				result.push(b);
+			}
+        }
+        return result;
+	}		
+
 	/**
 	 * 动态格子内部的互相检测
 	 * @param grid 
@@ -860,12 +875,29 @@ export class GridBroadphase1 extends Broadphase {
 	}
 
 	printDbgInfo(){
+		let stgrid = this.staticGrid.grids;
+		let dynagrid = this.dynaGrid.grids;
+		let stnum=0;
+		let stbodynum=0;
+		for(let gs in stgrid){
+			stnum++;
+			stbodynum+=stgrid[gs].length;
+		}
+		let dynanum=0;
+		let dynabodynum=0;
+		for(let gs in dynagrid){
+			dynanum++;
+			dynabodynum+=dynagrid[gs].length;
+		}
+
 		console.log(`
-	  对象个数:总${this.objnum},静${this.staticGrid.objnum},动${this.dynaGrid.objnum}
-      格子大小:${this.gridsz}
- 实际对象包围盒:${this.objsMin}, ${this.objsMax}
+ 	    对象个数:${this.objnum},${this.staticGrid.objnum},${this.dynaGrid.objnum}
+        格子大小:${this.gridsz}
+  实际对象包围盒:${this.objsMin}, ${this.objsMax}
    动态对象个数:${this.activeBodies.length}
-不用格子管理的个数:${this.otherBodies.length}
+ 不用格子管理的:${this.otherBodies.length}
+   静态格子平均:${(stbodynum/stnum)|0}
+   动态格子平均:${(dynabodynum/dynanum)|0}
 `);
 	}
 
@@ -873,3 +905,4 @@ export class GridBroadphase1 extends Broadphase {
 
 var rayQuery_tmpV1=new Vec3();
 var rayQuery_tmpV2=new Vec3();
+var tmpVec1=new Vec3();

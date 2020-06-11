@@ -238,6 +238,34 @@ export class Narrowphase {
         // return eq;
     }
 
+	/**
+	 * 不同版本的摩擦力和弹力的计算方法
+	 */
+	/**
+	 * v0
+	 * 	摩擦力=(a+b)/2
+	 *  弹力 = a*b
+	 * @param mi 
+	 * @param mj 
+	 * @param mo 
+	 */
+	private contactMtlAlg_v0(mi:Material, mj:Material, mo:ContactMaterial){
+		let rcm = this.world.getContactMaterial(mi,mj);
+		if(rcm){
+			mo.friction=rcm.friction;
+			mo.restitution=rcm.restitution;
+		}else{
+			// 如果没有相对材质，就计算组合。先用最简单的乘法
+			if(mi.friction == Material.infiniteFriction || mj.friction==Material.infiniteFriction){
+				mo.friction=1;	// 特殊情况
+			}else if(mi.friction<0 || mj.friction<0){
+				mo.friction=0;
+			}else
+				mo.friction = (mi.friction+mj.friction)/2;
+			mo.restitution = mi.restitution*mj.restitution;
+		}
+	}
+
 	private _getContactMtl(mi:Material|null, mj:Material|null){
 		let cm = this.currentContactMaterial;
 		let lastmi = this.curm1;
@@ -268,6 +296,9 @@ export class Narrowphase {
 		if( (mi===lastmi && mj===lastmj ) || (mi===lastmj && mj===lastmi)){
 			//前面已经找到了
 		}else{
+			//TODO 换成根据版本动态配置的。
+			this.contactMtlAlg_v0(mi,mj,cm);
+			/*
 			let rcm = this.world.getContactMaterial(mi,mj);
 			if(rcm){
 				cm.friction=rcm.friction;
@@ -282,6 +313,7 @@ export class Narrowphase {
 					cm.friction = (mi.friction+mj.friction)/2;
 				cm.restitution = mi.restitution*mj.restitution;
 			}
+			*/
 			this.curm1 = mi;
 			this.curm2 = mj;
 		}
