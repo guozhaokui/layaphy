@@ -2,6 +2,7 @@ import {Quaternion} from '../math/Quaternion.js';
 import {Vec3} from '../math/Vec3.js';
 import {Shape, SHAPETYPE, HitPointInfo, HitPointInfoArray } from './Shape.js';
 import { Voxel } from './Voxel.js';
+import { MinkowskiShape } from './MinkowskiShape.js';
 
 /** 从box指向球的向量，球心在box空间的本地位置（反向旋转了） */
 var box_to_sphere = new Vec3();
@@ -26,11 +27,11 @@ var extsubpos=new Vec3();
  * @param {Number} radius The radius of the sphere, a non-negative number.
  * @author schteppe / http://github.com/schteppe
  */
-export class Sphere extends Shape {
+export class Sphere extends Shape implements MinkowskiShape {
 	onPreNarrowpase(stepId: number, pos: Vec3, quat: Quaternion): void { }
 	radius = 1;
 	oriRadius=1;	// 原始半径，用来应用缩放的
-
+	minkowski=this;
 	constructor(radius: number) {
 		super();
 		this.margin = radius;
@@ -43,6 +44,16 @@ export class Sphere extends Shape {
 		}
 
 		this.updateBndSphR();
+	}
+
+	getSupportVertex(dir: Vec3, sup: Vec3): Vec3 {
+		let r = this.radius;
+		sup.set(dir.x*r,dir.y*r, dir.z*r);
+		return sup;
+	}
+	getSupportVertexWithoutMargin(dir: Vec3, sup: Vec3): Vec3 {
+		sup.set(0,0,0);
+		return sup;
 	}
 
 	calculateLocalInertia(mass: number, target = new Vec3()) {

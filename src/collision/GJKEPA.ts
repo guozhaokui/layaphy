@@ -590,6 +590,7 @@ export class GJKPairDetector {
 		// 把transform改成相对于两个对象中心的
 		let cen = tmpVec1;
 		/* 先不做这个，直接用世界坐标
+		// 取两个shape的中心点作为原点，把两个shape转到这个坐标系下，好处是。。。
 		let oldTransA = transA.position;
 		let oldTransB = transB.position;
 		transA.position = new Vec3();		// 记得后面要恢复
@@ -605,10 +606,14 @@ export class GJKPairDetector {
 		let distance = 0;
 		let isValid = false;	// sepAxis 有效
 
+		/** A的support点的世界坐标 */
 		let worldA = new Vec3();
+		/** B的support点的世界坐标 */
 		let worldB = new Vec3();
+		/** A-B */
 		let AminB = new Vec3();
-		let normSep = new Vec3();	//规格化之后的测试轴
+		/** 规格化之后的测试轴 */
+		let normSep = new Vec3();
 
 		let simpSolver = this.simplexSolver;
 		simpSolver.reset();
@@ -803,8 +808,7 @@ export class GJKPairDetector {
 		// 先不做这个，直接用世界坐标
 		//transA.position = oldTransB;
 		//transB.position = oldTransB;
-//DEBUG
-//return -1;
+
 		//performance.mark('getcloseptend');
 		//performance.measure('getClosePoint','getcloseptstart','getcloseptend');
 		return -distance;
@@ -815,10 +819,11 @@ export class GJKPairDetector {
 	 * 获得A，B的support点，以及A-B
 	 * @param transA 
 	 * @param transB 
-	 * @param dir 
-	 * @param worldA 
-	 * @param worldB 
+	 * @param dir 		要检测的方向。世界空间
+	 * @param worldA 	输出A的support点的世界坐标
+	 * @param worldB    输出B的support点的世界坐标
 	 * @param aMinB 
+	 * @param noMargin 
 	 */
 	computeSupport(transA: Transform, transB: Transform, dir: Vec3, worldA: Vec3, worldB: Vec3, aMinB: Vec3, noMargin: boolean) {
 		let A = this.shapeA;
@@ -826,17 +831,17 @@ export class GJKPairDetector {
 		//先把dir转换到本地空间
 		let dirA = _computeSupport_Vec1;
 		let dirB = _computeSupport_Vec2;
-		let negDir = new Vec3();
+		let negDir = NegDir;//new Vec3();
 		negDir.copy(dir).negate(negDir);
 		// 把dir转换到本地空间		
 		let qA = transA.quaternion;
 		qA.w *= -1;
-		qA.vmult(dir, dirA);
+		qA.vmult(dir, dirA);	// 转到A的本地空间
 		qA.w *= -1;
 
 		let qB = transB.quaternion;
 		qB.w *= -1;
-		qB.vmult(negDir, dirB);
+		qB.vmult(negDir, dirB);	// 转到B的本地空间
 		qB.w *= -1;
 
 		let supA = _computeSupport_Vec3;
@@ -859,3 +864,5 @@ export class GJKPairDetector {
 
 	}
 }
+
+var NegDir = new Vec3();

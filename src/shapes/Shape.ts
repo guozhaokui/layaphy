@@ -87,8 +87,9 @@ export class Shape {
 
 	hasPreNarrowPhase=false;    // 是否要执行 onPreNarrowpase
 
-	minkowski:MinkowskiShape|null=null;
-	margin=0.04;	// 缺省的margin，如果形状过小或者有其他特殊特点，可以在子类里面设置
+    minkowski:MinkowskiShape|null=null;
+    /** margin，gjkepa的时候用，例如球的margin就是半径，如果形状过小或者有其他特殊特点，可以在子类里面设置 */
+	margin=0.04;	
 	enable=true;
     constructor(options?: { type: number, collisionResponse: boolean, collisionFilterGroup: number, collisionFilterMask: number, material: Material }) {
         if(options){

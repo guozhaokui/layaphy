@@ -816,7 +816,35 @@ export class Narrowphase {
 	}
 
     sphereBox(si: Sphere, sj: Box, xi: Vec3, xj: Vec3, qi: Quaternion, qj: Quaternion, bi: Body, bj: Body, rsi: Shape, rsj: Shape, justTest: boolean): boolean {
-		return this.bigSphereBox(si,sj,xi,xj,qi,qj,bi,bj,rsi,rsj,justTest);
+        return this.bigSphereBox(si,sj,xi,xj,qi,qj,bi,bj,rsi,rsj,justTest);
+		let ni = Narrowphase.nor1;
+		let hitpos = point_on_plane_to_sphere;
+        let hit1 =Cap_Cap_tmpV1;
+        
+        let gjk = this.gjkdist;
+		gjk.shapeA=si.minkowski;
+		gjk.shapeB=sj.minkowski;
+		let transA = Narrowphase.trans1;
+		let transB = Narrowphase.trans2;
+		transA.position=xi;
+		transA.quaternion=qi;
+		transB.position=xj;
+		transB.quaternion=qj;
+		let deep = this.gjkdist.getClosestPoint(transA,transB, hitpos, hit1, ni, justTest);
+		if(deep>=0){
+			if(justTest)return true;
+			let r = this.createContactEquation(bi,bj, si, sj, rsi, rsj);
+            ni.negate(ni);// 
+			r.ni.copy(ni);
+			hitpos.vsub(bi.position,r.ri);
+			hit1.vsub(bj.position,r.rj);
+
+            this.result.push(r);
+			this.createFrictionEquationsFromContact(r, this.frictionResult);
+			return true;			
+		}
+		return false;        
+
 		/*
         const v3pool = this.v3pool;
 		let half = sj.halfExtents;
