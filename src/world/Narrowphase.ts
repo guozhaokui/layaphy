@@ -816,7 +816,7 @@ export class Narrowphase {
 	}
 
     sphereBox(si: Sphere, sj: Box, xi: Vec3, xj: Vec3, qi: Quaternion, qj: Quaternion, bi: Body, bj: Body, rsi: Shape, rsj: Shape, justTest: boolean): boolean {
-        return this.bigSphereBox(si,sj,xi,xj,qi,qj,bi,bj,rsi,rsj,justTest);
+        //return this.bigSphereBox(si,sj,xi,xj,qi,qj,bi,bj,rsi,rsj,justTest);
 		let ni = Narrowphase.nor1;
 		let hitpos = point_on_plane_to_sphere;
         let hit1 =Cap_Cap_tmpV1;

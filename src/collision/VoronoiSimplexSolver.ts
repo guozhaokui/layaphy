@@ -12,7 +12,7 @@ class SubSimplexClosestResult{
 	//btUsageBitfield m_usedVertices;
 	usedVertices=0;
 	barycentricCoords=[0,0,0,0];	// 重心坐标，最多到四面体，所以保留4个
-	degenerate=false;				// simplex退化了
+	degenerate=false;				// simplex需要退化再来
 
 	reset(){
 		this.degenerate = false;
@@ -20,6 +20,9 @@ class SubSimplexClosestResult{
 		this.usedVertices=0;
 	}
 
+	/**
+	 * 没有<0的就行
+	 */
 	isValid(){
 		let bcC = this.barycentricCoords;
 		return  (bcC[0] >= 0.) &&
@@ -41,8 +44,11 @@ export class VoronoiSimplexSolver{
 	MAXVERTS=5;
 	vertNum=0;		//当前指针，
 	needUpdate=true;
+	/** 记录Minkowski形上每个点的位置。在addVertex的时候修改 */
 	vecW  =[new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3()];		// P-Q. 注意不要看成是矢量，是Minkowski多边形上的点，
+	/** 记录原始A的support点的位置。在addVertex的时候修改 */
 	pointP=[new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3()];
+	/** 记录原始B的support点的位置。在addVertex的时候修改 */
 	pointQ=[new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3()];
 
 	/**  计算出的新的方向，也就是需要下一步扩展单形的方向 */
@@ -59,6 +65,12 @@ export class VoronoiSimplexSolver{
 		this.needUpdate=true;
 	}
 
+	/**
+	 * 添加一个顶点
+	 * @param w  		Minkowski形上的点。 值=pWorld-qWorld
+	 * @param pWorld 	这个点对应的A的世界坐标的点
+	 * @param qWorld 	这个点对应的B的世界坐标的点
+	 */
 	addVertex(w:Vec3,pWorld:Vec3,qWorld:Vec3){
 		this.lastW=w;
 		this.needUpdate=true;
@@ -69,6 +81,10 @@ export class VoronoiSimplexSolver{
 		this.vertNum++;
 	}
 
+	/**
+	 * p点是否已经加入了当前的顶点列表中了
+	 * @param p 
+	 */
 	inSimplex(p:Vec3):boolean{
 		let found=false;
 		let num = this.vertNum;
@@ -382,10 +398,11 @@ export class VoronoiSimplexSolver{
 			this.needUpdate=false;
 			cachedBC.reset();
 			switch(this.vertNum){
-				case 0: this.cachedValidClosest=false; break;
-				case 1:	// 一个支撑
+				case 0: this.cachedValidClosest=false; break;// 0是不可能的。一定是先addVertex再执行这个
+				case 1:	// 一个点
 					cachedP.copy(Ps[0]);
 					cachedQ.copy(Qs[0]);
+					// 对一个点来说，新的采样方向就是这个点指向原点的方向。（这里是反过来，后面会取反 TODO直接取反）
 					cachedV.copy(Vs[0]);
 					cachedBC.reset();
 					cachedBC.setBarycentricCoordinates(1,0,0,0);
@@ -393,7 +410,7 @@ export class VoronoiSimplexSolver{
 				break;
 				case 2:	// 线段
 				{
-					let from = Vs[0];
+					let from = Vs[0];	// minkowski形上的起点。就是第一个加入的点
 					let to = Vs[1];
 					let nearest = new Vec3();
 					let fromTo = new Vec3();
@@ -419,8 +436,9 @@ export class VoronoiSimplexSolver{
 						t = 0;
 						cachedBC.usedVertices|=1;	// 使用第一个点
 					}
+					// 设置线段的情况下的重心坐标
 					cachedBC.setBarycentricCoordinates(1 - t, t);
-					from.addScaledVector(t, fromTo,nearest);
+					from.addScaledVector(t, fromTo,nearest); 
 	
 					// 更新p1,p2
 					let p0 = Ps[0], p1=Ps[1];

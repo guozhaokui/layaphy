@@ -1,3 +1,4 @@
+import { Quaternion } from './../math/Quaternion';
 import { MinkowskiShape } from "../shapes/MinkowskiShape";
 import {Transform} from "../math/Transform";
 import {Vec3} from "../math/Vec3";
@@ -531,18 +532,20 @@ export class GJKPairDetector {
 				checkSimplex = true;
 				break;
 			}
-			if (newSepAx.lengthSquared() < REL_ERROR2) {
+
+			let previousSquaredDistance = squaredDistance;
+			squaredDistance = newSepAx.lengthSquared();
+
+			// 如果新的采样矢量非常接近于0，表示原点正好在壳上，可以停止了。
+			if (squaredDistance < REL_ERROR2) {
 				sepAxis.copy(newSepAx);	//TODO 是不是可以用同一个对象
 				degenerateSimplex = 6;
 				checkSimplex = true;
 				break;
 			}
 
-			let previousSquaredDistance = squaredDistance;
-			squaredDistance = newSepAx.lengthSquared();
-
 			if (previousSquaredDistance <= squaredDistance) {
-				//新的分离轴没有更靠近？
+				// 新的采样矢量反而变长了，距离原点变远了
 				checkSimplex = true;
 				degenerateSimplex = 12;
 				break;
@@ -550,8 +553,7 @@ export class GJKPairDetector {
 
 			sepAxis.copy(newSepAx);
 
-			let check = !simpSolver.fullSimplex();
-			if (!check) {//if full
+			if (simpSolver.fullSimplex()) {//if full
 				degenerateSimplex = 13;
 				break;
 			}
@@ -610,8 +612,8 @@ export class GJKPairDetector {
 		let worldA = new Vec3();
 		/** B的support点的世界坐标 */
 		let worldB = new Vec3();
-		/** A-B */
-		let AminB = new Vec3();
+		/** Minkowski形上的点 */
+		let minkowPt = new Vec3();
 		/** 规格化之后的测试轴 */
 		let normSep = new Vec3();
 
@@ -632,31 +634,30 @@ export class GJKPairDetector {
 			itNum++;
 			let sepLen = sepAxis.length();
 			sepAxis.scale(1 / sepLen, normSep);	//TODO 这个是不是在computeSupport函数内部做更好
-			this.computeSupport(transA, transB, normSep, worldA, worldB, AminB, true);//TODO dir谁取反的问题
+			// 获得normSep方向的Minkowski差 AminB
+			this.computeSupport(transA, transB, normSep, worldA, worldB, minkowPt, true);//TODO dir谁取反的问题
 			//DEBUG
 			if(showdbg){
 				phyr.addPoint(worldA.x+cen.x,worldA.y+cen.y,worldA.z+cen.z,0x77);
 				phyr.addPoint(worldB.x+cen.x,worldB.y+cen.y,worldB.z+cen.z,0xff);
-				phyr.addPoint(AminB.x,AminB.y,AminB.z,0xff0000);
+				phyr.addPoint(minkowPt.x,minkowPt.y,minkowPt.z,0xff0000);
 				phyr.addVec(0,0,0,sepAxis.x,sepAxis.y,sepAxis.z,0xff00);
 			}
 			//DEBUG
 			/** 新的采样点在采样方向上的投影。即采样点-原点 在采样方向的投影 */
-			let delta = normSep.dot(AminB);
-			if (delta < -margin) {// 如果沿着dir方向取A,沿着反向取B，但是dot却<0表示两个对象是分离的
-				// 沿着采样方向采样minkow形，结果点在后面，则原点一定不在minkow形内
-				// 相当于找到了一个dir方向能把对象分离
-				// 由于采样的是没有margin的，因此要把marin考虑在内
+			let delta = normSep.dot(minkowPt);
+			if (delta < -margin) {
+				// 朝着某个方向采样，却在反向得到点了（投影在margin外），则原点一定不再Minkowski差内。
+				// 例如采样向上，原点在凸体的上面
 				// 注意不能=，因为=算碰撞
-				checkSimplex = true;
-				degenerateSimplex = 10;
-				collision=false;
-				break;
+				//degenerateSimplex = 10;
+				//collision=false;
+				return -1;
 			}
 
 			// 新得到的点已经在smplex中了，表示无法更接近了
-			if (simpSolver.inSimplex(AminB)) {
-				degenerateSimplex = 1;
+			if (simpSolver.inSimplex(minkowPt)) {
+				//degenerateSimplex = 1;
 				checkSimplex = true;
 				collision=true;
 				break;
@@ -680,11 +681,13 @@ export class GJKPairDetector {
 			}
 			*/
 
-			simpSolver.addVertex(AminB, worldA, worldB);
+			// 不是明显分离的话，就把点加到solver中，以后检查
+			simpSolver.addVertex(minkowPt, worldA, worldB);
 
+			// 根据当前的单形决定下一步的采样方向
 			let newSepAx = new Vec3();
 			if (!simpSolver.closest(newSepAx)) {
-				// 如果找不到更近的点
+				// 如果找不到新的采样方向
 				degenerateSimplex = 3;
 				checkSimplex = true;
 				collision=true;
@@ -715,13 +718,12 @@ export class GJKPairDetector {
 
 			sepAxis.copy(newSepAx);
 
-			let check = !simpSolver.fullSimplex();
-			if (!check) {//if full
+			if (simpSolver.fullSimplex()) {//if full
 				degenerateSimplex = 13;
 				break;
 			}
 		}
-		//console.log('itnum=',itNum);
+		console.log('itnum=',itNum);
 
 		if(!collision){
 			return -1;
@@ -816,7 +818,7 @@ export class GJKPairDetector {
 
 
 	/**
-	 * 获得A，B的support点，以及A-B
+	 * 获得dir方向的Minkowski差。即A，B的support点相减
 	 * @param transA 
 	 * @param transB 
 	 * @param dir 		要检测的方向。世界空间
@@ -835,14 +837,17 @@ export class GJKPairDetector {
 		negDir.copy(dir).negate(negDir);
 		// 把dir转换到本地空间		
 		let qA = transA.quaternion;
-		qA.w *= -1;
-		qA.vmult(dir, dirA);	// 转到A的本地空间
-		qA.w *= -1;
+
+		qA.conjugate(invQA);
+		//qA.w *= -1;
+		invQA.vmult(dir, dirA);	// 转到A的本地空间
+		//qA.w *= -1;
 
 		let qB = transB.quaternion;
-		qB.w *= -1;
-		qB.vmult(negDir, dirB);	// 转到B的本地空间
-		qB.w *= -1;
+		qB.conjugate(invQB);
+		//qB.w *= -1;
+		invQB.vmult(negDir, dirB);	// 转到B的本地空间
+		//qB.w *= -1;
 
 		let supA = _computeSupport_Vec3;
 		let supB = _computeSupport_Vec4;
@@ -865,4 +870,6 @@ export class GJKPairDetector {
 	}
 }
 
+var invQA = new Quaternion();
 var NegDir = new Vec3();
+var invQB = new Quaternion();
