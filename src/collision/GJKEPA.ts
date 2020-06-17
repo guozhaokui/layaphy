@@ -571,10 +571,13 @@ export class GJKPairDetector {
 	}
 
 	/**
-	 * 计算A和B的最近点
+	 * 计算A和B的碰撞信息
 	 * @param transA 
 	 * @param transB 
+	 * @param hitA 		A的碰撞点
+	 * @param hitB 		B
 	 * @param hitNorm 把A推开的法线，即B身上的，朝向A的。
+	 * @param justtest 
 	 * @return 碰撞深度， <0表示没有碰撞，
 	 */
 	getClosestPoint(transA: Transform, transB: Transform,hitA:Vec3,hitB:Vec3, hitNorm:Vec3, justtest:boolean):f32 {
@@ -602,6 +605,7 @@ export class GJKPairDetector {
 		oldTransB.vsub(cen, transB.position);
 		*/
 
+		/** 采样方向，分离轴，长度表示到原点的距离 */
 		let sepAxis = tmpVec2;
 		sepAxis.set(0, 1, 0);
 		let margin = this.shapeA.margin + this.shapeB.margin;
@@ -624,7 +628,6 @@ export class GJKPairDetector {
 		let normalInB = new Vec3(0, 0, 0);
 		/** 分离轴的长度平方 */
 		let squaredDistance = 1e20;
-		let checkSimplex = false;
 		let degenerateSimplex = 0;
 		let collision=false;
 		const REL_ERROR2 = 1e-12;
@@ -658,7 +661,7 @@ export class GJKPairDetector {
 			// 新得到的点已经在smplex中了，表示无法更接近了
 			if (simpSolver.inSimplex(minkowPt)) {
 				//degenerateSimplex = 1;
-				checkSimplex = true;
+				// 既然没有判断出是分离的，那就是碰撞了
 				collision=true;
 				break;
 			}
@@ -689,7 +692,6 @@ export class GJKPairDetector {
 			if (!simpSolver.closest(newSepAx)) {
 				// 如果找不到新的采样方向
 				degenerateSimplex = 3;
-				checkSimplex = true;
 				collision=true;
 				break;
 			}
@@ -699,7 +701,6 @@ export class GJKPairDetector {
 				// 这种情况下，无法确定碰撞方向
 				sepAxis.copy(newSepAx);	//TODO 是不是可以用同一个对象
 				degenerateSimplex = 6;
-				checkSimplex = true;
 				collision=true;
 				break;
 			}
@@ -710,7 +711,6 @@ export class GJKPairDetector {
 			if (previousSquaredDistance - squaredDistance <= previousSquaredDistance * 1e-10) {
 				// 即 previousSquaredDistance<=squaredDistance 只是误差与previousSquaredDistance大小有关，避免都用相同误差
 				//新的分离轴没有更靠近？
-				checkSimplex = true;
 				degenerateSimplex = 12;
 				collision=true;
 				break;
@@ -731,31 +731,18 @@ export class GJKPairDetector {
 		if(justtest)
 			return 1;
 
-		let pointOnA = new Vec3();
-		let pointOnB = new Vec3();
-		if (checkSimplex) {
-			// 计算或者copy上次朝向采样的两个点（可能是计算的点，不一定在边界？）
-			simpSolver.compute_points(pointOnA, pointOnB);
-			// 由于采样方向是-AminB 所以是指向B，所以下面取反
-			sepAxis.negate(normalInB);
-			//normalInB.copy(sepAxis);
-			let lenSqr = sepAxis.lengthSquared();
-			if (lenSqr < 1e-12) {
-				degenerateSimplex = 5;//dir无效
-			} else {
-				let len = Math.sqrt(lenSqr);
-				let rlen = 1 / len;
-				normalInB.scale(rlen, normalInB);	//规格化一下
-				//let s = Math.sqrt(squaredDistance);	//TODO 是不是重复了
-				// pointOnA.addScaledVector(margin, normalInB, pointOnA); 	TODO 谁加谁减
-				// pointOnB.addScaledVector(-margin, normalInB, pointOnB);
-				distance = len - margin;
-				isValid = true;
-			}
-		}
-
-		let catchDegeneratePenetrationCase = distance + margin < 1e-13
-		if(!isValid || catchDegeneratePenetrationCase) {
+		// 确定发生碰撞了，下面找出碰撞信息
+		// 计算或者copy上次朝向采样的两个点（可能是计算的点，不一定在边界？）
+		simpSolver.compute_points(hitA, hitB);
+		// 由于采样方向是-AminB 所以是指向B，所以下面取反
+		sepAxis.negate(normalInB);
+		//normalInB.copy(sepAxis);
+		let len = sepAxis.length();
+		distance = len - margin;
+		// 如果len=0,到原点的距离在margin范围内，则可以直接使用。len=0表示原点正好在边界上
+		if(len<1e-13 || distance<0){
+			isValid=true;
+		}else{
 			// 如果上面没有检测到，或者太深，GJK无法计算深度，只能用复杂的EPA解决
 			if (this.penetrationDepthSolver) {
 				let tmpPointOnA = new Vec3();
@@ -799,12 +786,8 @@ export class GJKPairDetector {
 			sepAxis.negate(hitNorm);
 			//hitNorm.copy(sepAxis);
 			// 具体的碰撞点要把margin加上
-			pointOnA.addScaledVector(this.shapeA.margin, sepAxis, hitA);// hitA = pointOnA - margin*norm
-			hitA.vadd(cen,hitA);	//TODO 这个cen能去掉么，不知道有什么好处
-			//hitA.copy(pointOnA);
-			//hitB.copy(pointOnB);
-			pointOnB.addScaledVector(this.shapeB.margin,hitNorm,hitB);	//hitB = pointOnB+margin*norm
-			hitB.vadd(cen,hitB);
+			hitA.addScaledVector(this.shapeA.margin, sepAxis, hitA);// hitA = pointOnA - margin*norm
+			hitB.addScaledVector(this.shapeB.margin,hitNorm,hitB);	//hitB = pointOnB+margin*norm
 		}
 		// 恢复transform
 		// 先不做这个，直接用世界坐标

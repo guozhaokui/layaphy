@@ -44,9 +44,20 @@ function test(mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 	});
 }
 
-// 球在box上会自己移动
-function error1(){
+function spsp(){
+	let a = addSphere(1,0,0,0,1);
+	let b = addSphere(1,1.5,0,0,1);
 
+}
+
+function sp_box(){
+	addBox(new Vec3(10,10,10),new Vec3(),0,phymtl1);
+	addSphere(1,0,-4.5,0,1);
+}
+
+function staticobj(){
+	//addSphere(1,0,0,0,0);
+	addBox(new Vec3(1,1,1),new Vec3(),0,phymtl1);
 }
 
 // 球在box上会跳
@@ -57,11 +68,6 @@ function error2(){
 
 	b.phyBody.allowSleep = false;
 	b.phyBody.name = 'ban';
-
-	return;
-	let s = addSphere(0.3,-10,10,0);
-	s.phyBody.allowSleep=false;
-	s.phyBody.material = phymtl1;
 }
 
 export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, camctrl: MouseCtrl1) {
@@ -72,5 +78,10 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, camctrl: MouseCtrl1)
 	//mtl.renderMode = BlinnPhongMaterial.RENDERMODE_TRANSPARENT;
 	initPhy(sce);
 	test(mtl, cam);
-	error2();
+	
+	//
+	//spsp();
+	//staticobj();
+	sp_box();
+
 }

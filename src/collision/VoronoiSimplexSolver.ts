@@ -54,7 +54,9 @@ export class VoronoiSimplexSolver{
 	/**  计算出的新的方向，也就是需要下一步扩展单形的方向 */
 	cachedV=new Vec3();
 
+	/** 计算出最后的采样方向对应的P上的点，用来找碰撞点 */
 	cachedP=new Vec3();
+	/** 计算出最后的采样方向对应的Q上的点，用来找碰撞点 */
 	cachedQ=new Vec3();
 	lastW:Vec3;		//优化用，这个是对象指针，可以直接比较
 	cachedBC = new SubSimplexClosestResult();
@@ -440,7 +442,7 @@ export class VoronoiSimplexSolver{
 					cachedBC.setBarycentricCoordinates(1 - t, t);
 					from.addScaledVector(t, fromTo,nearest); 
 	
-					// 更新p1,p2
+					// 计算出最近点，这个点的方向就是新的采样方向
 					let p0 = Ps[0], p1=Ps[1];
 					let q0 = Qs[0], q1=Qs[1];
 					cachedP.x = p0.x + t*(p1.x-p0.x);
