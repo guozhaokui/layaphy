@@ -436,7 +436,7 @@ export class CollisionGjkEpa {
 
         switch (planeTests) {
             case abcTest:
-                // 如果只有abc朝向原点
+                // 如果只有abc朝向原点。则以abc为底重新采样
                 return this._checkTetrahedron(ao, ab, ac, abc, dir, simplex);
             case acdTest:
                 // 如果只有acd朝向原点
@@ -453,7 +453,8 @@ export class CollisionGjkEpa {
                 return this._checkTetrahedron(ao, ad, ab, adb, dir, simplex);
 
             case abcTest | acdTest:
-                // 如果原点在两个面的正方向
+                // 如果原点在两个面的正方向。
+                // 如果在abc和acd的正方向
                 return this._checkTwoTetrahedron(ao, ab, ac, abc, dir, simplex);
             case acdTest | adbTest:
                 pts[2].copy(c);
