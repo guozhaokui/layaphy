@@ -1,0 +1,888 @@
+import { Vec3 } from './../math/Vec3';
+import { MinkowskiShape } from '../shapes/MinkowskiShape';
+import { Transform } from '../math/Transform';
+import { Quaternion } from '../math/Quaternion';
+/**
+ * Class to help in the collision in 2D and 3D.
+ * To works the algorithm needs two convexe point cloud
+ * like bounding box or smthg like this.
+ * The function functions intersect and isIntersecting
+ * helps to have informations about the collision between two object.
+ *
+ * @class wnp.helpers.CollisionGjkEpa
+ * @constructor
+ */
+var tmpV1 = new Vec3();
+var tmpV2 = new Vec3();
+var tmpV3 = new Vec3();
+
+var center1 = new Vec3();
+var center2 = new Vec3();
+var dir1 = new Vec3();
+var vert1 = new Vec3();
+
+var _containsTriangle_ab=new Vec3();
+var _containsTriangle_ac = new Vec3();
+var _containsTriangle_ao = new Vec3();
+var _containsTriangle_abp=new Vec3();
+var _containsTriangle_acp=new Vec3();
+
+var edge1 = new Vec3();
+
+var _check_worldA = new Vec3();
+var _check_worldB = new Vec3();
+var _check_sup=new Vec3();
+
+var _check_invQA = new Quaternion();
+var _check_NegDir = new Vec3();
+var _check_invQB = new Quaternion();
+
+var _computeSupport_Vec1 = new Vec3();
+var _computeSupport_Vec2 = new Vec3();
+var _computeSupport_Vec3 = new Vec3();
+var _computeSupport_Vec4 = new Vec3();
+
+var _findResponseWithTriangle_v1=new Vec3();
+
+var _containsTriangle_abc = new Vec3();
+
+class Simplex{
+    points:Vec3[]=[new Vec3(), new Vec3(), new Vec3(), new Vec3()];
+    vertnum=0;
+    addvertex(x:number,y:number,z:number){
+        let n = this.vertnum++;
+        this.points[n].set(x,y,z);
+    }
+    
+    splice(removeid:int){
+        let pts = this.points;
+        switch(removeid){
+            case 0:
+                pts[0].copy(pts[1]);
+            case 1:
+                pts[1].copy(pts[2]);
+            case 2:
+                pts[2].copy(pts[3]);
+        }
+        this.vertnum--;
+    }
+
+    /**
+     * 保留两个点
+     * @param id0 
+     * @param id1 
+     */
+    tetrahedron2line(id0:int,id1:int){
+        let pts = this.points;
+        let p1x=pts[id0].x;
+        let p1y=pts[id0].y;
+        let p1z=pts[id0].z;
+        let p2x=pts[id1].x;
+        let p2y=pts[id1].y;
+        let p2z=pts[id1].z;
+        pts[0].set(p1x,p1y,p1z);
+        pts[1].set(p2x,p2y,p2z);
+        this.vertnum=2;
+    }
+
+    remove(id:int){
+
+    }
+}
+
+class EPA_NearestInfo{
+    index=-1;
+    distance=1e6;
+}
+
+var nearest_result = new EPA_NearestInfo();
+
+class Triangle {
+    a: Vec3;
+    b: Vec3;
+    c: Vec3;
+    n: Vec3;
+    constructor(a: Vec3, b: Vec3, c: Vec3) {
+        this.a = a;
+        this.b = b;
+        this.c = c;
+        b.vsub(a, tmpV1);
+        c.vsub(a, tmpV2);
+        tmpV1.cross(tmpV2, this.n);
+        this.n.normalize();
+    }
+}
+
+class Polytope_Edge{
+    a:Vec3;
+    b:Vec3;
+    //addid=0;    // 第几次加入的，同一次加入的忽略
+}
+
+class EdgePool{
+    edges:Polytope_Edge[]=[];
+    length=0;
+    addedge(a:Vec3, b:Vec3){
+        // 首先要判断是否重复了
+        let edges = this.edges;
+        let len = this.length;
+        for(let i=0; i<len; i++){
+            let edge = edges[i];
+            if(edge.a==a && edge.b==b){
+                return;
+            }
+        }
+        // 没有重复就添加
+        if(edges.length>len){
+            let e = edges[this.length++];
+            e.a=a;
+            e.b=b;
+        }else{
+            let e = new Polytope_Edge();
+            e.a=a;
+            e.b=b;
+            edges.push(e);
+            this.length++;
+        }
+    }
+    reset(){
+        this.length=0;
+    }
+    destroy(){
+        this.edges.length=0;
+        this.length=0;
+    }
+}
+
+var edgepool = new EdgePool();
+
+class Polytope{
+
+}
+
+export class CollisionGjkEpa {
+    EPSILON = 0.000001;
+    shapeA:MinkowskiShape|null=null;
+    shapeB:MinkowskiShape|null=null;
+
+    /**
+     * Method to get a normal of 3 points in 2D and 3D.
+    *  得到一个法线 axbxc 。结果与c垂直，在ab平面上, 例如 v1xv2xv1 得到的法线是一个与v1垂直，在v1v2平面上的法线。
+     *  axbxc
+     * @param  a
+     * @param  b    a的起点指向原点的方向
+     * @param  c
+     * @return  The normal.
+     */
+    private _getNormal(a: Vec3, b: Vec3, c: Vec3, norm: Vec3) {
+        var ac = a.dot(c);// Dot(a, c); // perform aDot(c)
+        var bc = b.dot(c);//Dot(b, c); // perform bDot(c)
+
+        // perform b * a.Dot(c) - a * b.Dot(c)
+        b.scale(ac, tmpV1);
+        a.scale(bc, tmpV2);
+        tmpV1.vsub(tmpV2, norm);
+        norm.normalize();
+        return norm;
+        // return  b.scale(ac).subtract(a.scale(bc)).normalize();
+    }
+
+    /**
+     * Gets the barycenter of a cloud points.
+     *
+     * @method _getBarycenter
+     * @private
+     * @param  vertices the cloud points
+     * @return  The barycenter.
+     */
+    _getBarycenter(vertices: Vec3[], avg: Vec3) {
+        avg.set(0, 0, 0);
+        for (var i = 0; i < vertices.length; i++) {
+            avg.vadd(vertices[i], avg);
+        }
+
+        avg.scale(1 / vertices.length, avg);
+        return avg;
+    }
+
+    /**
+     * Gets the farthest point of a cloud points.
+     *
+     * @method _getFarthestPointInDirection
+     * @private
+     * @param  vertices the cloud points.
+     * @param  d The direction to search.
+     * @return  The barycenter.
+     */
+    _getFarthestPointInDirection(vertices: Vec3[], d: Vec3) {
+        var maxProduct = vertices[0].dot(d);
+        var index = 0;
+        for (var i = 1; i < vertices.length; i++) {
+            var product = vertices[i].dot(d);
+            if (product > maxProduct) {
+                maxProduct = product;
+                index = i;
+            }
+        }
+        return vertices[index];
+    }
+
+    /**
+     * Gets the nearest edge of the simplex.
+     *
+     * @method _getNearestEdge
+     * @private
+     * @param  simplex The simplex.
+     * @return {Object} Informations about the nearest edge (distance, index and normal).
+     */
+    _getNearestEdge(simplex: Simplex) {
+        var distance = Infinity,
+            index, normal;
+
+        for (var i = 0; i < simplex.vertnum; i++) {
+            var j = (i + 1) % simplex.vertnum;
+            var v1 = simplex.points[i];
+            var v2 = simplex.points[j];
+
+            var edge = v2.subtract(v1);
+            if (edge.lengthSquared() === 0) {
+                continue;
+            }
+
+            var originTov1 = v1;
+
+            var n = this._getNormal(edge, originTov1, edge);
+
+            if (n.lengthSquared() === 0) {
+                n.y = -edge.x;
+                n.x = edge.y;
+            }
+
+            //n = n.scale(1 / n.length()); //normalize
+            var dist = Math.abs(n.dot(v1)); //distance from origin to edge
+
+            if (dist < distance) {
+                distance = dist;
+                index = j;
+                normal = n;
+            }
+        }
+
+        return {
+            distance: distance,
+            index: index,
+            normal: normal
+        };
+
+    }
+
+    /**
+     * Gets the nearest Triangle of the polytope.
+     * 计算原点到polytope的哪个三角形最近。
+     * 
+     * @method _getNearestTriangle
+     * @private
+     * @param  polytope The polytope.
+     * @return {Object} Informations about the nearest edge (distance and index).
+     */
+    _getNearestTriangle(polytope: Triangle[], result:EPA_NearestInfo) {
+        var distance = Infinity,
+            index=-1;
+
+        for (var i = 0; i < polytope.length; i++) {
+            var triangle = polytope[i];
+            var dist = Math.abs(triangle.n.dot(triangle.a));
+
+            if (dist < distance) {
+                distance = dist;
+                index = i;
+            }
+
+        }
+        result.distance=distance;
+        result.index=index;
+    }
+
+    /**
+     * Checks if the origin is in a line.
+     * 检查原点是否在线段上，并且计算新的dir
+     * @method _containsLine
+     * @param  simplex The simplex.
+     * @param  dir The direction.
+     * @return False in any case because the algorithm just begin.
+     */
+    private _containsLine(simplex: Simplex, dir: Vec3): boolean {
+        var a = simplex.points[1];
+        var b = simplex.points[0];
+        var ab = edge1
+        b.vsub(a,ab);
+        var ao = a.scale(-1);
+        if (ab.lengthSquared() !== 0) {
+            this._getNormal(ab, ao, ab, dir);
+        } else {
+            dir.copy(ao);
+        }
+        // 线段永远返回false，必须要组成四面体才能结束
+        return false;
+    }
+
+    /**
+     * Checks if the origin is in a triangle.
+     *
+     * @method _containsTriangle
+     * @private
+     * @param  simplex The simplex.
+     * @param  dir The direction.
+     * @return If in 2D case, may return true if the origin is in the triangle.
+     */
+    private _containsTriangle(simplex: Simplex, dir: Vec3): boolean {
+        let pts = simplex.points;
+        var a = pts[2];
+        var b = pts[1];
+        var c = pts[0];
+        var ab = _containsTriangle_ab;
+        b.vsub(a,ab);
+        var ac = _containsTriangle_ac;
+        c.vsub(a,ac);
+        var ao = _containsTriangle_ao;
+        a.negate(ao);
+
+        var abp = _containsTriangle_abp;
+        this._getNormal(ac, ab, ab,abp);
+        var acp = _containsTriangle_acp;
+        this._getNormal(ab, ac, ac,acp);
+
+        if (abp.dot(ao) > 0) {
+            // 退化
+            simplex.splice(0);// remove C
+            dir.copy(abp);
+        } else if (acp.dot(ao) > 0) {
+            // 退化
+            simplex.splice(1);// remove B
+            dir.copy(acp);
+        } else {
+            // 确定在哪个方向
+            //if (dir.z === undefined) {
+            //    return true;
+            //} else {
+                var abc = _containsTriangle_abc;
+                ab.cross(ac,abc);
+                dir.copy(abc);
+                if (abc.dot(ao) <= 0) {
+                    //upside down tetrahedron
+                    pts[0] = b;
+                    pts[1] = c;
+                    pts[2] = a;
+                    dir.set(-abc.x, -abc.y, -abc.z);
+                }
+
+            //    return false;
+            //}
+        }
+
+        // 三角形永远返回false，必须要组成四面体才能结束
+        return false;
+    }
+
+    static _containsTetrahedron_ab = new Vec3();
+    static _containsTetrahedron_ac = new Vec3();
+    static _containsTetrahedron_ad = new Vec3();
+    static _containsTetrahedron_ao = new Vec3();
+    static _containsTetrahedron_abc = new Vec3();
+    static _containsTetrahedron_acd = new Vec3();
+    static _containsTetrahedron_adb = new Vec3();
+
+    /**
+     * Checks if the origin is in a tetrahedron.
+     * 
+     *                  3   a 最后加的点
+     *                / | \
+     *               /  |  \
+     *              /   |   \
+     *            /     2 b  \
+     *         d 0 ---------- 1 c
+     *                 
+     * @method _containsTetrahedron
+     * @private
+     * @param  simplex The simplex.
+     * @param  dir The direction.
+     * @return {Boolean} Return true if the origin is in the tetrahedron.
+     */
+    _containsTetrahedron(simplex: Simplex, dir: Vec3) {
+        let pts = simplex.points;
+        var a = pts[3];
+        var b = pts[2];
+        var c = pts[1];
+        var d = pts[0];
+        var ab = b.vsub(a,CollisionGjkEpa._containsTetrahedron_ab);
+        var ac = c.vsub(a,CollisionGjkEpa._containsTetrahedron_ac);
+        var ad = d.vsub(a,CollisionGjkEpa._containsTetrahedron_ad);
+        var ao = CollisionGjkEpa._containsTetrahedron_ao;
+        a.negate(ao);
+
+        // 检查四面体的除了底面的其他面的法线（反）是否指向原点。底面一定是指向的，因为a点就是根据底面的朝向获得的。
+        var abc = ab.cross(ac,CollisionGjkEpa._containsTetrahedron_abc);
+        var acd = ac.cross(ad,CollisionGjkEpa._containsTetrahedron_acd);
+        var adb = ad.cross(ab,CollisionGjkEpa._containsTetrahedron_adb);
+
+        var abcTest = 0x1,
+            acdTest = 0x2,
+            adbTest = 0x4;
+
+        var planeTests = 
+            (abc.dot(ao) > 0 ? abcTest : 0) |
+            (acd.dot(ao) > 0 ? acdTest : 0) |
+            (adb.dot(ao) > 0 ? adbTest : 0);
+
+        switch (planeTests) {
+            case abcTest:
+                // 如果只有abc朝向原点
+                return this._checkTetrahedron(ao, ab, ac, abc, dir, simplex);
+            case acdTest:
+                // 如果只有acd朝向原点
+                // 由于_checkTetrahedron会使用固定顶点id，所以这里要调整一下顺序，保证1,2分别对应当前检查侧面的左边和右边(看向朝里的法线)
+                // 注意顺序，防止拷贝被拷贝修改的值
+                pts[2].copy(c);
+                pts[1].copy(d);
+                return this._checkTetrahedron(ao, ac, ad, acd, dir, simplex);
+            case adbTest:
+                //in front of triangle ADB
+                // 如果只有adb朝向原点
+                pts[1].copy(b);
+                pts[2].copy(d);
+                return this._checkTetrahedron(ao, ad, ab, adb, dir, simplex);
+
+            case abcTest | acdTest:
+                // 如果原点在两个面的正方向
+                return this._checkTwoTetrahedron(ao, ab, ac, abc, dir, simplex);
+            case acdTest | adbTest:
+                pts[2].copy(c);
+                pts[1].copy(d);
+                pts[0].copy(b);
+                return this._checkTwoTetrahedron(ao, ac, ad, acd, dir, simplex);
+            case adbTest | abcTest:
+                pts[1].copy(b);
+                pts[2].copy(d);
+                pts[0].copy(c);
+                return this._checkTwoTetrahedron(ao, ad, ab, adb, dir, simplex);
+            default:
+                break;
+        }
+
+        // 否则，四个面都指向原点，则包含原点
+        return true;
+    }
+
+    private static _checkTwoTetrahedron_abc_ac = new Vec3();
+    private static _checkTwoTetrahedron_ab=new Vec3();
+    private static _checkTwoTetrahedron_ac=new Vec3();
+    private static _checkTwoTetrahedron_abc=new Vec3();
+    /**
+     *  ab,ac是第一个底面的两条边
+     * 
+     * @param ao 
+     * @param ab  看向朝里的法线的时候的右边
+     * @param ac  看向朝里的法线的时候的左边
+     * @param abc 这个面的法线
+     * @param dir  返回方向
+     * @param simplex 
+     */
+    private _checkTwoTetrahedron(ao: Vec3, ab: Vec3, ac: Vec3, abc: Vec3, dir: Vec3, simplex: Simplex) {
+        var abc_ac = CollisionGjkEpa._checkTwoTetrahedron_abc_ac;
+        abc.cross(ac, abc_ac);
+
+        let pts = simplex.points;
+        if (abc_ac.dot(ao) > 0) {
+            //the origin is beyond AC from ABC's
+            //perspective, effectively excluding
+            //ACD from consideration
+
+            //we thus need test only ACD
+            pts[2].copy(pts[1]);    // ACD的右边
+            pts[1].copy(pts[0]);    // ACD的左边
+
+            /*
+            ab = pts[2].subtract(pts[3]);
+            ac = pts[1].subtract(pts[3]);
+            abc = ab.constructor.Cross(ab, ac);
+            */
+           ab = pts[2].vsub(pts[3], CollisionGjkEpa._checkTwoTetrahedron_ab);// 这时候的ab=原来的ac
+           ac = pts[1].vsub(pts[3], CollisionGjkEpa._checkTwoTetrahedron_ac);// 这时候的ac=原来的ad
+           abc = ab.cross(ac, CollisionGjkEpa._checkTwoTetrahedron_abc);    // 计算abc的法线，即原来的acd的法线。
+
+            return this._checkTetrahedron(ao, ab, ac, abc, dir, simplex);
+        }
+
+        var ab_abc = CollisionGjkEpa._checkTwoTetrahedron_abc_ac;   // 另外一条边。重用变量
+        ab.cross(abc,ab_abc);
+
+        if (ab_abc.dot(ao) > 0) {
+            simplex.tetrahedron2line(2,3);
+            //dir is not ab_abc because it's not point towards the origin;
+            //ABxA0xAB direction we are looking for
+            this._getNormal(ab, ao, ab, dir);
+            return false;
+        }
+        return false;
+    }
+
+    static _checkTetrahedron_acp = new Vec3();
+    /**
+     * 
+     * @param ao    朝向原点的方向
+     * @param ab 
+     * @param ac 
+     * @param abc   ao底面的法线（朝向指向原点方向）
+     * @param dir   输出新的采样方向
+     * @param simplex 
+     */
+    private _checkTetrahedron(ao: Vec3, ab: Vec3, ac: Vec3, abc: Vec3, dir: Vec3, simplex: Simplex ) {
+        var acp = abc.cross(ac, CollisionGjkEpa._checkTetrahedron_acp);
+
+        // 底面法线x左侧面 的方向是否朝向原点
+        if (acp.dot(ao) > 0) {
+            simplex.tetrahedron2line(1,3);
+            //dir is not abc_ac because it's not point towards the origin;
+            //ACxA0xAC direction we are looking for
+            this._getNormal(ac, ao, ac, dir);
+            return false;
+        }
+
+        //almost the same like triangle checks
+        // 右侧面x底面法线 的方向是否朝向原点
+        var ab_abc = ab.cross(abc, CollisionGjkEpa._checkTetrahedron_acp); // 重用上面的变量了
+        if (ab_abc.dot(ao) > 0) {
+            simplex.tetrahedron2line(2,3);
+            //dir is not ab_abc because it's not point towards the origin;
+            //ABxA0xAB direction we are looking for
+            this._getNormal(ab, ao, ab, dir);
+            return false;
+        }
+
+        // 如果左右两边都不朝向原点，只能用abc重新采样
+        // 把第一个点去掉，退化成三角形。以abc所在三角形为（确定朝向原点）底面，用abc作为采样点，再来
+        simplex.splice(0);
+        dir.copy(abc);
+        return false;
+    }
+
+    /**
+     * The support function.
+     *
+     * @method support
+     * @param  shapei The convexe collider object.
+     * @param  shapej The convexe collided object.
+     * @param  direction The direction.
+     * @return  The support points.
+     */
+    support(shapei: Vec3[], shapej: Vec3[], direction: Vec3, point:Vec3) {
+        // d is a vector direction (doesn't have to be normalized)
+        // get points on the edge of the shapes in opposite directions
+        direction.normalize();
+        var p1 = this._getFarthestPointInDirection(shapei, direction);
+        var p2 = this._getFarthestPointInDirection(shapej, direction.scale(-1));
+        // perform the Minkowski Difference
+        p1.vsub(p2,point);
+        // p3 is now a point in Minkowski space on the edge of the Minkowski Difference
+        return point;
+    }
+
+    /**
+     * Checks if the simplex contains the origin.
+     * 原点是否在单形内
+     *
+     * @method findResponseWithEdge
+     * @param  simplexThe simplex or false if no intersection.
+     * @param  dir The direction to test.
+     * @return Contains or not.
+     */
+    containsOrigin(simplex: Simplex, dir: Vec3) {
+        if (simplex.vertnum === 2) {
+            return this._containsLine(simplex, dir);
+        }
+        if (simplex.vertnum === 3) {
+            return this._containsTriangle(simplex, dir);
+        }
+        if (simplex.vertnum === 4) {
+            return this._containsTetrahedron(simplex, dir);
+        }
+        return false;
+    }
+
+    /**
+     * 注意 这里假设dir是没有规格化的
+     * @param transA 
+     * @param transB 
+     * @param dir   
+     * @param worldA 
+     * @param worldB 
+     * @param minkowPt 
+     */
+    computeSupport(transA: Transform, transB: Transform, dir: Vec3, worldA: Vec3, worldB: Vec3, minkowPt: Vec3) {
+        let A = this.shapeA;
+        let B = this.shapeB;
+        let qa = transA.quaternion;
+        let qb = transB.quaternion;
+        let invqa = _check_invQA;
+        let invqb = _check_invQB;
+        qa.conjugate(invqa);
+        qb.conjugate(invqb);
+
+		//先把dir转换到本地空间
+		let dirA = _computeSupport_Vec1;
+        let dirB = _computeSupport_Vec2;
+
+        // 规格化，后面的计算support点的地方需要规格化之后的
+        dirA.copy(dir);
+        dirA.normalize();
+
+        let negDir = _check_NegDir;
+        negDir.copy(dirA).negate(negDir);
+
+        invqa.vmult(dirA,dirA);
+        invqb.vmult(negDir,dirB);
+
+		let supA = _computeSupport_Vec3;
+        let supB = _computeSupport_Vec4;
+        A&&A.getSupportVertex(dirA,supA);
+        B&&B.getSupportVertex(dirB,supB);
+
+        // 转到世界空间
+        transA.pointToWorld(supA,worldA);
+        transB.pointToWorld(supB,worldB);
+        worldA.vsub(worldB,minkowPt);
+    }
+
+    /**
+     * The GJK (Gilbert–Johnson–Keerthi) algorithm.
+     * Computes support points to build the Minkowsky difference and
+     * create a simplex. The points of the collider and the collided object
+     * must be convexe.
+     *
+     * @return  The simplex or false if no intersection.
+     */    
+    check(transi: Transform, transj: Transform) {
+        var it = 0;
+        var simplex = new Simplex(); //TODO
+
+        // 根据位置计算初始采样方向
+        var origi = transi.position;
+        var origj = transj.position;
+
+        // initial direction from the center of 1st body to the center of 2nd body
+        var dir = dir1;
+        origi.vsub(origj,dir);
+
+        // if initial direction is zero – set it to any arbitrary axis (we choose X)
+        if (dir.lengthSquared() < this.EPSILON) {
+            dir.x = 1;
+        }
+
+        // set the first support as initial point of the new simplex
+        let worldA = _check_worldA;
+        let worldB = _check_worldB;
+        let minkowpt = vert1;
+        this.computeSupport(transi, transj,dir,worldA,worldB,minkowpt);
+        simplex.addvertex(minkowpt.x,minkowpt.y,minkowpt.z);
+
+        if (minkowpt.dot(dir) <= 0) {
+            // 没有发生碰撞
+            // TODO 这个没有考虑margin优化
+            return false;
+        }
+
+        dir.negate(dir);// we will be searching in the opposite direction next
+
+        var max = 1000;//collidedPoints.length * colliderPoints.length;    // TODO
+        while (it < max) {
+            let simplen = simplex.vertnum;
+            if (dir.lengthSquared() === 0 && simplen >= 2) {
+                // 如果dir的长度为0，且simplex有值，就取最后一个simplex的垂直向量
+                // Get perpendicular direction to last simplex
+                simplex.points[simplen - 1].vsub(simplex.points[simplen - 2],dir);
+                // TODO 这里只取了2d的垂线
+                var tmp = dir.y;
+                dir.y = -dir.x;
+                dir.x = tmp;
+            }
+
+            // TODO 没有记录对应i,j的全局点
+            this.computeSupport(transi,transj,dir,worldA,worldB,minkowpt);
+
+            // make sure that the last point we added actually passed the origin
+            if (minkowpt.dot(dir) <= 0) {
+                // if the point added last was not past the origin in the direction of d
+                // then the Minkowski Sum cannot possibly contain the origin since
+                // the last point added is on the edge of the Minkowski Difference
+                // 没有发生碰撞              
+                return false;
+            }
+
+            simplex.addvertex(minkowpt.x,minkowpt.y,minkowpt.z);
+            // otherwise we need to determine if the origin is in
+            // the current simplex
+            // 如果单形包含原点了，则发生碰撞了。
+            if (this.containsOrigin(simplex, dir)) {
+                return simplex;
+            }
+            it++;
+        }
+        return false;
+    }
+
+    /**
+     * Finds the response with the simplex (edges) of the gjk algorithm.
+     *
+     * @method findResponseWithEdge
+     * @param  colliderPoints The convexe collider object.
+     * @param  collidedPoints The convexe collided object.
+     * @param  simplex The simplex.
+     * @return  The penetration vector.
+     */
+    findResponseWithEdge(colliderPoints: Vec3[], collidedPoints: Vec3[], simplex: Simplex) {
+        var edge = this._getNearestEdge(simplex);
+        var sup = this.support(colliderPoints, collidedPoints, edge.normal); //get support point in direction of edge's normal
+        var d = Math.abs(sup.constructor.Dot(sup, edge.normal));
+
+        if (d - edge.distance <= this.EPSILON) {
+            return edge.normal.scale(edge.distance);
+        } else {
+            simplex.points.splice(edge.index, 0, sup);
+        }
+        return false;
+    }
+
+    /**
+     * Finds the response with the polytope done with the simplex of the gjk algorithm.
+     * 
+     * 遍历指定的polytope，找出距离原点最近的面，如果不是边界面的话，把polytope扩展一个四面体。
+     * @method findResponseWithTriangle
+     * @param  colliderPoints The convexe collider object.
+     * @param  collidedPoints The convexe collided object.
+     * @param  polytope The polytope done with the simplex.    初始polytope,是一个由四个三角形组成的四面体
+     * @return  The penetration vector.
+     */
+    findResponseWithTriangle(transA: Transform, transB: Transform,polytope: Triangle[]):Vec3|null {
+        if (polytope.length === 0) {
+            return null;
+        }
+
+        var nearest = nearest_result;
+        this._getNearestTriangle(polytope,nearest);
+        var triangle = polytope[nearest.index];
+
+        // 根据最近面的法线取一个新的顶点，用来扩展多面体
+        let worldA = _check_worldA;
+        let worldB = _check_worldB;
+        let sup = vert1;
+        this.computeSupport(transA, transB, triangle.n, worldA, worldB, sup);
+
+        var d = Math.abs(sup.dot(triangle.n));
+
+        if ((d - nearest.distance <= this.EPSILON)) {
+            // 新的采样点还在这个最近面上，表示已经到了外边界了，完成。
+            return triangle.n.scale(nearest.distance);
+        } else {
+            // 下面开始扩展
+            var edges = edgepool;
+            edges.reset();
+
+            for (var i = polytope.length - 1; i >= 0; i--) {
+                triangle = polytope[i];
+                // can this face be 'seen' by entry_cur_support?
+                let norm = triangle.n;
+                let p1 = triangle.a;
+                // norm dot (sup-p1) 如果这个sup在norm方向，则需要扩展这个面
+                if (norm.dot(sup.vsub(p1,_findResponseWithTriangle_v1)) > 0) {
+                    // 统计需要扩展的边
+                    edges.addedge(triangle.a,triangle.b);
+                    edges.addedge(triangle.b,triangle.c);
+                    edges.addedge(triangle.c,triangle.a);
+                    // 既然要扩展边了，那就要删掉当前这个三角形了。由于上面是i--,所以这个不会影响遍历数组
+                    polytope.splice(i, 1);
+                }
+            }
+
+            // create new triangles from the edges in the edge list
+            for (var i = 0; i < edges.length; i++) {
+                let edge = edges.edges[i];
+                triangle = new Triangle(sup, edge.a, edge.b);   //TODO 效率
+                if (triangle.n.length() !== 0) {
+                    polytope.push(triangle);
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Gets the response of the penetration vector with the simplex.
+     *
+     *  EPA算法（expanding-polytope-algorithm）
+     *  从gjk开始的四面体，不断扩展polytope
+     * 
+     * @param transA 
+     * @param transB 
+     * @param  simplex The simplex of the Minkowsky difference.
+     * @return The penetration vector.
+     */
+    getResponse(transA: Transform, transB: Transform, simplex: Simplex):Vec3|null {
+        var it = 0,
+            response:Vec3|null=null;
+        let pts = simplex.points;    
+        var polytope: Triangle[] = [//TODO 优化
+            // 注意顺序
+            new Triangle(pts[0], pts[1], pts[2]),
+            new Triangle(pts[0], pts[2], pts[3]),
+            new Triangle(pts[0], pts[3], pts[1]),
+            new Triangle(pts[1], pts[3], pts[2])
+        ] ;
+
+        var max = 1000;// TODO 最多扩展次数
+        while (it < max) {
+            if (pts[0].z === undefined) {
+                // 2D的情况
+                //response = this.findResponseWithEdge(colliderPoints, collidedPoints, simplex);
+            } else {
+                // 3D的情况
+                response = this.findResponseWithTriangle(transA, transB, polytope);
+            }
+            if (response) {
+                var norm = response.clone();    //TODO 
+                norm.normalize();
+                norm.scale(this.EPSILON,norm);
+                //var norm = response.clone().normalize().scaleInPlace(this.EPSILON);
+                return response.vsub(norm,response);    //TODO 这个返回后禁止保存
+            }
+            it++;
+        }
+        return null;
+    }    
+
+
+    /**
+     * Checks if the collider and the collided object are intersecting
+     * and give the response to be out of the object.
+     *
+     * 判断两个形状是否碰撞，并返回碰撞深度信息
+     * 
+     * @method intersect
+     * @param  colliderPoints The convexe collider object.
+     * @param  collidedPoints The convexe collided object.
+     * @return  The penetration vector.
+     */
+    intersect(transA: Transform, transB: Transform,hitA:Vec3,hitB:Vec3, hitNorm:Vec3, justtest:boolean):f32 {
+        // 如果发生碰撞，返回一个simplex
+        var simplex = this.check(transA, transB);
+
+        if (simplex) {
+            if(justtest)
+                return 1;
+            // 根据simplex和两个shape来得到碰撞信息
+            return this.getResponse(transA, transB, simplex);
+        }
+
+        return null;
+    }
+
+}

@@ -50,10 +50,16 @@ function spsp(){
 
 }
 
-function sp_box(){
+function sp_box1(){
 	addBox(new Vec3(10,10,10),new Vec3(),0,phymtl1);
 	addSphere(1,0,-4.5,0,1);
 }
+
+function sp_box(){
+	addBox(new Vec3(10,10,10),new Vec3(0,5.5,0),0,phymtl1);
+	addSphere(1,0,0,0,1);
+}
+
 
 function staticobj(){
 	//addSphere(1,0,0,0,0);

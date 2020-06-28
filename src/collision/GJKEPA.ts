@@ -414,163 +414,6 @@ export class GJKPairDetector {
 	marginB = 0;
 
 	/**
-	 * 计算A和B的最近点
-	 * @param transA 
-	 * @param transB 
-	 */
-	getClosestPoint1(transA: Transform, transB: Transform) {
-		// 把transform改成相对于两个对象中心的
-		let cen = tmpVec1;
-		let oldTransA = transA.position;
-		let oldTransB = transB.position;
-		transA.position = new Vec3();		// 记得后面要恢复
-		transB.position = new Vec3();
-		transA.position.vadd(transB.position, cen).scale(0.5, cen);
-		oldTransA.vsub(cen, transA.position);	// tranA.postion -= center;
-		oldTransB.vsub(cen, transB.position);
-
-		let maxIt = 1000;
-		let curIt = 0;
-
-		let sepAxis = tmpVec2;
-		sepAxis.set(0, 1, 0);
-		let margin = 0;
-
-		let simp1 = new Simplex();
-		let dir = new Vec3(1, 0, 0);	// 先随便假设一个方向。如果不对的话，以后会修改
-		let worldA = new Vec3();
-		let worldB = new Vec3();
-		let AminB = new Vec3();
-		this.computeSupport(transA, transB, dir, worldA, worldB, AminB, false);
-
-		let last = new SupportVector(AminB, worldA, worldB);
-		simp1.addCopy(last);
-		AminB.negate(dir);	// dir = -AminB
-		let status = -2;
-		for (let i = 0; i < maxIt; i++) {
-			this.computeSupport(transA, transB, dir, worldA, worldB, AminB, false);	//TODO 这个能简化一下么，里面空间转换太多
-			let delta = AminB.dot(dir);
-			if (delta < 0) {
-				// 当前检测方向，与当前支撑点，在原点的同一侧。例如w在原点的左侧，却对应超右的支撑方向，即w已经在最右边了，依然在左侧，则没有碰撞
-				status = -1;
-				break;
-			}
-			// 继续添加单体
-			last.v = AminB;
-			last.v1 = worldA;
-			last.v2 = worldB;
-			simp1.addCopy(last);
-
-			//let newDir = new Vec3();
-			let r = simp1.doSimplex(dir);
-			if (r == 1) {
-				// 确定碰撞了
-				status = 0;
-				break;
-			} else if (r == -1) {
-				// 确定没有碰撞
-				status = -1;
-				break;
-			}
-			if (nearZeroF(dir.dot(dir))) {
-				// 没有碰撞
-				status = -1;
-				break;
-			}
-			if (dir.almostZero()) {
-				status = -1;
-				break;
-			}
-		}
-
-		//simplexSolver.reset()
-		// 另外一种方法
-		/** 碰撞点的B上的法线 */
-		let normalInB = new Vec3(0, 0, 0);
-		let squaredDistance = 1e20;
-		let checkSimplex = false;
-		let degenerateSimplex = 0;
-		let REL_ERROR2 = 1e-12;
-		let simpSolver = this.simplexSolver;
-		while (true) {
-			this.computeSupport(transA, transB, sepAxis, worldA, worldB, AminB, true);//TODO dir谁取反的问题
-			let delta = sepAxis.dot(AminB);
-			if (delta <= 0) {// =? 如果沿着dir方向取A,沿着反向取B，但是dot却<0表示两个对象是分离的
-				// 即找到了一个dir方向能把对象分离
-				checkSimplex = true;
-				degenerateSimplex = 10;
-				break;
-			}
-
-			// 新得到的点已经在smplex中了，表示无法更接近了
-			if (simpSolver.inSimplex(AminB)) {
-				degenerateSimplex = 1;
-				checkSimplex = true;
-				break;
-			}
-
-			// 再近一点
-
-			let f0 = squaredDistance - delta;
-			let f1 = squaredDistance * REL_ERROR2;
-			if (f0 <= f1) {
-				// 如果dist已经很小了
-				if (f0 <= 0) {
-					degenerateSimplex = 2;
-				} else {
-					degenerateSimplex = 11;
-				}
-				checkSimplex = true;
-				break;
-			}
-
-			simpSolver.addVertex(AminB, worldA, worldB);
-			let newSepAx = new Vec3();
-			if (!simpSolver.closest(newSepAx)) {
-				// 如果找不到更近的点
-				degenerateSimplex = 3;
-				checkSimplex = true;
-				break;
-			}
-
-			let previousSquaredDistance = squaredDistance;
-			squaredDistance = newSepAx.lengthSquared();
-
-			// 如果新的采样矢量非常接近于0，表示原点正好在壳上，可以停止了。
-			if (squaredDistance < REL_ERROR2) {
-				sepAxis.copy(newSepAx);	//TODO 是不是可以用同一个对象
-				degenerateSimplex = 6;
-				checkSimplex = true;
-				break;
-			}
-
-			if (previousSquaredDistance <= squaredDistance) {
-				// 新的采样矢量反而变长了，距离原点变远了
-				checkSimplex = true;
-				degenerateSimplex = 12;
-				break;
-			}
-
-			sepAxis.copy(newSepAx);
-
-			if (simpSolver.fullSimplex()) {//if full
-				degenerateSimplex = 13;
-				break;
-			}
-
-			let pointOnA = new Vec3();
-			let pointOnB = new Vec3();
-			if (checkSimplex) {
-				simpSolver.compute_points(pointOnA, pointOnB);
-			}
-		}
-
-		// 恢复transform
-		transA.position = oldTransB;
-		transB.position = oldTransB;
-	}
-
-	/**
 	 * 计算A和B的碰撞信息
 	 * @param transA 
 	 * @param transB 
@@ -624,6 +467,9 @@ export class GJKPairDetector {
 		let simpSolver = this.simplexSolver;
 		simpSolver.reset();
 
+		/** 如果为false表示已经能通过gjk算出距离了？ */
+		let checkSimplex = false; 
+
 		/** 碰撞点的B上的法线 */
 		let normalInB = new Vec3(0, 0, 0);
 		/** 分离轴的长度平方 */
@@ -639,28 +485,30 @@ export class GJKPairDetector {
 			sepAxis.scale(1 / sepLen, normSep);	//TODO 这个是不是在computeSupport函数内部做更好
 			// 获得normSep方向的Minkowski差 AminB
 			this.computeSupport(transA, transB, normSep, worldA, worldB, minkowPt, true);//TODO dir谁取反的问题
-			//DEBUG
-			if(showdbg){
-				phyr.addPoint(worldA.x+cen.x,worldA.y+cen.y,worldA.z+cen.z,0x77);
-				phyr.addPoint(worldB.x+cen.x,worldB.y+cen.y,worldB.z+cen.z,0xff);
-				phyr.addPoint(minkowPt.x,minkowPt.y,minkowPt.z,0xff0000);
-				phyr.addVec(0,0,0,sepAxis.x,sepAxis.y,sepAxis.z,0xff00);
-			}
-			//DEBUG
 			/** 新的采样点在采样方向上的投影。即采样点-原点 在采样方向的投影 */
 			let delta = normSep.dot(minkowPt);
-			if (delta < -margin) {
-				// 朝着某个方向采样，却在反向得到点了（投影在margin外），则原点一定不再Minkowski差内。
-				// 例如采样向上，原点在凸体的上面
-				// 注意不能=，因为=算碰撞
-				//degenerateSimplex = 10;
-				//collision=false;
-				return -1;
+			if(delta<0){
+				if (delta < -margin) {
+					// 朝着某个方向采样，却在反向得到点了（投影在margin外），则原点一定不再Minkowski差内。
+					// 例如采样向上，原点在凸体的上面
+					// 注意不能=，因为=算碰撞
+					//degenerateSimplex = 10;
+					//collision=false;
+					return -1;
+				}
+				
+				// 否则就是在margin范围内，可以直接得到碰撞信息
+				// TODO
+				collision=true;
+				hitA = worldA;
+				hitB = worldB;
+				sepAxis.negate(hitNorm);
+				break;
 			}
 
 			// 新得到的点已经在smplex中了，表示无法更接近了
 			if (simpSolver.inSimplex(minkowPt)) {
-				//degenerateSimplex = 1;
+				checkSimplex=true; // 需要进一步处理
 				// 既然没有判断出是分离的，那就是碰撞了
 				collision=true;
 				break;
@@ -691,6 +539,7 @@ export class GJKPairDetector {
 			let newSepAx = new Vec3();
 			if (!simpSolver.closest(newSepAx)) {
 				// 如果找不到新的采样方向
+				checkSimplex=true;
 				degenerateSimplex = 3;
 				collision=true;
 				break;
@@ -699,6 +548,7 @@ export class GJKPairDetector {
 			if ( newSepLen2 < REL_ERROR2) {
 				// 如果分离轴已经很短了。表示最近点已经是原点了，原点在simplex上
 				// 这种情况下，无法确定碰撞方向
+				checkSimplex=true;
 				sepAxis.copy(newSepAx);	//TODO 是不是可以用同一个对象
 				degenerateSimplex = 6;
 				collision=true;
@@ -712,13 +562,16 @@ export class GJKPairDetector {
 				// 即 previousSquaredDistance<=squaredDistance 只是误差与previousSquaredDistance大小有关，避免都用相同误差
 				//新的分离轴没有更靠近？
 				degenerateSimplex = 12;
+				checkSimplex=true;
 				collision=true;
 				break;
 			}
 
 			sepAxis.copy(newSepAx);
 
-			if (simpSolver.fullSimplex()) {//if full
+			if (simpSolver.fullSimplex()) {
+				// full了，则原点一定在里面。
+				// 这种情况不用checksimplex
 				degenerateSimplex = 13;
 				break;
 			}
@@ -732,17 +585,21 @@ export class GJKPairDetector {
 			return 1;
 
 		// 确定发生碰撞了，下面找出碰撞信息
-		// 计算或者copy上次朝向采样的两个点（可能是计算的点，不一定在边界？）
-		simpSolver.compute_points(hitA, hitB);
-		// 由于采样方向是-AminB 所以是指向B，所以下面取反
-		sepAxis.negate(normalInB);
-		//normalInB.copy(sepAxis);
-		let len = sepAxis.length();
-		distance = len - margin;
-		// 如果len=0,到原点的距离在margin范围内，则可以直接使用。len=0表示原点正好在边界上
-		if(len<1e-13 || distance<0){
-			isValid=true;
-		}else{
+		if(checkSimplex){
+			// 计算或者copy上次朝向采样的两个点（可能是计算的点，不一定在边界？）
+			simpSolver.compute_points(hitA, hitB);
+			// 由于采样方向是-AminB 所以是指向B，所以下面取反
+			sepAxis.negate(normalInB);
+			//normalInB.copy(sepAxis);
+			let len = sepAxis.length();
+			distance = len - margin;
+			// 如果len=0,到原点的距离在margin范围内，则可以直接使用。len=0表示原点正好在边界上
+			if(len<1e-13 || distance<0){
+				isValid=true;
+			}
+		}
+
+		if(!isValid){
 			// 如果上面没有检测到，或者太深，GJK无法计算深度，只能用复杂的EPA解决
 			if (this.penetrationDepthSolver) {
 				let tmpPointOnA = new Vec3();

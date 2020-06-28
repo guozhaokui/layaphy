@@ -24,6 +24,7 @@ import { Material } from '../material/Material.js';
 import { ContactInfoMgr } from '../collision/ContactManager.js';
 import { MinkowskiDiff } from '../collision/GJKEPA2.js';
 import { MinkowskiShape } from '../shapes/MinkowskiShape.js';
+import { CollisionGjkEpa } from '../collision/GJKEPA3.js';
 
 //declare type anyShape=Box|Sphere|Capsule|Voxel|ConvexPolyhedron|Heightfield|Trimesh;
 interface checkFunc {
@@ -825,6 +826,42 @@ export class Narrowphase {
 		let hitpos = point_on_plane_to_sphere;
         let hit1 =Cap_Cap_tmpV1;
         
+        let gjk = new CollisionGjkEpa();
+		if(!si.minkowski || !sj.minkowski){
+			console.error('gjk 需要shape有Minkowski接口');
+			return false;
+		}
+		gjk.shapeA=si.minkowski;
+		gjk.shapeB=sj.minkowski;
+		let transA = Narrowphase.trans1;
+		let transB = Narrowphase.trans2;
+		transA.position=xi;
+		transA.quaternion=qi;
+		transB.position=xj;
+        transB.quaternion=qj;
+        
+        let deep = gjk.intersect(transA, transB,hitpos, hit1,ni,justTest);
+		if(deep>=0){
+			if(justTest)return true;
+			let r = this.createContactEquation(bi,bj, si, sj, rsi, rsj);
+            ni.negate(ni);// 
+			r.ni.copy(ni);
+			hitpos.vsub(bi.position,r.ri);
+			hit1.vsub(bj.position,r.rj);
+
+            this.result.push(r);
+			this.createFrictionEquationsFromContact(r, this.frictionResult);
+			return true;			
+		}
+		return false;        
+
+	}
+
+ 	gjk1(si: Shape, sj: Shape, xi: Vec3, xj: Vec3, qi: Quaternion, qj: Quaternion, bi: Body, bj: Body, rsi: Shape|null, rsj: Shape|null, justTest: boolean): boolean {
+		let ni = Narrowphase.nor1;
+		let hitpos = point_on_plane_to_sphere;
+        let hit1 =Cap_Cap_tmpV1;
+        
 		let gjk = this.gjkdist;
 		if(!si.minkowski || !sj.minkowski){
 			console.error('gjk 需要shape有Minkowski接口');
@@ -853,9 +890,9 @@ export class Narrowphase {
 		}
 		return false;        
 
-	}
-
-    sphereBox(si: Sphere, sj: Box, xi: Vec3, xj: Vec3, qi: Quaternion, qj: Quaternion, bi: Body, bj: Body, rsi: Shape, rsj: Shape, justTest: boolean): boolean {
+    }
+    
+   sphereBox(si: Sphere, sj: Box, xi: Vec3, xj: Vec3, qi: Quaternion, qj: Quaternion, bi: Body, bj: Body, rsi: Shape, rsj: Shape, justTest: boolean): boolean {
         //return this.bigSphereBox(si,sj,xi,xj,qi,qj,bi,bj,rsi,rsj,justTest);
 		return this.gjk(si, sj,xi,xj,qi,qj,bi,bj,rsi,rsj,justTest);
 		/*
