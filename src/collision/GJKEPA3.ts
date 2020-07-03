@@ -46,6 +46,92 @@ var _findResponseWithTriangle_v1=new Vec3();
 
 var _containsTriangle_abc = new Vec3();
 
+
+function closestPtPointTriangle(p:Vec3, a:Vec3, b:Vec3, c:Vec3, result:any){
+	let ab = new Vec3();
+	let ac = new Vec3();
+	let ap = new Vec3();
+	let bc = new Vec3();
+
+	//let closest = result.closestPointOnSimplex;
+	// Check if P in vertex region outside A
+	b.vsub(a,ab);
+	c.vsub(a,ac);
+	p.vsub(a,ap);
+	let d1 = ab.dot(ap);
+	let d2 = ac.dot(ap);
+	if (d1 <= 0.0 && d2 <= 0.0){
+		result.setBarycentricCoordinates(1, 0, 0);
+		return ; 
+	}
+
+	// Check if P in vertex region outside B
+	let bp =new Vec3();
+	p.vsub(b,bp);
+	let d3 = ab.dot(bp);
+	let d4 = ac.dot(bp);
+	if (d3 >= 0.0 && d4 <= d3){
+		result.setBarycentricCoordinates(0, 1, 0);
+		return ;  // b; // barycentric coordinates (0,1,0)
+	}
+
+	// Check if P in vertex region outside C
+	let cp = new Vec3();
+	p.vsub(c,cp);
+	let d5 = ab.dot(cp);
+	let d6 = ac.dot(cp);
+	if (d6 >= 0.0 && d5 <= d6){
+		result.setBarycentricCoordinates(0, 0, 1);
+		return ;  //c; // barycentric coordinates (0,0,1)
+	}
+
+	// Check if P in edge region of AB, if so return projection of P onto AB
+	let vc = d1 * d4 - d3 * d2;
+	if (vc <= 0.0 && d1 >= 0.0 && d3 <= 0.0){
+		let v = d1 / (d1 - d3);
+		//a.addScaledVector(v,ab,closest);// = a+v*ab
+		result.setBarycentricCoordinates(1 - v, v, 0);
+		return ;
+		//return a + v * ab; // barycentric coordinates (1-v,v,0)
+	}
+
+
+	// Check if P in edge region of AC, if so return projection of P onto AC
+	let vb = d5 * d2 - d1 * d6;
+	if (vb <= 0.0 && d2 >= 0.0 && d6 <= 0.0){
+		let w = d2 / (d2 - d6);
+		//a.addScaledVector(w,ac,closest);//closest = a + w * ac;
+		result.setBarycentricCoordinates(1 - w, 0, w);
+		return ;
+		//return a + w * ac; // barycentric coordinates (1-w,0,w)
+	}
+
+	// Check if P in edge region of BC, if so return projection of P onto BC
+	let va = d3 * d6 - d5 * d4;
+	if (va <= 0.0 && (d4 - d3) >= 0.0 && (d5 - d6) >= 0.0){
+		let w = (d4 - d3) / ((d4 - d3) + (d5 - d6));
+		c.vsub(b,bc);
+		//b.addScaledVector(w,bc,closest);//closest = b + w * (c - b);
+		result.setBarycentricCoordinates(0, 1 - w, w);
+		return ;
+		// return b + w * (c - b); // barycentric coordinates (0,1-w,w)
+	}
+
+	// P inside face region. Compute Q through its barycentric coordinates (u,v,w)
+	let denom = 1.0 / (va + vb + vc);
+	let v = vb * denom;
+	let w = vc * denom;
+	a.addScaledVector(v,ab,closest);
+	//closest.addScaledVector(w,ac,closest);//closest = a + ab * v + ac * w;
+
+	result.setBarycentricCoordinates(1 - v - w, v, w);
+}
+
+
+function calcBarycentricCoord(pt:Vec3,a:Vec3, b:Vec3,c:Vec3,out:Vec3){
+
+}
+
 class Simplex{
     points:Vec3[]=[new Vec3(), new Vec3(), new Vec3(), new Vec3()];
     vertnum=0;
@@ -98,14 +184,14 @@ class EPA_NearestInfo{
 var nearest_result = new EPA_NearestInfo();
 
 class Triangle {
-    a: Vec3;
-    b: Vec3;
-    c: Vec3;
-    n: Vec3;
+    a:Vec3;	// 三角形，edge的点都是引用，为了能直接对象比较。以后可以改成polytope负责分配顶点
+    b:Vec3;
+    c:Vec3;
+    n = new Vec3();
     constructor(a: Vec3, b: Vec3, c: Vec3) {
-        this.a = a;
-        this.b = b;
-        this.c = c;
+        this.a=a;
+        this.b=b;
+        this.c=c;
         b.vsub(a, tmpV1);
         c.vsub(a, tmpV2);
         tmpV1.cross(tmpV2, this.n);
@@ -119,6 +205,7 @@ class Polytope_Edge{
     //addid=0;    // 第几次加入的，同一次加入的忽略
 }
 
+
 class EdgePool{
     edges:Polytope_Edge[]=[];
     length=0;
@@ -127,8 +214,13 @@ class EdgePool{
         let edges = this.edges;
         let len = this.length;
         for(let i=0; i<len; i++){
-            let edge = edges[i];
-            if(edge.a==a && edge.b==b){
+			let edge = edges[i];
+			// a-b, b-a 是一个。这种情况表示这是一个共享边，需要删掉，因为只需要边缘边
+            if((edge.a==a && edge.b==b)||(edge.a==b && edge.b==a)){
+				// 删掉这个边
+				edges[i].a = edges[len-1].a;
+				edges[i].b = edges[len-1].b;
+				this.length--;
                 return;
             }
         }
@@ -157,7 +249,13 @@ class EdgePool{
 var edgepool = new EdgePool();
 
 class Polytope{
-
+	vertes:Vec3[]=[];
+	clear(){
+		this.vertes.length=0;
+	}
+	addVert(v:Vec3){
+		this.vertes.push( new Vec3(v.x,v.y,v.z));
+	}
 }
 
 export class CollisionGjkEpa {
@@ -236,6 +334,7 @@ export class CollisionGjkEpa {
      * @return {Object} Informations about the nearest edge (distance, index and normal).
      */
     _getNearestEdge(simplex: Simplex) {
+		/*
         var distance = Infinity,
             index, normal;
 
@@ -273,7 +372,7 @@ export class CollisionGjkEpa {
             index: index,
             normal: normal
         };
-
+		*/
     }
 
     /**
@@ -741,6 +840,7 @@ export class CollisionGjkEpa {
      * @return  The penetration vector.
      */
     findResponseWithEdge(colliderPoints: Vec3[], collidedPoints: Vec3[], simplex: Simplex) {
+		/*
         var edge = this._getNearestEdge(simplex);
         var sup = this.support(colliderPoints, collidedPoints, edge.normal); //get support point in direction of edge's normal
         var d = Math.abs(sup.constructor.Dot(sup, edge.normal));
@@ -750,18 +850,20 @@ export class CollisionGjkEpa {
         } else {
             simplex.points.splice(edge.index, 0, sup);
         }
-        return false;
+		return false;
+		*/
     }
 
     /**
      * Finds the response with the polytope done with the simplex of the gjk algorithm.
      * 
-     * 遍历指定的polytope，找出距离原点最近的面，如果不是边界面的话，把polytope扩展一个四面体。
+     * 遍历指定的polytope，找出距离原点最近的面，如果找到了，返回深度向量
+	 * 如果不是边界面的话，把polytope扩展一个四面体。返回null
      * @method findResponseWithTriangle
      * @param  colliderPoints The convexe collider object.
      * @param  collidedPoints The convexe collided object.
      * @param  polytope The polytope done with the simplex.    初始polytope,是一个由四个三角形组成的四面体
-     * @return  The penetration vector.
+     * @return  找到了最近边界了，则深度向量，否则扩展多面体并返回null
      */
     findResponseWithTriangle(transA: Transform, transB: Transform,polytope: Triangle[]):Vec3|null {
         if (polytope.length === 0) {
@@ -775,7 +877,7 @@ export class CollisionGjkEpa {
         // 根据最近面的法线取一个新的顶点，用来扩展多面体
         let worldA = _check_worldA;
         let worldB = _check_worldB;
-        let sup = vert1;
+        let sup = new Vec3();	// 这个不能复用，因为下面要用到triangle中作为引用
         this.computeSupport(transA, transB, triangle.n, worldA, worldB, sup);
 
         var d = Math.abs(sup.dot(triangle.n));
@@ -784,7 +886,9 @@ export class CollisionGjkEpa {
             // 新的采样点还在这个最近面上，表示已经到了外边界了，完成。
             return triangle.n.scale(nearest.distance);
         } else {
-            // 下面开始扩展
+			// 下面开始扩展
+			
+			// 本次扩展参与的边，即被新点照射到的三角形的所有的边
             var edges = edgepool;
             edges.reset();
 
@@ -795,7 +899,8 @@ export class CollisionGjkEpa {
                 let p1 = triangle.a;
                 // norm dot (sup-p1) 如果这个sup在norm方向，则需要扩展这个面
                 if (norm.dot(sup.vsub(p1,_findResponseWithTriangle_v1)) > 0) {
-                    // 统计需要扩展的边
+					// 统计需要扩展的边。注意要去掉重复。
+					// 这时候，有的边是内部边，实际是不需要的？
                     edges.addedge(triangle.a,triangle.b);
                     edges.addedge(triangle.b,triangle.c);
                     edges.addedge(triangle.c,triangle.a);
@@ -849,11 +954,7 @@ export class CollisionGjkEpa {
                 response = this.findResponseWithTriangle(transA, transB, polytope);
             }
             if (response) {
-                var norm = response.clone();    //TODO 
-                norm.normalize();
-                norm.scale(this.EPSILON,norm);
-                //var norm = response.clone().normalize().scaleInPlace(this.EPSILON);
-                return response.vsub(norm,response);    //TODO 这个返回后禁止保存
+				return response;
             }
             it++;
         }
@@ -879,11 +980,24 @@ export class CollisionGjkEpa {
         if (simplex) {
             if(justtest)
                 return 1;
-            // 根据simplex和两个shape来得到碰撞信息
-            return this.getResponse(transA, transB, simplex);
+			// 根据simplex和两个shape来得到碰撞信息
+			let response = this.getResponse(transA, transB, simplex);
+			if(!response){
+				return -1;
+			}
+			// response是从A指向B的
+			let deep = response.length();
+			//var norm = response.clone();    //TODO 
+			hitNorm.set(response.x/deep, response.y/deep,response.z/deep);
+			//TODO 深度减去一个误差值？
+			//return response.vsub(norm,response);    //TODO 这个返回后禁止保存
+			// 计算碰撞点
+			hitA.set();
+			hitB.set();
+			return deep;			
         }
 
-        return null;
+        return -1;
     }
 
 }
