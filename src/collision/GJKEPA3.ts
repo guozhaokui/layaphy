@@ -47,7 +47,7 @@ var _findResponseWithTriangle_v1=new Vec3();
 var _containsTriangle_abc = new Vec3();
 
 
-function closestPtPointTriangle(p:Vec3, a:Vec3, b:Vec3, c:Vec3, result:any){
+function closestPtPointTriangle(p:Vec3, a:Vec3, b:Vec3, c:Vec3, result:Vec3){
 	let ab = new Vec3();
 	let ac = new Vec3();
 	let ap = new Vec3();
@@ -61,7 +61,7 @@ function closestPtPointTriangle(p:Vec3, a:Vec3, b:Vec3, c:Vec3, result:any){
 	let d1 = ab.dot(ap);
 	let d2 = ac.dot(ap);
 	if (d1 <= 0.0 && d2 <= 0.0){
-		result.setBarycentricCoordinates(1, 0, 0);
+		result.set(1,0,0);
 		return ; 
 	}
 
@@ -71,7 +71,7 @@ function closestPtPointTriangle(p:Vec3, a:Vec3, b:Vec3, c:Vec3, result:any){
 	let d3 = ab.dot(bp);
 	let d4 = ac.dot(bp);
 	if (d3 >= 0.0 && d4 <= d3){
-		result.setBarycentricCoordinates(0, 1, 0);
+		result.set(0,1,0);
 		return ;  // b; // barycentric coordinates (0,1,0)
 	}
 
@@ -81,7 +81,7 @@ function closestPtPointTriangle(p:Vec3, a:Vec3, b:Vec3, c:Vec3, result:any){
 	let d5 = ab.dot(cp);
 	let d6 = ac.dot(cp);
 	if (d6 >= 0.0 && d5 <= d6){
-		result.setBarycentricCoordinates(0, 0, 1);
+		result.set(0,0,1);
 		return ;  //c; // barycentric coordinates (0,0,1)
 	}
 
@@ -89,10 +89,8 @@ function closestPtPointTriangle(p:Vec3, a:Vec3, b:Vec3, c:Vec3, result:any){
 	let vc = d1 * d4 - d3 * d2;
 	if (vc <= 0.0 && d1 >= 0.0 && d3 <= 0.0){
 		let v = d1 / (d1 - d3);
-		//a.addScaledVector(v,ab,closest);// = a+v*ab
-		result.setBarycentricCoordinates(1 - v, v, 0);
+		result.set(1 - v, v, 0);
 		return ;
-		//return a + v * ab; // barycentric coordinates (1-v,v,0)
 	}
 
 
@@ -100,10 +98,8 @@ function closestPtPointTriangle(p:Vec3, a:Vec3, b:Vec3, c:Vec3, result:any){
 	let vb = d5 * d2 - d1 * d6;
 	if (vb <= 0.0 && d2 >= 0.0 && d6 <= 0.0){
 		let w = d2 / (d2 - d6);
-		//a.addScaledVector(w,ac,closest);//closest = a + w * ac;
-		result.setBarycentricCoordinates(1 - w, 0, w);
+		result.set(1 - w, 0, w);
 		return ;
-		//return a + w * ac; // barycentric coordinates (1-w,0,w)
 	}
 
 	// Check if P in edge region of BC, if so return projection of P onto BC
@@ -111,25 +107,15 @@ function closestPtPointTriangle(p:Vec3, a:Vec3, b:Vec3, c:Vec3, result:any){
 	if (va <= 0.0 && (d4 - d3) >= 0.0 && (d5 - d6) >= 0.0){
 		let w = (d4 - d3) / ((d4 - d3) + (d5 - d6));
 		c.vsub(b,bc);
-		//b.addScaledVector(w,bc,closest);//closest = b + w * (c - b);
-		result.setBarycentricCoordinates(0, 1 - w, w);
+		result.set(0, 1 - w, w);
 		return ;
-		// return b + w * (c - b); // barycentric coordinates (0,1-w,w)
 	}
 
 	// P inside face region. Compute Q through its barycentric coordinates (u,v,w)
 	let denom = 1.0 / (va + vb + vc);
 	let v = vb * denom;
 	let w = vc * denom;
-	a.addScaledVector(v,ab,closest);
-	//closest.addScaledVector(w,ac,closest);//closest = a + ab * v + ac * w;
-
-	result.setBarycentricCoordinates(1 - v - w, v, w);
-}
-
-
-function calcBarycentricCoord(pt:Vec3,a:Vec3, b:Vec3,c:Vec3,out:Vec3){
-
+	result.set(1 - v - w, v, w);
 }
 
 class Simplex{
