@@ -46,8 +46,22 @@ var _findResponseWithTriangle_v1=new Vec3();
 
 var _containsTriangle_abc = new Vec3();
 
+class minkVec3 extends Vec3{
+	worldA:Vec3 = new Vec3();
+	worldB:Vec3 = new Vec3();
 
-function closestPtPointTriangle(p:Vec3, a:Vec3, b:Vec3, c:Vec3, result:Vec3){
+	copy(v:minkVec3){
+		this.x=v.x;
+		this.y=v.y;
+		this.z=v.z;
+		this.worldA.copy(v.worldA);
+		this.worldB.copy(v.worldB);
+		return this;
+	}
+}
+
+
+function calcBarycentricCoord(p:Vec3, a:Vec3, b:Vec3, c:Vec3, result:Vec3){
 	let ab = new Vec3();
 	let ac = new Vec3();
 	let ap = new Vec3();
@@ -118,23 +132,42 @@ function closestPtPointTriangle(p:Vec3, a:Vec3, b:Vec3, c:Vec3, result:Vec3){
 	result.set(1 - v - w, v, w);
 }
 
+function calcPtInTriangle(barycentricCoord:Vec3, a:Vec3, b:Vec3, c:Vec3, out:Vec3){
+	// out = a*bc.x+b*bc.y+c*bc.z
+	let cx = barycentricCoord.x;
+	let cy = barycentricCoord.y;
+	let cz = barycentricCoord.z;
+	out.set(
+		cx*a.x+cy*b.x+cz*c.x,
+		cx*a.y+cy*b.y+cz*c.y,
+		cx*a.z+cy*b.z+cz*c.z
+	);
+}
+
 class Simplex{
-    points:Vec3[]=[new Vec3(), new Vec3(), new Vec3(), new Vec3()];
-    vertnum=0;
-    addvertex(x:number,y:number,z:number){
+	points=[new minkVec3(), new minkVec3(), new minkVec3(), new minkVec3()];
+
+	vertnum=0;
+	/**
+	 * 
+	 * @param v  	 这几个值必须复制，不能引用
+	 * @param worldA 
+	 * @param worldB 
+	 */
+    addvertex( v:minkVec3){
         let n = this.vertnum++;
-        this.points[n].set(x,y,z);
+		this.points[n].copy(v);
     }
     
     splice(removeid:int){
-        let pts = this.points;
+		let pts = this.points;
         switch(removeid){
             case 0:
-                pts[0].copy(pts[1]);
+				pts[0].copy(pts[1]);
             case 1:
-                pts[1].copy(pts[2]);
+				pts[1].copy(pts[2]);
             case 2:
-                pts[2].copy(pts[3]);
+				pts[2].copy(pts[3]);
         }
         this.vertnum--;
     }
@@ -153,7 +186,26 @@ class Simplex{
         let p2y=pts[id1].y;
         let p2z=pts[id1].z;
         pts[0].set(p1x,p1y,p1z);
-        pts[1].set(p2x,p2y,p2z);
+		pts[1].set(p2x,p2y,p2z);
+		
+		let A1x = pts[id0].worldA.x;
+		let A1y = pts[id0].worldA.y;
+		let A1z = pts[id0].worldA.z;
+		let A2x = pts[id1].worldA.x;
+		let A2y = pts[id1].worldA.y;
+		let A2z = pts[id1].worldA.z;
+		pts[0].worldA.set(A1x,A1y,A1z);
+		pts[1].worldA.set(A2x,A2y,A2z);
+
+		let B1x = pts[id0].worldB.x;
+		let B1y = pts[id0].worldB.y;
+		let B1z = pts[id0].worldB.z;
+		let B2x = pts[id1].worldB.x;
+		let B2y = pts[id1].worldB.y;
+		let B2z = pts[id1].worldB.z;
+		pts[0].worldB.set(B1x,B1y,B1z);
+		pts[1].worldB.set(B2x,B2y,B2z);
+
         this.vertnum=2;
     }
 
@@ -170,11 +222,11 @@ class EPA_NearestInfo{
 var nearest_result = new EPA_NearestInfo();
 
 class Triangle {
-    a:Vec3;	// 三角形，edge的点都是引用，为了能直接对象比较。以后可以改成polytope负责分配顶点
-    b:Vec3;
-    c:Vec3;
+    a:minkVec3;	// 三角形，edge的点都是引用，为了能直接对象比较。以后可以改成polytope负责分配顶点
+    b:minkVec3;
+    c:minkVec3;
     n = new Vec3();
-    constructor(a: Vec3, b: Vec3, c: Vec3) {
+    constructor(a: minkVec3, b: minkVec3, c: minkVec3) {
         this.a=a;
         this.b=b;
         this.c=c;
@@ -186,8 +238,8 @@ class Triangle {
 }
 
 class Polytope_Edge{
-    a:Vec3;
-    b:Vec3;
+    a:minkVec3;
+    b:minkVec3;
     //addid=0;    // 第几次加入的，同一次加入的忽略
 }
 
@@ -195,7 +247,7 @@ class Polytope_Edge{
 class EdgePool{
     edges:Polytope_Edge[]=[];
     length=0;
-    addedge(a:Vec3, b:Vec3){
+    addedge(a:minkVec3, b:minkVec3){
         // 首先要判断是否重复了
         let edges = this.edges;
         let len = this.length;
@@ -241,6 +293,20 @@ class Polytope{
 	}
 	addVert(v:Vec3){
 		this.vertes.push( new Vec3(v.x,v.y,v.z));
+	}
+
+	init(v1:Vec3, v2:Vec3, v3:Vec3, v4:Vec3){
+		this.addVert(v1);
+		this.addVert(v2);
+		this.addVert(v3);
+		this.addVert(v4);
+	}
+
+	getTriangle(id:int){
+
+	}
+	getEdge(id:int){
+		
 	}
 }
 
@@ -765,11 +831,9 @@ export class CollisionGjkEpa {
         }
 
         // set the first support as initial point of the new simplex
-        let worldA = _check_worldA;
-        let worldB = _check_worldB;
-        let minkowpt = vert1;
-        this.computeSupport(transi, transj,dir,worldA,worldB,minkowpt);
-        simplex.addvertex(minkowpt.x,minkowpt.y,minkowpt.z);
+        let minkowpt = new minkVec3();	//TODO 
+        this.computeSupport(transi, transj,dir, minkowpt.worldA,minkowpt.worldB,minkowpt);
+        simplex.addvertex(minkowpt);
 
         if (minkowpt.dot(dir) <= 0) {
             // 没有发生碰撞
@@ -793,7 +857,7 @@ export class CollisionGjkEpa {
             }
 
             // TODO 没有记录对应i,j的全局点
-            this.computeSupport(transi,transj,dir,worldA,worldB,minkowpt);
+            this.computeSupport(transi,transj,dir,minkowpt.worldA, minkowpt.worldB,minkowpt);
 
             // make sure that the last point we added actually passed the origin
             if (minkowpt.dot(dir) <= 0) {
@@ -804,7 +868,7 @@ export class CollisionGjkEpa {
                 return false;
             }
 
-            simplex.addvertex(minkowpt.x,minkowpt.y,minkowpt.z);
+            simplex.addvertex(minkowpt);
             // otherwise we need to determine if the origin is in
             // the current simplex
             // 如果单形包含原点了，则发生碰撞了。
@@ -851,9 +915,9 @@ export class CollisionGjkEpa {
      * @param  polytope The polytope done with the simplex.    初始polytope,是一个由四个三角形组成的四面体
      * @return  找到了最近边界了，则深度向量，否则扩展多面体并返回null
      */
-    findResponseWithTriangle(transA: Transform, transB: Transform,polytope: Triangle[]):Vec3|null {
+    findResponseWithTriangle(transA: Transform, transB: Transform,polytope: Triangle[],hitA:Vec3, hitB:Vec3, hitNorm:Vec3):f32 {
         if (polytope.length === 0) {
-            return null;
+            return -1;
         }
 
         var nearest = nearest_result;
@@ -861,16 +925,26 @@ export class CollisionGjkEpa {
         var triangle = polytope[nearest.index];
 
         // 根据最近面的法线取一个新的顶点，用来扩展多面体
-        let worldA = _check_worldA;
-        let worldB = _check_worldB;
-        let sup = new Vec3();	// 这个不能复用，因为下面要用到triangle中作为引用
-        this.computeSupport(transA, transB, triangle.n, worldA, worldB, sup);
+		let sup = new minkVec3(); // 这个不能复用，因为下面要用到triangle中作为引用
+        this.computeSupport(transA, transB, triangle.n, sup.worldA, sup.worldB, sup);
 
         var d = Math.abs(sup.dot(triangle.n));
 
         if ((d - nearest.distance <= this.EPSILON)) {
-            // 新的采样点还在这个最近面上，表示已经到了外边界了，完成。
-            return triangle.n.scale(nearest.distance);
+			// 新的采样点还在这个最近面上，表示已经到了外边界了，完成。
+			// normal 取反，B指向A。是否取反实在想不通的话就实际测试，反正只有两种情况。
+			triangle.n.negate(hitNorm);
+			//hitNorm.copy( triangle.n);
+			// 计算Minkowsky上的最近点
+			let nearestpt = new Vec3(); //TODO
+			triangle.n.scale(-nearest.distance,nearestpt);
+			let bc=new Vec3();
+			calcBarycentricCoord(nearestpt,triangle.a, triangle.b,triangle.c, bc);
+			// 计算碰撞点
+			calcPtInTriangle(bc,triangle.a.worldA,triangle.b.worldA,triangle.c.worldA,hitA);
+			calcPtInTriangle(bc,triangle.a.worldB,triangle.b.worldB,triangle.c.worldB,hitB);
+			return nearest.distance;
+            //return triangle.n.scale(nearest.distance);
         } else {
 			// 下面开始扩展
 			
@@ -904,7 +978,7 @@ export class CollisionGjkEpa {
                 }
             }
         }
-        return null;
+        return -1;
     }
 
     /**
@@ -918,9 +992,9 @@ export class CollisionGjkEpa {
      * @param  simplex The simplex of the Minkowsky difference.
      * @return The penetration vector.
      */
-    getResponse(transA: Transform, transB: Transform, simplex: Simplex):Vec3|null {
-        var it = 0,
-            response:Vec3|null=null;
+    getResponse(transA: Transform, transB: Transform, simplex: Simplex,hitA:Vec3, hitB:Vec3, hitNorm:Vec3):f32 {
+		var it = 0;
+		let deep = -1;
         let pts = simplex.points;    
         var polytope: Triangle[] = [//TODO 优化
             // 注意顺序
@@ -937,14 +1011,14 @@ export class CollisionGjkEpa {
                 //response = this.findResponseWithEdge(colliderPoints, collidedPoints, simplex);
             } else {
                 // 3D的情况
-                response = this.findResponseWithTriangle(transA, transB, polytope);
+                deep = this.findResponseWithTriangle(transA, transB, polytope, hitA, hitB, hitNorm);
             }
-            if (response) {
-				return response;
+            if (deep>0) {
+				return deep;
             }
             it++;
         }
-        return null;
+        return -1;
     }    
 
 
@@ -953,12 +1027,14 @@ export class CollisionGjkEpa {
      * and give the response to be out of the object.
      *
      * 判断两个形状是否碰撞，并返回碰撞深度信息
-     * 
-     * @method intersect
-     * @param  colliderPoints The convexe collider object.
-     * @param  collidedPoints The convexe collided object.
-     * @return  The penetration vector.
-     */
+	 * 
+	 * @param transA 
+	 * @param transB 
+	 * @param hitA 
+	 * @param hitB 
+	 * @param hitNorm 
+	 * @param justtest 
+	 */
     intersect(transA: Transform, transB: Transform,hitA:Vec3,hitB:Vec3, hitNorm:Vec3, justtest:boolean):f32 {
         // 如果发生碰撞，返回一个simplex
         var simplex = this.check(transA, transB);
@@ -967,19 +1043,16 @@ export class CollisionGjkEpa {
             if(justtest)
                 return 1;
 			// 根据simplex和两个shape来得到碰撞信息
-			let response = this.getResponse(transA, transB, simplex);
-			if(!response){
+			let deep = this.getResponse(transA, transB, simplex,hitA,hitB, hitNorm);
+			if(deep<0){
 				return -1;
 			}
 			// response是从A指向B的
-			let deep = response.length();
+			//let deep = response.length();
 			//var norm = response.clone();    //TODO 
-			hitNorm.set(response.x/deep, response.y/deep,response.z/deep);
 			//TODO 深度减去一个误差值？
 			//return response.vsub(norm,response);    //TODO 这个返回后禁止保存
 			// 计算碰撞点
-			hitA.set();
-			hitB.set();
 			return deep;			
         }
 
