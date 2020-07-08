@@ -605,7 +605,8 @@ export class CollisionGjkEpa {
 
             case abcTest | acdTest:
                 // 如果原点在两个面的正方向。
-                // 如果在abc和acd的正方向
+				// 如果在abc和acd的正方向
+				// 需要去掉 abc和acd
                 return this._checkTwoTetrahedron(ao, ab, ac, abc, dir, simplex);
             case acdTest | adbTest:
                 pts[2].copy(c);
@@ -640,14 +641,21 @@ export class CollisionGjkEpa {
      * @param simplex 
      */
     private _checkTwoTetrahedron(ao: Vec3, ab: Vec3, ac: Vec3, abc: Vec3, dir: Vec3, simplex: Simplex) {
-        var abc_ac = CollisionGjkEpa._checkTwoTetrahedron_abc_ac;
+
+		/**
+		 * 在abc和acd的正方向。
+		 */
+
+		var abc_ac = CollisionGjkEpa._checkTwoTetrahedron_abc_ac;
+		// 在abc平面上的，与ac垂直的线
         abc.cross(ac, abc_ac);
 
         let pts = simplex.points;
         if (abc_ac.dot(ao) > 0) {
             //the origin is beyond AC from ABC's
             //perspective, effectively excluding
-            //ACD from consideration
+			//ACD from consideration
+			// 从abc平面上看的话，原点在ac的外面
 
             //we thus need test only ACD
             pts[2].copy(pts[1]);    // ACD的右边
@@ -1036,6 +1044,12 @@ export class CollisionGjkEpa {
 	 * @param justtest 
 	 */
     intersect(transA: Transform, transB: Transform,hitA:Vec3,hitB:Vec3, hitNorm:Vec3, justtest:boolean):f32 {
+//DEBUG
+	let transa  = JSON.parse( `{"position":{"x":3.047712156903969,"y":7.238084823732435,"z":5.3513835448599},"quaternion":{"x":7.633624811061411e-8,"y":2.863294548138404e-7,"z":-7.981622297533533e-16,"w":0.9999999999999563}}`);
+		transA.position.copy(transa.position);
+		transA.quaternion.copy(transa.quaternion);
+//DEBUG
+
         // 如果发生碰撞，返回一个simplex
         var simplex = this.check(transA, transB);
 
