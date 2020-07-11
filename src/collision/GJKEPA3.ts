@@ -469,6 +469,7 @@ export class CollisionGjkEpa {
         b.vsub(a,ab);
         var ao = a.scale(-1);
         if (ab.lengthSquared() !== 0) {
+			// dir是线段和原点形成的平面上与线段垂直的指向原点的方向
             this._getNormal(ab, ao, ab, dir);
         } else {
             dir.copy(ao);
@@ -478,7 +479,7 @@ export class CollisionGjkEpa {
     }
 
     /**
-     * Checks if the origin is in a triangle.
+	 * 当有三个点的时候，确定下一个采样方向
      *
      * @method _containsTriangle
      * @private
@@ -491,44 +492,35 @@ export class CollisionGjkEpa {
         var a = pts[2];
         var b = pts[1];
         var c = pts[0];
-        var ab = _containsTriangle_ab;
-        b.vsub(a,ab);
-        var ac = _containsTriangle_ac;
-        c.vsub(a,ac);
-        var ao = _containsTriangle_ao;
-        a.negate(ao);
+        var ab = b.vsub(a, _containsTriangle_ab);
+        var ac = c.vsub(a, _containsTriangle_ac);
+        var ao = a.negate( _containsTriangle_ao);
 
-        var abp = _containsTriangle_abp;
-        this._getNormal(ac, ab, ab,abp);
-        var acp = _containsTriangle_acp;
-        this._getNormal(ab, ac, ac,acp);
+        var abp = this._getNormal(ac,ab,ab, _containsTriangle_abp);
+        var acp = this._getNormal(ab,ac,ac, _containsTriangle_acp);
 
+		// 先判断原点在ab的外面还是ac的外面
         if (abp.dot(ao) > 0) {
-            // 退化
-            simplex.splice(0);// remove C
+            // ab的外面，删掉c点，退化成线段继续。
+            simplex.splice(0);
             dir.copy(abp);
         } else if (acp.dot(ao) > 0) {
-            // 退化
-            simplex.splice(1);// remove B
+            // ac的外面，删掉b点，退化成线段继续
+            simplex.splice(1);
             dir.copy(acp);
         } else {
-            // 确定在哪个方向
-            //if (dir.z === undefined) {
-            //    return true;
-            //} else {
-                var abc = _containsTriangle_abc;
-                ab.cross(ac,abc);
-                dir.copy(abc);
-                if (abc.dot(ao) <= 0) {
-                    //upside down tetrahedron
-                    pts[0] = b;
-                    pts[1] = c;
-                    pts[2] = a;
-                    dir.set(-abc.x, -abc.y, -abc.z);
-                }
-
-            //    return false;
-            //}
+			// 原点在ab和ac的里面，这时候要扩展成四面体了，
+            // 确定在面的哪个方向
+			var abc = ab.cross(ac,_containsTriangle_abc);
+			if (abc.dot(ao) <= 0) {
+				//upside down tetrahedron
+				pts[0] = b;
+				pts[1] = c;
+				pts[2] = a;
+				dir.set(-abc.x, -abc.y, -abc.z);
+			}else{
+				dir.copy(abc);
+			}
         }
 
         // 三角形永远返回false，必须要组成四面体才能结束
@@ -557,7 +549,7 @@ export class CollisionGjkEpa {
      * @private
      * @param  simplex The simplex.
      * @param  dir The direction.
-     * @return {Boolean} Return true if the origin is in the tetrahedron.
+     * @return  Return true if the origin is in the tetrahedron.
      */
     _containsTetrahedron(simplex: Simplex, dir: Vec3) {
         let pts = simplex.points;
@@ -568,8 +560,7 @@ export class CollisionGjkEpa {
         var ab = b.vsub(a,CollisionGjkEpa._containsTetrahedron_ab);
         var ac = c.vsub(a,CollisionGjkEpa._containsTetrahedron_ac);
         var ad = d.vsub(a,CollisionGjkEpa._containsTetrahedron_ad);
-        var ao = CollisionGjkEpa._containsTetrahedron_ao;
-        a.negate(ao);
+        var ao = a.negate(CollisionGjkEpa._containsTetrahedron_ao);
 
         // 检查四面体的除了底面的其他面的法线（反）是否指向原点。底面一定是指向的，因为a点就是根据底面的朝向获得的。
         var abc = ab.cross(ac,CollisionGjkEpa._containsTetrahedron_abc);
@@ -614,16 +605,15 @@ export class CollisionGjkEpa {
                 pts[0].copy(b);
                 return this._checkTwoTetrahedron(ao, ac, ad, acd, dir, simplex);
             case adbTest | abcTest:
-                pts[1].copy(b);
-                pts[2].copy(d);
-                pts[0].copy(c);
+				// 调换顺序，都是pts数组中的，可以调换，只要避免多个指向同一个Vec3就行
+                pts[1]=b;
+                pts[2]=d;
+                pts[0]=c;
                 return this._checkTwoTetrahedron(ao, ad, ab, adb, dir, simplex);
             default:
-                break;
+				// 否则，四个面都指向原点，则包含原点
+                return true;
         }
-
-        // 否则，四个面都指向原点，则包含原点
-        return true;
     }
 
     private static _checkTwoTetrahedron_abc_ac = new Vec3();
@@ -633,6 +623,8 @@ export class CollisionGjkEpa {
     /**
      *  ab,ac是第一个底面的两条边
      * 
+	 * 如果原点在两个面的外面，则优先考虑这两个面的共同边的垂线
+	 * 
      * @param ao 
      * @param ab  看向朝里的法线的时候的右边
      * @param ac  看向朝里的法线的时候的左边
@@ -650,8 +642,8 @@ export class CollisionGjkEpa {
 		// 在abc平面上的，与ac垂直的线
         abc.cross(ac, abc_ac);
 
-        let pts = simplex.points;
         if (abc_ac.dot(ao) > 0) {
+			let pts = simplex.points;
             //the origin is beyond AC from ABC's
             //perspective, effectively excluding
 			//ACD from consideration
@@ -686,7 +678,8 @@ export class CollisionGjkEpa {
         return false;
     }
 
-    static _checkTetrahedron_acp = new Vec3();
+	static _checkTetrahedron_acp = new Vec3();
+	
     /**
      * 
      * @param ao    朝向原点的方向
@@ -752,11 +745,11 @@ export class CollisionGjkEpa {
      * 原点是否在单形内
      *
      * @method findResponseWithEdge
-     * @param  simplexThe simplex or false if no intersection.
+     * @param  simplex The simplex or false if no intersection.
      * @param  dir The direction to test.
      * @return Contains or not.
      */
-    containsOrigin(simplex: Simplex, dir: Vec3) {
+    containsOrigin1(simplex: Simplex, dir: Vec3) {
         if (simplex.vertnum === 2) {
             return this._containsLine(simplex, dir);
         }
@@ -767,6 +760,27 @@ export class CollisionGjkEpa {
             return this._containsTetrahedron(simplex, dir);
         }
         return false;
+	}
+
+	/**
+	 * 判断原点是否在单形内，并确定下一个采样方向
+	 * @param simplex 
+	 * @param dir 
+	 */
+    containsOrigin(simplex: Simplex, dir: Vec3):boolean {
+		switch( simplex.vertnum){
+			case 0:
+			case 1:
+				return false;
+			case 2:
+				return this._containsLine(simplex, dir);
+			case 3:
+				return this._containsTriangle(simplex, dir);
+			case 4:
+				return this._containsTetrahedron(simplex, dir);
+			default:
+				return false;
+		}
     }
 
     /**
