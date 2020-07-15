@@ -30,7 +30,7 @@ let m2v = new Mesh2Voxel();
 
 function initPhy(scene: Scene3D) {
 	let phyworld = world = scene.addComponent(CannonWorld) as CannonWorld;
-	phyworld.world.gravity.set(0, 0, 0);
+	phyworld.world.gravity.set(0, -10, 0);
 	(window as any).phyr = new PhyRender(scene, phyworld.world);
 	phyworld.world.addContactMaterial(cmtl1).addContactMaterial(cmtl2);
 	phyr = getPhyRender();

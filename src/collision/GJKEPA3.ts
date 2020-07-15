@@ -2,6 +2,7 @@ import { Vec3 } from './../math/Vec3';
 import { MinkowskiShape } from '../shapes/MinkowskiShape';
 import { Transform } from '../math/Transform';
 import { Quaternion } from '../math/Quaternion';
+import { debug } from 'console';
 /**
  * Class to help in the collision in 2D and 3D.
  * To works the algorithm needs two convexe point cloud
@@ -237,7 +238,13 @@ class Triangle {
     b:minkVec3;
     c:minkVec3;
     n = new Vec3();
-    constructor(a: minkVec3, b: minkVec3, c: minkVec3) {
+    constructor(a?: minkVec3, b?: minkVec3, c?: minkVec3) {
+		if(a&&b&&c){
+			this.init(a,b,c);
+		}
+	}
+
+	init(a: minkVec3, b: minkVec3, c: minkVec3){
         this.a=a;
         this.b=b;
         this.c=c;
@@ -245,7 +252,7 @@ class Triangle {
         c.vsub(a, tmpV2);
         tmpV1.cross(tmpV2, this.n);
         this.n.normalize();
-    }
+	}
 }
 
 class Polytope_Edge{
@@ -300,7 +307,14 @@ var edgepool = new EdgePool();
 export class CollisionGjkEpa {
     EPSILON = 0.000001;
     shapeA:MinkowskiShape|null=null;
-    shapeB:MinkowskiShape|null=null;
+	shapeB:MinkowskiShape|null=null;
+	/** epa初始多面体 */
+	private _polytope: Triangle[] = [
+		new Triangle(),
+		new Triangle(),
+		new Triangle(),
+		new Triangle()
+	] ;
 
     /**
      * Method to get a normal of 3 points in 2D and 3D.
@@ -1009,13 +1023,13 @@ export class CollisionGjkEpa {
 		var it = 0;
 		let deep = -1;
         let pts = simplex.points;    
-        var polytope: Triangle[] = [//TODO 优化
-            // 注意顺序
-            new Triangle(pts[0], pts[1], pts[2]),
-            new Triangle(pts[0], pts[2], pts[3]),
-            new Triangle(pts[0], pts[3], pts[1]),
-            new Triangle(pts[1], pts[3], pts[2])
-        ] ;
+		var polytope = this._polytope;
+		polytope.length=4;
+        // 注意顺序
+		polytope[0].init(pts[0], pts[1], pts[2]);
+		polytope[1].init(pts[0], pts[2], pts[3]);
+		polytope[2].init(pts[0], pts[3], pts[1]);
+		polytope[3].init(pts[1], pts[3], pts[2]);
 
         var max = 1000;// TODO 最多扩展次数
         while (it < max) {
@@ -1027,11 +1041,13 @@ export class CollisionGjkEpa {
                 deep = this.findResponseWithTriangle(transA, transB, polytope, hitA, hitB, hitNorm);
             //}
             if (deep>0) {
+				if(it>100) debugger;
 				console.log('epait=',it);
 				return deep;
             }
             it++;
 		}
+		if(it>100) debugger;
 		console.log('epait=',it);
         return -1;
     }    
@@ -1057,6 +1073,11 @@ export class CollisionGjkEpa {
 		transA.position.copy(transa.position);
 		transA.quaternion.copy(transa.quaternion);
 */
+
+	// epa迭代1000次的例子
+	let transa = JSON.parse(`{"position":{"x":-1.012593433428434,"y":10.799216498665817,"z":0.5586403603301122},"quaternion":{"x":0.7639201612548266,"y":-0.02076238836886444,"z":-0.07677177733184969,"w":0.6403912902772247}}`);
+	transA.position.copy(transa.position);
+	transA.quaternion.copy(transa.quaternion);
 //DEBUG
 
         // 如果发生碰撞，返回一个simplex
