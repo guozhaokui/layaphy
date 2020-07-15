@@ -14,12 +14,8 @@ import { Quaternion } from '../math/Quaternion';
  */
 var tmpV1 = new Vec3();
 var tmpV2 = new Vec3();
-var tmpV3 = new Vec3();
 
-var center1 = new Vec3();
-var center2 = new Vec3();
 var dir1 = new Vec3();
-var vert1 = new Vec3();
 
 var _containsTriangle_ab=new Vec3();
 var _containsTriangle_ac = new Vec3();
@@ -28,10 +24,6 @@ var _containsTriangle_abp=new Vec3();
 var _containsTriangle_acp=new Vec3();
 
 var edge1 = new Vec3();
-
-var _check_worldA = new Vec3();
-var _check_worldB = new Vec3();
-var _check_sup=new Vec3();
 
 var _check_invQA = new Quaternion();
 var _check_NegDir = new Vec3();
@@ -43,9 +35,12 @@ var _computeSupport_Vec3 = new Vec3();
 var _computeSupport_Vec4 = new Vec3();
 
 var _findResponseWithTriangle_v1=new Vec3();
-
 var _containsTriangle_abc = new Vec3();
 
+
+/**
+ * Minkowski点。主要是用来保存原始形状的上的采样点.worldA/B
+ */
 class minkVec3 extends Vec3{
 	worldA:Vec3 = new Vec3();
 	worldB:Vec3 = new Vec3();
@@ -61,6 +56,14 @@ class minkVec3 extends Vec3{
 }
 
 
+/**
+ * 计算p在abc上的重心坐标。用来根据Minkowski形上的点来插值采样点
+ * @param p 
+ * @param a 
+ * @param b 
+ * @param c 
+ * @param result 
+ */
 function calcBarycentricCoord(p:Vec3, a:Vec3, b:Vec3, c:Vec3, result:Vec3){
 	let ab = new Vec3();
 	let ac = new Vec3();
@@ -132,6 +135,14 @@ function calcBarycentricCoord(p:Vec3, a:Vec3, b:Vec3, c:Vec3, result:Vec3){
 	result.set(1 - v - w, v, w);
 }
 
+/**
+ * 给一个重心坐标得到一个点
+ * @param barycentricCoord 
+ * @param a 
+ * @param b 
+ * @param c 
+ * @param out 
+ */
 function calcPtInTriangle(barycentricCoord:Vec3, a:Vec3, b:Vec3, c:Vec3, out:Vec3){
 	// out = a*bc.x+b*bc.y+c*bc.z
 	let cx = barycentricCoord.x;
@@ -146,7 +157,7 @@ function calcPtInTriangle(barycentricCoord:Vec3, a:Vec3, b:Vec3, c:Vec3, out:Vec
 
 class Simplex{
 	points=[new minkVec3(), new minkVec3(), new minkVec3(), new minkVec3()];
-
+	/** 顶点个数。由于上面固定是4个，所以靠这个成员 */
 	vertnum=0;
 	/**
 	 * 
@@ -158,7 +169,11 @@ class Simplex{
         let n = this.vertnum++;
 		this.points[n].copy(v);
     }
-    
+	
+	/**
+	 * 移除某个点
+	 * @param removeid 
+	 */
     splice(removeid:int){
 		let pts = this.points;
         switch(removeid){
@@ -207,10 +222,6 @@ class Simplex{
 		pts[1].worldB.set(B2x,B2y,B2z);
 
         this.vertnum=2;
-    }
-
-    remove(id:int){
-
     }
 }
 
@@ -286,30 +297,6 @@ class EdgePool{
 
 var edgepool = new EdgePool();
 
-class Polytope{
-	vertes:Vec3[]=[];
-	clear(){
-		this.vertes.length=0;
-	}
-	addVert(v:Vec3){
-		this.vertes.push( new Vec3(v.x,v.y,v.z));
-	}
-
-	init(v1:Vec3, v2:Vec3, v3:Vec3, v4:Vec3){
-		this.addVert(v1);
-		this.addVert(v2);
-		this.addVert(v3);
-		this.addVert(v4);
-	}
-
-	getTriangle(id:int){
-
-	}
-	getEdge(id:int){
-		
-	}
-}
-
 export class CollisionGjkEpa {
     EPSILON = 0.000001;
     shapeA:MinkowskiShape|null=null;
@@ -325,34 +312,15 @@ export class CollisionGjkEpa {
      * @return  The normal.
      */
     private _getNormal(a: Vec3, b: Vec3, c: Vec3, norm: Vec3) {
-        var ac = a.dot(c);// Dot(a, c); // perform aDot(c)
-        var bc = b.dot(c);//Dot(b, c); // perform bDot(c)
+        var ac = a.dot(c);
+        var bc = b.dot(c);
 
-        // perform b * a.Dot(c) - a * b.Dot(c)
+        // b * a.Dot(c) - a * b.Dot(c)
         b.scale(ac, tmpV1);
         a.scale(bc, tmpV2);
         tmpV1.vsub(tmpV2, norm);
         norm.normalize();
         return norm;
-        // return  b.scale(ac).subtract(a.scale(bc)).normalize();
-    }
-
-    /**
-     * Gets the barycenter of a cloud points.
-     *
-     * @method _getBarycenter
-     * @private
-     * @param  vertices the cloud points
-     * @return  The barycenter.
-     */
-    _getBarycenter(vertices: Vec3[], avg: Vec3) {
-        avg.set(0, 0, 0);
-        for (var i = 0; i < vertices.length; i++) {
-            avg.vadd(vertices[i], avg);
-        }
-
-        avg.scale(1 / vertices.length, avg);
-        return avg;
     }
 
     /**
@@ -364,7 +332,7 @@ export class CollisionGjkEpa {
      * @param  d The direction to search.
      * @return  The barycenter.
      */
-    _getFarthestPointInDirection(vertices: Vec3[], d: Vec3) {
+    private _getFarthestPointInDirection(vertices: Vec3[], d: Vec3) {
         var maxProduct = vertices[0].dot(d);
         var index = 0;
         for (var i = 1; i < vertices.length; i++) {
@@ -383,9 +351,9 @@ export class CollisionGjkEpa {
      * @method _getNearestEdge
      * @private
      * @param  simplex The simplex.
-     * @return {Object} Informations about the nearest edge (distance, index and normal).
+     * ret {Object} Informations about the nearest edge (distance, index and normal).
      */
-    _getNearestEdge(simplex: Simplex) {
+    private _getNearestEdge(simplex: Simplex) {
 		/*
         var distance = Infinity,
             index, normal;
@@ -434,9 +402,8 @@ export class CollisionGjkEpa {
      * @method _getNearestTriangle
      * @private
      * @param  polytope The polytope.
-     * @return {Object} Informations about the nearest edge (distance and index).
      */
-    _getNearestTriangle(polytope: Triangle[], result:EPA_NearestInfo) {
+    private _getNearestTriangle(polytope: Triangle[], result:EPA_NearestInfo) {
         var distance = Infinity,
             index=-1;
 
@@ -455,7 +422,6 @@ export class CollisionGjkEpa {
     }
 
     /**
-     * Checks if the origin is in a line.
      * 检查原点是否在线段上，并且计算新的dir
      * @method _containsLine
      * @param  simplex The simplex.
@@ -552,20 +518,21 @@ export class CollisionGjkEpa {
      * @return  Return true if the origin is in the tetrahedron.
      */
     _containsTetrahedron(simplex: Simplex, dir: Vec3) {
+		let cls = CollisionGjkEpa;
         let pts = simplex.points;
         var a = pts[3];
         var b = pts[2];
         var c = pts[1];
         var d = pts[0];
-        var ab = b.vsub(a,CollisionGjkEpa._containsTetrahedron_ab);
-        var ac = c.vsub(a,CollisionGjkEpa._containsTetrahedron_ac);
-        var ad = d.vsub(a,CollisionGjkEpa._containsTetrahedron_ad);
-        var ao = a.negate(CollisionGjkEpa._containsTetrahedron_ao);
+        var ab = b.vsub(a,cls._containsTetrahedron_ab);
+        var ac = c.vsub(a,cls._containsTetrahedron_ac);
+        var ad = d.vsub(a,cls._containsTetrahedron_ad);
+        var ao = a.negate(cls._containsTetrahedron_ao);
 
         // 检查四面体的除了底面的其他面的法线（反）是否指向原点。底面一定是指向的，因为a点就是根据底面的朝向获得的。
-        var abc = ab.cross(ac,CollisionGjkEpa._containsTetrahedron_abc);
-        var acd = ac.cross(ad,CollisionGjkEpa._containsTetrahedron_acd);
-        var adb = ad.cross(ab,CollisionGjkEpa._containsTetrahedron_adb);
+        var abc = ab.cross(ac,cls._containsTetrahedron_abc);
+        var acd = ac.cross(ad,cls._containsTetrahedron_acd);
+        var adb = ad.cross(ab,cls._containsTetrahedron_adb);
 
         var abcTest = 0x1,
             acdTest = 0x2,
@@ -686,9 +653,6 @@ export class CollisionGjkEpa {
     }
 
     private static _checkTwoTetrahedron_abc_ac = new Vec3();
-    private static _checkTwoTetrahedron_ab=new Vec3();
-    private static _checkTwoTetrahedron_ac=new Vec3();
-    private static _checkTwoTetrahedron_abc=new Vec3();
     /**
 	 * 如果四面体有两个面朝向原点的时候，找到下一个最好的采样方向
 	 * 在abc和acd的正方向。
@@ -718,7 +682,6 @@ export class CollisionGjkEpa {
         let ab_abc = ab.cross(abc,CollisionGjkEpa._checkTwoTetrahedron_abc_ac);   // 另外一条边。重用变量
         if (ab_abc.dot(ao) > 0) {
 			// 原点方向在ab外面，只保留ab就行（a3 b2 c1 d0）
-            //simplex.tetrahedron2line(2,3);
             //dir is not ab_abc because it's not point towards the origin;
             //ABxA0xAB direction we are looking for
             this._getNormal(ab, ao, ab, dir);
@@ -747,7 +710,6 @@ export class CollisionGjkEpa {
 
         // 底面法线x左侧面 的方向是否朝向原点
         if (acp.dot(ao) > 0) {
-            //simplex.tetrahedron2line(1,3);
             //dir is not abc_ac because it's not point towards the origin;
             //ACxA0xAC direction we are looking for
             this._getNormal(ac, ao, ac, dir);
@@ -758,7 +720,6 @@ export class CollisionGjkEpa {
         // 右侧面x底面法线 的方向是否朝向原点
         var ab_abc = ab.cross(abc, CollisionGjkEpa._checkTetrahedron_acp); // 重用上面的变量了
         if (ab_abc.dot(ao) > 0) {
-            //simplex.tetrahedron2line(2,3);
             //dir is not ab_abc because it's not point towards the origin;
             //ABxA0xAB direction we are looking for
             this._getNormal(ab, ao, ab, dir);
@@ -767,13 +728,12 @@ export class CollisionGjkEpa {
 
         // 如果左右两边都不朝向原点，只能用abc重新采样
         // 把第一个点去掉，退化成三角形。以abc所在三角形为（确定朝向原点）底面，用abc作为采样点，再来
-        //simplex.splice(0);
         dir.copy(abc);
         return 2;
     }
 
     /**
-     * The support function.
+	 * 这个先留着，以后做多面体的检测
      *
      * @method support
      * @param  shapei The convexe collider object.
@@ -781,7 +741,7 @@ export class CollisionGjkEpa {
      * @param  direction The direction.
      * @return  The support points.
      */
-    support(shapei: Vec3[], shapej: Vec3[], direction: Vec3, point:Vec3) {
+    private _support(shapei: Vec3[], shapej: Vec3[], direction: Vec3, point:Vec3) {
         // d is a vector direction (doesn't have to be normalized)
         // get points on the edge of the shapes in opposite directions
         direction.normalize();
@@ -793,28 +753,6 @@ export class CollisionGjkEpa {
         return point;
     }
 
-    /**
-     * Checks if the simplex contains the origin.
-     * 原点是否在单形内
-     *
-     * @method findResponseWithEdge
-     * @param  simplex The simplex or false if no intersection.
-     * @param  dir The direction to test.
-     * @return Contains or not.
-     */
-    containsOrigin1(simplex: Simplex, dir: Vec3) {
-        if (simplex.vertnum === 2) {
-            return this._containsLine(simplex, dir);
-        }
-        if (simplex.vertnum === 3) {
-            return this._containsTriangle(simplex, dir);
-        }
-        if (simplex.vertnum === 4) {
-            return this._containsTetrahedron(simplex, dir);
-        }
-        return false;
-	}
-
 	/**
 	 * 判断原点是否在单形内，并确定下一个采样方向
 	 * @param simplex 
@@ -822,9 +760,6 @@ export class CollisionGjkEpa {
 	 */
     containsOrigin(simplex: Simplex, dir: Vec3):boolean {
 		switch( simplex.vertnum){
-			case 0:
-			case 1:
-				return false;
 			case 2:
 				return this._containsLine(simplex, dir);
 			case 3:
@@ -939,7 +874,8 @@ export class CollisionGjkEpa {
                 // if the point added last was not past the origin in the direction of d
                 // then the Minkowski Sum cannot possibly contain the origin since
                 // the last point added is on the edge of the Minkowski Difference
-                // 没有发生碰撞              
+				// 没有发生碰撞       
+				console.log('gjk it=',it);
                 return false;
             }
 
@@ -948,10 +884,12 @@ export class CollisionGjkEpa {
             // the current simplex
             // 如果单形包含原点了，则发生碰撞了。
             if (this.containsOrigin(simplex, dir)) {
+				console.log('gjk it=',it);
                 return simplex;
             }
             it++;
-        }
+		}
+		console.log('gjk it=',it);
         return false;
     }
 
@@ -1081,18 +1019,20 @@ export class CollisionGjkEpa {
 
         var max = 1000;// TODO 最多扩展次数
         while (it < max) {
-            if (pts[0].z === undefined) {
+            //if (pts[0].z === undefined) {
                 // 2D的情况
                 //response = this.findResponseWithEdge(colliderPoints, collidedPoints, simplex);
-            } else {
+            //} else {
                 // 3D的情况
                 deep = this.findResponseWithTriangle(transA, transB, polytope, hitA, hitB, hitNorm);
-            }
+            //}
             if (deep>0) {
+				console.log('epait=',it);
 				return deep;
             }
             it++;
-        }
+		}
+		console.log('epait=',it);
         return -1;
     }    
 
@@ -1130,12 +1070,6 @@ export class CollisionGjkEpa {
 			if(deep<0){
 				return -1;
 			}
-			// response是从A指向B的
-			//let deep = response.length();
-			//var norm = response.clone();    //TODO 
-			//TODO 深度减去一个误差值？
-			//return response.vsub(norm,response);    //TODO 这个返回后禁止保存
-			// 计算碰撞点
 			return deep;			
         }
 
