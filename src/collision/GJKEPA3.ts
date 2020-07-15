@@ -775,14 +775,14 @@ export class CollisionGjkEpa {
      * 注意 这里假设dir是没有规格化的
      * @param transA 
      * @param transB 
-     * @param dir   
-     * @param worldA 
-     * @param worldB 
-     * @param minkowPt 
+     * @param dir   	采样方向。没有normalize。
+     * @param worldA 	A的世界坐标的support点
+     * @param worldB  	B的世界坐标的support点
+     * @param minkowPt  A-B得到Minkowski点
      */
     computeSupport(transA: Transform, transB: Transform, dir: Vec3, worldA: Vec3, worldB: Vec3, minkowPt: Vec3) {
-        let A = this.shapeA;
-        let B = this.shapeB;
+        let A:MinkowskiShape = this.shapeA as MinkowskiShape;
+        let B:MinkowskiShape = this.shapeB as MinkowskiShape;
         let qa = transA.quaternion;
         let qb = transB.quaternion;
         let invqa = _check_invQA;
@@ -806,8 +806,8 @@ export class CollisionGjkEpa {
 
 		let supA = _computeSupport_Vec3;
         let supB = _computeSupport_Vec4;
-        A&&A.getSupportVertex(dirA,supA);
-        B&&B.getSupportVertex(dirB,supB);
+        A.getSupportVertex(dirA,supA);
+        B.getSupportVertex(dirB,supB);
 
         // 转到世界空间
         transA.pointToWorld(supA,worldA);
@@ -983,10 +983,10 @@ export class CollisionGjkEpa {
             }
 
             // create new triangles from the edges in the edge list
-            for (var i = 0; i < edges.length; i++) {
+            for (let i = 0,l=edges.length; i < l; i++) {
                 let edge = edges.edges[i];
                 triangle = new Triangle(sup, edge.a, edge.b);   //TODO 效率
-                if (triangle.n.length() !== 0) {
+                if (triangle.n.lengthSquared() !== 0) {
                     polytope.push(triangle);
                 }
             }
