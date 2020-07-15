@@ -538,12 +538,12 @@ export class CollisionGjkEpa {
     /**
      * Checks if the origin is in a tetrahedron.
      * 
-     *                  3   a 最后加的点
+     *                 3a 最后加的点
      *                / | \
      *               /  |  \
      *              /   |   \
-     *            /     2 b  \
-     *         d 0 ---------- 1 c
+     *            /     1c   \
+     *          0d ---------- 2b
      *                 
      * @method _containsTetrahedron
      * @private
@@ -579,37 +579,106 @@ export class CollisionGjkEpa {
         switch (planeTests) {
             case abcTest:
                 // 如果只有abc朝向原点。则以abc为底重新采样
-                return this._checkTetrahedron(ao, ab, ac, abc, dir, simplex);
+                switch(this._checkTetrahedron(ao, ab, ac, abc, dir)){
+					case 0:
+						simplex.tetrahedron2line(1,3);	// 从左边重新开始
+						break;
+					case 1:
+						simplex.tetrahedron2line(2,3);	// 从右边重新开始
+						break;
+					case 2:
+						simplex.splice(0);		// 去掉0点，从当前面重新开始
+						break;
+				}
+				return false;
             case acdTest:
                 // 如果只有acd朝向原点
-                // 由于_checkTetrahedron会使用固定顶点id，所以这里要调整一下顺序，保证1,2分别对应当前检查侧面的左边和右边(看向朝里的法线)
-                // 注意顺序，防止拷贝被拷贝修改的值
-                pts[2].copy(c);
-                pts[1].copy(d);
-                return this._checkTetrahedron(ao, ac, ad, acd, dir, simplex);
+				switch(this._checkTetrahedron(ao, ac, ad, acd, dir)){
+					case 0:
+						simplex.tetrahedron2line(1,3);
+						break;
+					case 1:
+						simplex.tetrahedron2line(0,3);
+						break;
+					case 2:
+						simplex.splice(2);
+						break;
+				}
+				return false;
             case adbTest:
-                //in front of triangle ADB
                 // 如果只有adb朝向原点
-                pts[1].copy(b);
-                pts[2].copy(d);
-                return this._checkTetrahedron(ao, ad, ab, adb, dir, simplex);
-
+                switch(this._checkTetrahedron(ao, ad, ab, adb, dir)){
+					case 0:
+						simplex.tetrahedron2line(2,3);
+						break;
+					case 1:
+						simplex.tetrahedron2line(0,3);
+						break;
+					case 2:
+						simplex.splice(1);
+						break;
+				}
+				return false;
             case abcTest | acdTest:
                 // 如果原点在两个面的正方向。
 				// 如果在abc和acd的正方向
 				// 需要去掉 abc和acd
-                return this._checkTwoTetrahedron(ao, ab, ac, abc, dir, simplex);
+                switch(this._checkTwoTetrahedron(ao, ab, ac, ad, abc, acd, dir)){
+					case 0:
+						simplex.tetrahedron2line(0,3);
+						break;
+					case 1:
+						simplex.tetrahedron2line(1,3);
+						break;
+					case 2:
+						simplex.splice(2);
+						break;
+					case 3:
+						simplex.tetrahedron2line(2,3);
+						break;
+					case 4:
+						simplex.splice(0);
+						break;
+				}
+				return false;
             case acdTest | adbTest:
-                pts[2].copy(c);
-                pts[1].copy(d);
-                pts[0].copy(b);
-                return this._checkTwoTetrahedron(ao, ac, ad, acd, dir, simplex);
+				switch(this._checkTwoTetrahedron(ao,ac,ad,ab,acd,adb,dir)){
+					case 0:
+						simplex.tetrahedron2line(2,3);
+						break;
+					case 1:
+						simplex.tetrahedron2line(0,3);
+						break;
+					case 2:
+						simplex.splice(1);
+						break;
+					case 3:
+						simplex.tetrahedron2line(1,3);
+						break;
+					case 4:
+						simplex.splice(2);
+						break;
+				}
+				return false;
             case adbTest | abcTest:
-				// 调换顺序，都是pts数组中的，可以调换，只要避免多个指向同一个Vec3就行
-                pts[1]=b;
-                pts[2]=d;
-                pts[0]=c;
-                return this._checkTwoTetrahedron(ao, ad, ab, adb, dir, simplex);
+				switch(this._checkTwoTetrahedron(ao,ad,ab,ac,adb,abc,dir)){
+					case 0:
+						simplex.tetrahedron2line(1,3);
+						break;
+					case 1:
+						simplex.tetrahedron2line(2,3);
+						break;
+					case 2:
+						simplex.splice(0);
+						break;
+					case 3:
+						simplex.tetrahedron2line(0,3);
+						break;
+					case 4:
+						simplex.splice(1);
+						break;
+				}
+				return false;
             default:
 				// 否则，四个面都指向原点，则包含原点
                 return true;
@@ -621,6 +690,9 @@ export class CollisionGjkEpa {
     private static _checkTwoTetrahedron_ac=new Vec3();
     private static _checkTwoTetrahedron_abc=new Vec3();
     /**
+	 * 如果四面体有两个面朝向原点的时候，找到下一个最好的采样方向
+	 * 在abc和acd的正方向。
+	 * 
      *  ab,ac是第一个底面的两条边
      * 
 	 * 如果原点在两个面的外面，则优先考虑这两个面的共同边的垂线
@@ -631,92 +703,73 @@ export class CollisionGjkEpa {
      * @param abc 这个面的法线
      * @param dir  返回方向
      * @param simplex 
+	 * @return  0,1,2 当前面的左边的面的 0,1,2   
+	 * 			3 当前面的右边
+	 * 			4 当前面的上方
      */
-    private _checkTwoTetrahedron(ao: Vec3, ab: Vec3, ac: Vec3, abc: Vec3, dir: Vec3, simplex: Simplex) {
-
-		/**
-		 * 在abc和acd的正方向。
-		 */
-
-		var abc_ac = CollisionGjkEpa._checkTwoTetrahedron_abc_ac;
-		// 在abc平面上的，与ac垂直的线
-        abc.cross(ac, abc_ac);
-
+    private _checkTwoTetrahedron(ao: Vec3, ab: Vec3, ac: Vec3, ad:Vec3, abc: Vec3, acd:Vec3, dir: Vec3):int {
+		// 当前面的左边(ac)朝向原点
+		let abc_ac = abc.cross(ac,CollisionGjkEpa._checkTwoTetrahedron_abc_ac);
         if (abc_ac.dot(ao) > 0) {
-			let pts = simplex.points;
-            //the origin is beyond AC from ABC's
-            //perspective, effectively excluding
-			//ACD from consideration
-			// 从abc平面上看的话，原点在ac的外面
-
-            //we thus need test only ACD
-            pts[2].copy(pts[1]);    // ACD的右边
-            pts[1].copy(pts[0]);    // ACD的左边
-
-            /*
-            ab = pts[2].subtract(pts[3]);
-            ac = pts[1].subtract(pts[3]);
-            abc = ab.constructor.Cross(ab, ac);
-            */
-           ab = pts[2].vsub(pts[3], CollisionGjkEpa._checkTwoTetrahedron_ab);// 这时候的ab=原来的ac
-           ac = pts[1].vsub(pts[3], CollisionGjkEpa._checkTwoTetrahedron_ac);// 这时候的ac=原来的ad
-           abc = ab.cross(ac, CollisionGjkEpa._checkTwoTetrahedron_abc);    // 计算abc的法线，即原来的acd的法线。
-
-            return this._checkTetrahedron(ao, ab, ac, abc, dir, simplex);
+			return this._checkTetrahedron(ao,ac,ad,acd,dir);
         }
 
-        var ab_abc = CollisionGjkEpa._checkTwoTetrahedron_abc_ac;   // 另外一条边。重用变量
-        ab.cross(abc,ab_abc);
-
+		// 右边 
+        let ab_abc = ab.cross(abc,CollisionGjkEpa._checkTwoTetrahedron_abc_ac);   // 另外一条边。重用变量
         if (ab_abc.dot(ao) > 0) {
-            simplex.tetrahedron2line(2,3);
+			// 原点方向在ab外面，只保留ab就行（a3 b2 c1 d0）
+            //simplex.tetrahedron2line(2,3);
             //dir is not ab_abc because it's not point towards the origin;
             //ABxA0xAB direction we are looking for
             this._getNormal(ab, ao, ab, dir);
-            return false;
-        }
-        return false;
+            return 3;
+		}
+		
+		// 否则的话，就是在abc的上方
+		dir.copy(abc);
+        return 4;
     }
 
 	static _checkTetrahedron_acp = new Vec3();
 	
     /**
-     * 
+     * 四面体只有一个面朝向原点，这时候只要处理这个面就行，根据这个面得到新的采样方向
      * @param ao    朝向原点的方向
-     * @param ab 
-     * @param ac 
+     * @param ab 	从ao看向这个平面的右边
+     * @param ac    从ao看向这个平面的左边
      * @param abc   ao底面的法线（朝向指向原点方向）
      * @param dir   输出新的采样方向
      * @param simplex 
+	 * @returns 0 左边，1 右边，3 上面
      */
-    private _checkTetrahedron(ao: Vec3, ab: Vec3, ac: Vec3, abc: Vec3, dir: Vec3, simplex: Simplex ) {
+    private _checkTetrahedron(ao: Vec3, ab: Vec3, ac: Vec3, abc: Vec3, dir: Vec3 ):int {
         var acp = abc.cross(ac, CollisionGjkEpa._checkTetrahedron_acp);
 
         // 底面法线x左侧面 的方向是否朝向原点
         if (acp.dot(ao) > 0) {
-            simplex.tetrahedron2line(1,3);
+            //simplex.tetrahedron2line(1,3);
             //dir is not abc_ac because it's not point towards the origin;
             //ACxA0xAC direction we are looking for
             this._getNormal(ac, ao, ac, dir);
-            return false;
+            return 0;
         }
 
         //almost the same like triangle checks
         // 右侧面x底面法线 的方向是否朝向原点
         var ab_abc = ab.cross(abc, CollisionGjkEpa._checkTetrahedron_acp); // 重用上面的变量了
         if (ab_abc.dot(ao) > 0) {
-            simplex.tetrahedron2line(2,3);
+            //simplex.tetrahedron2line(2,3);
             //dir is not ab_abc because it's not point towards the origin;
             //ABxA0xAB direction we are looking for
             this._getNormal(ab, ao, ab, dir);
-            return false;
+            return 1;
         }
 
         // 如果左右两边都不朝向原点，只能用abc重新采样
         // 把第一个点去掉，退化成三角形。以abc所在三角形为（确定朝向原点）底面，用abc作为采样点，再来
-        simplex.splice(0);
+        //simplex.splice(0);
         dir.copy(abc);
-        return false;
+        return 2;
     }
 
     /**
@@ -1059,9 +1112,11 @@ export class CollisionGjkEpa {
 	 */
     intersect(transA: Transform, transB: Transform,hitA:Vec3,hitB:Vec3, hitNorm:Vec3, justtest:boolean):f32 {
 //DEBUG
+/*
 	let transa  = JSON.parse( `{"position":{"x":3.047712156903969,"y":7.238084823732435,"z":5.3513835448599},"quaternion":{"x":7.633624811061411e-8,"y":2.863294548138404e-7,"z":-7.981622297533533e-16,"w":0.9999999999999563}}`);
 		transA.position.copy(transa.position);
 		transA.quaternion.copy(transa.quaternion);
+*/
 //DEBUG
 
         // 如果发生碰撞，返回一个simplex
