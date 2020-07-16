@@ -17,6 +17,7 @@ var tmpV1 = new Vec3();
 var tmpV2 = new Vec3();
 
 var dir1 = new Vec3();
+var normedDir = new Vec3();
 
 var _containsTriangle_ab=new Vec3();
 var _containsTriangle_ac = new Vec3();
@@ -38,6 +39,8 @@ var _computeSupport_Vec4 = new Vec3();
 var _findResponseWithTriangle_v1=new Vec3();
 var _containsTriangle_abc = new Vec3();
 
+var findResponseWithTriangle_nearest=new Vec3();
+var findResponseWithTriangle_bc = new Vec3();
 
 /**
  * Minkowski点。主要是用来保存原始形状的上的采样点.worldA/B
@@ -160,6 +163,9 @@ class Simplex{
 	points=[new minkVec3(), new minkVec3(), new minkVec3(), new minkVec3()];
 	/** 顶点个数。由于上面固定是4个，所以靠这个成员 */
 	vertnum=0;
+	reset(){
+		this.vertnum=0;
+	}
 	/**
 	 * 
 	 * @param v  	 这几个值必须复制，不能引用
@@ -304,10 +310,26 @@ class EdgePool{
 
 var edgepool = new EdgePool();
 
+
+class HitResult{
+	hitA:Vec3;			// 引用
+	hitB:Vec3;			// 引用
+	hitNorm:Vec3;		// 引用
+	deep=0;
+}
+
+const enum GJKResult{
+	NOCD=0,
+	INMARGIN=1,
+	NEEDEPA=2
+}
 export class CollisionGjkEpa {
+	
     EPSILON = 0.000001;
     shapeA:MinkowskiShape|null=null;
 	shapeB:MinkowskiShape|null=null;
+	private simplex = new Simplex();
+	private hitResult = new HitResult();
 	/** epa初始多面体 */
 	private _polytope: Triangle[] = [
 		new Triangle(),
@@ -315,6 +337,8 @@ export class CollisionGjkEpa {
 		new Triangle(),
 		new Triangle()
 	] ;
+
+	private useMargin=true;
 
     /**
      * Method to get a normal of 3 points in 2D and 3D.
@@ -794,7 +818,7 @@ export class CollisionGjkEpa {
      * @param worldB  	B的世界坐标的support点
      * @param minkowPt  A-B得到Minkowski点
      */
-    computeSupport(transA: Transform, transB: Transform, dir: Vec3, worldA: Vec3, worldB: Vec3, minkowPt: Vec3) {
+    computeSupport(transA: Transform, transB: Transform, dir: Vec3, worldA: Vec3, worldB: Vec3, minkowPt: Vec3, dirNormed=false) {
         let A:MinkowskiShape = this.shapeA as MinkowskiShape;
         let B:MinkowskiShape = this.shapeB as MinkowskiShape;
         let qa = transA.quaternion;
@@ -809,8 +833,8 @@ export class CollisionGjkEpa {
         let dirB = _computeSupport_Vec2;
 
         // 规格化，后面的计算support点的地方需要规格化之后的
-        dirA.copy(dir);
-        dirA.normalize();
+		dirA.copy(dir);
+		!dirNormed && dirA.normalize();
 
         let negDir = _check_NegDir;
         negDir.copy(dirA).negate(negDir);
@@ -819,15 +843,75 @@ export class CollisionGjkEpa {
         invqb.vmult(negDir,dirB);
 
 		let supA = _computeSupport_Vec3;
-        let supB = _computeSupport_Vec4;
-        A.getSupportVertex(dirA,supA);
-        B.getSupportVertex(dirB,supB);
+		let supB = _computeSupport_Vec4;
+		if(this.useMargin){
+			A.getSupportVertexWithoutMargin(dirA,supA);
+			B.getSupportVertexWithoutMargin(dirB,supB);
+		}else{
+			A.getSupportVertex(dirA,supA);
+			B.getSupportVertex(dirB,supB);
+		}
 
         // 转到世界空间
         transA.pointToWorld(supA,worldA);
         transB.pointToWorld(supB,worldB);
         worldA.vsub(worldB,minkowPt);
-    }
+	}
+	
+	/**
+	 * 在margin内发现了一个分离面，这时候可以立即得到碰撞信息。
+	 * @param dir 	minkpt的采样方向
+	 * @param margin 
+	 * @param d 
+	 * @param minkpt 
+	 */
+	private getHitInfoByMargin(dir:Vec3, margin:number, d:number, minkpt:minkVec3){
+		let hitresult = this.hitResult;
+		let hitA = hitresult.hitA;
+		let hitB = hitresult.hitB;
+		let hitNorm = hitresult.hitNorm;	// 需要是B指向A
+		let simplex = this.simplex;
+		let hitpt = new Vec3(); 	//TODO
+		//let len = minkpt.length();	// 采样点到原点的距离
+		let A = this.shapeA as MinkowskiShape;
+		let B = this.shapeB as MinkowskiShape;
+		debugger;
+		switch( simplex.vertnum){
+			case 0:{
+				let len = minkpt.length();
+				let deep = margin-len;
+				hitNorm.set(minkpt.x, minkpt.y,minkpt.z);
+				hitNorm.normalize();
+				hitresult.deep = deep;
+				minkpt.worldA.addScaledVector(-A.margin,hitNorm, hitA);	// hitnorm 是B指向A，所以要反过来
+				minkpt.worldB.addScaledVector(B.margin, hitNorm, hitB);
+				return deep;
+			}
+			case 1:{
+				// 已经有一个点了，当前采样点与这个点组成线段，根据原点的位置就能得到碰撞信息
+				let len = minkpt.length();
+				let deep = margin-len;
+				hitNorm.set(minkpt.x, minkpt.y,minkpt.z);
+				hitNorm.normalize();
+				hitresult.deep = deep;
+				minkpt.worldA.addScaledVector(-A.margin,hitNorm, hitA);	// hitnorm 是B指向A，所以要反过来
+				minkpt.worldB.addScaledVector(B.margin, hitNorm, hitB);
+				return deep;
+			}
+			case 2:
+				// 已经有两个点了，当前采样点与这个线段组成三角形
+				break;
+			case 3:
+				// 已经有三个点了，当前采样点与这个三角形组成四面体，
+				break;
+			case 4:
+				// 已经有4个点了，这种情况不可能发生，因为有4个点的情况下，如果还要采样，必然会退化成小于4个点
+				break;
+			default:
+			break;
+		}
+		return -1;
+	}
 
     /**
      * The GJK (Gilbert–Johnson–Keerthi) algorithm.
@@ -837,9 +921,10 @@ export class CollisionGjkEpa {
      *
      * @return  The simplex or false if no intersection.
      */    
-    check(transi: Transform, transj: Transform) {
+    gjk(transi: Transform, transj: Transform):GJKResult {
         var it = 0;
-        var simplex = new Simplex(); //TODO
+		var simplex = this.simplex;// new Simplex(); //TODO
+		simplex.reset();
 
         // 根据位置计算初始采样方向
         var origi = transi.position;
@@ -854,15 +939,32 @@ export class CollisionGjkEpa {
             dir.x = 1;
         }
 
+		var normdir = normedDir;
+		normdir.copy(dir);
+		normdir.normalize();
+
         // set the first support as initial point of the new simplex
         let minkowpt = new minkVec3();	//TODO 
-        this.computeSupport(transi, transj,dir, minkowpt.worldA,minkowpt.worldB,minkowpt);
+        this.computeSupport(transi, transj,normdir, minkowpt.worldA,minkowpt.worldB,minkowpt,true);
         simplex.addvertex(minkowpt);
 
-        if (minkowpt.dot(dir) <= 0) {
-            // 没有发生碰撞
-            // TODO 这个没有考虑margin优化
-            return false;
+		let A = this.shapeA as MinkowskiShape;
+		let B = this.shapeB as MinkowskiShape;
+		let margin = A.margin+B.margin;
+
+		let d = minkowpt.dot(normdir);
+        if (d <= 0) {
+			if(this.useMargin){
+				if(margin>-d){
+					debugger;
+				}else{
+					return GJKResult.NOCD; 	// 超出margin了，没有碰撞
+				}
+			}else{
+				// 没有发生碰撞
+				// TODO 这个没有考虑margin优化
+				return GJKResult.NOCD;
+			}
         }
 
         dir.negate(dir);// we will be searching in the opposite direction next
@@ -880,17 +982,28 @@ export class CollisionGjkEpa {
                 dir.x = tmp;
             }
 
+			normdir.copy(dir);
+			normdir.normalize();
+	
             // TODO 没有记录对应i,j的全局点
-            this.computeSupport(transi,transj,dir,minkowpt.worldA, minkowpt.worldB,minkowpt);
+            this.computeSupport(transi,transj,normdir,minkowpt.worldA, minkowpt.worldB,minkowpt,true);
 
-            // make sure that the last point we added actually passed the origin
-            if (minkowpt.dot(dir) <= 0) {
-                // if the point added last was not past the origin in the direction of d
-                // then the Minkowski Sum cannot possibly contain the origin since
-                // the last point added is on the edge of the Minkowski Difference
-				// 没有发生碰撞       
-				console.log('gjk it=',it);
-                return false;
+			// make sure that the last point we added actually passed the origin
+			d = minkowpt.dot(normdir);
+            if (d <= 0) {
+				if(this.useMargin){
+					if(margin>-d){
+						// 碰撞深度在margin以内，可以立即得到碰撞信息。
+						this.getHitInfoByMargin(normdir,margin,-d,minkowpt);
+						return GJKResult.INMARGIN;
+					}else{
+						return GJKResult.NOCD; 	// 超出margin了，没有碰撞
+					}
+				}else{
+					// 没有发生碰撞
+					// TODO 这个没有考虑margin优化
+					return GJKResult.NOCD;
+				}
             }
 
             simplex.addvertex(minkowpt);
@@ -899,12 +1012,12 @@ export class CollisionGjkEpa {
             // 如果单形包含原点了，则发生碰撞了。
             if (this.containsOrigin(simplex, dir)) {
 				console.log('gjk it=',it);
-                return simplex;
+                return GJKResult.NEEDEPA;
             }
             it++;
 		}
 		console.log('gjk it=',it);
-        return false;
+        return GJKResult.NOCD;
     }
 
     /**
@@ -936,9 +1049,6 @@ export class CollisionGjkEpa {
      * 
      * 遍历指定的polytope，找出距离原点最近的面，如果找到了，返回深度向量
 	 * 如果不是边界面的话，把polytope扩展一个四面体。返回null
-     * @method findResponseWithTriangle
-     * @param  colliderPoints The convexe collider object.
-     * @param  collidedPoints The convexe collided object.
      * @param  polytope The polytope done with the simplex.    初始polytope,是一个由四个三角形组成的四面体
      * @return  找到了最近边界了，则深度向量，否则扩展多面体并返回null
      */
@@ -963,9 +1073,9 @@ export class CollisionGjkEpa {
 			triangle.n.negate(hitNorm);
 			//hitNorm.copy( triangle.n);
 			// 计算Minkowsky上的最近点
-			let nearestpt = new Vec3(); //TODO
+			let nearestpt =  findResponseWithTriangle_nearest;
 			triangle.n.scale(-nearest.distance,nearestpt);
-			let bc=new Vec3();
+			let bc= findResponseWithTriangle_bc;
 			calcBarycentricCoord(nearestpt,triangle.a, triangle.b,triangle.c, bc);
 			// 计算碰撞点
 			calcPtInTriangle(bc,triangle.a.worldA,triangle.b.worldA,triangle.c.worldA,hitA);
@@ -996,6 +1106,19 @@ export class CollisionGjkEpa {
                 }
             }
 
+			if(edges.length==0){
+				// 所有的面都朝向这个点，通常是浮点误差表示，这时候表示无法更靠近了，就用上面的作为碰撞信息就行
+				triangle.n.negate(hitNorm);
+				// 计算Minkowsky上的最近点
+				let nearestpt =  findResponseWithTriangle_nearest;
+				triangle.n.scale(-nearest.distance,nearestpt);
+				let bc= findResponseWithTriangle_bc;
+				calcBarycentricCoord(nearestpt,triangle.a, triangle.b,triangle.c, bc);
+				// 计算碰撞点
+				calcPtInTriangle(bc,triangle.a.worldA,triangle.b.worldA,triangle.c.worldA,hitA);
+				calcPtInTriangle(bc,triangle.a.worldB,triangle.b.worldB,triangle.c.worldB,hitB);
+				return nearest.distance;				
+			}
             // create new triangles from the edges in the edge list
             for (let i = 0,l=edges.length; i < l; i++) {
                 let edge = edges.edges[i];
@@ -1074,18 +1197,43 @@ export class CollisionGjkEpa {
 		transA.quaternion.copy(transa.quaternion);
 */
 
+/*
 	// epa迭代1000次的例子
 	let transa = JSON.parse(`{"position":{"x":-1.012593433428434,"y":10.799216498665817,"z":0.5586403603301122},"quaternion":{"x":0.7639201612548266,"y":-0.02076238836886444,"z":-0.07677177733184969,"w":0.6403912902772247}}`);
 	transA.position.copy(transa.position);
 	transA.quaternion.copy(transa.quaternion);
+*/
+/*
+	let transa = JSON.parse(`{"position":{"x":-3.629106999975412,"y":10.795690566386964,"z":-5.02737115423355},"quaternion":{"x":-0.4349174512832908,"y":0.012517727147505158,"z":0.031959456897814036,"w":-0.8998159312832285}}`);
+	transA.position.copy(transa.position);
+	transA.quaternion.copy(transa.quaternion);
+*/
 //DEBUG
 
-        // 如果发生碰撞，返回一个simplex
-        var simplex = this.check(transA, transB);
+		let hitresult = this.hitResult;
+		hitresult.hitA=hitA;
+		hitresult.hitB=hitB;
+		hitresult.hitNorm = hitNorm;
+		hitresult.deep=-1;
 
-        if (simplex) {
-            if(justtest)
-                return 1;
+		let needepa = false;
+        var ret = this.gjk(transA, transB);
+		switch( ret){
+			case GJKResult.NEEDEPA:
+				needepa=true;
+				break;
+			case GJKResult.INMARGIN:
+				return hitresult.deep;
+			default:
+				return -1;
+		}
+		// 这时候必然发生碰撞了。
+		if(justtest)
+			return 1;
+
+		let simplex = this.simplex;
+		if (needepa) {
+				// 在gjk阶段已经得到碰撞信息了
 			// 根据simplex和两个shape来得到碰撞信息
 			let deep = this.getResponse(transA, transB, simplex,hitA,hitB, hitNorm);
 			if(deep<0){
