@@ -860,12 +860,12 @@ export class CollisionGjkEpa {
 	
 	/**
 	 * 在margin内发现了一个分离面，这时候可以立即得到碰撞信息。
-	 * @param dir 	minkpt的采样方向
+	 * @param ndir 	minkpt的采样方向。规格化后的。
 	 * @param margin 
 	 * @param d 
 	 * @param minkpt 
 	 */
-	private getHitInfoByMargin(dir:Vec3, margin:number, d:number, minkpt:minkVec3){
+	private getHitInfoByMargin(ndir:Vec3, margin:number, d:number, minkpt:minkVec3){
 		let hitresult = this.hitResult;
 		let hitA = hitresult.hitA;
 		let hitB = hitresult.hitB;
@@ -876,8 +876,14 @@ export class CollisionGjkEpa {
 		let A = this.shapeA as MinkowskiShape;
 		let B = this.shapeB as MinkowskiShape;
 		debugger;
+		let ao = new Vec3();
+		let ab = new Vec3();
+		let pdir = new Vec3();	// 垂直于当前的线或者面的
+		let hit = new Vec3();
+
 		switch( simplex.vertnum){
 			case 0:{
+				// 这个应该不可能发生
 				let len = minkpt.length();
 				let deep = margin-len;
 				hitNorm.set(minkpt.x, minkpt.y,minkpt.z);
@@ -888,11 +894,11 @@ export class CollisionGjkEpa {
 				return deep;
 			}
 			case 1:{
-				// 已经有一个点了，当前采样点与这个点组成线段，根据原点的位置就能得到碰撞信息
-				let len = minkpt.length();
-				let deep = margin-len;
-				hitNorm.set(minkpt.x, minkpt.y,minkpt.z);
-				hitNorm.normalize();
+				// 已经有一个点了，当前dir采样点在margin内，表示与一个线段的头碰撞了 //与这个点组成线段，根据原点的位置就能得到碰撞信息
+				// dir可以直接使用，他是当前点的采样方向
+				let deep = margin-d;
+				// 计算
+				hitNorm.set(-ndir.x, -ndir.y, -ndir.z);	// B指向A
 				hitresult.deep = deep;
 				minkpt.worldA.addScaledVector(-A.margin,hitNorm, hitA);	// hitnorm 是B指向A，所以要反过来
 				minkpt.worldB.addScaledVector(B.margin, hitNorm, hitB);
