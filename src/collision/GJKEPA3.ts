@@ -3,6 +3,7 @@ import { MinkowskiShape } from '../shapes/MinkowskiShape';
 import { Transform } from '../math/Transform';
 import { Quaternion } from '../math/Quaternion';
 import { debug } from 'console';
+import { Sphere } from '../shapes/Sphere';
 /**
  * Class to help in the collision in 2D and 3D.
  * To works the algorithm needs two convexe point cloud
@@ -347,7 +348,7 @@ export class CollisionGjkEpa {
      * @param  a
      * @param  b    a的起点指向原点的方向
      * @param  c
-     * @return  The normal.
+     * @return   normal 已经规格化了
      */
     private _getNormal(a: Vec3, b: Vec3, c: Vec3, norm: Vec3) {
         var ac = a.dot(c);
@@ -859,11 +860,20 @@ export class CollisionGjkEpa {
 	}
 	
 	/**
+	 * 计算原点到ab的最近值
+	 * @param a 
+	 * @param b 
+	 */
+	private getPtNearsetLine(a:Vec3, b:Vec3,out:Vec3){
+
+	}
+
+	/**
 	 * 在margin内发现了一个分离面，这时候可以立即得到碰撞信息。
-	 * @param ndir 	minkpt的采样方向。规格化后的。
-	 * @param margin 
-	 * @param d 
-	 * @param minkpt 
+	 * @param ndir 	最后一个单形的垂线
+	 * @param margin 两个margin的和
+	 * @param d 	原点到最后的单形的距离
+	 * @param minkpt 最后的采样点
 	 */
 	private getHitInfoByMargin(ndir:Vec3, margin:number, d:number, minkpt:minkVec3){
 		let hitresult = this.hitResult;
@@ -882,7 +892,7 @@ export class CollisionGjkEpa {
 		let hit = new Vec3();
 
 		switch( simplex.vertnum){
-			case 0:{
+			case 1:{
 				// 这个应该不可能发生
 				let len = minkpt.length();
 				let deep = margin-len;
@@ -893,24 +903,25 @@ export class CollisionGjkEpa {
 				minkpt.worldB.addScaledVector(B.margin, hitNorm, hitB);
 				return deep;
 			}
-			case 1:{
-				// 已经有一个点了，当前dir采样点在margin内，表示与一个线段的头碰撞了 //与这个点组成线段，根据原点的位置就能得到碰撞信息
-				// dir可以直接使用，他是当前点的采样方向
-				let deep = margin-d;
-				// 计算
-				hitNorm.set(-ndir.x, -ndir.y, -ndir.z);	// B指向A
-				hitresult.deep = deep;
-				minkpt.worldA.addScaledVector(-A.margin,hitNorm, hitA);	// hitnorm 是B指向A，所以要反过来
-				minkpt.worldB.addScaledVector(B.margin, hitNorm, hitB);
+			case 2:{// 已经有一个点了，加上minkpt是两个点
+				// 已经有一个点了，当前dir采样点在margin内，
+				// 不能直接使用dir，因为外面已经计算为垂直于当前线段了（例如一个球与直立capsule的碰撞，当球撞到capsule的侧面的时候，当前的采样方向可能是斜着的，直接用的话肯定不对）
+				// 按照两个球计算。考虑球和胶囊，当球撞到侧面和端的时候法线必然是不同的，所以无法用任何现成的dir
+				let deep = Sphere.SpherehitSphere(A.margin, minkpt.worldA, B.margin, minkpt.worldB, hitA, hitNorm, hitB, false);
+				//hitNorm.negate(hitNorm);
+				//TODO 先要计算最近点，
+				this.getPtNearsetLine(minkpt.worldA,minkpt.worldB,hit);
+				// 根据最近点可以用来计算法线
+				// 根据最近点插值worldA,worldB计算碰撞点
 				return deep;
 			}
-			case 2:
+			case 3:
 				// 已经有两个点了，当前采样点与这个线段组成三角形
 				break;
-			case 3:
+			case 4:
 				// 已经有三个点了，当前采样点与这个三角形组成四面体，
 				break;
-			case 4:
+			case 5:
 				// 已经有4个点了，这种情况不可能发生，因为有4个点的情况下，如果还要采样，必然会退化成小于4个点
 				break;
 			default:
@@ -998,6 +1009,14 @@ export class CollisionGjkEpa {
 			d = minkowpt.dot(normdir);
             if (d <= 0) {
 				if(this.useMargin){
+					// 如果有margin的话，首先得到新的垂直的采样方向，再判断是否在margin内
+					// 不能直接使用d，例如球和胶囊，normdir很可能是斜着的，用这个normdir计算深度是不合理的
+					// 当然在不用margin的情况下，只用来判断方向是足够的。
+					simplex.addvertex(minkowpt);
+					this.containsOrigin(simplex,dir);// 这个dir可以被冲掉
+					normdir.copy(dir);
+					normdir.normalize();
+					d = minkowpt.dot(normdir);
 					if(margin>-d){
 						// 碰撞深度在margin以内，可以立即得到碰撞信息。
 						this.getHitInfoByMargin(normdir,margin,-d,minkowpt);
@@ -1015,7 +1034,8 @@ export class CollisionGjkEpa {
             simplex.addvertex(minkowpt);
             // otherwise we need to determine if the origin is in
             // the current simplex
-            // 如果单形包含原点了，则发生碰撞了。
+			// 如果单形包含原点了，则发生碰撞了。
+			// TODO 现在的dir有的规格化了，有的没有
             if (this.containsOrigin(simplex, dir)) {
 				console.log('gjk it=',it);
                 return GJKResult.NEEDEPA;
