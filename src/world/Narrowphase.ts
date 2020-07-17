@@ -1388,6 +1388,8 @@ export class Narrowphase {
 
 	
 	CapsuleCapsule(cap1: Capsule, cap2: Capsule,  pos1: Vec3, pos2: Vec3, q1: Quaternion, q2: Quaternion, body1: Body, body2: Body,  rsi: Shape, rsj: Shape, justTest: boolean): boolean {
+		return this.gjk(cap1, cap2,pos1,pos2,q1,q2,body1,body2,rsi,rsj,justTest);
+		/*
 		let ni = Narrowphase.nor1;
 		let hitpos = point_on_plane_to_sphere;
 		let hit1 =Cap_Cap_tmpV1;
@@ -1405,6 +1407,7 @@ export class Narrowphase {
 			return true;
 		}
 		return false;
+		*/
 	}
 
     sphereCapsule(sphere: Sphere, capsule: Capsule,  sphPos: Vec3, capPos: Vec3, sphQ: Quaternion, capQ: Quaternion,  sphBody: Body, capBody: Body,  rsi: Shape, rsj: Shape, justTest: boolean): boolean {

@@ -393,12 +393,6 @@ export class Capsule extends Shape implements MinkowskiShape{
 			}
 			deep = QQ(r1, p1, r2, p2, hitPos, hitNormal, hitPos1, justtest);
 		}
-		//DEBUG
-		if (deep >= 0) {
-			//let phyr = PhyRender.inst;
-			//phyr.addPoint(hitPos1.x, hitPos1.y, hitPos1.z, 0xffff00);
-		}
-		//DEBUG
 		return deep;
 	}
 

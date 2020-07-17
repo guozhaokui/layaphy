@@ -860,12 +860,53 @@ export class CollisionGjkEpa {
 	}
 	
 	/**
-	 * 计算原点到ab的最近值
-	 * @param a 
-	 * @param b 
+	 * 
+	 * @param hit minkowski上的碰撞点。基本在线上。
+	 * @param wa  返回最近点对应的A的世界坐标
+	 * @param wb  对应的B的世界坐标
 	 */
-	private getPtNearsetLine(a:Vec3, b:Vec3,out:Vec3){
+	private getPtNearsetLine(hit:Vec3, wa:Vec3, wb:Vec3){
+		let ab = new Vec3(); 	//TODO
+		let ap = new Vec3();
+		
+		let simplex = this.simplex.points;
+		let p1 = simplex[0];
+		let p2 = simplex[1];
+		p2.vsub(p1,ab);
+		hit.vsub(p1,ap);
+		let k = ap.dot(ab)/ab.dot(ab);
+		if(k<=0){
+			wa.copy(p1.worldA);
+			wb.copy(p1.worldB);
+			return;
+		}else if(k>=1){
+			wa.copy(p2.worldA);
+			wb.copy(p2.worldB);
+			return;
+		}else{
+			p2.worldA.vsub(p1.worldA,ab);
+			p1.worldA.addScaledVector(k,ab,wa);
+			p2.worldB.vsub(p1.worldB,ab);
+			p1.worldB.addScaledVector(k,ab,wb);
+		}
+	}
 
+	private getPtNearsetTri(hit:Vec3, wa:Vec3, wb:Vec3){
+		let bc = new Vec3(); 	//TODO
+		
+		let simplex = this.simplex.points;
+		let p1 = simplex[0];
+		let p2 = simplex[1];
+		let p3 = simplex[2];
+		calcBarycentricCoord(hit,p1,p2,p3,bc);
+		if(bc.x<0)bc.x=0;
+		if(bc.x>1)bc.x=1;
+		if(bc.y<0)bc.y=0;
+		if(bc.y>1)bc.y=1;
+		if(bc.z<0)bc.z=0;
+		if(bc.z>1)bc.z=1;
+		calcPtInTriangle(bc,p1.worldA,p2.worldA,p3.worldA,wa);
+		calcPtInTriangle(bc,p1.worldB,p2.worldB,p3.worldB,wb);
 	}
 
 	/**
@@ -885,11 +926,10 @@ export class CollisionGjkEpa {
 		//let len = minkpt.length();	// 采样点到原点的距离
 		let A = this.shapeA as MinkowskiShape;
 		let B = this.shapeB as MinkowskiShape;
-		debugger;
-		let ao = new Vec3();
-		let ab = new Vec3();
-		let pdir = new Vec3();	// 垂直于当前的线或者面的
 		let hit = new Vec3();
+		let wa =new Vec3();
+		let wb = new Vec3();
+
 
 		switch( simplex.vertnum){
 			case 1:{
@@ -907,19 +947,26 @@ export class CollisionGjkEpa {
 				// 已经有一个点了，当前dir采样点在margin内，
 				// 不能直接使用dir，因为外面已经计算为垂直于当前线段了（例如一个球与直立capsule的碰撞，当球撞到capsule的侧面的时候，当前的采样方向可能是斜着的，直接用的话肯定不对）
 				// 按照两个球计算。考虑球和胶囊，当球撞到侧面和端的时候法线必然是不同的，所以无法用任何现成的dir
-				let deep = Sphere.SpherehitSphere(A.margin, minkpt.worldA, B.margin, minkpt.worldB, hitA, hitNorm, hitB, false);
+				// 原点在单形上的投影点
+				hit.set( -ndir.x*d,-ndir.y*d,-ndir.z*d);
+				// 计算出对应的AB的位置
+				this.getPtNearsetLine(hit,wa,wb);
+				let deep = hitresult.deep = Sphere.SpherehitSphere(A.margin, wa, B.margin, wb, hitA, hitNorm, hitB, false);
 				//hitNorm.negate(hitNorm);
-				//TODO 先要计算最近点，
-				this.getPtNearsetLine(minkpt.worldA,minkpt.worldB,hit);
-				// 根据最近点可以用来计算法线
-				// 根据最近点插值worldA,worldB计算碰撞点
 				return deep;
 			}
 			case 3:
-				// 已经有两个点了，当前采样点与这个线段组成三角形
-				break;
+				// 已经有两个点了，当前采样点与这个线段组成三角形。找原点与三角形的关系。
+				hit.set(-ndir.x*d, -ndir.y*d, -ndir.z*d);
+				this.getPtNearsetTri(hit,wa,wb);
+				let deep = hitresult.deep = Sphere.SpherehitSphere(A.margin, wa, B.margin, wb, hitA, hitNorm, hitB, false);
+				return deep;
 			case 4:
-				// 已经有三个点了，当前采样点与这个三角形组成四面体，
+				// 已经有三个点了，当前采样点与这个三角形组成四面体，找原点与四面体的关系
+				hit.set(-ndir.x*d, -ndir.y*d, -ndir.z*d);
+
+
+				debugger;
 				break;
 			case 5:
 				// 已经有4个点了，这种情况不可能发生，因为有4个点的情况下，如果还要采样，必然会退化成小于4个点
@@ -1019,6 +1066,8 @@ export class CollisionGjkEpa {
 					d = minkowpt.dot(normdir);
 					if(margin>-d){
 						// 碰撞深度在margin以内，可以立即得到碰撞信息。
+						if(simplex.vertnum>=4)
+							return GJKResult.NEEDEPA;
 						this.getHitInfoByMargin(normdir,margin,-d,minkowpt);
 						return GJKResult.INMARGIN;
 					}else{
