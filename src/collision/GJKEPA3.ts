@@ -2,7 +2,6 @@ import { Vec3 } from './../math/Vec3';
 import { MinkowskiShape } from '../shapes/MinkowskiShape';
 import { Transform } from '../math/Transform';
 import { Quaternion } from '../math/Quaternion';
-import { debug } from 'console';
 import { Sphere } from '../shapes/Sphere';
 /**
  * Class to help in the collision in 2D and 3D.
@@ -195,6 +194,19 @@ class Simplex{
         this.vertnum--;
     }
 
+	hasPoint(pt:minkVec3){
+		let pts = this.points;
+		for(let i=0; i<this.vertnum; i++){
+			let curpt = pts[i];
+			let dx = curpt.x-pt.x;
+			let dy = curpt.y-pt.y;
+			let dz = curpt.z-pt.z;
+			if(dx*dx+dy*dy+dz*dz<1e-6){
+				return true;
+			}
+		}
+		return false;
+	}
     /**
      * 保留两个点
      * @param id0 
@@ -1050,12 +1062,18 @@ export class CollisionGjkEpa {
 			normdir.normalize();
 	
             // TODO 没有记录对应i,j的全局点
-            this.computeSupport(transi,transj,normdir,minkowpt.worldA, minkowpt.worldB,minkowpt,true);
-
-			// make sure that the last point we added actually passed the origin
+			this.computeSupport(transi,transj,normdir,minkowpt.worldA, minkowpt.worldB,minkowpt,true);
 			d = minkowpt.dot(normdir);
+			// 如果这个点已经有了，表示无法继续采样了
+			if(simplex.hasPoint(minkowpt)){
+				// 这时候如果是边界碰撞,则原点一定在最后的单形上
+				debugger;
+			}
+			// make sure that the last point we added actually passed the origin
             if (d <= 0) {
-				if(this.useMargin){
+				if(this.useMargin && d>-margin){
+					debugger;
+					/*
 					// 如果有margin的话，首先得到新的垂直的采样方向，再判断是否在margin内
 					// 不能直接使用d，例如球和胶囊，normdir很可能是斜着的，用这个normdir计算深度是不合理的
 					// 当然在不用margin的情况下，只用来判断方向是足够的。
@@ -1064,15 +1082,12 @@ export class CollisionGjkEpa {
 					normdir.copy(dir);
 					normdir.normalize();
 					d = minkowpt.dot(normdir);
-					if(margin>-d){
-						// 碰撞深度在margin以内，可以立即得到碰撞信息。
-						if(simplex.vertnum>=4)
-							return GJKResult.NEEDEPA;
-						this.getHitInfoByMargin(normdir,margin,-d,minkowpt);
-						return GJKResult.INMARGIN;
-					}else{
-						return GJKResult.NOCD; 	// 超出margin了，没有碰撞
-					}
+					// 碰撞深度在margin以内，可以立即得到碰撞信息。
+					if(simplex.vertnum>=4)
+						return GJKResult.NEEDEPA;
+					this.getHitInfoByMargin(normdir,margin,-d,minkowpt);
+					return GJKResult.INMARGIN;
+					*/
 				}else{
 					// 没有发生碰撞
 					// TODO 这个没有考虑margin优化

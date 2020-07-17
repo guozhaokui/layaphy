@@ -2,7 +2,7 @@ import { Laya } from "Laya";
 import { BlinnPhongMaterial } from "laya/d3/core/material/BlinnPhongMaterial";
 import { Scene3D } from "laya/d3/core/scene/Scene3D";
 import { Event } from "laya/events/Event";
-import { addBox, addSphere, mouseDownEmitObj } from "./DemoUtils";
+import { addBox, addSphere, mouseDownEmitObj, addCapsule } from "./DemoUtils";
 import { CannonWorld } from "./layawrap/CannonWorld";
 import { MouseCtrl1 } from "./layawrap/ctrls/MouseCtrl1";
 import { PhyCharactorCtrl } from "./layawrap/PhyCharactorCtrl";
@@ -12,6 +12,8 @@ import { Material } from "./material/Material";
 import { Vec3 } from "./math/Vec3";
 import { Mesh2Voxel } from "./tools/Mesh2Voxel";
 import { getPhyRender, IPhyRender } from "./world/World";
+import { Body } from "./objects/Body";
+import { Plane } from "./shapes/Plane";
 
 var sce3d: Scene3D;
 var mtl1: BlinnPhongMaterial;
@@ -30,7 +32,7 @@ let m2v = new Mesh2Voxel();
 
 function initPhy(scene: Scene3D) {
 	let phyworld = world = scene.addComponent(CannonWorld) as CannonWorld;
-	phyworld.world.gravity.set(0, -10, 0);
+	phyworld.world.gravity.set(0, 0, 0);
 	(window as any).phyr = new PhyRender(scene, phyworld.world);
 	phyworld.world.addContactMaterial(cmtl1).addContactMaterial(cmtl2);
 	phyr = getPhyRender();
@@ -56,10 +58,17 @@ function sp_box1(){
 }
 
 function sp_box(){
-	addBox(new Vec3(10,10,10),new Vec3(0,5.5,0),0,phymtl1);
-	//addSphere(1,0,0,0,1);
+	addBox(new Vec3(10,10,10),new Vec3(0,0,0),0,phymtl1);
+	addSphere(1,0,5,0,1);
 }
 
+function sp_sp(){
+	addSphere(2,0,0,0,0);
+}
+
+function cap_sp(){
+	let b = addCapsule(2,4,0,0,0);
+}
 
 function staticobj(){
 	//addSphere(1,0,0,0,0);
@@ -89,5 +98,7 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, camctrl: MouseCtrl1)
 	//spsp();
 	//staticobj();
 	sp_box();
+	//sp_sp();
+	//cap_sp();
 
 }
