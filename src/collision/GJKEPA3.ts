@@ -1067,6 +1067,9 @@ export class CollisionGjkEpa {
 			// 如果这个点已经有了，表示无法继续采样了
 			if(simplex.hasPoint(minkowpt)){
 				// 这时候如果是边界碰撞,则原点一定在最后的单形上
+				if( d>-margin){
+					
+				}
 				debugger;
 			}
 			// make sure that the last point we added actually passed the origin

@@ -99,7 +99,7 @@ export function addRenderCylinder(r:number,h:number){
 	return m;
 }
 
-export function addCapsule(r: f32, h: f32, x: f32, y: f32, z: f32,randr=false): CannonBody {
+export function addCapsule(r: f32, h: f32, x: f32, y: f32, z: f32,mass=0,randr=false): CannonBody {
     var cap = scene.addChild(new MeshSprite3D(PrimitiveMesh.createCapsule(r, h + r + r, 10, 10))) as MeshSprite3D;
     cap.meshRenderer.material = mtl;
     var transform = cap.transform;
@@ -122,7 +122,7 @@ export function addCapsule(r: f32, h: f32, x: f32, y: f32, z: f32,randr=false): 
 	var phy = new CannonBody();// cap.addComponent(CannonBody) as CannonBody;
 	phy.renderobj=cap;
     phy.addShape(new Capsule(r, h), new Vector3(), shapeq);
-	phy.setMass(1);
+	phy.setMass(mass);
 	phy.setName('capsule')
     return phy;
 }
@@ -431,6 +431,7 @@ export function mouseDownEmitObj(scrx: number, scry: number, cam:Camera, lockEmi
 	dir.set(emitDir.x,emitDir.y,emitDir.z);
 	let sp = addSphere(.3, stpos.x, stpos.y, stpos.z);
 	//let sp = addBox(new Vec3(1,1,1), stpos,1,phymtl as Material);
+	//let sp = addCapsule(1,6,stpos.x, stpos.y, stpos.z,1,true);
 	//sp.setMaterial(phySph);
 	let v = 20;
 	setTimeout(() => {
