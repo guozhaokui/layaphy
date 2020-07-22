@@ -3,6 +3,7 @@ import { MinkowskiShape } from '../shapes/MinkowskiShape';
 import { Transform } from '../math/Transform';
 import { Quaternion } from '../math/Quaternion';
 import { Sphere } from '../shapes/Sphere';
+import { debug } from 'console';
 /**
  * Class to help in the collision in 2D and 3D.
  * To works the algorithm needs two convexe point cloud
@@ -21,9 +22,11 @@ var normedDir = new Vec3();
 
 var _containsTriangle_ab=new Vec3();
 var _containsTriangle_ac = new Vec3();
+var _containsTriangle_bc = new Vec3();
 var _containsTriangle_ao = new Vec3();
 var _containsTriangle_abp=new Vec3();
 var _containsTriangle_acp=new Vec3();
+var _containsTriangle_bcp=new Vec3();
 
 var edge1 = new Vec3();
 
@@ -511,32 +514,43 @@ export class CollisionGjkEpa {
         var c = pts[0];
         var ab = b.vsub(a, _containsTriangle_ab);
         var ac = c.vsub(a, _containsTriangle_ac);
-        var ao = a.negate( _containsTriangle_ao);
+        var ao = a;
 
         var abp = this._getNormal(ac,ab,ab, _containsTriangle_abp);
         var acp = this._getNormal(ab,ac,ac, _containsTriangle_acp);
 
 		// 先判断原点在ab的外面还是ac的外面
-        if (abp.dot(ao) > 0) {
+        if (abp.dot(ao) < 0) {
             // ab的外面，删掉c点，退化成线段继续。
             simplex.splice(0);
             dir.copy(abp);
-        } else if (acp.dot(ao) > 0) {
+        } else if (acp.dot(ao) < 0) {
             // ac的外面，删掉b点，退化成线段继续
             simplex.splice(1);
             dir.copy(acp);
         } else {
-			// 原点在ab和ac的里面，这时候要扩展成四面体了，
-            // 确定在面的哪个方向
-			var abc = ab.cross(ac,_containsTriangle_abc);
-			if (abc.dot(ao) <= 0) {
-				//upside down tetrahedron
-				pts[0] = b;
-				pts[1] = c;
-				pts[2] = a;
-				dir.set(-abc.x, -abc.y, -abc.z);
+			// 判断第三条边 。 对于三维来说，即使是从bc过来扩展的，对于这个三角形来说，依然可能在bc外面
+			let bc =c.vsub(b,_containsTriangle_bc);
+			let bcp = this._getNormal(ac,ab,bc, _containsTriangle_bcp);
+			if(bcp.dot(b)<0){	// 这个要与b或者c dot
+				//在bc外面
+				simplex.splice(2);// 去掉a
+				dir.copy(bcp);
 			}else{
-				dir.copy(abc);
+				// 原点在ab和ac的里面，这时候要扩展成四面体了，
+				// 确定在面的哪个方向
+				// TODO 其实三角形的法线已经在前面求出过。修改 _getNormal为各种叉乘会提高效率。
+				var abc = ab.cross(ac,_containsTriangle_abc);
+				// 如果原点在平面下面
+				if (abc.dot(ao) > 0) {
+					//upside down tetrahedron
+					pts[0] = b;
+					pts[1] = c;
+					pts[2] = a;
+					dir.set(-abc.x, -abc.y, -abc.z);
+				}else{
+					dir.copy(abc);
+				}
 			}
         }
 
@@ -978,7 +992,7 @@ export class CollisionGjkEpa {
 				hit.set(-ndir.x*d, -ndir.y*d, -ndir.z*d);
 
 
-				debugger;
+				//debugger;
 				break;
 			case 5:
 				// 已经有4个点了，这种情况不可能发生，因为有4个点的情况下，如果还要采样，必然会退化成小于4个点
@@ -1032,7 +1046,7 @@ export class CollisionGjkEpa {
         if (d <= 0) {
 			if(this.useMargin){
 				if(margin>-d){
-					debugger;
+					//debugger;
 				}else{
 					return GJKResult.NOCD; 	// 超出margin了，没有碰撞
 				}
@@ -1068,14 +1082,19 @@ export class CollisionGjkEpa {
 			if(simplex.hasPoint(minkowpt)){
 				// 这时候如果是边界碰撞,则原点一定在最后的单形上
 				if( d>-margin){
-					
+					this.getHitInfoByMargin(normdir,margin,-d,minkowpt);
+					return GJKResult.INMARGIN;
+				}else{
+					//debugger;
 				}
-				debugger;
 			}
 			// make sure that the last point we added actually passed the origin
             if (d <= 0) {
-				if(this.useMargin && d>-margin){
-					debugger;
+				if(this.useMargin && -d<margin){
+					// 在margin范围内，继续
+					// TODO 如果已经有3个点了，第四个点在这个平面上，则也要结束了
+					
+					//debugger;
 					/*
 					// 如果有margin的话，首先得到新的垂直的采样方向，再判断是否在margin内
 					// 不能直接使用d，例如球和胶囊，normdir很可能是斜着的，用这个normdir计算深度是不合理的
@@ -1301,6 +1320,14 @@ export class CollisionGjkEpa {
 	transA.position.copy(transa.position);
 	transA.quaternion.copy(transa.quaternion);
 */
+
+	//let transa = JSON.parse(`{"position":{"x":-0.9185988583792287,"y":6.554776762299604,"z":3.27601564867931},"quaternion":{"x":0,"y":0,"z":0,"w":1}}`);
+	let transa = JSON.parse(`{"position":{"x":-1.777604274568285,"y":5.160385130854598,"z":1.163047889483976},"quaternion":{"x":0,"y":0,"z":0,"w":1}}`);
+	transA.position.copy(transa.position);
+	transA.quaternion.copy(transa.quaternion);
+	if(transA.position.y<5.2){
+		//debugger;
+	}
 //DEBUG
 
 		let hitresult = this.hitResult;
