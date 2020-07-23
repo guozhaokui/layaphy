@@ -9,6 +9,8 @@ import { Shape } from '../shapes/Shape.js';
 import { EventTarget } from '../utils/EventTarget.js';
 import { World } from '../world/World.js';
 import { GridInfo } from '../collision/GridBroadphase1.js';
+import { RaycastResult } from '../collision/RaycastResult.js';
+import { ContactEquation } from '../equations/ContactEquation.js';
 
 export interface BodyInitOptions {
     position?: Vec3;
@@ -29,6 +31,7 @@ export interface BodyInitOptions {
     angularFactor?: Vec3;
 }
 
+var ccdIterations = 30;
 export const enum BODYTYPE{
     /**
      * A dynamic body is fully simulated. Can be moved manually by the user, but normally they move according to forces. 
@@ -321,6 +324,8 @@ export class Body extends EventTarget {
     
     /** 运行时数据，不可持久保存，可以优化一些算法，例如重复检测判断 */
     runData:any=null;
+
+	ccdSpeedThreshold=-1;	// 缺省不开CCD
 
     constructor(mass: number = 1, shape: Shape|null = null, pos:Vec3|null=null, options?: BodyInitOptions) {
         super();
@@ -864,8 +869,103 @@ export class Body extends EventTarget {
         this.angularVelocity.cross(r, result);
         this.velocity.vadd(result, result);
         return result;
-    }
+	}
+	
 
+	integrateToTimeOfImpact(dt:number){
+		if(this.ccdSpeedThreshold < 0 || this.velocity.length() < Math.pow(this.ccdSpeedThreshold, 2)){
+			return false;
+		}
+	
+		let world = this.world as World;
+		var ignoreBodies:Body[] = [];
+	
+		direction.copy(this.velocity);
+		direction.normalize();
+	
+		// 预计的终点
+		this.velocity.scale(dt, end);
+		end.vadd(this.position, end);
+	
+		// vec start->end
+		end.vsub(this.position, startToEnd);
+		var len = startToEnd.length();
+	
+		var timeOfImpact = 1;
+	
+		var hitBody:Body|null=null;
+	
+		for(var i=0; i<this.shapes.length; i++){
+			var shape = this.shapes[i];
+			// 从起点到终点用射线检测会碰撞的最近的物体
+			world.raycastClosest(this.position, end, {
+				collisionFilterMask: shape.collisionFilterMask,
+				collisionFilterGroup: shape.collisionFilterGroup,
+				skipBackfaces: true
+			}, result);
+			hitBody = result.body;
+	
+			if(hitBody === this || ignoreBodies.indexOf(hitBody as Body) !== -1){
+				hitBody = null;
+			}
+	
+			if(hitBody){
+				break;
+			}
+		}
+	
+		if(!hitBody || !timeOfImpact){
+			return false;
+		}
+	
+		end = result.hitPointWorld;
+		end.vsub(this.position, startToEnd);
+		timeOfImpact = result.distance / len; // guess
+	
+		rememberPosition.copy(this.position);
+	
+		// Got a start and end point. Approximate time of impact using binary search
+		var iter = 0;
+		var tmin = 0;
+		var tmid = timeOfImpact;
+		var tmax = 1;
+		while (tmax >= tmin && iter < ccdIterations) {
+			iter++;
+	
+			// calculate the midpoint
+			tmid = (tmax + tmin) / 2;
+	
+			// Move the body to that point
+			startToEnd.scale(tmid, integrate_velodt);
+			rememberPosition.vadd(integrate_velodt, this.position);
+			//this.computeAABB();
+			this.updateAABB();
+	
+			// check overlap
+			var overlapResult:ContactEquation[] = [];
+			world.narrowphase.getContacts([this], [hitBody], world, overlapResult, [], [], []);
+			var overlaps = this.aabb.overlaps(hitBody.aabb) && overlapResult.length > 0;
+	
+			if (overlaps) {
+				// change max to search lower interval
+				tmax = tmid;
+			} else {
+				// change min to search upper interval
+				tmin = tmid;
+			}
+		}
+	
+		timeOfImpact = tmax; // Need to guarantee overlap to resolve collisions
+	
+		this.position.copy(rememberPosition);
+	
+		// move to TOI
+		startToEnd.scale(timeOfImpact, integrate_velodt);
+		this.position.vadd(integrate_velodt, this.position);
+	
+		return true;
+	}
+	
     /**
      * Move the body forward in time.
 	 * 先更新速度，使用新的速度计算位置
@@ -911,10 +1011,12 @@ export class Body extends EventTarget {
         angularVelo.y += dt * (e[3] * tx + e[4] * ty + e[5] * tz);
         angularVelo.z += dt * (e[6] * tx + e[7] * ty + e[8] * tz);
 
-        // Use new velocity  - leap frog
+		// Use new velocity  - leap frog
+		/*
         pos.x += velo.x * dt;
         pos.y += velo.y * dt;
-        pos.z += velo.z * dt;
+		pos.z += velo.z * dt;
+		*/
 
         quat.integrate(this.angularVelocity, dt, this.angularFactor, quat);
 
@@ -925,6 +1027,13 @@ export class Body extends EventTarget {
                 quat.normalize();
             }
         }
+
+		// CCD
+		if(!this.integrateToTimeOfImpact(dt)){
+			// Regular position update
+			velo.scale(dt,integrate_velodt)
+			pos.vadd(integrate_velodt, pos);
+		}
 
         this.aabbNeedsUpdate = true;
 
@@ -964,3 +1073,10 @@ var Body_updateMassProperties_halfExtents = new Vec3();
 //const invI_tau_dt = new Vec3();
 //const w = new Quaternion();
 //const wq = new Quaternion();
+
+var direction = new Vec3();
+var end = new Vec3();
+var startToEnd = new Vec3();
+var rememberPosition = new Vec3();
+var result = new RaycastResult();
+var integrate_velodt = new Vec3();
