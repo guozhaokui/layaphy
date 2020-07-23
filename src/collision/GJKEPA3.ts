@@ -245,7 +245,22 @@ class Simplex{
 		pts[1].worldB.set(B2x,B2y,B2z);
 
         this.vertnum=2;
-    }
+	}
+	
+	/**
+	 * 当形成四面体的时候，最后一个点其实与底面重合
+	 */
+	isPtInTri(pt:minkVec3,norm:Vec3){
+		if(this.vertnum!=3)return false;
+		let pts = this.points;
+		let p0=pts[0];
+		let dx = pt.x-p0.x;
+		let dy = pt.y-p0.y;
+		let dz = pt.z-p0.z;
+		let d = dx*norm.x+dy*norm.y+dz*norm.z;
+		return (Math.abs(d)<1e-6)
+	}
+
 }
 
 class EPA_NearestInfo{
@@ -514,28 +529,33 @@ export class CollisionGjkEpa {
         var c = pts[0];
         var ab = b.vsub(a, _containsTriangle_ab);
         var ac = c.vsub(a, _containsTriangle_ac);
-        var ao = a;
+		var ao = a;
 
         var abp = this._getNormal(ac,ab,ab, _containsTriangle_abp);
         var acp = this._getNormal(ab,ac,ac, _containsTriangle_acp);
 
 		// 先判断原点在ab的外面还是ac的外面
         if (abp.dot(ao) < 0) {
+			// dir.copy(abp); 不能用abp，要朝向原点，abp并不朝向原点
+			this._getNormal(ao,ab,ab,dir);	// dir = aox(ao x ab)  最后方向要与ao相反
+			//ab.cross( ao.cross(ab,c1),dir);	// dir = ab x (ao x ab)
+			//this._getNormal()
             // ab的外面，删掉c点，退化成线段继续。
-            simplex.splice(0);
-            dir.copy(abp);
+            simplex.splice(0);	// 注意在getnormal后面splice，否则ao会变
         } else if (acp.dot(ao) < 0) {
+			//dir.copy(acp);
+			//ac.cross(ao.cross(ac,c1),dir); // dir = ac x (ao x ac)
+			this._getNormal(ac,ao,ac,dir).negate(dir);	// acx(acxao) = -acxaoxac
             // ac的外面，删掉b点，退化成线段继续
             simplex.splice(1);
-            dir.copy(acp);
         } else {
 			// 判断第三条边 。 对于三维来说，即使是从bc过来扩展的，对于这个三角形来说，依然可能在bc外面
 			let bc =c.vsub(b,_containsTriangle_bc);
 			let bcp = this._getNormal(ac,ab,bc, _containsTriangle_bcp);
 			if(bcp.dot(b)<0){	// 这个要与b或者c dot
 				//在bc外面
+				this._getNormal(b,bc,bc,dir);	// boxbcxbc
 				simplex.splice(2);// 去掉a
-				dir.copy(bcp);
 			}else{
 				// 原点在ab和ac的里面，这时候要扩展成四面体了，
 				// 确定在面的哪个方向
@@ -1042,6 +1062,8 @@ export class CollisionGjkEpa {
 		let B = this.shapeB as MinkowskiShape;
 		let margin = A.margin+B.margin;
 
+		let lastDist = 0;	// 上一次单形到原点的距离，这个应该越来越近
+
 		let d = minkowpt.dot(normdir);
         if (d <= 0) {
 			if(this.useMargin){
@@ -1075,6 +1097,20 @@ export class CollisionGjkEpa {
 			normdir.copy(dir);
 			normdir.normalize();
 	
+			// 计算原点到当前单形的距离
+			// 由于dir是根据朝向算出来的，所以-d一定是大于0的
+			let d1 = -simplex.points[0].dot(normdir);
+			//console.log('dist=',d1);
+			if(it>0 && d1>=lastDist){
+				// 无法更靠近了，
+				if(this.useMargin && d1<margin){
+					this.getHitInfoByMargin(normdir,margin,d1,minkowpt);
+					console.log('gjk it=',it);
+					return GJKResult.INMARGIN;
+				}
+			}
+			lastDist = d1;
+
             // TODO 没有记录对应i,j的全局点
 			this.computeSupport(transi,transj,normdir,minkowpt.worldA, minkowpt.worldB,minkowpt,true);
 			d = minkowpt.dot(normdir);
@@ -1083,38 +1119,32 @@ export class CollisionGjkEpa {
 				// 这时候如果是边界碰撞,则原点一定在最后的单形上
 				if( d>-margin){
 					this.getHitInfoByMargin(normdir,margin,-d,minkowpt);
+					console.log('gjk it=',it);
 					return GJKResult.INMARGIN;
 				}else{
 					//debugger;
 				}
 			}
-			// make sure that the last point we added actually passed the origin
+
             if (d <= 0) {
 				if(this.useMargin && -d<margin){
 					// 在margin范围内，继续
-					// TODO 如果已经有3个点了，第四个点在这个平面上，则也要结束了
-					
-					//debugger;
-					/*
-					// 如果有margin的话，首先得到新的垂直的采样方向，再判断是否在margin内
-					// 不能直接使用d，例如球和胶囊，normdir很可能是斜着的，用这个normdir计算深度是不合理的
-					// 当然在不用margin的情况下，只用来判断方向是足够的。
-					simplex.addvertex(minkowpt);
-					this.containsOrigin(simplex,dir);// 这个dir可以被冲掉
-					normdir.copy(dir);
-					normdir.normalize();
-					d = minkowpt.dot(normdir);
-					// 碰撞深度在margin以内，可以立即得到碰撞信息。
-					if(simplex.vertnum>=4)
-						return GJKResult.NEEDEPA;
-					this.getHitInfoByMargin(normdir,margin,-d,minkowpt);
-					return GJKResult.INMARGIN;
-					*/
+
+					// 如果已经是三角形了，且新的点在三角形上，则表示这是在壳上的面了
+					if(simplex.isPtInTri(minkowpt, normdir)){
+						this.getHitInfoByMargin(normdir,margin,-d,minkowpt);
+						console.log('gjk it=',it);
+						return GJKResult.INMARGIN;
+					}else{
+						// 继续
+					}
 				}else{
 					// 没有发生碰撞
 					// TODO 这个没有考虑margin优化
+					console.log('gjk it=',it);
 					return GJKResult.NOCD;
 				}
+
             }
 
             simplex.addvertex(minkowpt);
@@ -1125,7 +1155,7 @@ export class CollisionGjkEpa {
             if (this.containsOrigin(simplex, dir)) {
 				console.log('gjk it=',it);
                 return GJKResult.NEEDEPA;
-            }
+			}
             it++;
 		}
 		console.log('gjk it=',it);
@@ -1320,14 +1350,18 @@ export class CollisionGjkEpa {
 	transA.position.copy(transa.position);
 	transA.quaternion.copy(transa.quaternion);
 */
-
+/*
 	//let transa = JSON.parse(`{"position":{"x":-0.9185988583792287,"y":6.554776762299604,"z":3.27601564867931},"quaternion":{"x":0,"y":0,"z":0,"w":1}}`);
 	let transa = JSON.parse(`{"position":{"x":-1.777604274568285,"y":5.160385130854598,"z":1.163047889483976},"quaternion":{"x":0,"y":0,"z":0,"w":1}}`);
 	transA.position.copy(transa.position);
 	transA.quaternion.copy(transa.quaternion);
-	if(transA.position.y<5.2){
-		//debugger;
-	}
+*/
+
+/*
+	let transa = JSON.parse(`{"position":{"x":-4.6925864018753805,"y":-5.167927209183408,"z":4.691472874455349},"quaternion":{"x":0,"y":0,"z":0,"w":1}}`);
+	transA.position.copy(transa.position);
+	transA.quaternion.copy(transa.quaternion);
+*/
 //DEBUG
 
 		let hitresult = this.hitResult;
