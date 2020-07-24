@@ -10,7 +10,6 @@ import { EventTarget } from '../utils/EventTarget.js';
 import { World } from '../world/World.js';
 import { GridInfo } from '../collision/GridBroadphase.js';
 import { RaycastResult } from '../collision/RaycastResult.js';
-import { ContactEquation } from '../equations/ContactEquation.js';
 
 export interface BodyInitOptions {
     position?: Vec3;
@@ -873,43 +872,39 @@ export class Body extends EventTarget {
 	
 
 	integrateToTimeOfImpact(dt:number){
-		if(this.ccdSpeedThreshold < 0 || this.velocity.length() < Math.pow(this.ccdSpeedThreshold, 2)){
+		let ccdvel = this.ccdSpeedThreshold;
+		let vel2 = this.velocity.lengthSquared();
+		if( ccdvel< 0 ||  vel2< ccdvel*ccdvel){
 			return false;
 		}
 	
 		let world = this.world as World;
-		var ignoreBodies:Body[] = [];
-	
+		// 规格化速度
+		let vel = Math.sqrt(vel2);
 		direction.copy(this.velocity);
-		direction.normalize();
+		direction.scale(1/vel,direction);
 	
 		// 预计的终点
-		this.velocity.scale(dt, end);
-		end.vadd(this.position, end);
-	
-		// vec start->end
-		end.vsub(this.position, startToEnd);
+		this.velocity.scale(dt, startToEnd);
 		var len = startToEnd.length();
-	
+
+		this.position.vadd( startToEnd, end);
+
 		var timeOfImpact = 1;
 	
 		var hitBody:Body|null=null;
 	
-		for(var i=0; i<this.shapes.length; i++){
+		for(let i=0,l=this.shapes.length; i<l; i++){
 			var shape = this.shapes[i];
 			// 从起点到终点用射线检测会碰撞的最近的物体
-			world.raycastClosest(this.position, end, {
-				collisionFilterMask: shape.collisionFilterMask,
-				collisionFilterGroup: shape.collisionFilterGroup,
-				skipBackfaces: true
-			}, result);
+			raycastobj.collisionFilterMask = shape.collisionFilterMask;
+			raycastobj.collisionFilterGroup = shape.collisionFilterGroup;
+			//TODO 先把自己忽略掉
+			world.raycastClosest(this.position, end, raycastobj, result);
 			hitBody = result.body;
 	
-			if(hitBody === this || ignoreBodies.indexOf(hitBody as Body) !== -1){
-				hitBody = null;
-			}
-	
-			if(hitBody){
+			// 找到最近的就停止
+			if(hitBody && hitBody!=this){
 				break;
 			}
 		}
@@ -918,9 +913,11 @@ export class Body extends EventTarget {
 			return false;
 		}
 	
+		// 用实际碰撞点
 		end = result.hitPointWorld;
 		end.vsub(this.position, startToEnd);
-		timeOfImpact = result.distance / len; // guess
+		// 碰撞时间，0是当前位置 1是无阻挡最终位置
+		timeOfImpact = result.distance / len; 
 	
 		rememberPosition.copy(this.position);
 	
@@ -941,12 +938,7 @@ export class Body extends EventTarget {
 			//this.computeAABB();
 			this.updateAABB();
 	
-			// check overlap
-			var overlapResult:ContactEquation[] = [];
-			world.narrowphase.getContacts([this], [hitBody], world, overlapResult, [], [], []);
-			var overlaps = this.aabb.overlaps(hitBody.aabb) && overlapResult.length > 0;
-	
-			if (overlaps) {
+			if (world.narrowphase.hitTest(this,hitBody)) {
 				// change max to search lower interval
 				tmax = tmid;
 			} else {
@@ -1080,3 +1072,4 @@ var startToEnd = new Vec3();
 var rememberPosition = new Vec3();
 var result = new RaycastResult();
 var integrate_velodt = new Vec3();
+var raycastobj={collisionFilterMask:0,collisionFilterGroup:0,skipBackfaces: true};

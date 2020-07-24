@@ -284,7 +284,8 @@ export class GridBroadphase extends Broadphase {
 	private removeBodyListener:EventListener;
 
     constructor(nx:i32=100, ny:i32=100, nz:i32=100) {
-        super();
+		super();
+		this.useBoundingBoxes=true;	// 反正都要计算包围盒，就用aabb判断把
         this.nx = nx;
         this.ny = ny;
 		this.nz = nz;

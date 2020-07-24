@@ -317,6 +317,80 @@ export class Narrowphase {
 		}
 		return cm;
 	}
+
+	/**
+	 * 判断两个对象是否会相撞
+	 * @param b1 
+	 * @param b2 
+	 * @param world 
+	 */
+	hitTest(bi:Body, bj:Body){
+        const qi = tmpQuat1;
+        const qj = tmpQuat2;
+        const xi = tmpVec1;
+		const xj = tmpVec2;
+
+		for (let i = 0; i < bi.shapes.length; i++) {
+			const si = bi.shapes[i];
+			if(!si.enable) continue;
+
+			let shapeoffi = bi.shapeOffsets[i];
+			let shapeqi = bi.shapeOrientations[i];
+			if(shapeqi){
+				bi.quaternion.mult(shapeqi, qi);
+			}else{
+				qi.copy(bi.quaternion);
+			}
+			if(shapeoffi){
+				bi.quaternion.vmult(shapeoffi, xi);
+				xi.vadd(bi.position, xi);
+			}else{
+				xi.copy(bi.position);
+			}
+
+			for (let j = 0; j < bj.shapes.length; j++) {
+				const sj = bj.shapes[j];
+				if(!sj.enable)
+					continue;
+				let shapeoffj = bj.shapeOffsets[j];
+				let shapeqj = bj.shapeOrientations[j];
+				if(shapeqj){
+					bj.quaternion.mult(shapeqj, qj);
+				}else{
+					qj.copy(bj.quaternion);
+				}
+				if(shapeoffj){
+					bj.quaternion.vmult(shapeoffj, xj);
+					xj.vadd(bj.position, xj);
+				}else{
+					xj.copy(bj.position);
+				}
+
+				// 碰撞组判断
+				if (!((si.collisionFilterMask & sj.collisionFilterGroup) && (sj.collisionFilterMask & si.collisionFilterGroup))) {
+					continue;
+				}
+
+				// 包围球判断
+				if (xi.distanceTo(xj) > si.boundSphR + sj.boundSphR) {
+					continue;
+				}
+				const resolver = shapeChecks[si.type | sj.type];
+				let retval = false;
+				if (resolver) {
+					if (si.type < sj.type) {
+						retval = resolver.call(this, si, sj, xi, xj, qi, qj, bi, bj, si, sj, true);
+					} else {
+						retval = resolver.call(this, sj, si, xj, xi, qj, qi, bj, bi, si, sj, true);
+					}
+				}
+				if(retval)
+					return true;
+			}
+		}
+		return false;
+	}
+
     /**
      * Generate all contacts between a list of body pairs
      * @param  p1 Array of body indices
