@@ -15,7 +15,7 @@ import { Plane } from "./shapes/Plane";
 import { Sphere } from "./shapes/Sphere";
 import { test_gridbroadphase1, test_raycastInner } from "./testCase";
 import { getPhyRender, IPhyRender, World } from "./world/World";
-import { GridBroadphase1 } from "./collision/GridBroadphase1";
+import { GridBroadphase } from "./collision/GridBroadphase";
 
 
 //test_gridbroadphase1();
@@ -39,7 +39,7 @@ let lockEmit = false;
 
 function initPhy(scene: Scene3D) {
 	world = (scene.addComponent(CannonWorld) as CannonWorld).world;
-	world.broadphase = new GridBroadphase1();
+	world.broadphase = new GridBroadphase();
 	world.gravity.set(0, -10, 0);
 	(window as any).phyr = new PhyRender(scene, world);
 	world.addContactMaterial(cmtl1).addContactMaterial(cmtl2).addContactMaterial(cmtl3);

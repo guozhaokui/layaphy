@@ -7,11 +7,10 @@ import { Vec3 } from "./math/Vec3";
 import { Narrowphase } from "./world/Narrowphase";
 import { ContactEquation } from "./equations/ContactEquation";
 import { FrictionEquation } from "./equations/FrictionEquation";
-import { GridBroadphase } from "./collision/GridBroadphase";
 import { Box } from "./shapes/Box";
 import { NaiveBroadphase } from "./collision/NaiveBroadPhase";
 import { RaycastResult } from "./collision/RaycastResult";
-import { GridBroadphase1 } from "./collision/GridBroadphase1";
+import { GridBroadphase } from "./collision/GridBroadphase";
 import { Plane } from "./shapes/Plane";
 
 
@@ -67,7 +66,7 @@ export function test_gridbroadphase(){
 export function test_gridbroadphase1(){
 	function testSimple(){
 		let world = new World();
-		let broadphase:GridBroadphase1 = world.broadphase = new GridBroadphase1();
+		let broadphase:GridBroadphase = world.broadphase = new GridBroadphase();
 
 		let b1 = new Body( 1, new Box(new Vec3(1,1,1)));
 		world.addBody(b1);
@@ -86,7 +85,7 @@ export function test_gridbroadphase1(){
 
 	function testBigBody(){
 		let world = new World();
-		let broadphase:GridBroadphase1 = world.broadphase = new GridBroadphase1();
+		let broadphase:GridBroadphase = world.broadphase = new GridBroadphase();
 		
 		let b1 = new Body( 1, new Box(new Vec3(1,1,1)));
 		world.addBody(b1);
@@ -103,7 +102,7 @@ export function test_gridbroadphase1(){
 
 	function testManyBodies(){
 		let world = new World();
-		let broadphase:GridBroadphase1 = world.broadphase = new GridBroadphase1();
+		let broadphase:GridBroadphase = world.broadphase = new GridBroadphase();
 
 		for(let i=0; i<1000; i++){
 			let b = new Body(0, new Box(new Vec3(1,1,1)));

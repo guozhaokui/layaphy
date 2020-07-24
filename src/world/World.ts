@@ -17,7 +17,6 @@ import { Solver } from '../solver/Solver.js';
 import { EventTarget } from '../utils/EventTarget.js';
 import { TupleDictionary } from '../utils/TupleDictionary.js';
 import { Narrowphase } from './Narrowphase.js';
-import { GridBroadphase1 } from '../collision/GridBroadphase1.js';
 import { GridBroadphase } from '../collision/GridBroadphase.js';
 import { NaiveBroadphase } from '../collision/NaiveBroadPhase.js';
 
@@ -230,7 +229,7 @@ export class World extends EventTarget {
     /**
      * The broadphase algorithm to use. Default is NaiveBroadphase
      */
-	_broadphase: Broadphase =  new GridBroadphase1();// new NaiveBroadphase();// new NaiveBroadphase();// new GridBroadphase(); Grid的有问题
+	_broadphase: Broadphase =  new GridBroadphase();// new NaiveBroadphase();// new NaiveBroadphase();// new GridBroadphase(); Grid的有问题
 	get broadphase(){return this._broadphase;}
 	set broadphase(b:Broadphase){ this._broadphase=b; b.setWorld(this);}
 

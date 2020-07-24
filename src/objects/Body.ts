@@ -8,7 +8,7 @@ import { Box } from '../shapes/Box.js';
 import { Shape } from '../shapes/Shape.js';
 import { EventTarget } from '../utils/EventTarget.js';
 import { World } from '../world/World.js';
-import { GridInfo } from '../collision/GridBroadphase1.js';
+import { GridInfo } from '../collision/GridBroadphase.js';
 import { RaycastResult } from '../collision/RaycastResult.js';
 import { ContactEquation } from '../equations/ContactEquation.js';
 

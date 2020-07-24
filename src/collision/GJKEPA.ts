@@ -3,17 +3,7 @@ import { MinkowskiShape } from '../shapes/MinkowskiShape';
 import { Transform } from '../math/Transform';
 import { Quaternion } from '../math/Quaternion';
 import { Sphere } from '../shapes/Sphere';
-import { debug } from 'console';
-/**
- * Class to help in the collision in 2D and 3D.
- * To works the algorithm needs two convexe point cloud
- * like bounding box or smthg like this.
- * The function functions intersect and isIntersecting
- * helps to have informations about the collision between two object.
- *
- * @class wnp.helpers.CollisionGjkEpa
- * @constructor
- */
+
 var tmpV1 = new Vec3();
 var tmpV2 = new Vec3();
 
@@ -23,7 +13,6 @@ var normedDir = new Vec3();
 var _containsTriangle_ab=new Vec3();
 var _containsTriangle_ac = new Vec3();
 var _containsTriangle_bc = new Vec3();
-var _containsTriangle_ao = new Vec3();
 var _containsTriangle_abp=new Vec3();
 var _containsTriangle_acp=new Vec3();
 var _containsTriangle_bcp=new Vec3();
@@ -341,7 +330,6 @@ class EdgePool{
 
 var edgepool = new EdgePool();
 
-
 class HitResult{
 	hitA:Vec3;			// 引用
 	hitB:Vec3;			// 引用
@@ -354,6 +342,7 @@ const enum GJKResult{
 	INMARGIN=1,
 	NEEDEPA=2
 }
+
 export class CollisionGjkEpa {
 	
     EPSILON = 0.000001;

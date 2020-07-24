@@ -13,7 +13,7 @@ import { Voxel } from '../shapes/Voxel.js';
 import { World } from '../world/World.js';
 import { AABB } from './AABB.js';
 import { RaycastResult } from './RaycastResult.js';
-import { GridBroadphase1 } from './GridBroadphase1.js';
+import { GridBroadphase } from './GridBroadphase.js';
 
 var tmpVec1 = new Vec3();
 var tmpVec2 = new Vec3();
@@ -174,7 +174,7 @@ export class Ray {
 			let checkid = Ray.checkid++;
 			// 下面会修改rundata数据，所以启用新的frame。之所以没有放在下面的rayIntersect中，是因为那里到处都是return
 			gRunDataStack.startFrame();
-			(broadphase as GridBroadphase1).rayIntersect(this,gRunDataStack, checkid);
+			(broadphase as GridBroadphase).rayIntersect(this,gRunDataStack, checkid);
 			// 恢复body的rundata
 			gRunDataStack.ret();
 			if(result._shouldStop)
