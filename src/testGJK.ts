@@ -70,6 +70,11 @@ function cap_sp(){
 	let b = addCapsule(2,4,0,0,0);
 }
 
+function box_cap(){
+	addBox(new Vec3(10,10,10),new Vec3(0,0,0),0,phymtl1);
+	addCapsule(1,1,5.8,0,0,1,false);
+}
+
 function staticobj(){
 	//addSphere(1,0,0,0,0);
 	addBox(new Vec3(1,1,1),new Vec3(),0,phymtl1);
@@ -97,7 +102,8 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, camctrl: MouseCtrl1)
 	//
 	//spsp();
 	//staticobj();
-	sp_box();
+	//sp_box();
+	box_cap();
 	//sp_sp();
 	//cap_sp();
 
