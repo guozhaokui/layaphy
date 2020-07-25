@@ -14,6 +14,7 @@ import { World } from '../world/World.js';
 import { AABB } from './AABB.js';
 import { RaycastResult } from './RaycastResult.js';
 import { GridBroadphase } from './GridBroadphase.js';
+import { Capsule } from '../shapes/Capsule.js';
 
 var tmpVec1 = new Vec3();
 var tmpVec2 = new Vec3();
@@ -281,14 +282,14 @@ export class Ray {
 		}
 
 		switch (shape.type) {
-			case SHAPETYPE.BOX: this.intersectBox(shape as Box, quat, position, body, shape); break;
-			case SHAPETYPE.SPHERE: this.intersectSphere(shape as Sphere, quat, position, body, shape); break;
-			case SHAPETYPE.PLANE: this.intersectPlane(shape as Plane, quat, position, body, shape); break;
+			case              SHAPETYPE.BOX: this.intersectBox(shape as Box, quat, position, body, shape); break;
+			case           SHAPETYPE.SPHERE: this.intersectSphere(shape as Sphere, quat, position, body, shape); break;
+			case            SHAPETYPE.PLANE: this.intersectPlane(shape as Plane, quat, position, body, shape); break;
 			case SHAPETYPE.CONVEXPOLYHEDRON: this.intersectConvex(shape as ConvexPolyhedron, quat, position, body, shape); break;
-			case SHAPETYPE.TRIMESH: this.intersectTrimesh(shape as Trimesh, quat, position, body, shape); break;
-			case SHAPETYPE.HEIGHTFIELD: this.intersectHeightfield(shape as Heightfield, quat, position, body, shape); break;
-			case SHAPETYPE.CAPSULE: break;
-			case SHAPETYPE.VOXEL: this.intersectVoxel(shape as Voxel, quat, position, body, shape); break;
+			case          SHAPETYPE.TRIMESH: this.intersectTrimesh(shape as Trimesh, quat, position, body, shape); break;
+			case      SHAPETYPE.HEIGHTFIELD: this.intersectHeightfield(shape as Heightfield, quat, position, body, shape); break;
+			case          SHAPETYPE.CAPSULE: this.intersectCapsule(shape as Capsule, quat, position, body, shape); break;
+			case            SHAPETYPE.VOXEL: this.intersectVoxel(shape as Voxel, quat, position, body, shape); break;
 		}
         /*
         const intersectMethod = this[shape.type];
@@ -592,6 +593,98 @@ export class Ray {
 			}
 			// }
 		}
+	}
+
+	/**
+	 * 这个没有Quaternion参数，因为假设只依赖body当前朝向。因为这个函数依赖axis
+	 * 内部向外不算碰撞
+	 * @param capsule 
+	 * @param position 
+	 * @param body 
+	 * @param reportedShape 
+	 */
+	intersectCapsule(capsule: Capsule, position: Vec3, quat: Quaternion, body: Body, reportedShape: Shape){
+		const from = this.from;
+		const to = this.to;
+
+		if(body.aabbNeedsUpdate){
+			body.updateAABB();	//这个应该调用的calcDir
+		}
+
+		// 世界空间的包围盒
+		let capmin = body.aabb.lowerBound;
+		let capmax = body.aabb.upperBound;
+
+		// 判断包围盒
+		let minx = from.x < to.x ? from.x : to.x;
+		let miny = from.y < to.y ? from.y : to.y;
+		let minz = from.z < to.z ? from.z : to.z;
+		let maxx = from.x > to.x ? from.x : to.x;
+		let maxy = from.y > to.y ? from.y : to.y;
+		let maxz = from.z > to.z ? from.z : to.z;
+
+		if (maxx < capmin.x ||
+			minx > capmax.x ||
+			maxy < capmin.y ||
+			miny > capmax.y ||
+			maxz < capmin.z ||
+			minz > capmax.z
+		) return;
+		
+		// from to转到capsule空间
+		let invQ = tmpQ;
+		quat.conjugate(invQ);
+		let fromLocal = tmpVec1;
+		let toLocal = tmpVec2;
+		from.vsub(position,fromLocal); invQ.vmult(fromLocal,fromLocal); 
+		to.vsub(position,toLocal); invQ.vmult(toLocal,toLocal);
+
+		//TODO 考虑缩放
+		
+		let r = capsule.radius;
+		let ax = capsule.axis;
+
+		throw 'ray intersectCapsule NI';
+		/*
+		let r1 = 0;
+		let r2 = capsule.radius;
+		let ax1 = this.axis;
+		let ax2 = capsule.axis;
+		let D1 = tmpDir1; ax1.scale(2, D1);
+		let D2 = tmpDir2; ax2.scale(2, D2);
+		let P1 = from;	//我的起点
+		let P2 = tmpVec2; position.vsub(ax2, P2);	//胶囊的起点
+		let d = tmpVec3; P1.vsub(P2, d);
+		// 两个线段之间的距离: | P1+t1D1 -(P2+t2D2) |
+		// P1-P2 = d
+		// (d + t1D1-t2D2)^2 是距离的平方，对这个取全微分
+		// 2(d+t1D1-t2D2)*D1, -2(d+t1D1-t2D2)*D2 这两个都是0
+		// 显然这时候与D1,D2都垂直
+		// -dD1 -t1D1^2 + t2D1D2  = 0
+		// -dD2 -t1D1D2 + t2D2^2  = 0
+		// 先用多项式的方法求解 Ax=b
+		// | -D1^2  D1D2 | |t1|    |dD1|
+		// |             | |  |  = |   |
+		// | -D1D2  D2^2 | |t2|    |dD2|
+		//
+		// 如果平行，则有个方向的d永远为0
+		let A = -D1.dot(D1); let B = D1.dot(D2);
+		let C = -B; let D = D2.dot(D2);
+		let b1 = d.dot(D1);
+		let b2 = d.dot(D2);
+		let adbc = A * D - B * C;
+		if (adbc > -1e-6 && adbc < 1e-6) {
+			//平行
+			return -1;
+		}
+		let dd = 1 / adbc; //只要胶囊没有退化为球，这个就没有问题
+		let t1 = (D * b1 - B * b2) * dd;
+		let t2 = (-C * b1 + A * b2) * dd;
+
+		const intersectionPoint = Ray_intersectSphere_intersectionPoint;
+		const normal = Ray_intersectSphere_normal;
+		*/
+
 	}
 
     /**

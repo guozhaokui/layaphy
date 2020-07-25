@@ -24,7 +24,6 @@ let A1 = new Vec3();
 
 /**
  * 缺省主轴是z轴
- * 测试的时候可以通过组合shape来模拟胶囊
  */
 export class Capsule extends Shape implements MinkowskiShape{
 	radius: f32;

@@ -72,7 +72,9 @@ function cap_sp(){
 
 function box_cap(){
 	addBox(new Vec3(10,10,10),new Vec3(0,0,0),0,phymtl1);
-	addCapsule(1,1,5.8,0,0,1,false);
+	//let b = addCapsule(1,1,5.8,0,0,1,false);
+	//b.phyBody.name='ddd';
+	addSphere(1,10,10,10,111);
 }
 
 function staticobj(){
