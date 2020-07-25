@@ -433,11 +433,12 @@ export function mouseDownEmitObj(scrx: number, scry: number, cam:Camera, lockEmi
 	//let sp = addBox(new Vec3(1,1,1), stpos,1,phymtl as Material);
 	//let sp = addCapsule(1,6,stpos.x, stpos.y, stpos.z,1,true);
 	//sp.setMaterial(phySph);
-	let v = 20;
+	let v = 1220;
+	sp.phyBody.ccdSpeedThreshold=100;
 	setTimeout(() => {
 		//sp.owner.destroy();
 		sp._onDestroy();
-	}, 11000);
+	}, 31000);
 	sp.setVel(dir.x * v, dir.y * v, dir.z * v);
 
 }

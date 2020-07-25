@@ -871,6 +871,10 @@ export class Body extends EventTarget {
 	}
 	
 
+	/**
+	 * 把位置移到刚发生碰撞的地方
+	 * @param dt 
+	 */
 	integrateToTimeOfImpact(dt:number){
 		let ccdvel = this.ccdSpeedThreshold;
 		let vel2 = this.velocity.lengthSquared();
@@ -884,16 +888,12 @@ export class Body extends EventTarget {
 		direction.copy(this.velocity);
 		direction.scale(1/vel,direction);
 	
-		// 预计的终点
+		// 不碰撞的情况下的终点
 		this.velocity.scale(dt, startToEnd);
 		var len = startToEnd.length();
-
 		this.position.vadd( startToEnd, end);
 
-		var timeOfImpact = 1;
-	
 		var hitBody:Body|null=null;
-	
 		for(let i=0,l=this.shapes.length; i<l; i++){
 			var shape = this.shapes[i];
 			// 从起点到终点用射线检测会碰撞的最近的物体
@@ -909,7 +909,7 @@ export class Body extends EventTarget {
 			}
 		}
 	
-		if(!hitBody || !timeOfImpact){
+		if(!hitBody){
 			return false;
 		}
 	
@@ -917,16 +917,20 @@ export class Body extends EventTarget {
 		end = result.hitPointWorld;
 		end.vsub(this.position, startToEnd);
 		// 碰撞时间，0是当前位置 1是无阻挡最终位置
-		timeOfImpact = result.distance / len; 
+		let timeOfImpact = result.distance / len; 
+		// 下面迭代要用距离来结束，所以记一下
+		let mindist = 0.1;	// 小于这个距离就结束
+		let mindt = mindist/result.distance;
 	
+		// 保存当前位置
 		rememberPosition.copy(this.position);
 	
 		// Got a start and end point. Approximate time of impact using binary search
 		var iter = 0;
 		var tmin = 0;
-		var tmid = timeOfImpact;
-		var tmax = 1;
-		while (tmax >= tmin && iter < ccdIterations) {
+		var tmid = 0;
+		var tmax = 1;	// 1对应射线碰撞点
+		while (tmax - tmin>mindt && iter < ccdIterations) {
 			iter++;
 	
 			// calculate the midpoint
@@ -945,9 +949,11 @@ export class Body extends EventTarget {
 				// change min to search upper interval
 				tmin = tmid;
 			}
+
 		}
 	
-		timeOfImpact = tmax; // Need to guarantee overlap to resolve collisions
+		//console.log('it=',iter);
+		timeOfImpact = tmax+mindt; // Need to guarantee overlap to resolve collisions
 	
 		this.position.copy(rememberPosition);
 	

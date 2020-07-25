@@ -1094,7 +1094,7 @@ export class CollisionGjkEpa {
 				// 无法更靠近了，
 				if(this.useMargin && d1<margin){
 					this.getHitInfoByMargin(normdir,margin,d1,minkowpt);
-					console.log('gjk it=',it);
+					//console.log('gjk it=',it);
 					return GJKResult.INMARGIN;
 				}
 			}
@@ -1108,7 +1108,7 @@ export class CollisionGjkEpa {
 				// 这时候如果是边界碰撞,则原点一定在最后的单形上
 				if( d>-margin){
 					this.getHitInfoByMargin(normdir,margin,-d,minkowpt);
-					console.log('gjk it=',it);
+					//console.log('gjk it=',it);
 					return GJKResult.INMARGIN;
 				}else{
 					//debugger;
@@ -1122,7 +1122,7 @@ export class CollisionGjkEpa {
 					// 如果已经是三角形了，且新的点在三角形上，则表示这是在壳上的面了
 					if(simplex.isPtInTri(minkowpt, normdir)){
 						this.getHitInfoByMargin(normdir,margin,-d,minkowpt);
-						console.log('gjk it=',it);
+						//console.log('gjk it=',it);
 						return GJKResult.INMARGIN;
 					}else{
 						// 继续
@@ -1130,7 +1130,7 @@ export class CollisionGjkEpa {
 				}else{
 					// 没有发生碰撞
 					// TODO 这个没有考虑margin优化
-					console.log('gjk it=',it);
+					//console.log('gjk it=',it);
 					return GJKResult.NOCD;
 				}
 
@@ -1142,12 +1142,12 @@ export class CollisionGjkEpa {
 			// 如果单形包含原点了，则发生碰撞了。
 			// TODO 现在的dir有的规格化了，有的没有
             if (this.containsOrigin(simplex, dir)) {
-				console.log('gjk it=',it);
+				//console.log('gjk it=',it);
                 return GJKResult.NEEDEPA;
 			}
             it++;
 		}
-		console.log('gjk it=',it);
+		//console.log('gjk it=',it);
         return GJKResult.NOCD;
     }
 
@@ -1295,14 +1295,12 @@ export class CollisionGjkEpa {
                 deep = this.findResponseWithTriangle(transA, transB, polytope, hitA, hitB, hitNorm);
             //}
             if (deep>0) {
-				if(it>100) debugger;
-				console.log('epait=',it);
+				//console.log('epait=',it);
 				return deep;
             }
             it++;
 		}
-		if(it>100) debugger;
-		console.log('epait=',it);
+		//console.log('epait=',it);
         return -1;
     }    
 
