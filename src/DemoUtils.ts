@@ -418,6 +418,7 @@ export function mouseDownEmitObj(scrx: number, scry: number, cam:Camera, lockEmi
 		emitPos.set(ray.origin.x, ray.origin.y, ray.origin.z);
 		//DEBUG
 		//emitPos.set(-31.65083976589477,20.991332874362374,66.50135643487836 );
+		emitPos.set(0,0,1500);
 	}
 
 	stpos.set(emitPos.x, emitPos.y, emitPos.z);
@@ -429,6 +430,7 @@ export function mouseDownEmitObj(scrx: number, scry: number, cam:Camera, lockEmi
 	}
 	
 	dir.set(emitDir.x,emitDir.y,emitDir.z);
+	dir.set(0,0,-1);//DEBUG
 	let sp = addSphere(.3, stpos.x, stpos.y, stpos.z);
 	//let sp = addBox(new Vec3(1,1,1), stpos,1,phymtl as Material);
 	//let sp = addCapsule(1,6,stpos.x, stpos.y, stpos.z,1,true);
