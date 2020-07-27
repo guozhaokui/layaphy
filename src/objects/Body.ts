@@ -960,8 +960,6 @@ export class Body extends EventTarget {
 		// move to TOI
 		startToEnd.scale(timeOfImpact, integrate_velodt);
 		this.position.vadd(integrate_velodt, this.position);
-
-		console.log('hit pos-to', rememberPosition.x, rememberPosition.y, rememberPosition.z);
 	
 		return true;
 	}
