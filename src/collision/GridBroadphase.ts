@@ -500,10 +500,10 @@ export class GridBroadphase extends Broadphase {
 			}else{
 				// 这表示原来是静止的,已经记录在静止数组中了。或者是第一次加入
 				this.staticGrid.remove(b);
-				// 加入动态
-				b.activeid=this.activeBodies.length;
-				this.activeBodies.push(b);
 			}
+			// 加入动态
+			b.activeid=this.activeBodies.length;
+			this.activeBodies.push(b);
 		}else{
 			// 已经是动态的了，检查一下
 			if(this.activeBodies[b.activeid]!=b){
