@@ -496,6 +496,7 @@ export class Voxel extends Shape {
 		let zt = absdirz > 1e-6 ? w / absdirz : 10000;
 
 		//由于起点不在0,0,0因此需要计算到下一个面的时间，第一次需要计算，以后直接加就行
+		//TODO 感觉这里不太对，应该是根据方向确定是 1-x 还是 x
 		let maxX = (1 - (nst.x % w) / w) * xt;
 		let maxY = (1 - (nst.y % w) / w) * yt;
 		let maxZ = (1 - (nst.z % w) / w) * zt;
