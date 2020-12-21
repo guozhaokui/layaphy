@@ -288,7 +288,7 @@ export class Ray {
 			case SHAPETYPE.CONVEXPOLYHEDRON: this.intersectConvex(shape as ConvexPolyhedron, quat, position, body, shape); break;
 			case          SHAPETYPE.TRIMESH: this.intersectTrimesh(shape as Trimesh, quat, position, body, shape); break;
 			case      SHAPETYPE.HEIGHTFIELD: this.intersectHeightfield(shape as Heightfield, quat, position, body, shape); break;
-			case          SHAPETYPE.CAPSULE: this.intersectCapsule(shape as Capsule, quat, position, body, shape); break;
+			case          SHAPETYPE.CAPSULE: this.intersectCapsule(shape as Capsule, position, quat, body, shape); break;
 			case            SHAPETYPE.VOXEL: this.intersectVoxel(shape as Voxel, quat, position, body, shape); break;
 		}
         /*

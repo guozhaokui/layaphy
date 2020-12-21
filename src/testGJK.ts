@@ -21,8 +21,9 @@ var world: CannonWorld;
 let phymtl1 = new Material();
 let phymtl2 = new Material();
 let phymtl3 = new Material();
-let cmtl1 = new ContactMaterial(phymtl1, phymtl2, 0.001, 1);
+let cmtl1 = new ContactMaterial(phymtl1, phymtl2, 0, 1);
 let cmtl2 = new ContactMaterial(phymtl1, phymtl3, 0, 1);
+let cmtl3 = new ContactMaterial(phymtl1, phymtl1, 0, 1);
 //cmtl1.contactEquationRelaxation=1;
 let cam:MouseCtrl1;
 
@@ -34,7 +35,7 @@ function initPhy(scene: Scene3D) {
 	let phyworld = world = scene.addComponent(CannonWorld) as CannonWorld;
 	phyworld.world.gravity.set(0, 0, 0);
 	(window as any).phyr = new PhyRender(scene, phyworld.world);
-	phyworld.world.addContactMaterial(cmtl1).addContactMaterial(cmtl2);
+	phyworld.world.addContactMaterial(cmtl1).addContactMaterial(cmtl2).addContactMaterial(cmtl3);
 	phyr = getPhyRender();
 }
 
@@ -42,7 +43,7 @@ function initPhy(scene: Scene3D) {
 
 function test(mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 	Laya.stage.on(Event.MOUSE_DOWN, null, (e: { stageX: number, stageY: number }) => {
-		mouseDownEmitObj(e.stageX, e.stageY, cam.camera);
+		//mouseDownEmitObj(e.stageX, e.stageY, cam.camera);
 	});
 }
 
@@ -72,11 +73,14 @@ function cap_sp(){
 
 function box_cap(){
 	addBox(new Vec3(10,10,10),new Vec3(0,0,0),0,phymtl1);
+	addBox(new Vec3(10,10,10),new Vec3(40,0,0),0,phymtl1);
 	//let b = addCapsule(1,1,5.8,0,0,1,false);
 	//b.phyBody.name='ddd';
-	addSphere(1,10,10,10,111);
+	let b = addSphere(1,30,0,0,1);
+	b.setMaterial(phymtl1);
+	b.phyBody.velocity = new Vec3(-20,0,0);
 
-	addBox(new Vec3(30,30,10),new Vec3(0,0,0),110,phymtl1);
+	//addBox(new Vec3(30,30,10),new Vec3(0,0,0),110,phymtl1);
 }
 
 function staticobj(){

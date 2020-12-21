@@ -418,6 +418,7 @@ export function mouseDownEmitObj(scrx: number, scry: number, cam:Camera, lockEmi
 		emitPos.set(ray.origin.x, ray.origin.y, ray.origin.z);
 		//DEBUG
 		//emitPos.set(-31.65083976589477,20.991332874362374,66.50135643487836 );
+		
 	}
 
 	stpos.set(emitPos.x, emitPos.y, emitPos.z);
