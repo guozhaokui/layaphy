@@ -59,7 +59,7 @@ export declare class Node extends EventDispatcher {
     protected _onAdded(): void;
     protected _onRemoved(): void;
     addComponentIntance(comp: Component): any;
-    addComponent<T>(type:typeof T): T;
+    addComponent(type:any): any;
     getComponent(clas: any): any;
     getComponents(clas: any): any[];
     readonly timer: Timer;

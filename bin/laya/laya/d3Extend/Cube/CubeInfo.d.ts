@@ -1,4 +1,4 @@
-import { SubCubeGeometry } from "SubCubeGeometry";
+//import { SubCubeGeometry } from "SubCubeGeometry";
 export declare class CubeInfo {
     static _aoFactor: number;
     static aoFactor: number[];
@@ -38,8 +38,8 @@ export declare class CubeInfo {
     selectArrayIndex: number[];
     static create(x: number, y: number, z: number): CubeInfo;
     static recover(cube: CubeInfo): void;
-    subCube: SubCubeGeometry;
-    updateCube: SubCubeGeometry;
+    subCube: any;
+    updateCube: any;
     x: number;
     y: number;
     z: number;
