@@ -4,7 +4,7 @@ export interface IDimention{
     input:Size;
     output:Size;
     // 参数个数
-    parameters:number
+    parameters:Size
 }
 
 export class LayerBase{

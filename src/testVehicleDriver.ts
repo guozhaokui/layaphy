@@ -7,6 +7,8 @@ import { PrimitiveMesh } from "laya/d3/resource/models/PrimitiveMesh";
 import { Sprite } from "laya/display/Sprite";
 import { Event } from "laya/events/Event";
 import { addBox, addSphere, createVoxelBox, JSONLoader, loadVoxel, mouseDownEmitObj, nodeProxy, ZupPos2Yup, ZupQuat2Yup } from "./DemoUtils";
+import { Model } from "./DNN/neurojs/network";
+import { Agent } from "./DNN/neurojs/rl/agent";
 import { CannonBody } from "./layawrap/CannonBody";
 import { CannonWorld } from "./layawrap/CannonWorld";
 import { ttt, updateStatus } from "./layawrap/ctrls/GamePadTest";
@@ -58,11 +60,6 @@ function testGround() {
 
 }
 
-class Agent{
-	states:any;
-	actions:any;
-
-}
 
 /**
  * 输入参数
@@ -144,6 +141,48 @@ class NodeLoaderProxy implements nodeProxy{
 	}
 }
 	
+function initRL(){
+	let input = 118;
+	let actions = 2;
+
+    let brains = {
+        actor: new Model([
+            { type: 'input', size: input },
+            { type: 'fc', size: 50, activation: 'relu' },
+            { type: 'fc', size: 50, activation: 'relu' },
+            { type: 'fc', size: 50, activation: 'relu', dropout: 0.5 },
+            { type: 'fc', size: actions, activation: 'tanh' },
+            { type: 'regression' }
+        ]),
+
+        critic: new Model([
+            { type: 'input', size: input + actions },
+            { type: 'fc', size: 100, activation: 'relu' },
+            { type: 'fc', size: 100, activation: 'relu' },
+            { type: 'fc', size: 1 },
+            { type: 'regression' }
+        ])
+    }
+
+	let carAgent = new Agent({
+		
+	});
+
+	let actor = new Model([
+		{type:'input',size:input},
+		{type:'fc',size:50, activation:'relu'},
+		{type:'fc',size:50, activation:'relu'},
+		{type:'fc',size:50, activation:'relu', dropout:0.5},
+		{type:'fc',size:actions, activation:'tanh'},
+		{type:'regression'}
+	]);
+
+	let critic = new Model([
+
+	]
+	);
+}
+
 var useGamePad=false;
 export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 	camctr = cam;

@@ -1,7 +1,12 @@
 
 export class NetworkWrapper{
     net;
-    option;
+	option;
+	
+	constructor(){
+		
+	}
+
     useOptimizer(optim){
 
     }
