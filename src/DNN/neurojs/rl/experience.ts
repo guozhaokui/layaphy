@@ -1,10 +1,27 @@
 import { Agent } from "./agent"
+import {Node} from "./replay-buffers"
 
 export class Experience {
+	// action空间，是2d的，所以分0,1
+	action0:Float64Array;
+	action1:Float64Array;
+
 	agent:Agent;
+	atAge:int;
+	node:Node;
+
 	learnSteps=0;
-	reward0;
-	target;
+	reward0:number;
+	
+	/** 
+	 * 状态。 这里是一个118长度的数据，例如每条射线的长度
+	 *  是2d的，所以分0,1
+	 */
+	state0:Float64Array;
+	state1:Float64Array;
+
+	target;//__q_target
+	value:number;
 	private __sarsa_target;
 	private __q_target;
 	loss=0;
@@ -34,5 +51,10 @@ export class Experience {
 		this.lastLearnedAt = this.agent.age
 
 		return this.loss
+	}	
+
+	init() {
+		this.loss = this.agent.algorithm.optimize(this, false)
+		this.atAge = this.agent.age
 	}	
 }

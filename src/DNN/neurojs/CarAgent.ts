@@ -33,6 +33,7 @@ export class CarAgent{
 		
 				// 经验回放数量？
 				experience: 75e3, 
+				// 每次从buffer采样的个数
 				learningPerTick: 40, 
 				startLearningAt: 900,
 		

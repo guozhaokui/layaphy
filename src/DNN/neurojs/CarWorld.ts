@@ -1,9 +1,17 @@
+import { ConfigPool } from './shared';
 import { CarAgent } from "./CarAgent";
 import { Model } from "./network";
 
+interface IWorldBrain{
+	actor:Model;
+	critic:Model;
+	shared?:ConfigPool
+}
+
 export class CarWorld{
 	agents:CarAgent[]=[];
-	brains:{actor:Model, critic:Model};
+	brains:IWorldBrain;
+	timer=0;
 
 	constructor(){
 		var input = 118, actions = 2
@@ -31,5 +39,19 @@ export class CarWorld{
 			])
 	
 		};
+	}
+
+	populate(n:int) {
+		for (var i = 0; i < n; i++) {
+			var ag = new CarAgent({}, this);
+			this.agents.push(ag);
+		}
+	};	
+
+	step(dt:number){
+		if (dt >= 0.02)  dt = 0.02;
+		++this.timer
+
+		var loss = 0.0, reward = 0.0, agentUpdate = false
 	}
 }

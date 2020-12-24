@@ -100,6 +100,7 @@ export class Model{
 	}	
 }
 
+// defines how the network behaves; parameter/weights etc.
 export class Configuration{
 	model:Model;
 	parameters:Tensor[];

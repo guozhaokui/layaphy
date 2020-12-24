@@ -120,7 +120,7 @@ class Optim {
             throw 'unrecognized optimizer type'
     }
 
-    assemble(dir:string) {
+    assemble(dir:'+'|'-') {
         var method = Optim.methods[this.method];
         var regDir = dir === '+' ? '-' : '+'
 
