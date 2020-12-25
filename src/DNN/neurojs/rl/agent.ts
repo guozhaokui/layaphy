@@ -217,6 +217,14 @@ export class Agent{
 	act(state:Float64Array, target:boolean) {
 		return this.algorithm.act(state, target)
 	}	
+
+	value(state, action, target)  {
+		return this.algorithm.value(state, action, target)
+	}
+
+	evaluate(state, target) {
+		return this.algorithm.evaluate(state, target)
+	}	
 	/**
 	 * 根据状态，动作等获得输入维度
 	 * @param states 

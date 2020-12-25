@@ -9,6 +9,12 @@ class Algorithm {
 	act(state, target) { throw 'Not implemented' }
 
 	// how good is an action at state
+	/**
+	 * 评估一个动作的价值
+	 * @param state 
+	 * @param action 
+	 * @param target 
+	 */
 	value(state, action, target) { throw 'Not implemented' }
 
 	// replay
@@ -21,6 +27,11 @@ class Algorithm {
 	export() { throw 'Not implemented' }
 
 
+	/**
+	 * 评估选中动作的价值
+	 * @param state 
+	 * @param target 
+	 */
 	evaluate(state, target) {
 		return this.value(state, this.act(state, target), target)
 	}
@@ -145,6 +156,15 @@ export class DDPG extends Algorithm {
 
 		return this.actor.live.forward(state)
 	}	
+
+	value(state, action, target) {
+		var net = target ? this.critic.target : this.critic.live
+
+		net.in.w.set(state, 0)
+		net.in.w.set(action, this.input)
+
+		return net.forward()[0]
+	}
 
 	optimize(e:Experience, descent = true) {
 		var target = e.target()

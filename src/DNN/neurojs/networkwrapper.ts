@@ -5,7 +5,9 @@ export class NetworkWrapper extends EventRadio{
     net:State;
 	option;
     model:Model;
-    config:Configuration
+	config:Configuration
+	live:State;
+	target:State;
     
 	constructor(){
 		super();

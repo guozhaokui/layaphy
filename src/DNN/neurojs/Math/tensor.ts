@@ -3,6 +3,7 @@ import { Size } from "./size";
 export class Tensor {
 	size:Size;
 	w:Float64Array;
+	// 反向用
 	dw:Float64Array;
 	constructor(size:Size) {
 		this.size = Size.derive(size)

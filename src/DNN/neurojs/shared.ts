@@ -1,3 +1,4 @@
+import { Configuration } from './network';
 import { NetworkWrapper } from './networkwrapper';
 export class EventRadio {
 
@@ -55,7 +56,7 @@ export class ConfigPool extends EventRadio {
 		this.trigger('add ' + name, [ wrapper ])
 	}
 
-	set(name, config) {
+	set(name:string, config:Configuration) {
 		if (name in this.states) {
 
 			for (var i = 0; i < this.states[name].length; i++) {

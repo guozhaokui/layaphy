@@ -10,13 +10,16 @@ export interface IModelOption{
 	activation?:string;
 	// 如果有的话表示dropout概率
     dropout?:number;		
-    classes?:Float64Array;
+	classes?:Float64Array;
+	// 节点个数
     size?:Size|int; //softmax的时候
     probability?:boolean;
 }
 
 /**
  * 网络模型
+ * 
+ * 只是网络的结构，不含运行时数据。
  */
 export class Model{
     representation:IModelOption[];
@@ -52,6 +55,15 @@ export class Model{
 		this.output = this.layers[this.layers.length - 1]
 
     }
+
+	newConfiguration() {
+		return new Configuration(this)
+	}
+
+	newState() {
+		return this.newConfiguration().newState()
+	}
+
 
     static create(inp:Size|null, opt:IModelOption):LayerBase{
 		switch (opt.type) {
@@ -95,20 +107,22 @@ export class Model{
 		return description
 	}    
 
-	newConfiguration() {
-		return new Configuration(this)
-	}	
 }
 
-// defines how the network behaves; parameter/weights etc.
+/**
+ * defines how the network behaves; parameter/weights etc.
+ * 包含整个网络的运行时数据
+ */
 export class Configuration{
 	model:Model;
+	// 每一层的参数。注意有的层是空的。例如input，output，非线性层等，有的是fc层之类的。
 	parameters:Tensor[];
 	optimizer:any|null;
 	// 总参数个数
 	countOfParameters=0;
 
-	constructor(model:Model, parameters?:Tensor[], optimizer?:any) {
+
+	constructor(model:Model, parameters?, optimizer?) {
 		this.model = model
 		this.parameters = []
 		this.optimizer = null
@@ -136,18 +150,119 @@ export class Configuration{
 		}
 	}
 
+
+	useOptimizer(optimizer) {
+		if (optimizer.constructor === Object)
+			optimizer = new Optim(optimizer)
+
+		this.optimizer = optimizer
+		this.forEachParameter(param => optimizer.initialize(param))
+
+		return optimizer
+	}
+
+	freeze(val = true) {
+		this.freezed = val
+	}
+
+	optimize(accu = true) {
+		if (accu) this.accumulate(Number.isInteger(accu) ? accu : undefined)
+		this.forEachParameter(param => this.optimizer.apply(param))
+	}
+	
+	accumulate(weighted) {
+		this.forEachParameter(param => this.optimizer.accumulate(param, weighted))
+	}
+
+
+
+	forEachParameter(cb) {
+		if (this.freezed) return
+		for (var i = 0; i < this.parameters.length; i++) { 
+			var param = this.parameters[i]
+			if (param === undefined) 
+				continue
+
+			cb(param, i)
+		}
+	}
+
+	copyParametersFrom(config) {
+		if (config.model !== this.model)
+			throw 'models must match'
+
+		this.forEachParameter((function (param, index) {
+			param.w.set(config.parameters[index].w)
+		}).bind(this))
+	}
+
+
 	newState() {
 		return new State(this)
 	}
 
+	clone() {
+		return new Configuration(this.model, this.parameters, this.optimizer)
+	}
+
+
+	/**
+	 * 设置网络的权重
+	 * @param arr 
+	 */
+	putWeights(arr:Float64Array) {
+		var joined = arr
+
+		if (arr.length !== this.countOfParameters)
+			throw 'array doesnt match'
+
+		for (var i = 0, p = 0; i < this.parameters.length; i++) { 
+			var param = this.parameters[i]
+			if (param === undefined) 
+				continue
+
+			param.w.set(joined.subarray(p, p + param.w.length))
+
+			p += param.w.length
+		}
+	}
+
+	/**
+	 * 获取网络的权重
+	 */
+	pullWeights() {
+		var joined = new Float64Array(this.countOfParameters)
+
+		for (var i = 0, p = 0; i < this.parameters.length; i++) { 
+			var param = this.parameters[i]
+			if (param === undefined) 
+				continue
+
+			joined.set(param.w, p)
+
+			p += param.w.length
+		}
+
+		return joined
+	}
+
+
+	share() {
+		return new SharedConfiguration(this)
+	}
+
+
 }
 
 // defines current network input/hidden/output-state; activations and gradients etc.
+/**
+ * 相当于整个网络的运行时数据？
+ */
 export class State{
-    output:Float64Array;
     options:any;
     tensors:Tensor[] = [] // array of layer tensors; this.tensors[i] = output tensor of layer i
-    contexts:LayerContext[] = [];
+	contexts:LayerContext[] = [];
+	// 每个State有自己的 configuration
 	configuration:Configuration;
 	model:Model;
 	layers:LayerBase[];
@@ -229,12 +344,88 @@ export class State{
 
 		return this.loss(desired) // return loss
 	}    
+
+	/**
+	 * Instead of regressing the network to have minimal error, you can provide your own gradient.
+	 * @param  {Float64Array} grad
+	 */
+	backwardWithGradient(grad) {
+		if (Array.isArray(grad))
+			this.out.dw.set(grad)
+		else if (this.out.dw.length === 1)
+			this.out.dw[0] = grad
+		else
+			throw 'error grad not propagatable';
+
+		this.propagate()
+	}
+
+	// get copy of current output
+	get output():Float64Array {
+		return this.__l_out.result(this.contexts[this.__l_out.index])
+	}
+
+	// get loss of current 
+	loss(desired) {
+		if (desired === undefined)
+			return 
+
+		return this.__l_out.loss(this.contexts[this.__l_out.index], desired)
+	}
+
+
+	// not error gradient, but value gradient => how to increase/decrease n-th output value
+	derivatives(n, clone = true) {
+		this.out.dw.fill(0.0)
+		this.out.dw[n] = 1.0
+
+		this.propagate()
+
+		if (clone)
+			return this.in.dw.clone()
+
+		return this.in.dw
+	}
+
+
+	// forward pass
+	activate() {
+		for (var i = 0; i < this.layers.length; i++) {
+			if (this.layers[i].passthrough) 
+				continue ;
+
+			this.layers[i].forward(this.contexts[i])
+		}
+	}
+
+	// backwards pass
+	propagate() {
+		// safety check
+		for (var i = 0; i < this.out.dw.length; i++) {
+			if (isNaN(this.out.dw[i])) {
+				throw 'warning: terror!';
+			}
+		}
+
+		for (var i = this.layers.length - 1; i >= 0; i--) {
+			if (this.layers[i].passthrough) 
+				continue ;
+
+			this.layers[i].backward(this.contexts[i])
+		}
+	}
+
+
 }
 
 export class LayerContext{
-    input;
-    output;
-    params:number;
+	// 输入值
+	input:Tensor;	
+	// 输出值
+	output:Tensor;
+	// 参数值。例如fc是inputNum*outputNum个
+	params:number|Tensor;
+	
     state:State;
     constructor(opt:any){
         this.input = opt.input;
