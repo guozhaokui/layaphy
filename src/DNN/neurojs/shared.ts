@@ -1,6 +1,7 @@
 import { Configuration } from './network';
 import { NetworkWrapper } from './networkwrapper';
 export class EventRadio {
+	private events:{[key:string]:Function[];}
 
 	constructor() {
 		this.events = {}
@@ -8,7 +9,7 @@ export class EventRadio {
 
 
     // 响应
-	on(event, callback) {
+	on(event:string, callback:Function) {
 		if (!(event in this.events)) {
 			this.events[event] = []
 		}
@@ -17,7 +18,7 @@ export class EventRadio {
 	}
 
     // 触发
-	trigger(event, args = []) {
+	trigger(event:string, args:any[] = []) {
 		if (event in this.events) {
 			for (var i = 0; i < this.events[event].length; i++) {
 				this.events[event][i].apply(undefined, [this].concat(args));
@@ -28,15 +29,13 @@ export class EventRadio {
 }
 
 export class ConfigPool extends EventRadio {
-    states:any;
-    configs:any;
-    requested:any[];
+    states:{[key:string]:NetworkWrapper[]}={};
+	configs:{[key:string]:Configuration}={};
+	// 请求优化的 Configuration 的name
+    requested:string[]=[];
 
 	constructor() {
 		super()
-		this.states = {}
-		this.configs = {}
-		this.requested = []
 	}
 
 	add(name:string, wrapper:NetworkWrapper) {
@@ -68,6 +67,10 @@ export class ConfigPool extends EventRadio {
 		this.configs[name] = config
 	}
 
+	/**
+	 * 执行优化。
+	 * 前面请求的优化都执行一下
+	 */
 	step() {
 		for (var i = 0; i < this.requested.length; i++) {
 			var name = this.requested[i]
@@ -77,7 +80,11 @@ export class ConfigPool extends EventRadio {
 		this.requested = []
 	}
 
-	requestOptimisation(wrapper) {
+	/**
+	 * 请求优化
+	 * @param wrapper 
+	 */
+	requestOptimisation(wrapper:NetworkWrapper) {
 		if (wrapper.__pool_name === undefined || !(wrapper.__pool_name in this.configs)) 
 			return false
 

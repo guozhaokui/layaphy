@@ -1,14 +1,18 @@
 import { Configuration, Model, State } from "./network";
-import { EventRadio } from "./shared";
+import { ConfigPool, EventRadio } from "./shared";
 
 export class NetworkWrapper extends EventRadio{
     net:State;
-	option;
+	option:any;
     model:Model;
 	config:Configuration
 	live:State;
 	target:State;
-    
+	// 这个对象对应的pool对象
+	pool:ConfigPool;
+	// 在pool中的key值
+	__pool_name:string;
+
 	constructor(){
 		super();
     }
