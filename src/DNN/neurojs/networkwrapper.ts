@@ -6,7 +6,9 @@ export class NetworkWrapper extends EventRadio{
 	option:any;
     model:Model;
 	config:Configuration
+	// 当前网络，实时
 	live:State;
+	// target网络，定期更新
 	target:State;
 	// 这个对象对应的pool对象
 	pool:ConfigPool;

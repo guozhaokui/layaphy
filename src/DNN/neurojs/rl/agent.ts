@@ -218,7 +218,7 @@ export class Agent{
 		return this.algorithm.act(state, target)
 	}	
 
-	value(state, action, target)  {
+	value(state:Float64Array, action:Float64Array, target)  {
 		return this.algorithm.value(state, action, target)
 	}
 

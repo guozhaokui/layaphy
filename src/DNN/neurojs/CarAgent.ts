@@ -1,4 +1,4 @@
-import { Car } from "./Car";
+import { AutoCar } from "./Car";
 import { Agent } from "./rl/agent";
 
 export class CarAgent{
@@ -10,7 +10,7 @@ export class CarAgent{
 	frequency=15;
 	timerFrequency = 60/this.frequency;
 
-	car = new Car();
+	car = new AutoCar();
 	brain:Agent;
 
 	init(actor,critic){
@@ -48,8 +48,8 @@ export class CarAgent{
 		this.timer++;
 		if (this.timer % this.timerFrequency === 0) {
 			//updateSensors()
-			let vel;
-			let speed=0;
+			let car = this.car;
+			let speed = car.phycar.getSpeed();
 			this.reward;// f(vel, contac, impact)
 			if(Math.abs(speed)<1e-2){
 				// 不动的话得分低

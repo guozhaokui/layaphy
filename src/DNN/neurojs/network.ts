@@ -268,7 +268,7 @@ export class State{
 	layers:LayerBase[];
 	in:Tensor;
 	out:Tensor;
-	private __l_in:LayerBase;
+	private __l_in:InputLayer;
 	private __l_out:LayerBase;
 
 	private __target:Float64Array;
@@ -309,22 +309,23 @@ export class State{
 		this.out = this.tensors[this.layers.length]
 
 		this.__target = new Float64Array(this.out.w.length)
-		this.__l_in = this.layers[0]
+		this.__l_in = this.layers[0] as InputLayer
 		this.__l_out = this.layers[this.layers.length - 1]
 	}
 
 
 	/**
 	 * Evaluate network
-	 * @param  {Float64Array} input
-	 * @return {Float64Array} 
+	 * @param   input
+	 * @return 
 	 */
-	forward(input:Float64Array, opt:any) {
+	forward(input:Float64Array, opt?:any) {
 		if (input != null) {
 			this.__l_in.toInputVector(input, this.in.w) // use 'input' as input values, while converting it to a vector
 		}
 
 		this.options = opt || {} // set pass options
+		// 逐层计算
 		this.activate() // activate all layers
 
 		return this.output // return copy of output
@@ -332,10 +333,10 @@ export class State{
 
 	/**
 	 * Propagates error back, error is provided by subtracting desired from actual output values. 
-	 * @param  {Float64Array | Int} desired
-	 * @return {Float}         loss
+	 * @param   desired
+	 * @return        loss
 	 */
-	backward(desired:Float64Array|int) {
+	backward(desired:Float64Array|int):number {
 		if (desired != null) {
 			this.__l_out.toGradientVector(desired, this.out.w, this.out.dw) // convert 'desired' to target vector
 		}
@@ -389,6 +390,7 @@ export class State{
 
 
 	// forward pass
+	// 前向过程。逐层计算
 	activate() {
 		for (var i = 0; i < this.layers.length; i++) {
 			if (this.layers[i].passthrough) 

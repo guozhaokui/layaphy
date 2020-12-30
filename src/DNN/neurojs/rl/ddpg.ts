@@ -5,8 +5,12 @@ import { ReplayBuffer } from "./replay-buffers";
 
 class Algorithm {
 
-	// what to do?
-	act(state, target) { throw 'Not implemented' }
+	/**
+	 * 根据状态决定动作。
+	 * @param state 
+	 * @param target  是否是计算target网络
+	 */
+	act(state:Float64Array, target:boolean):Float64Array { throw 'Not implemented' }
 
 	// how good is an action at state
 	/**
@@ -15,10 +19,10 @@ class Algorithm {
 	 * @param action 
 	 * @param target 
 	 */
-	value(state, action, target) { throw 'Not implemented' }
+	value(state:Float64Array, action:Float64Array, target=false):number { throw 'Not implemented' }
 
 	// replay
-	optimize(e, descent = true) { throw 'Not implemented' }
+	optimize(e:Experience, descent = true) { throw 'Not implemented' }
 
 	// adjust weights etc
 	learn() { throw 'Not implemented' }
@@ -32,7 +36,7 @@ class Algorithm {
 	 * @param state 
 	 * @param target 
 	 */
-	evaluate(state, target) {
+	evaluate(state:Float64Array, target:Float64Array) {
 		return this.value(state, this.act(state, target), target)
 	}
 
@@ -130,15 +134,6 @@ export class DDPG extends Algorithm {
 		this.critic.set(this.options.critic)
 	}
 
-	learn() {
-		// Improve through batch accumuluated gradients
-		this.actor.optimize()
-		this.critic.optimize()
-
-		// Copy actor and critic to target networks slowly
-		this.targetNetworkUpdates()
-	}
-
 	targetNetworkUpdates() {
 		this.actor.target.configuration.forEachParameter(this.targetActorUpdate)
 		this.critic.target.configuration.forEachParameter(this.targetCriticUpdate)
@@ -157,7 +152,7 @@ export class DDPG extends Algorithm {
 		return this.actor.live.forward(state)
 	}	
 
-	value(state, action, target) {
+	value(state:Float64Array, action:Float64Array, target=false) {
 		var net = target ? this.critic.target : this.critic.live
 
 		net.in.w.set(state, 0)
@@ -185,6 +180,30 @@ export class DDPG extends Algorithm {
 		}
 
 		return 0.5 * gradAL * gradAL // Math.pow(this.teach(e, isw, descent) - target, 2)
+	}
+
+	teach(e:Experience, isw = 1.0, descent = true) {
+		var action = this.actor.live.forward(e.state0)  // which action to take?
+		var val = this.value(e.state0, action) // how good will the future be, if i take this action?
+		var grad = this.critic.live.derivatives(0, false) // how will the future change, if i change this action
+
+		for (var i = 0; i < this.options.actions; i++) {
+			this.actor.live.out.dw[i] = grad[this.input + i] * isw
+		}
+
+		if (descent) {
+			this.actor.live.backward() // propagate change
+			this.actor.config.accumulate()
+		}
+	}
+
+	learn() {
+		// Improve through batch accumuluated gradients
+		this.actor.optimize()
+		this.critic.optimize()
+		
+		// Copy actor and critic to target networks slowly
+		this.targetNetworkUpdates()
 	}
 
 	progressiveCopy(net:NetworkWrapper, param, index) {

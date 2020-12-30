@@ -20,10 +20,8 @@ export class Experience {
 	state0:Float64Array;
 	state1:Float64Array;
 
-	target;//__q_target
+	target:()=>number;//__q_target
 	value:number;
-	private __sarsa_target;
-	private __q_target;
 	loss=0;
 
 	constructor(agent:Agent) {
@@ -36,13 +34,16 @@ export class Experience {
 	}	
 
 	private __q_target() {
-		return this.reward0 + this.agent.options.discount * this.agent.evaluate(this.state1, true) // this.agent.value(this.state1, this.agent.act(this.state1, true), true)
+		return this.reward0 + this.agent.options.discount! * this.agent.evaluate(this.state1, true) // this.agent.value(this.state1, this.agent.act(this.state1, true), true)
 	}
 
 	private __sarsa_target() {
 		return this.reward0 + this.agent.options.discount * this.agent.value(this.state1, this.action1, true)
 	}
 
+	estimate() {
+		return this.value = this.agent.value(this.state0, this.action0)
+	}
 
 	step() {
 		this.loss = this.agent.algorithm.optimize(this)
