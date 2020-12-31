@@ -319,7 +319,7 @@ export class State{
 	 * @param   input
 	 * @return 
 	 */
-	forward(input:Float64Array, opt?:any) {
+	forward(input?:Float64Array|null, opt?:any|null) {
 		if (input != null) {
 			this.__l_in.toInputVector(input, this.in.w) // use 'input' as input values, while converting it to a vector
 		}

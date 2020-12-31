@@ -1,5 +1,5 @@
 import { NetworkWrapper } from './../networkwrapper';
-import { Agent } from "./agent";
+import { Agent, IAgenOptions } from "./agent";
 import { Experience } from './experience';
 import { ReplayBuffer } from "./replay-buffers";
 
@@ -10,7 +10,7 @@ class Algorithm {
 	 * @param state 
 	 * @param target  是否是计算target网络
 	 */
-	act(state:Float64Array, target:boolean):Float64Array { throw 'Not implemented' }
+	act(state:Float64Array, target?:boolean):Float64Array { throw 'Not implemented' }
 
 	// how good is an action at state
 	/**
@@ -36,18 +36,26 @@ class Algorithm {
 	 * @param state 
 	 * @param target 
 	 */
-	evaluate(state:Float64Array, target:Float64Array) {
+	evaluate(state:Float64Array, target?:boolean) {
 		return this.value(state, this.act(state, target), target)
 	}
 
 }
 
+interface IDDPGOption{
+	/** advantage learning (AL) http://arxiv.org/pdf/1512.04860v1.pdf; increase action-gap */
+	alpha:number;
+	/**soft target updates */
+	theta:number;
+	actor?:NetworkWrapper;
+	critic?:NetworkWrapper;
+}
 
 /* Deep deterministic policy gradient */
 export class DDPG extends Algorithm {
 	actor: NetworkWrapper;
 	critic: NetworkWrapper;
-	options:any;
+	options:IDDPGOption&IAgenOptions;
 	agent:Agent;
 	buffer:ReplayBuffer;
 	// 输入维度
@@ -152,6 +160,12 @@ export class DDPG extends Algorithm {
 		return this.actor.live.forward(state)
 	}	
 
+	/**
+	 * 用critic网络估算Q值: Q(s,a)
+	 * @param state  当前的状态
+	 * @param action actor网络输出的动作
+	 * @param target 是否是计算target网络
+	 */
 	value(state:Float64Array, action:Float64Array, target=false) {
 		var net = target ? this.critic.target : this.critic.live
 
@@ -162,7 +176,10 @@ export class DDPG extends Algorithm {
 	}
 
 	optimize(e:Experience, descent = true) {
+		// target 网经验e的Q值
 		var target = e.target()
+
+		// 评估经验e的q值
 		var value = e.estimate()
 
 		var grad = value - target

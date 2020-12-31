@@ -201,7 +201,7 @@ export class PrioritizedReplayBuffer extends ReplayBuffer {
 		}
 	}
 
-	getImportanceSamplingWeight(e) { 
+	getImportanceSamplingWeight(e:Experience) { 
 		if (e.priority === undefined)
 			return 1.0
 

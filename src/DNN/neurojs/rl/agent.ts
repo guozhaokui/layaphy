@@ -5,9 +5,11 @@ import { PrioritizedReplayBuffer, ReplayBuffer } from "./replay-buffers";
 export interface IAgenOptions{
 	type:'sarsa'|'q-learning';
 	experience:number;
+	/** 收益折扣率 */
 	discount?:number;
 	states?:int;
 	temporalWindow:int;
+	beta:number;
 }
 
 interface IHistory{
@@ -218,11 +220,11 @@ export class Agent{
 		return this.algorithm.act(state, target)
 	}	
 
-	value(state:Float64Array, action:Float64Array, target)  {
+	value(state:Float64Array, action:Float64Array, target?:boolean)  {
 		return this.algorithm.value(state, action, target)
 	}
 
-	evaluate(state, target) {
+	evaluate(state:Float64Array, target?:boolean) {
 		return this.algorithm.evaluate(state, target)
 	}	
 	/**
