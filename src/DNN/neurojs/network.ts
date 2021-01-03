@@ -348,13 +348,14 @@ export class State{
 
 	/**
 	 * Instead of regressing the network to have minimal error, you can provide your own gradient.
-	 * @param  {Float64Array} grad
+	 * @param  grad 如果多个输出，这个参数就是一个数组，否则就是一个数字
 	 */
-	backwardWithGradient(grad) {
-		if (Array.isArray(grad))
-			this.out.dw.set(grad)
+	backwardWithGradient(grad:Float64Array|number) {
+		if((grad as Float64Array).length>1)
+		//if (Array.isArray(grad))
+			this.out.dw.set(grad as Float64Array)
 		else if (this.out.dw.length === 1)
-			this.out.dw[0] = grad
+			this.out.dw[0] = grad as number
 		else
 			throw 'error grad not propagatable';
 

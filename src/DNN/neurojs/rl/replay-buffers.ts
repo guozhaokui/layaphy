@@ -1,5 +1,5 @@
 import { Experience } from "./experience";
-
+/*
 export class ReplayBuffer {
 
 	add(e:Experience) { throw 'not implemented' }
@@ -9,6 +9,7 @@ export class ReplayBuffer {
 	updateAfterLearning() {}
 
 }
+*/
 
 export class Node {
 	value=0.0;
@@ -126,7 +127,7 @@ export class Node {
  * 有优先级的回放池
  * 优先级会影响被采样的频率
  */
-export class PrioritizedReplayBuffer extends ReplayBuffer {
+export class PrioritizedReplayBuffer {//extends ReplayBuffer {
 	static Node=Node;
 	root:Node;
 	iterations=0;
@@ -136,7 +137,7 @@ export class PrioritizedReplayBuffer extends ReplayBuffer {
 	leafs:Node[]=[];
 
 	constructor(N:int) {
-		super()
+		//super()
 		this.root = new PrioritizedReplayBuffer.Node(null, null)
 
 		for (var i = 0; i < N - 1; ++i) {

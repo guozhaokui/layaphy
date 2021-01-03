@@ -1,17 +1,12 @@
 import { Laya } from "Laya";
 import { BlinnPhongMaterial } from "laya/d3/core/material/BlinnPhongMaterial";
-import { MeshSprite3D } from "laya/d3/core/MeshSprite3D";
 import { Scene3D } from "laya/d3/core/scene/Scene3D";
 import { Vector3 } from "laya/d3/math/Vector3";
-import { PrimitiveMesh } from "laya/d3/resource/models/PrimitiveMesh";
 import { Sprite } from "laya/display/Sprite";
 import { Event } from "laya/events/Event";
-import { addBox, addSphere, createVoxelBox, JSONLoader, loadVoxel, mouseDownEmitObj, nodeProxy, ZupPos2Yup, ZupQuat2Yup } from "./DemoUtils";
-import { Model } from "./DNN/neurojs/network";
-import { Agent } from "./DNN/neurojs/rl/agent";
-import { CannonBody } from "./layawrap/CannonBody";
+import { addBox, mouseDownEmitObj } from "./DemoUtils";
+import { delay } from "./layawrap/Async";
 import { CannonWorld } from "./layawrap/CannonWorld";
-import { ttt, updateStatus } from "./layawrap/ctrls/GamePadTest";
 import { MouseCtrl1 } from "./layawrap/ctrls/MouseCtrl1";
 import { PhyRender, UIPlane } from "./layawrap/PhyRender";
 import { ContactMaterial } from "./material/ContactMaterial";
@@ -19,7 +14,6 @@ import { Material } from "./material/Material";
 import { Quaternion as phyQuat } from "./math/Quaternion";
 import { Vec3 } from "./math/Vec3";
 import { Car, carData } from "./objects/Car";
-import { Box } from "./shapes/Box";
 
 
 var sce3d: Scene3D;
@@ -79,111 +73,7 @@ function testGround() {
 
 let car1:Car;
 
-// 加载器
-class NodeLoaderProxy implements nodeProxy{
-	rnode:CannonBody;
-	zup=true;
-	constructor(){
-		this.rnode=new CannonBody();
-		this.rnode._onAdded();
-	}
 	
-	getRealNode() {
-		return this.rnode;
-	}
-
-	setProp(name: string, value: any, node: any, loader: JSONLoader): void {
-		var rigidBody = this.rnode;//new CannonBody();
-
-		//rigidBody.phyBody.material = phymtl;
-		switch(name){
-			case 'name':
-				rigidBody.setName(value);
-				break;
-			case 'dim':
-				let boxShape = new Box(new Vec3(value.x / 2, value.y / 2, value.z / 2));
-				rigidBody.addShape(boxShape);
-				break;
-			case 'pos':
-				let pos = new Vec3(value.x,value.y,value.z);
-				ZupPos2Yup(pos,pos);
-				rigidBody.phyBody.position.copy(pos);
-				break;
-			case 'quat':
-				let quat = new phyQuat(value.x,value.y,value.z,value.w);
-				ZupQuat2Yup(quat,quat);
-				rigidBody.phyBody.quaternion.copy(quat);
-				break;
-			case 'mass':
-				rigidBody.setMass(value);
-				break;
-		}
-	}
-	setPropEnd(node: any, loader: JSONLoader): void {
-		var rigidBody = this.rnode
-		rigidBody.phyBody.aabbNeedsUpdate=true
-		rigidBody.phyBody.material= phymtl2;
-		let phypos = rigidBody.phyBody.position;
-		let phyquat = rigidBody.phyBody.quaternion;
-
-		// 调试渲染模型
-		let box = new MeshSprite3D(PrimitiveMesh.createBox(node.dim.x,node.dim.y,node.dim.z));
-		sce3d.addChild(box);
-		box.meshRenderer.material = mtl1;
-		var transform = box.transform;
-		var p = transform.position;
-		p.setValue(phypos.x, phypos.y, phypos.z);
-		transform.position = p;
-		let quat = transform.rotation;
-		quat.x = phyquat.x; quat.y=phyquat.y; quat.z=phyquat.z; quat.w=phyquat.w;
-		transform.rotation=quat;
-		this.rnode.renderobj=box;
-	}
-}
-	
-function initRL(){
-	let input = 118;
-	let actions = 2;
-
-    let brains = {
-        actor: new Model([
-            { type: 'input', size: input },
-            { type: 'fc', size: 50, activation: 'relu' },
-            { type: 'fc', size: 50, activation: 'relu' },
-            { type: 'fc', size: 50, activation: 'relu', dropout: 0.5 },
-            { type: 'fc', size: actions, activation: 'tanh' },
-            { type: 'regression' }
-        ]),
-
-        critic: new Model([
-            { type: 'input', size: input + actions },
-            { type: 'fc', size: 100, activation: 'relu' },
-            { type: 'fc', size: 100, activation: 'relu' },
-            { type: 'fc', size: 1 },
-            { type: 'regression' }
-        ])
-    }
-
-	let carAgent = new Agent({
-		
-	});
-
-	let actor = new Model([
-		{type:'input',size:input},
-		{type:'fc',size:50, activation:'relu'},
-		{type:'fc',size:50, activation:'relu'},
-		{type:'fc',size:50, activation:'relu', dropout:0.5},
-		{type:'fc',size:actions, activation:'tanh'},
-		{type:'regression'}
-	]);
-
-	let critic = new Model([
-
-	]
-	);
-}
-
-var useGamePad=false;
 export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 	camctr = cam;
 	cam.dist = 10;
@@ -191,28 +81,8 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 	mtl1 = mtl;
 	//mtl.renderMode = BlinnPhongMaterial.RENDERMODE_TRANSPARENT;
 	initPhy(sce);
-	let sceobj =
-	[{"name": "Cube", "dim": {"x": 20.0, "y": 40.0, "z": 0.20000004768371582}, "pos": {"x": -9.5367431640625e-07, "y": 2.384185791015625e-07, "z": 2.384185791015625e-07}, "quat": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}, "mass": 0}, {"name": "Cube.001", "dim": {"x": 2.0, "y": 8.0, "z": 0.30000001192092896}, "pos": {"x": -10.583667755126953, "y": 1.719085931777954, "z": 0.19451212882995605}, "quat": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}, "mass": 0}, {"name": "Cube.002", "dim": {"x": 2.0, "y": 8.0, "z": 0.30000001192092896}, "pos": {"x": -12.58366584777832, "y": 1.719085931777954, "z": 0.49451208114624023}, "quat": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}, "mass": 0}, {"name": "Cube.004", "dim": {"x": 2.0, "y": 8.0, "z": 0.30000001192092896}, "pos": {"x": -14.58366584777832, "y": 1.719085931777954, "z": 0.7945119142532349}, "quat": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}, "mass": 0}, {"name": "Cube.005", "dim": {"x": 2.0, "y": 8.0, "z": 0.30000001192092896}, "pos": {"x": -16.583667755126953, "y": 1.719085931777954, "z": 1.0945121049880981}, "quat": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}, "mass": 0}, {"name": "Cube.007", "dim": {"x": 21.156166076660156, "y": 2.0, "z": 22.843351364135742}, "pos": {"x": 0.7932448387145996, "y": 29.810110092163086, "z": 1.923642873764038}, "quat": {"x": -0.6076875925064087, "y": -2.8394364189311764e-17, "z": -1.2932333602556147e-17, "w": 0.7941761612892151}, "mass": 0}, {"name": "Cube.010", "dim": {"x": 39.56965637207031, "y": 46.535789489746094, "z": 2.0}, "pos": {"x": -36.34748840332031, "y": -1.1900715827941895, "z": 0.12122726440429688}, "quat": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}, "mass": 0}, {"name": "Cube.011", "dim": {"x": 2.0, "y": 7.904061317443848, "z": 2.0}, "pos": {"x": -28.82550811767578, "y": 20.522964477539062, "z": 5.052074909210205}, "quat": {"x": -0.7062811851501465, "y": -0.0, "z": 0.0, "w": 0.7079314589500427}, "mass": 0}, {"name": "Cube.012", "dim": {"x": 10.628738403320312, "y": 6.746131420135498, "z": 2.0}, "pos": {"x": -11.732584953308105, "y": -10.690053939819336, "z": -0.7721989154815674}, "quat": {"x": 0.0, "y": 0.07997595518827438, "z": 0.0, "w": 0.9967967867851257}, "mass": 0}, {"name": "Cube.013", "dim": {"x": 21.156166076660156, "y": 2.000000238418579, "z": 22.843355178833008}, "pos": {"x": 0.7932448387145996, "y": 50.98167037963867, "z": 4.678845405578613}, "quat": {"x": -0.7063905000686646, "y": -5.2919352835390326e-17, "z": -2.6763240121973548e-17, "w": 0.7078224420547485}, "mass": 0}, {"name": "Cube.014", "dim": {"x": 21.156166076660156, "y": 2.000000238418579, "z": 22.84335708618164}, "pos": {"x": 0.7932448387145996, "y": 72.1532211303711, "z": 1.0535789728164673}, "quat": {"x": -0.8072583079338074, "y": -8.069866853459951e-17, "z": -4.249768775422248e-17, "w": 0.5901987552642822}, "mass": 0}]
-
-	let loader = new JSONLoader();
-	loader.loadJSON(sceobj,(l:JSONLoader,node:any)=>{
-		if( node.name )
-			return new NodeLoaderProxy();
-		return null;
-	});
-
 	testGround();
 
-	//loadVoxel('res/house/house1.obj',new Vec3(-37, -0.5, 45));//, undefined, new Vec3(-1,-1,1));
-	loadVoxel('res/body1.obj',new Vec3(-37, -0.5, 45), undefined, new Vec3(.1,.2,.1));//, undefined, new Vec3(-1,-1,1));
- 
-	createVoxelBox(100,100,100,0.01, new Vec3(0,0,0)); 
-	addSphere(0.5,0.5,2,0.5);
-
-	//loadVoxTest('res/test/data.json');
-
-	if(useGamePad)
-		ttt();
 	//createJoint();
 	let kmhSp = new Sprite();
 	let uip = new UIPlane(kmhSp);
@@ -223,7 +93,10 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 	car1 = new Car(sce3d,world.world);
 	car1.parse(carData,null);
 	car1.enable();
-	car1.phyCar.chassisBody.position.set(10,1,10);
+	car1.phyCar.chassisBody.position.set(0,1,0);
+	let q = new phyQuat();
+	q.setFromEuler(0,Math.PI,0);
+	car1.phyCar.chassisBody.quaternion=q;
 	car1.showTrack=true;
 	car1.onUpdatePoseEnd=function(pos:Vec3,quat:phyQuat){
 		let speed = car1.getSpeed();
@@ -242,49 +115,9 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 		camctr.target.setValue(lastTarget.x,lastTarget.y,lastTarget.z);
 		camctr.updateCam(true);
 		*/
-
-		if(useGamePad){
-			let acck=0;
-			let isR=false;
-			updateStatus((v)=>{
-				car1.steer(-v*Math.PI/4)
-			},
-			(v)=>{
-				//console.log('v',v);
-				if(v<0.01){
-					if(v<0){
-						// 油门
-						acck=-v;
-						if(isR){
-							car1.reversing(acck);
-						}else{
-							car1.accel(acck);
-						}
-						let phy = car1.phyCar;
-						phy.setBrake(0,0);		
-						phy.setBrake(0,1);
-						phy.setBrake(0,2);
-						phy.setBrake(0,3);
-		
-					}
-				}else{
-					// 刹车
-					let phy = car1.phyCar;
-					let vv = 1000*v;
-					phy.setBrake(vv,0);		
-					phy.setBrake(vv,1);
-					phy.setBrake(vv,2);
-					phy.setBrake(vv,3);
-				}
-			},()=>{
-				isR=false;
-			}, ()=>{
-				isR=true;
-			}
-			);
-		}
 	}
-	
+
+	drive();
 
 	Laya.stage.on(Event.MOUSE_DOWN, null, (e: { stageX: number, stageY: number }) => {
 		mouseDownEmitObj(e.stageX, e.stageY, cam.camera);
@@ -307,3 +140,30 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 	//b.phyBody.velocity=new Vec3(-1,0,0);
 }
 
+async function drive(){
+
+	await delay(1000);
+	car1.accel(5);
+	await delay(1000);
+	car1.steer(45,true);
+	await delay(1000);
+	car1.steer(-45,true);
+	await delay(1000);
+
+	let chassis = car1.phyCar.chassisBody
+	for(let i=0; ;i++){
+		let cpos = chassis.position;
+
+		if(cpos.z<100 || cpos.x<-100 || cpos.x>100){
+			chassis.position.set(0,0,0);
+		}
+		await delay(1000);
+		car1.accel(5);
+		let r = Math.random();
+		if(r<0.2)car1.steer(90,true);
+		else if(r<0.6)
+			car1.steer(20,true);
+		else
+			car1.steer(-20,true);
+	}
+}
