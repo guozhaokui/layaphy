@@ -33,7 +33,7 @@ function initPhy(scene: Scene3D) {
 	// phyworld
 	phyworld.world.gravity.set(0, 0, 0);
 
-	(window as any).phyr = new PhyRender(scene, phyworld.world);
+	//(window as any).phyr = new PhyRender(scene, phyworld.world);
 	world.world.defaultContactMaterial.friction=0.6;
 	phyworld.world.addContactMaterial(cmtl1).addContactMaterial(cmtl2);
 }

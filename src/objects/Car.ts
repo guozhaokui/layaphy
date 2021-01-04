@@ -395,7 +395,7 @@ export class Car{
 		}
 
 		let phyr = this.world.phyRender;
-		if(this.showTrack){
+		if(phyr && this.showTrack){
 			this.wheelstrackf.forEach((v:Vec3)=>{
 				phyr.addVec(v.x,v.y,v.z,0,.1,0,0xff6666);
 			});
@@ -407,7 +407,7 @@ export class Car{
 			});
 		}
 
-		if(this.showCenter)
+		if(phyr && this.showCenter)
 			phyr.addPoint1(this.phyCar.chassisBody.position, 0xff0000)
 
 	}

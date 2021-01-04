@@ -1,6 +1,7 @@
 {
     "compilerOptions": {
-        "target": "es2018",
+		"target": "es2018",
+		"declaration": true,
         "moduleResolution": "node",
         "experimentalDecorators": true,
         "noImplicitAny": true,
