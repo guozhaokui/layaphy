@@ -4,7 +4,7 @@ declare module cannon {
  * A Quaternion describes a rotation in 3D space. The Quaternion is mathematically defined as Q = x*i + y*j + z*k + w, where (i,j,k) are imaginary basis vectors. (x,y,z) can be seen as a vector related to the axis of rotation, while the real multiplier, w, is related to the amount of rotation.
  * @see http://en.wikipedia.org/wiki/Quaternion
  */
-declare class Quaternion {
+class Quaternion {
     x: number;
     y: number;
     z: number;
@@ -100,7 +100,7 @@ declare class Quaternion {
  * @author schteppe / http://github.com/schteppe
  * TODO  实现太啰嗦，有时间改一下
  */
-declare class Mat3 {
+class Mat3 {
     ele: number[];
     constructor(elements?: number[]);
     /**
@@ -196,7 +196,7 @@ declare class Mat3 {
     transpose(target?: Mat3): Mat3;
 }
 
-declare class Vec3 {
+class Vec3 {
     static ZERO: Vec3;
     static UNIT_X: Vec3;
     static UNIT_Y: Vec3;
@@ -308,7 +308,7 @@ declare class Vec3 {
     clone(): Vec3;
 }
 
-declare class Transform {
+class Transform {
     position: Vec3;
     quaternion: Quaternion;
     constructor(options?: {
@@ -356,7 +356,7 @@ declare class Transform {
 /**
  * An element containing 6 entries, 3 spatial and 3 rotational degrees of freedom.
  */
-declare class JacobianElement {
+class JacobianElement {
     spatial: Vec3;
     rotational: Vec3;
     constructor();
@@ -376,7 +376,7 @@ declare class JacobianElement {
  * @param  minForce Minimum (read: negative max) force to be applied by the constraint.
  * @param  maxForce Maximum (read: positive max) force to be applied by the constraint.
  */
-declare class Equation {
+class Equation {
     static ID: u32;
     id: u32;
     minForce: f32;
@@ -441,7 +441,7 @@ declare class Equation {
 /**
  * @author schteppe
  */
-declare class Material {
+class Material {
     static idCounter: number;
     id: number;
     static infiniteFriction: number;
@@ -469,12 +469,12 @@ interface MinkowskiShape {
     getSupportVertexWithoutMargin(dir: Vec3, sup: Vec3): Vec3;
 }
 
-declare class HitPointInfo {
+class HitPointInfo {
     posi: Vec3;
     posj: Vec3;
     normal: Vec3;
 }
-declare class HitPointInfoArray {
+class HitPointInfoArray {
     data: HitPointInfo[];
     private _length;
     getnew(): HitPointInfo;
@@ -485,7 +485,7 @@ declare class HitPointInfoArray {
 /**
  * Base class for shapes
  */
-declare class Shape {
+class Shape {
     static idCounter: number;
     id: number;
     type: number;
@@ -537,7 +537,7 @@ declare class Shape {
  * @author schteppe
  * TODO 复用
  */
-declare class ContactEquation extends Equation {
+class ContactEquation extends Equation {
     /** 补偿值。保持一定距离 公式中的 e? */
     restitution: number;
     /**
@@ -574,7 +574,7 @@ declare class ContactEquation extends Equation {
     getImpactVelocityAlongNormal(): number;
 }
 
-declare class ContactInfo {
+class ContactInfo {
     body: Body;
     hitpos: Vec3;
     hitnorm: Vec3;
@@ -584,7 +584,7 @@ declare class ContactInfo {
 /**
  * 每个body保留一份所有的碰撞信息。不能按照碰撞对保存，因为可能a-b, b-a,c
  */
-declare class ContactInfoMgr {
+class ContactInfoMgr {
     added: ContactInfo[];
     addlen: number;
     removed: ContactInfo[];
@@ -631,7 +631,7 @@ interface eventHandler {
  * @class EventTarget
  * @constructor
  */
-declare class EventTarget {
+class EventTarget {
     _listeners: {
         [type: string]: eventHandler[];
     } | null;
@@ -683,7 +683,7 @@ declare class EventTarget {
  * @constructor
  * @author schteppe
  */
-declare abstract class Broadphase {
+abstract class Broadphase {
     /**
     * The world to search for collisions in.
     */
@@ -749,7 +749,7 @@ declare abstract class Broadphase {
 /**
  * Storage for Ray casting data.
  */
-declare class RaycastResult {
+class RaycastResult {
     rayFromWorld: Vec3;
     rayToWorld: Vec3;
     hitNormalWorld: Vec3;
@@ -792,7 +792,7 @@ declare class RaycastResult {
  * Constraint base class
  * @author schteppe
  */
-declare class Constraint {
+class Constraint {
     static idCounter: number;
     /**
      * Equations to be solved in this constraint
@@ -824,7 +824,7 @@ declare class Constraint {
  * Constrains the slipping in a contact along a tangent
  * @author schteppe
  */
-declare class FrictionEquation extends Equation {
+class FrictionEquation extends Equation {
     ri: Vec3;
     rj: Vec3;
     t: Vec3;
@@ -838,7 +838,7 @@ declare class FrictionEquation extends Equation {
     computeB(h: number): number;
 }
 
-declare class hitInfo {
+class hitInfo {
     point: Vec3;
     normal: Vec3;
     depth: f32;
@@ -863,7 +863,7 @@ declare class hitInfo {
 interface polygon extends Array<number> {
     connectedFaces?: i32[];
 }
-declare class ConvexPolyhedron extends Shape {
+class ConvexPolyhedron extends Shape {
     /**
      * Array of Vec3
      */
@@ -1023,7 +1023,7 @@ declare class ConvexPolyhedron extends Shape {
 /**
  * A 3d box shape.
  */
-declare class Box extends Shape implements MinkowskiShape {
+class Box extends Shape implements MinkowskiShape {
     halfExtents: Vec3;
     origHalfExt: Vec3 | null;
     /**
@@ -1116,7 +1116,7 @@ interface voxdata {
     z: i32;
     color: i32;
 }
-declare class hashData {
+class hashData {
     x: i32;
     y: i32;
     z: i32;
@@ -1127,7 +1127,7 @@ declare class hashData {
  * 除了第一层以外都是完整八叉树  用来做大块的判断 上层完整的话，占0层的1/7的内存
  * 第一层用hash来保存
  */
-declare class SparseVoxData {
+class SparseVoxData {
     data: voxdata[];
     dataLod: voxdata[][];
     private gridsz;
@@ -1150,7 +1150,7 @@ declare class SparseVoxData {
 /**
  * 每一级的voxel数据
  */
-declare class VoxelBitData {
+class VoxelBitData {
     xs: number;
     ys: number;
     zs: number;
@@ -1205,7 +1205,7 @@ interface IOrigVoxData {
     fillVoxBitData(dt: VoxelBitData): void;
 }
 
-declare class Voxel extends Shape {
+class Voxel extends Shape {
     voxData: IOrigVoxData;
     bitDataLod: VoxelBitData[];
     dataxsize: number;
@@ -1307,7 +1307,7 @@ declare class Voxel extends Shape {
 /**
  * 缺省主轴是z轴
  */
-declare class Capsule extends Shape implements MinkowskiShape {
+class Capsule extends Shape implements MinkowskiShape {
     radius: f32;
     height: f32;
     noTrans: boolean;
@@ -1402,7 +1402,7 @@ declare class Capsule extends Shape implements MinkowskiShape {
 /**
  * A plane, facing in the Z direction. The plane has its surface at z=0 and everything below z=0 is assumed to be solid plane. To make the plane face in some other direction than z, you must put it inside a Body and rotate that body. See the demos.
  */
-declare class Plane extends Shape {
+class Plane extends Shape {
     worldNormal: Vec3;
     worldNormalNeedsUpdate: boolean;
     boundSphR: number;
@@ -1415,36 +1415,25 @@ declare class Plane extends Shape {
     updateBndSphR(): void;
 }
 
-/**
- * 无交互界面，已经变成图片了
- */
-declare class UIPlane extends MeshSprite3D {
-    plane: MeshSprite3D;
-    mat: Laya.UnlitMaterial;
-    texture2D: RenderTexture2D;
-    s: Sprite | null;
-    constructor(s: Sprite | null);
-    buildTex(s?: Sprite): void;
-}
+
 /**
  * 渲染物理线框
  */
-declare class PhyRender extends IPhyRender {
-    sce: Scene3D;
+class PhyRender extends IPhyRender {
+    sce: laya.d3.core.scene.Scene3D;
     phyworld: World;
     drawAllShape: boolean;
-    renders: PixelLineSprite3D[];
+    renders: laya.d3.core.pixelLine.PixelLineSprite3D[];
     posInd: Vector3;
-    posIndColor: Color;
+    posIndColor: laya.d3.math.Color;
     setPosInd: boolean;
     enable: boolean;
     /** 持久显示的点，直到clear */
     private persistPoint;
     /** 持久显示的矢量。格式是 vec,pos,vec,pos, ... 直到clear */
     private persistVec;
-    ui1: UIPlane;
     static inst: PhyRender;
-    constructor(sce: Scene3D, world: World);
+    constructor(sce: laya.d3.core.scene.Scene3D, world: World);
     getInst(): PhyRender;
     showPos(x: f32, y: f32, z: f32): void;
     /**
@@ -1494,7 +1483,7 @@ declare class PhyRender extends IPhyRender {
     transVec3(vin: Vec3, pos: Vec3, q: Quaternion, vout: Vec3): Vec3;
     createCapsuleLine(cap: Capsule, pos: Vec3, q: Quaternion): void;
     createPlaneLine(plane: Plane, pos: Vec3, q: Quaternion): void;
-    showUI(s: Sprite, x: number, y: number, z: number): void;
+    showUI(s: laya.display.Sprite, x: number, y: number, z: number): void;
 }
 
 /**
@@ -1511,7 +1500,7 @@ declare class PhyRender extends IPhyRender {
  * @param {number} [options.frictionEquationStiffness=1e7]
  * @param {Number} [options.frictionEquationRelaxation=3]
  */
-declare class ContactMaterial extends Material {
+class ContactMaterial extends Material {
     static idCounter: number;
     /**
      * Identifier of this material
@@ -1556,7 +1545,7 @@ declare class ContactMaterial extends Material {
  * Constraint equation solver base class.
  * @author schteppe / https://github.com/schteppe
  */
-declare class Solver {
+class Solver {
     equations: Equation[];
     constructor();
     /**
@@ -1575,7 +1564,7 @@ declare class Solver {
  * @class TupleDictionary
  * @constructor
  */
-declare class TupleDictionary<T> {
+class TupleDictionary<T> {
     data: {
         keys: string[];
         [key: string]: any;
@@ -1615,7 +1604,7 @@ declare class TupleDictionary<T> {
  *     heightfieldBody.addShape(heightfieldShape);
  *     world.addBody(heightfieldBody);
  */
-declare class Heightfield extends Shape {
+class Heightfield extends Shape {
     /**
      * An array of numbers, or height values, that are spread out along the x axis.
      */
@@ -1770,7 +1759,7 @@ declare class Heightfield extends Shape {
  * Particle shape.
  * @author schteppe
  */
-declare class Particle extends Shape {
+class Particle extends Shape {
     constructor();
     calculateLocalInertia(mass: number, target?: Vec3): Vec3;
     volume(): number;
@@ -1787,7 +1776,7 @@ declare class Particle extends Shape {
  * @param {Number} radius The radius of the sphere, a non-negative number.
  * @author schteppe / http://github.com/schteppe
  */
-declare class Sphere extends Shape implements MinkowskiShape {
+class Sphere extends Shape implements MinkowskiShape {
     onPreNarrowpase(stepId: number, pos: Vec3, quat: Quaternion): void;
     radius: number;
     oriRadius: number;
@@ -1861,7 +1850,7 @@ declare class Sphere extends Shape implements MinkowskiShape {
  * @param {Octree} [options.root]
  * @param {AABB} [options.aabb]
  */
-declare class OctreeNode<T> {
+class OctreeNode<T> {
     /**
      * The root node
      */
@@ -1910,7 +1899,7 @@ declare class OctreeNode<T> {
  * @param {number} [options.maxDepth=8]
  * @extends OctreeNode
  */
-declare class Octree<T> extends OctreeNode<T> {
+class Octree<T> extends OctreeNode<T> {
     maxDepth: number;
     constructor(aabb?: AABB, maxDepth?: i32);
 }
@@ -1933,7 +1922,7 @@ declare class Octree<T> extends OctreeNode<T> {
  *     ];
  *     var trimeshShape = new Trimesh(vertices, indices);
  */
-declare class Trimesh extends Shape {
+class Trimesh extends Shape {
     onPreNarrowpase(stepId: number, pos: Vec3, quat: Quaternion): void;
     vertices: Float32Array;
     /**
@@ -2057,7 +2046,7 @@ declare class Trimesh extends Shape {
  * @todo Contact reduction
  * @todo  should move methods to prototype
  */
-declare class Narrowphase {
+class Narrowphase {
     /**
      * Internal storage of pooled contact points.
      */
@@ -2166,19 +2155,19 @@ declare class Narrowphase {
     sphereHeightfield(sphereShape: Sphere, hfShape: Heightfield, spherePos: Vec3, hfPos: Vec3, sphereQuat: Quaternion, hfQuat: Quaternion, sphereBody: Body, hfBody: Body, rsi: Shape | null, rsj: Shape | null, justTest: boolean): boolean;
 }
 
-declare class PhyEvent {
+class PhyEvent {
     type: string;
     constructor(name: string);
 }
-declare class AddBodyEvent extends PhyEvent {
+class AddBodyEvent extends PhyEvent {
     body: Body | null;
     constructor(body: Body | null);
 }
-declare class RemoveBodyEvent extends PhyEvent {
+class RemoveBodyEvent extends PhyEvent {
     body: Body | null;
     constructor(body: Body | null);
 }
-declare abstract class IPhyRender {
+abstract class IPhyRender {
     abstract stepStart(): void;
     abstract stepEnd(): void;
     abstract internalStep(): void;
@@ -2199,7 +2188,7 @@ declare abstract class IPhyRender {
 /**
  * The physics world
  */
-declare class World extends EventTarget {
+class World extends EventTarget {
     /**
      * Currently / last used timestep. Is set to -1 if not available. This value is updated before each internal step, which means that it is "fresh" inside event callbacks.
      */
@@ -2427,10 +2416,14 @@ declare class World extends EventTarget {
     pause(b?: boolean): void;
 }
 
+export function setPhyRender(r:IPhyRender):void;
+export function getPhyRender():IPhyRender;
+
+
 /**
  * 在Body身上记录grid相关的信息。
  */
-declare class GridInfo {
+class GridInfo {
     body: Body;
     /**
      * 这个是记录自己的所占用的所有的格子
@@ -2473,7 +2466,7 @@ declare class GridInfo {
  * 	其他对象的update
  * 		逻辑，例如射线检测
  */
-declare class GridBroadphase extends Broadphase {
+class GridBroadphase extends Broadphase {
     static MaxValue: number;
     static MinValue: number;
     static bigBodySize: number;
@@ -2590,7 +2583,7 @@ interface BodyInitOptions {
     linearFactor?: Vec3;
     angularFactor?: Vec3;
 }
-declare const enum BODYTYPE {
+const enum BODYTYPE {
     /**
      * A dynamic body is fully simulated. Can be moved manually by the user, but normally they move according to forces.
      * A dynamic body can collide with all body types. A dynamic body always has finite, non-zero mass.
@@ -2619,7 +2612,7 @@ declare const enum BODYTYPE {
      */
     TRIGGER = 8
 }
-declare const enum BODY_SLEEP_STATE {
+const enum BODY_SLEEP_STATE {
     AWAKE = 0,
     SLEEPY = 1,
     SLEEPING = 2
@@ -2634,7 +2627,7 @@ declare const enum BODY_SLEEP_STATE {
  *     body.addShape(shape);
  *     world.addBody(body);
  */
-declare class Body extends EventTarget {
+class Body extends EventTarget {
     /**
      * Dispatched after two bodies collide. This event is dispatched on each
      * of the two bodies involved in the collision.
@@ -2934,7 +2927,7 @@ declare class Body extends EventTarget {
     preCollision: () => void;
 }
 
-declare const enum RayMode {
+const enum RayMode {
     CLOSEST = 1,
     ANY = 2,
     ALL = 4
@@ -2952,7 +2945,7 @@ interface hitworldOptions {
 /**
  * 为了节省内存，Body中保存一个通用的rundata。可能很多地方需要使用，因此需要一个stack以便修改恢复
  */
-declare class BodyRunDataStack {
+class BodyRunDataStack {
     static rundataStack: any[];
     /** 当前开始的位置，恢复的时候就是到这里 */
     curStackBase: number;
@@ -2967,7 +2960,7 @@ declare class BodyRunDataStack {
 /**
  * A line in 3D space that intersects bodies and return points.
  */
-declare class Ray {
+class Ray {
     from: Vec3;
     to: Vec3;
     _direction: Vec3;
@@ -3097,7 +3090,7 @@ declare class Ray {
     static pointInTriangle(p: Vec3, a: Vec3, b: Vec3, c: Vec3): boolean;
 }
 
-declare class AABB {
+class AABB {
     lowerBound: Vec3;
     upperBound: Vec3;
     constructor(lowerBound?: Vec3, upperBound?: Vec3);
@@ -3152,7 +3145,7 @@ declare class AABB {
  * @param  [maxForce=1e6]
  * 用distance中点方作为碰撞点来实现
  */
-declare class DistanceConstraint extends Constraint {
+class DistanceConstraint extends Constraint {
     distance: number;
     distanceEquation: ContactEquation;
     constructor(bodyA: Body, bodyB: Body, distance?: f32, maxForce?: f32);
@@ -3164,7 +3157,7 @@ declare class DistanceConstraint extends Constraint {
  * 旋转约束。A只能绕着axisA旋转，B只能绕着axisB旋转。
  * @author schteppe
  */
-declare class RotationalEquation extends Equation {
+class RotationalEquation extends Equation {
     axisA: Vec3;
     axisB: Vec3;
     maxAngle: number;
@@ -3176,7 +3169,7 @@ declare class RotationalEquation extends Equation {
  * Rotational motor constraint. Tries to keep the relative angular velocity of the bodies to a given value.
  * @author schteppe
  */
-declare class RotationalMotorEquation extends Equation {
+class RotationalMotorEquation extends Equation {
     /**
      * World oriented rotational axis
      */
@@ -3213,7 +3206,7 @@ declare class RotationalMotorEquation extends Equation {
  *     var constraint = new PointToPointConstraint(bodyA, localPivotA, bodyB, localPivotB);
  *     world.addConstraint(constraint);
  */
-declare class PointToPointConstraint extends Constraint {
+class PointToPointConstraint extends Constraint {
     pivotA: Vec3;
     pivotB: Vec3;
     equationX: ContactEquation;
@@ -3249,7 +3242,7 @@ declare class PointToPointConstraint extends Constraint {
  * @param {Number} [options.maxForce=1e6]
  * @extends PointToPointConstraint
  */
-declare class HingeConstraint extends PointToPointConstraint {
+class HingeConstraint extends PointToPointConstraint {
     /**
      * Rotation axis, defined locally in bodyA.
      */
@@ -3310,7 +3303,7 @@ declare class HingeConstraint extends PointToPointConstraint {
  * @param {boolean} [options.useCustomSlidingRotationalSpeed=false]
  * @param {number} [options.customSlidingRotationalSpeed=-0.1]
  */
-declare class WheelInfo {
+class WheelInfo {
     id: number;
     /**
      * Max travel distance of the suspension, in meters.
@@ -3401,7 +3394,7 @@ declare class WheelInfo {
  * @param {integer} [options.indexLeftAxis]
  * @param {integer} [options.indexUpAxis]
  */
-declare class RaycastVehicle {
+class RaycastVehicle {
     chassisBody: Body;
     /**
      * An array of WheelInfo objects.
@@ -3488,7 +3481,7 @@ declare class RaycastVehicle {
     updateFriction(timeStep: number): void;
 }
 
-declare var carData: {
+var carData: {
     modelUrl: string;
     chassisNode: string;
     wheelflNode: string;
@@ -3538,15 +3531,15 @@ declare var carData: {
     rlpos: Vec3;
     rrpos: Vec3;
 };
-declare class Car {
+class Car {
     private static tmpV1;
-    scene3D: Scene3D;
+    scene3D: laya.d3.core.scene.Scene3D;
     world: World;
     carData: typeof carData;
     /** 控制车身的根节点。可能不是车身模型，例如可能有好几层父子关系，为了给外部方便获取位置，需要设置根节点。缺省是设置的车身 */
-    renderRoot: Sprite3D;
+    renderRoot: laya.d3.core.Sprite3D;
     renderRootOffq: Quaternion;
-    wheels: MeshSprite3D[];
+    wheels: laya.d3.core.MeshSprite3D[];
     wheelsOffQuat: Quaternion[];
     private wheelstrackf;
     private wheelstrackr;
@@ -3558,7 +3551,7 @@ declare class Car {
     showTrack: boolean;
     showCenter: boolean;
     onUpdatePoseEnd: (pos: Vec3, quat: Quaternion) => void;
-    constructor(sce: Scene3D, world: World);
+    constructor(sce: laya.d3.core.scene.Scene3D, world: World);
     set showSlideForce(b: boolean);
     get showSlideForce(): boolean;
     set showSuspForce(b: boolean);
@@ -3570,15 +3563,15 @@ declare class Car {
      * @param data
      * @param renderModel 如果传入这个参数，则不再自己加载。外部负责加载并加到场景中。模型必须符合制定的规则。
      */
-    parse(data: typeof carData, renderModel: Sprite3D | null): void;
+    parse(data: typeof carData, renderModel: laya.d3.core.Sprite3D | null): void;
     /** 获得当前速度，单位是Km/H */
     getSpeed(): number;
-    onModelLoaded(model: Sprite3D, addtoSce?: boolean): void;
+    onModelLoaded(model: laya.d3.core.Sprite3D, addtoSce?: boolean): void;
     /**
      * 设置根渲染对象。物理对渲染的控制就是通过这个对象进行的。
      * @param s
      */
-    setRootObj(s: Sprite3D): void;
+    setRootObj(s: laya.d3.core.Sprite3D): void;
     enable(): void;
     accel(k: number): void;
     reversing(k: number): void;
@@ -3619,5 +3612,5 @@ declare class Car {
     RaycastVehicle: typeof RaycastVehicle;
     Car: typeof Car;
 */    
-};
+}
 
