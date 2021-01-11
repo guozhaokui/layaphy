@@ -11,8 +11,9 @@ import { MouseCtrl1 } from "./layawrap/ctrls/MouseCtrl1";
 import { PhyRender, UIPlane } from "./layawrap/PhyRender";
 import { ContactMaterial } from "./material/ContactMaterial";
 import { Material } from "./material/Material";
-import { Quaternion as phyQuat } from "./math/Quaternion";
+import { Quaternion as phyQuat, Quaternion } from "./math/Quaternion";
 import { Vec3 } from "./math/Vec3";
+import { Body } from "./objects/Body";
 import { Car, carData } from "./objects/Car";
 
 
@@ -33,7 +34,7 @@ function initPhy(scene: Scene3D) {
 	// phyworld
 	phyworld.world.gravity.set(0, 0, 0);
 
-	//(window as any).phyr = new PhyRender(scene, phyworld.world);
+	(window as any).phyr = new PhyRender(scene, phyworld.world);
 	world.world.defaultContactMaterial.friction=0.6;
 	phyworld.world.addContactMaterial(cmtl1).addContactMaterial(cmtl2);
 }
@@ -41,6 +42,7 @@ function initPhy(scene: Scene3D) {
 function testGround() {
 	world.world.gravity.set(0, -11, 0);
 	let p = addBox(new Vec3(10000, 100, 10000), new Vec3(0, -50, 0), 0, phymtl1);
+	addBox(new Vec3(1, 1, 1), new Vec3(0, 1, 0), 0, phymtl1);
 	/*
 	let plane = new Sprite3D();
     let planephy = plane.addComponent(CannonBody) as CannonBody;
@@ -93,7 +95,7 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 	car1 = new Car(sce3d,world.world);
 	car1.parse(carData,null);
 	car1.enable();
-	car1.phyCar.chassisBody.position.set(0,1,0);
+	car1.phyCar.chassisBody.position.set(-20,0,0);
 	let q = new phyQuat();
 	q.setFromEuler(0,Math.PI,0);
 	car1.phyCar.chassisBody.quaternion=q;
@@ -140,17 +142,98 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 	//b.phyBody.velocity=new Vec3(-1,0,0);
 }
 
-async function drive(){
 
+var distData={
+	dDeg:0,
+
+}
+
+/**
+ * 角度为0朝向+z
+ * 绕着y转90度为+x
+ */
+const VFRONT = new Vec3(0,0,1);
+const VUP = new Vec3(0,1,0);
+var front = new Vec3();
+const RADIUS = 10;
+
+var targetPos = new Vec3();
+/** 朝向圈上的方向。单位向量 */
+var vToTarget = new Vec3();
+var degCross = new Vec3();
+var posdist = new Vec3();
+var DIST1 = 100;
+function dist(chassis:Body){
+	let pos = chassis.position;
+	let len = pos.length();
+	let k = RADIUS/len;
+	targetPos.set(pos.x*k, pos.y*k,pos.z*k);
+	// 当前位置到达目标的向量。到原点连线的向量。
+	vToTarget.set(-pos.x/len, -pos.y/len, -pos.z/len);
+	chassis.quaternion.vmult(VFRONT,front);
+	front.normalize();
+	// 从前方到圆心的cross
+	front.cross(vToTarget,degCross);
+	degCross.normalize();
+	// 根据前方方向和到圆心的方向计算夹角。也可以用前方方向和圆切线的夹角，但是都不合理，需要结合到圆形的距离
+	// atan2(sin,cos)。 90度在左边，-90度在右边。 规格化后1在坐标-1在右边
+	let tan = Math.atan2(degCross.y,front.dot(vToTarget))/Math.PI;
+
+	pos.vsub(targetPos, posdist);
+	let dist = posdist.length();
+	dist/=DIST1;
+	if(dist>1)dist=1;
+	let v = chassis.velocity.length();
+	act(tan,dist,v, car1);
+
+
+	console.log('front',front.x,front.y,front.z, tan);
+}
+
+function act(degdist:number, posdist:number, v:number, car:Car){
+	if(posdist<0.1){
+
+	}else{
+		car.steer(90*degdist,true);
+	}
+	if(v<10)
+		car.accel(1);
+}
+
+async function drive(){
+	let chassis = car1.phyCar.chassisBody
+	dist(chassis);
 	await delay(1000);
 	car1.accel(5);
 	await delay(1000);
+	dist(chassis);
+
 	car1.steer(45,true);
 	await delay(1000);
+	dist(chassis);
 	car1.steer(-45,true);
 	await delay(1000);
 
+	for(let i=0; ;i++){
+		await delay(1000);
+		dist(chassis);
+	}
+}
+
+async function drive1(){
 	let chassis = car1.phyCar.chassisBody
+	dist(chassis);
+	await delay(1000);
+	car1.accel(5);
+	await delay(1000);
+	dist(chassis);
+
+	car1.steer(45,true);
+	await delay(1000);
+	dist(chassis);
+	car1.steer(-45,true);
+	await delay(1000);
+
 	for(let i=0; ;i++){
 		let cpos = chassis.position;
 

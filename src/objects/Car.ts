@@ -14,6 +14,10 @@ import { World } from "../world/World";
 import { Ease } from "laya/utils/Ease";
 
 var tempQ = new Quaternion();
+var FRONT=new Vec3(0,0,1);
+var qsteer = new Quaternion();
+// steer 向量
+var vsteer = new Vec3();
 
 // 车面向屏幕外面。位置是模型的全局坐标
 export var carData={
@@ -94,6 +98,9 @@ export class Car{
 	// 轮胎
 	wheels:MeshSprite3D[]=[];	// TODO 对于轮子可以做到不需要这个。
 	wheelsOffQuat:Quaternion[]=[];
+
+	// 当前方向盘弧度
+	curSteer=0;
 
 	// 调试轨迹
 	private wheelstrackf:Vec3[]=[];	// 前轮
@@ -283,6 +290,7 @@ export class Car{
 		if(isDeg){
 			v= v*Math.PI/180;
 		}
+		this.curSteer=v;
 		this.phyCar.setSteeringValue(v, 0);
 		this.phyCar.setSteeringValue(v, 1);
 	}
@@ -328,9 +336,9 @@ export class Car{
 
 	updatePose(){
 		let car = this.phyCar;
+		let phypos = car.chassisBody.position;
+		let phyquat = car.chassisBody.quaternion;
 		if(this.renderRoot){
-			let phypos = car.chassisBody.position;
-			let phyquat = car.chassisBody.quaternion;
 			let rpos = this.renderRoot.transform.position;
 			let rquat = this.renderRoot.transform.rotation;
 			let poff = this.carData.center;
@@ -410,6 +418,13 @@ export class Car{
 		if(phyr && this.showCenter)
 			phyr.addPoint1(this.phyCar.chassisBody.position, 0xff0000)
 
+		// 显示方向盘
+		if(phyr){
+			qsteer.setFromEuler(0,this.curSteer,0);
+			phyquat.vmult(FRONT, vsteer);
+			qsteer.vmult(vsteer,vsteer);
+			phyr.addSeg(phypos.x, phypos.y, phypos.z, phypos.x+vsteer.x*10, phypos.y+vsteer.y*10, phypos.z+vsteer.z*10, 0xff0000 )
+		}
 	}
 
 	op_steerLeft=false;

@@ -141,7 +141,7 @@ export abstract class IPhyRender{
     abstract stepStart():void;
     abstract stepEnd():void;
     abstract internalStep():void;
-	abstract addSeg(stx:f32, sty:f32, stz:f32, dirx:f32, diry:f32, dirz:f32, color:i32):void;
+	abstract addSeg(stx:f32, sty:f32, stz:f32, edx:f32, edy:f32, edz:f32, color:i32):void;
     abstract addPoint(px:f32, py:f32, pz:f32, color:i32):void;
 	/*
     _addSeg(st:Vec3, dir:Vec3,color:i32):void{
