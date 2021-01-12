@@ -376,8 +376,12 @@ export class State{
 	}
 
 
-	// not error gradient, but value gradient => how to increase/decrease n-th output value
-	derivatives(n, clone = true) {
+	/**
+	 * not error gradient, but value gradient => how to increase/decrease n-th output value
+	 * @param n 
+	 * @param clone 
+	 */
+	derivatives(n:int, clone = true) {
 		this.out.dw.fill(0.0)
 		this.out.dw[n] = 1.0
 

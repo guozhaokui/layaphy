@@ -2,8 +2,22 @@ import { Agent } from "./agent"
 import {Node} from "./replay-buffers"
 
 export class Experience {
-	// action空间，是2d的，所以分0,1
+	// SARSA?
+	/** 
+	 * 状态。 这里是一个118长度的数据，例如每条射线的长度
+	 * 0是上一次的
+	 * 1是当前的
+	 * state实际是整个input，包含上次state,上次act,这次state
+	 */
+	/** 上次的state */
+	state0:Float64Array;
+	/** 上次的action */
 	action0:Float64Array;
+	/** 上次的reward */
+	reward0:number;
+	/** 当前的state */
+	state1:Float64Array;
+	/** 当前的action */
 	action1:Float64Array;
 
 	agent:Agent;
@@ -11,19 +25,10 @@ export class Experience {
 	node:Node;
 
 	learnSteps=0;
-	reward0:number;
 	
-	/** 
-	 * 状态。 这里是一个118长度的数据，例如每条射线的长度
-	 *  是2d的，所以分0,1
-	 * 	不对
-	 *  0 是live  1是target ?
-	 */
-	state0:Float64Array;
-	state1:Float64Array;
-
 	target:()=>number;//__q_target
 	value:number;
+	//TD error计算的loss。>0
 	loss=0;
 
 	constructor(agent:Agent) {
@@ -36,6 +41,8 @@ export class Experience {
 	}	
 
 	/**
+	 * 评估target的Q值
+	 * target的输出值 更新到reward
 	 *  Q = r + γ()
 	 */
 	private __q_target() {
@@ -46,6 +53,10 @@ export class Experience {
 		return this.reward0 + this.agent.options.discount! * this.agent.value(this.state1, this.action1, true)
 	}
 
+	/**
+	 * livenet的critic的输出值
+	 * 上一次的状态和action的输出的Q
+	 */
 	estimate() {
 		return this.value = this.agent.value(this.state0, this.action0)
 	}

@@ -1,5 +1,5 @@
 class _Window {
-	// 记录的数据
+	// 记录的数据。 0是最新的
 	private list:any[]=[];
 	// 设置的长度
     private length:int;
@@ -9,6 +9,7 @@ class _Window {
 		this.length = n
 	}
 
+	// 
 	push(value:any) {
 		this.list.unshift(value)
 

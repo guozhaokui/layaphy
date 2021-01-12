@@ -1,6 +1,6 @@
 import { DDPG } from "./ddpg";
 import { Experience } from "./experience";
-import { PrioritizedReplayBuffer, ReplayBuffer } from "./replay-buffers";
+import { PrioritizedReplayBuffer } from "./replay-buffers";
 
 export interface IAgenOptions{
 	type:'sarsa'|'q-learning';
@@ -10,11 +10,17 @@ export interface IAgenOptions{
 	states?:int;
 	temporalWindow:int;
 	beta:number;
+	// 收集多少数据才开始训练。
+	startLearningAt:int;
+	/** 每次训练取出多少exp，例如40 */ 
+	learningPerTick:int;
 }
 
 interface IHistory{
+	/** states 保存window个状态记录，例如状态是xy，window大小为2， 则为 [xlast,ylast, xnow,ynow]  */
 	states:_Window;
 	actions:_Window;// new Window(Math.max(2, this.options.temporalWindow)),
+	/** f64array的input记录。目前是上面的state,action加上当前的state */
 	inputs:_Window;// new Window(2),
 	rewards:_Window;// new Window(2),	
 }
@@ -28,7 +34,7 @@ export class Agent{
 	ready = true
 	history:IHistory;
 	algorithm:DDPG;
-	buffer:ReplayBuffer;
+	buffer:PrioritizedReplayBuffer;
 
 	training=false;
 	// 输入维度？
@@ -94,9 +100,12 @@ export class Agent{
 		if (!this.ready)
 			return
 
+		// 历史state，action加上当前的state组成input
 		var input = this.getStateInputVector(state)
+		// 放到网络里，计算生成的action
 		var action = this.act(input)
 
+		// 记录当前input,state,action
 		this.history.inputs.push(input)
 		this.history.states.push(state)
 		this.history.actions.push(action)
@@ -119,6 +128,7 @@ export class Agent{
 
 	/**
 	 * 获取一个输入vector， 包含指定个历史的(state+action)+当前的state  
+	 * 目前的历史是1个
 	 * 例如temporalWindow=1则是 58+2+58 = 118
 	 * @param state 
 	 */
@@ -216,10 +226,16 @@ export class Agent{
 	 * @param state 	输入状态，包含历史s,a 和当前状态 s
 	 * @param target 
 	 */
-	act(state:Float64Array, target:boolean) {
+	act(state:Float64Array, target:boolean=false) {
 		return this.algorithm.act(state, target)
 	}	
 
+	/**
+	 * critic的值
+	 * @param state 
+	 * @param action 
+	 * @param target 
+	 */
 	value(state:Float64Array, action:Float64Array, target?:boolean)  {
 		return this.algorithm.value(state, action, target)
 	}

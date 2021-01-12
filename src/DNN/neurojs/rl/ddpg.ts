@@ -32,11 +32,12 @@ class Algorithm {
 
 
 	/**
-	 * 评估选中动作的价值
+	 * 先选动作，act()
+	 * 再评估选中动作的价值。critic网
 	 * @param state 
 	 * @param target 
 	 */
-	evaluate(state:Float64Array, target?:boolean) {
+	evaluate(state:Float64Array, target=false) {
 		return this.value(state, this.act(state, target), target)
 	}
 
@@ -175,17 +176,24 @@ export class DDPG extends Algorithm {
 		return net.forward()[0]
 	}
 
+	/**
+	 * 计算e的loss。
+	 * 
+	 * @param e 
+	 * @param descent 
+	 */
 	optimize(e:Experience, descent = true) {
-		// target 网经验e的Q值
+		// e 的state1,action1 在target 网的Q， 更新后的reward. 是上一个step的值
 		var target = e.target()
 
-		// 评估经验e的q值
+		// e的state0,action0 在live网的输出值。是当前的值
 		var value = e.estimate()
 
 		var grad = value - target
 		var gradAL = grad
 
 		if (this.options.alpha > 0) {
+			// TD: V(St)⇐V(St)+α[Rt+1+γV(St+1)−V(St)]
 			gradAL = grad + this.options.alpha * (value - this.evaluate(e.state0, true)) // advantage learning
 		}
 
@@ -235,5 +243,15 @@ export class DDPG extends Algorithm {
 		for (var i = 0; i < param.w.length; i++) {
 			paramw[i] = _theta * _paramw[i] + theta * paramw[i]
 		}
+	}	
+
+	/**
+	 * 先根据state从actor选动作，act()
+	 * 再评估选中动作的价值。critic网
+	 * @param state 
+	 * @param target 
+	 */
+	evaluate(state:Float64Array, target=false) {
+		return this.value(state, this.act(state, target), target)
 	}	
 }

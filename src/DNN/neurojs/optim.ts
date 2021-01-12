@@ -55,6 +55,8 @@ Object.assign(String.prototype, {
 
 });
 
+
+
 /**
  * How to use this optimizer:
  *
@@ -198,16 +200,16 @@ class Optim {
         return new Function('tensor', fn);
     }
 
-    accumulate(tensor:Tensor, weighted:number) {
-        weighted = weighted || 1
+    accumulate(tensor:Tensor, weighted=1) {
         var w = tensor.w, dw = tensor.dw, accdw = dw.acc;
         var dx, gij, grad, iteration = (dw.iteration += weighted);
         for (var i = 0; i < w.length; ++i) accdw[i] += weighted * dw[i];
     }
 
-    initialize(tensor, set, linked) {
+    initialize(tensor:Tensor, set, linked) {
         if (!tensor.initialized) { // general initialization
-            tensor.dw.iteration = 0;
+			tensor.dw.iteration = 0;
+			// acc 是 accumulate 值
             tensor.dw.acc = new Float64Array(tensor.dw.length)
         }
 
