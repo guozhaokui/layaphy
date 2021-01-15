@@ -1,9 +1,11 @@
+import { Configuration } from './network';
 import { FullyConnectedLayer } from "./layers/dot";
 import { DropOutLayer } from "./layers/dropout";
 import { InputLayer } from "./layers/input";
 import { LayerBase } from "./layers/layerbase";
 import { Size } from "./Math/size";
 import { Tensor } from "./Math/tensor";
+import { Optim } from './optim';
 
 export interface IModelOption{
     type:string;
@@ -121,8 +123,14 @@ export class Configuration{
 	// 总参数个数
 	countOfParameters=0;
 
-
-	constructor(model:Model, parameters?, optimizer?) {
+	freezed=false;
+	/**
+	 * 
+	 * @param model 
+	 * @param parameters 	指定第几层的参数。
+	 * @param optimizer 
+	 */
+	constructor(model:Model, parameters?:{[key:number]:{w:Float64Array}}, optimizer?) {
 		this.model = model
 		this.parameters = []
 		this.optimizer = null
@@ -151,7 +159,7 @@ export class Configuration{
 	}
 
 
-	useOptimizer(optimizer) {
+	useOptimizer(optimizer:any) {
 		if (optimizer.constructor === Object)
 			optimizer = new Optim(optimizer)
 
@@ -165,18 +173,23 @@ export class Configuration{
 		this.freezed = val
 	}
 
+	/**
+	 * 应用优化器更新权重
+	 * @param accu 
+	 */
 	optimize(accu = true) {
-		if (accu) this.accumulate(Number.isInteger(accu) ? accu : undefined)
+		// 累加梯度
+		if (accu) this.accumulate(Number.isInteger(accu) ? accu as any as int : undefined)
+		// 更新权重
 		this.forEachParameter(param => this.optimizer.apply(param))
 	}
 	
-	accumulate(weighted) {
+	accumulate(weighted?:int) {
 		this.forEachParameter(param => this.optimizer.accumulate(param, weighted))
 	}
 
 
-
-	forEachParameter(cb) {
+	forEachParameter(cb:(tensor:Tensor,i:number)=>void) {
 		if (this.freezed) return
 		for (var i = 0; i < this.parameters.length; i++) { 
 			var param = this.parameters[i]
@@ -187,11 +200,11 @@ export class Configuration{
 		}
 	}
 
-	copyParametersFrom(config) {
+	copyParametersFrom(config:Configuration) {
 		if (config.model !== this.model)
 			throw 'models must match'
 
-		this.forEachParameter((function (param, index) {
+		this.forEachParameter((function (param:Tensor, index:int) {
 			param.w.set(config.parameters[index].w)
 		}).bind(this))
 	}

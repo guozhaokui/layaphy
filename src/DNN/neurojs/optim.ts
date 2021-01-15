@@ -79,13 +79,13 @@ Object.assign(String.prototype, {
  * 
  */
 
-class Optim {
+export class Optim {
 	static INDEX=0;
 	uuid=0;
 	method:string;
 	options:any;
-	static methods:any;
-	apply:any;
+	static methods:any={};
+	apply:(tensor:Tensor)=>void;
 	states:any;
 
     constructor(opt:any) {
@@ -202,10 +202,16 @@ class Optim {
 
     accumulate(tensor:Tensor, weighted=1) {
         var w = tensor.w, dw = tensor.dw, accdw = dw.acc;
-        var dx, gij, grad, iteration = (dw.iteration += weighted);
+        dw.iteration += weighted;
         for (var i = 0; i < w.length; ++i) accdw[i] += weighted * dw[i];
     }
 
+    /**
+     * 给tensor添加优化相关数据。
+     * @param tensor 
+     * @param set 
+     * @param linked 
+     */
     initialize(tensor:Tensor, set, linked) {
         if (!tensor.initialized) { // general initialization
 			tensor.dw.iteration = 0;
@@ -223,14 +229,49 @@ class Optim {
         tensor.initialized = true
     }
 
-    static register(name, value) {
+    static register(name:string, value) {
         Optim.methods[name] = value;
     }
-
 }
 
-Optim.methods = {};
+    // 展开几个函数
+    /*
+    {
+        "type": "ascent",
+        "method": "adadelta",
+        "regularization": {
+          "l2": 0.01
+        }
+      }
+    */
+    (function anonymous(tensor:Tensor) {
+            var w = tensor.w, dw = tensor.dw, accdw = dw.acc;
+            var dx, gij, grad, iteration = dw.iteration;
+            if (iteration < 1) return ;
+            var gsum=dw.gsum,xsum=dw.xsum;
+            var l2grad:number;
+            // ro=0.95;
+            for (var i = 0; i < w.length; ++i) {
+                grad = accdw[i];
+                l2grad = 0.01 * w[i] * -1.0;
+                gij = (grad+l2grad) / iteration;
+                
+                gsum[i] = 0.95 * gsum[i] + (1 - 0.95) * gij * gij;
+                dx = Math.sqrt((xsum[i] + 1e-8) / (gsum[i] + 1e-8)) * gij;
+                xsum[i] = 0.95 * xsum[i] + (1 - 0.95) * dx * dx; // yes, xsum lags behind gsum by 1.
+        
+                // 更新权重值
+                w[i] += dx;
+                accdw[i] = 0.0;
+            }
+            dw.iteration = 0;
+        })
 
+
+        /**
+         * SGD是随机梯度下降，是用一个样本或者部分样本的梯度来更新。
+         * 对应的BGD是所有样本的梯度
+         */
 Optim.register("sgd", {
 
     deliver(opt) {

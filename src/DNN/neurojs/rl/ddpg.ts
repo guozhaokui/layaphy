@@ -114,8 +114,11 @@ export class DDPG extends Algorithm {
 			}
 		})
 
-		// optimizer
-
+		/**
+		 * 设置optimizer
+		 * actor
+		 * critic
+		 */
 		this.actor.useOptimizer({
 			type: 'ascent',
 			method: 'adadelta',

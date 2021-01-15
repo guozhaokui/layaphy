@@ -2,6 +2,8 @@ import { ConfigPool } from './shared';
 import { CarAgent } from "./CarAgent";
 import { Model } from "./network";
 
+declare var neurojs:any;
+
 interface IWorldBrain{
 	actor:Model;
 	critic:Model;
@@ -14,31 +16,46 @@ export class CarWorld{
 	timer=0;
 
 	constructor(){
-		var input = 118, actions = 2
-		this.brains = {
-			actor: new Model([
+		//2*state+act
+		var input = 16, actions = 2
+		let actor =new neurojs.Network.Model([
 
-				{ type: 'input', size: input },
-				{ type: 'fc', size: 50, activation: 'relu' },
-				{ type: 'fc', size: 50, activation: 'relu' },
-				{ type: 'fc', size: 50, activation: 'relu', dropout: 0.5 },
-				{ type: 'fc', size: actions, activation: 'tanh' },
-				{ type: 'regression' }
+			{ type: 'input', size: input },
+			{ type: 'fc', size: 50, activation: 'relu' },
+			{ type: 'fc', size: 50, activation: 'relu' },
+			{ type: 'fc', size: 50, activation: 'relu', dropout: 0.5 },
+			{ type: 'fc', size: actions, activation: 'tanh' },
+			{ type: 'regression' }
+
+		]);
+
+		let critic = new neurojs.Network.Model([
 	
-			]),
-	
-	
-			critic: new Model([
-	
-				{ type: 'input', size: input + actions },
-				{ type: 'fc', size: 100, activation: 'relu' },
-				{ type: 'fc', size: 100, activation: 'relu' },
-				{ type: 'fc', size: 1 },
-				{ type: 'regression' }
-	
-			])
-	
+			{ type: 'input', size: input + actions },
+			{ type: 'fc', size: 100, activation: 'relu' },
+			{ type: 'fc', size: 100, activation: 'relu' },
+			{ type: 'fc', size: 1 },
+			{ type: 'regression' }
+
+		]);
+
+		let config1 = new neurojs.Network.Configuration(actor);
+		let config2 = new neurojs.Network.Configuration(critic);
+
+		this.brains = {
+			actor,
+			critic
 		};
+
+		let shared = new neurojs.Shared.ConfigPool();
+		this.brains.shared = shared;
+		//@ts-ignore
+		shared.set('actor', config1)
+		//@ts-ignore
+		shared.set('critic', config2)		
+
+		// 添加agent
+		this.populate(1);
 	}
 
 	populate(n:int) {

@@ -1,6 +1,9 @@
 import { Configuration, Model, State } from "./network";
 import { ConfigPool, EventRadio } from "./shared";
 
+/**
+ * 给DDPG的网络
+ */
 export class NetworkWrapper extends EventRadio{
     net:State;
 	option:any;
@@ -15,12 +18,14 @@ export class NetworkWrapper extends EventRadio{
 	// 在pool中的key值
 	__pool_name:string;
 
+	optim:any;
+
 	constructor(){
 		super();
     }
     
 	set(value:Configuration|State|Model) {
-		var state!:State;
+		var state:State;
 
 		if (!value) {
 			return
@@ -34,14 +39,22 @@ export class NetworkWrapper extends EventRadio{
 			state = (value as Configuration).newState()
 		}
 
-		this.net = state;
-		this.config = state.configuration
-		this.model = state.model
+		this.net = state!;
+		this.config = state!.configuration
+		this.model = state!.model
 
-		this.trigger('set', [ state ])
+		this.trigger('set', [ state! ])
 	}    
 
+	/**
+	 * 设置 优化器
+	 * @param optim 
+	 */
     useOptimizer(optim){
+		this.optim = optim;
 
+		if (this.config) {
+			this.config.useOptimizer(optim);
+		}
     }
 }

@@ -5,6 +5,7 @@ import { Vector3 } from "laya/d3/math/Vector3";
 import { Sprite } from "laya/display/Sprite";
 import { Event } from "laya/events/Event";
 import { addBox, mouseDownEmitObj } from "./DemoUtils";
+import { CarWorld } from "./DNN/neurojs/CarWorld";
 import { delay } from "./layawrap/Async";
 import { CannonWorld } from "./layawrap/CannonWorld";
 import { MouseCtrl1 } from "./layawrap/ctrls/MouseCtrl1";
@@ -15,6 +16,7 @@ import { Quaternion as phyQuat, Quaternion } from "./math/Quaternion";
 import { Vec3 } from "./math/Vec3";
 import { Body } from "./objects/Body";
 import { Car, carData } from "./objects/Car";
+import { getPhyRender, World } from "./world/World";
 
 
 var sce3d: Scene3D;
@@ -148,27 +150,7 @@ var distData={
 
 }
 
-/**
- * 简化：
- * 输入：8个
- * //当前位置 x,z
- * 当前朝向 dir
- * 当前速度 vel
- * （其他特定参数：质量，摩擦等）
- * 到目标的距离 	相对空间  x,z
- * 目标路径的下一个距离	x,z
- * 目标路径的下下个距离	x,z
- * 
- * 输出
- * 加速，转向，刹车
- * n=2: acc:[-1,1], steer:[-1,1]
- * 
- * 评价
- * 	到路径的距离，速度
- * 
- * 
- * reward = -posdist+vel
- */
+
 
 /**
  * 角度为0朝向+z
@@ -200,6 +182,7 @@ function dist(chassis:Body){
 	// 根据前方方向和到圆心的方向计算夹角。也可以用前方方向和圆切线的夹角，但是都不合理，需要结合到圆形的距离
 	// atan2(sin,cos)。 90度在左边，-90度在右边。 规格化后1在坐标-1在右边
 	let tan = Math.atan2(degCross.y,front.dot(vToTarget))/Math.PI;
+	console.log('tan=',tan)
 
 	pos.vsub(targetPos, posdist);
 	let dist = posdist.length();
@@ -223,6 +206,31 @@ function act(degdist:number, posdist:number, v:number, car:Car){
 }
 
 async function drive(){
+	let carworld = new CarWorld();
+	let aicar = carworld.agents[0];
+	let phycar = car1;
+	aicar.car = phycar;
+
+	let chassis = car1.phyCar.chassisBody
+	for(let i=0; ;i++){
+		await delay(100);
+		//dist(chassis);
+		aicar.step();
+		let actions = aicar.outActions;
+		// 处理
+		if(actions){
+			phycar.accel(actions[0]);
+			phycar.steer(actions[1]);
+		}
+	}
+}
+
+async function drive2(){
+
+	let carworld = new CarWorld();
+	let aicar = carworld.agents[0];
+	
+
 	let chassis = car1.phyCar.chassisBody
 	dist(chassis);
 	await delay(1000);
@@ -237,38 +245,8 @@ async function drive(){
 	await delay(1000);
 
 	for(let i=0; ;i++){
-		await delay(1000);
+		await delay(1);
 		dist(chassis);
 	}
 }
 
-async function drive1(){
-	let chassis = car1.phyCar.chassisBody
-	dist(chassis);
-	await delay(1000);
-	car1.accel(5);
-	await delay(1000);
-	dist(chassis);
-
-	car1.steer(45,true);
-	await delay(1000);
-	dist(chassis);
-	car1.steer(-45,true);
-	await delay(1000);
-
-	for(let i=0; ;i++){
-		let cpos = chassis.position;
-
-		if(cpos.z<100 || cpos.x<-100 || cpos.x>100){
-			chassis.position.set(0,0,0);
-		}
-		await delay(1000);
-		car1.accel(5);
-		let r = Math.random();
-		if(r<0.2)car1.steer(90,true);
-		else if(r<0.6)
-			car1.steer(20,true);
-		else
-			car1.steer(-20,true);
-	}
-}
