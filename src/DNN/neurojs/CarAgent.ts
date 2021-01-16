@@ -1,5 +1,6 @@
 import { Car } from "../../objects/Car";
 import { CarWorld } from "./CarWorld";
+import { Plot } from "./Plot";
 import { Agent } from "./rl/agent";
 
 declare var neurojs:any;
@@ -87,19 +88,24 @@ export class CarAgent{
 		this.actions = actions
 	}
 
-	step(){
+	step(plot:Plot){
 		this.timer++;
 		//if (this.timer % this.timerFrequency === 0) {
 			this.updateInput();
 			let car = this.car;
 			let speed = car.getSpeed();
 			this.reward = this.getReward() ;// f(vel, contac, impact)
+			plot.addData(1,this.reward);
 			if(Math.abs(speed)<1e-2){
 				// 不动的话得分低
 				this.reward=-1;
 			}
 
-			this.loss = this.brain.learn(this.reward) as number;
+			let loss = this.loss = this.brain.learn(this.reward) as number;
+
+			if(loss)
+				plot.addData(0,loss)
+
 			let action = this.brain.policy(this.stateBuffer)
 			if(action){
 				this.outActions = action;
@@ -109,6 +115,7 @@ export class CarAgent{
 			console.log('Loss=',this.loss);
 			//this.car.impact = 0			
 		//}
+		return this.loss;
 	}
 
 	getReward(){
@@ -120,7 +127,8 @@ export class CarAgent{
 		let dz = pos.z;
 		let len = Math.sqrt(dx*dx+dz*dz);
 
-		return (-Math.abs(len-20))/100;
+		//return (-Math.abs(len-20))/100;
+		return -len/200;
 	}
 
 	updateInput(){

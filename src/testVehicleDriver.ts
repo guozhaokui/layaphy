@@ -6,6 +6,7 @@ import { Sprite } from "laya/display/Sprite";
 import { Event } from "laya/events/Event";
 import { addBox, mouseDownEmitObj } from "./DemoUtils";
 import { CarWorld } from "./DNN/neurojs/CarWorld";
+import { Plot } from "./DNN/neurojs/Plot";
 import { delay } from "./layawrap/Async";
 import { CannonWorld } from "./layawrap/CannonWorld";
 import { MouseCtrl1 } from "./layawrap/ctrls/MouseCtrl1";
@@ -44,7 +45,7 @@ function initPhy(scene: Scene3D) {
 function testGround() {
 	world.world.gravity.set(0, -11, 0);
 	let p = addBox(new Vec3(10000, 100, 10000), new Vec3(0, -50, 0), 0, phymtl1);
-	addBox(new Vec3(1, 1, 1), new Vec3(0, 1, 0), 0, phymtl1);
+	//addBox(new Vec3(1, 1, 1), new Vec3(0, 1, 0), 0, phymtl1);
 	/*
 	let plane = new Sprite3D();
     let planephy = plane.addComponent(CannonBody) as CannonBody;
@@ -77,8 +78,16 @@ function testGround() {
 
 let car1:Car;
 
+let plot:Plot;
 	
 export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
+	plot = new Plot({bgalpha:0.8});
+	Laya.stage.addChild(plot);
+
+	plot.addDataDef(0,0xff,'',1);
+	plot.addDataDef(1,0xff0000,'',1);
+
+
 	camctr = cam;
 	cam.dist = 10;
 	sce3d = sce;
@@ -135,13 +144,6 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 		car1.onkeyEvent(e,false);
 	});
 
-	//testLift();
-	//testConveyorbelt();
-	//loadObj(oo,world.world);
-	setInterval(() => {
-		//console.log('speed=',car1.phyCar.currentVehicleSpeedKmHour,'Km/H');
-	}, 1000);
-	//b.phyBody.velocity=new Vec3(-1,0,0);
 }
 
 
@@ -211,11 +213,13 @@ async function drive(){
 	let phycar = car1;
 	aicar.car = phycar;
 
+	let age=0;
 	let chassis = car1.phyCar.chassisBody
 	for(let i=0; ;i++){
 		await delay(100);
 		//dist(chassis);
-		aicar.step();
+		let loss = aicar.step(plot);
+		age++;
 		let actions = aicar.outActions;
 		// 处理
 		if(actions){
