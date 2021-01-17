@@ -152,7 +152,7 @@ export class Plot extends Sprite {
             let lastmin = cd.datas[(n-1)<<1];
             //let lastmax = cd.datas[((n-1)<<1)+1];
 
-            ctx.fillText(''+lastmin,_cx,sty+h1/2,'14px Arial','white','')
+            ctx.fillText(cd.name+' '+lastmin,_cx,sty+h1/2,'14px Arial','white','')
         }
         ctx.restore();
     }

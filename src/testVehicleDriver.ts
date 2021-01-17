@@ -84,8 +84,8 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 	plot = new Plot({bgalpha:0.8});
 	Laya.stage.addChild(plot);
 
-	plot.addDataDef(0,0xff,'',1);
-	plot.addDataDef(1,0xff0000,'',1);
+	plot.addDataDef(0,0xff,'L',1);
+	plot.addDataDef(1,0xff0000,'R',1);
 
 
 	camctr = cam;
@@ -211,21 +211,16 @@ async function drive(){
 	let carworld = new CarWorld();
 	let aicar = carworld.agents[0];
 	let phycar = car1;
-	aicar.car = phycar;
+	//aicar.car = phycar;
 
 	let age=0;
 	let chassis = car1.phyCar.chassisBody
 	for(let i=0; ;i++){
-		await delay(100);
+		await delay(1);
 		//dist(chassis);
 		let loss = aicar.step(plot);
+		aicar.handleOut();
 		age++;
-		let actions = aicar.outActions;
-		// 处理
-		if(actions){
-			phycar.accel(actions[0]);
-			phycar.steer(actions[1]);
-		}
 	}
 }
 

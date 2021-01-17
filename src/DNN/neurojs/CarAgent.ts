@@ -1,3 +1,4 @@
+import { stat } from "fs";
 import { Car } from "../../objects/Car";
 import { CarWorld } from "./CarWorld";
 import { Plot } from "./Plot";
@@ -25,6 +26,21 @@ declare var neurojs:any;
  * 
  * reward = -posdist+vel
  */	
+
+
+class TestCar{
+	px=100;
+	pz=100;
+
+	movx(dx:number){
+		this.px+=dx;
+	}
+
+	movz(d:number){
+		this.pz+=d;
+	}
+}
+
 export class CarAgent{
 	loss=0;
 	reward=0;
@@ -34,17 +50,19 @@ export class CarAgent{
 	frequency=15;
 	timerFrequency = 60/this.frequency;
 
-	car:Car;
+	//car:Car;
+	car = new TestCar();
 	brain:Agent;
 
 	options:any;
 	world:CarWorld;
 	outActions:Float64Array;
 
-	actions = 2;
-	statenum = 7;//quat,fSpeed,x0,z0 //,x1,z1,x2,z2
+	static actions = 2;
+	static statenum = 2;//quat,fSpeed,x0,z0 //,x1,z1,x2,z2
+	static temporal=1;
 
-	stateBuffer = new Float64Array(this.statenum);
+	stateBuffer = new Float64Array(CarAgent.statenum);
 
 	constructor(opt:any, world:CarWorld){
 		this.options=opt;
@@ -53,19 +71,17 @@ export class CarAgent{
 	}
 
 	init(){
-		var actions = 2
-		var temporal = 1
 		
-		let states = this.statenum;
+		let states = CarAgent.statenum;
 		//var input = neurojs.Agent.getInputDimension(states, actions, temporal)
 		
 		let agent:Agent =  new neurojs.Agent({
 				states: states,
-				actions: actions,
+				actions: CarAgent.actions,
 		
 				algorithm: 'ddpg',
 		
-				temporalWindow: temporal, 
+				temporalWindow: CarAgent.temporal, 
 		
 				discount: 0.95, 
 		
@@ -73,7 +89,7 @@ export class CarAgent{
 				experience: 75e3, 
 				// 每次从buffer采样的个数
 				learningPerTick: 40, 
-				startLearningAt: 900,
+				startLearningAt: 100,
 		
 				theta: 0.05, // progressive copy
 				alpha: 0.1 // advantage learning
@@ -85,7 +101,6 @@ export class CarAgent{
 		this.world.brains!.shared!.add('actor', agent.algorithm.actor)
 		this.world.brains!.shared!.add('critic', agent.algorithm.critic)
 	
-		this.actions = actions
 	}
 
 	step(plot:Plot){
@@ -93,13 +108,13 @@ export class CarAgent{
 		//if (this.timer % this.timerFrequency === 0) {
 			this.updateInput();
 			let car = this.car;
-			let speed = car.getSpeed();
+			//let speed = car.getSpeed();
 			this.reward = this.getReward() ;// f(vel, contac, impact)
 			plot.addData(1,this.reward);
-			if(Math.abs(speed)<1e-2){
+			//if(Math.abs(speed)<1e-2){
 				// 不动的话得分低
-				this.reward=-1;
-			}
+			//	this.reward=-1;
+			//}
 
 			let loss = this.loss = this.brain.learn(this.reward) as number;
 
@@ -112,13 +127,49 @@ export class CarAgent{
 			}
 			
 			this.rewardBonus = 0.0
-			console.log('Loss=',this.loss);
 			//this.car.impact = 0			
 		//}
 		return this.loss;
 	}
 
+	updateInput(){
+		let car = this.car;
+		let stats = this.stateBuffer;
+		stats[0]=car.px/1000;
+		stats[1]=car.pz/1000;
+		stats[2]=stats[3]=stats[4]=stats[5]=stats[6]=0
+	}
+
 	getReward(){
+		let car = this.car;
+		let dx = car.px;
+		let dz = car.pz;
+		let ln = Math.sqrt(dx*dx+dz*dz)/800;
+		return -ln;
+	}
+
+	handleOut(){
+		let actions = this.outActions;
+		// 处理
+		if(actions){
+			this.car.movx(actions[0]);
+			this.car.movz(actions[1]);
+		}
+	}
+
+
+	handleOut1(){
+		let actions = this.outActions;
+
+		// 处理
+		if(actions){
+			this.car.accel(actions[0]);
+			this.car.steer(actions[1]);
+		}
+
+	}
+
+	getReward1(){
 		let car = this.car;
 		let body = car.phyCar.chassisBody;
 		let pos = body.position;
@@ -128,10 +179,10 @@ export class CarAgent{
 		let len = Math.sqrt(dx*dx+dz*dz);
 
 		//return (-Math.abs(len-20))/100;
-		return -len/200;
+		return -len/800;
 	}
 
-	updateInput(){
+	updateInput1(){
 		let car = this.car;
 		let body = car.phyCar.chassisBody;
 		let pos = body.position;

@@ -20,11 +20,12 @@ export class FullyConnectedLayer extends LayerBase{
         
     }
 
+	// 前向
 	forward(ctx:LayerContext) {
 		var sum = 0.0, X = this.dimensions.input.length, Y = this.dimensions.output.length
 		var inpw = ctx.input.w, outw = ctx.output.w, paramw = ctx.params.w
 		
-		// 所有的节点
+		// 所有的输出节点
 		for (var i = 0; i < Y; i++) {
 			sum = 0.0
 			// 计算每个节点所有的输入的累加值
@@ -39,13 +40,16 @@ export class FullyConnectedLayer extends LayerBase{
 		// outw.set(this.fwd(inpw, paramw));
 	}
 
+	// 反向传播dw
 	backward(ctx:LayerContext) {
 		var sum = 0.0, X = this.dimensions.input.length, Y = this.dimensions.output.length
 		var inpw = ctx.input.w, outw = ctx.output.w, paramw = (ctx.params as Tensor).w
 		var inpdw = ctx.input.dw, outdw = ctx.output.dw, paramdw = (ctx.params as Tensor).dw
 
+		// 对每个*输入*节点
 		for (var i = 0; i < X; i++) {
 			sum = 0.0
+			// 所有的输出节点
 			for (var j = 0; j < Y; j++) {
 				sum += paramw[j * X + i] * outdw[j]
 				paramdw[j * X + i] = inpw[i] * outdw[j]

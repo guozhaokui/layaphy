@@ -17,21 +17,21 @@ export class CarWorld{
 
 	constructor(){
 		//2*state+act
-		var input = 16, actions = 2
+		var input = neurojs.Agent.getInputDimension(CarAgent.statenum, CarAgent.actions,CarAgent.temporal);
 		let actor =new neurojs.Network.Model([
 
 			{ type: 'input', size: input },
 			{ type: 'fc', size: 50, activation: 'relu' },
 			{ type: 'fc', size: 50, activation: 'relu' },
 			{ type: 'fc', size: 50, activation: 'relu', dropout: 0.5 },
-			{ type: 'fc', size: actions, activation: 'tanh' },
+			{ type: 'fc', size: CarAgent.actions, activation: 'tanh' },
 			{ type: 'regression' }
 
 		]);
 
 		let critic = new neurojs.Network.Model([
 	
-			{ type: 'input', size: input + actions },
+			{ type: 'input', size: input + CarAgent.actions },
 			{ type: 'fc', size: 100, activation: 'relu' },
 			{ type: 'fc', size: 100, activation: 'relu' },
 			{ type: 'fc', size: 1 },
