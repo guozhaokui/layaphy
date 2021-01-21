@@ -1,6 +1,7 @@
 import { ConfigPool } from './shared';
 import { CarAgent } from "./CarAgent";
 import { Model } from "./network";
+import { Agent } from './rl/agent';
 
 declare var neurojs:any;
 
@@ -17,7 +18,7 @@ export class CarWorld{
 
 	constructor(){
 		//2*state+act
-		var input = neurojs.Agent.getInputDimension(CarAgent.statenum, CarAgent.actions,CarAgent.temporal);
+		var input = Agent.getInputDimension(CarAgent.statenum, CarAgent.actions,CarAgent.temporal);
 		let actor =new neurojs.Network.Model([
 
 			{ type: 'input', size: input },
@@ -29,6 +30,7 @@ export class CarWorld{
 
 		]);
 
+		// critic的输入是
 		let critic = new neurojs.Network.Model([
 	
 			{ type: 'input', size: input + CarAgent.actions },

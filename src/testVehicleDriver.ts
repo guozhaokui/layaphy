@@ -7,6 +7,7 @@ import { Event } from "laya/events/Event";
 import { addBox, mouseDownEmitObj } from "./DemoUtils";
 import { CarWorld } from "./DNN/neurojs/CarWorld";
 import { Plot } from "./DNN/neurojs/Plot";
+import { testTF } from "./DNN/TSjs/testTF";
 import { delay } from "./layawrap/Async";
 import { CannonWorld } from "./layawrap/CannonWorld";
 import { MouseCtrl1 } from "./layawrap/ctrls/MouseCtrl1";
@@ -216,7 +217,8 @@ async function drive(){
 	let age=0;
 	let chassis = car1.phyCar.chassisBody
 	for(let i=0; ;i++){
-		await delay(1);
+		if(i%100==0)
+			await delay(1);
 		//dist(chassis);
 		let loss = aicar.step(plot);
 		aicar.handleOut();
@@ -249,3 +251,4 @@ async function drive2(){
 	}
 }
 
+testTF();

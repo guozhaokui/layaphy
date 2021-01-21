@@ -176,11 +176,11 @@ export class Agent{
 
 		// Create new experience
 		var e = new Experience(this)
-		e.action0 = this.history.actions.get(1)
-		e.state0 = this.history.inputs.get(1)
-		e.reward0 = this.history.rewards.get(1)
-		e.state1 = this.history.inputs.get(0)
-		e.action1 = this.history.actions.get(0) // for SARSA only
+		e.action0 = this.history.actions.get(1)	// A
+		e.state0 = this.history.inputs.get(1)	// S
+		e.reward0 = this.history.rewards.get(1)	// R
+		e.state1 = this.history.inputs.get(0)	// S' 新状态
+		e.action1 = this.history.actions.get(0) // A' for SARSA only
 		e.init() // set loss etc.
 
 		// Add experience to replay buffer
@@ -249,7 +249,7 @@ export class Agent{
 	 * @param actions 
 	 * @param temporalWindow 	TODO 不懂
 	 */
-	//static getInputDimension(states:int, actions:int, temporalWindow:int) {
-	//	return states + temporalWindow * (states + actions)
-	//}	
+	static getInputDimension(states:int, actions:int, temporalWindow:int) {
+		return states + temporalWindow * (states + actions)
+	}	
 }

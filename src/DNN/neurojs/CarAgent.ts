@@ -58,8 +58,8 @@ export class CarAgent{
 	world:CarWorld;
 	outActions:Float64Array;
 
-	static actions = 2;
-	static statenum = 2;//quat,fSpeed,x0,z0 //,x1,z1,x2,z2
+	static actions = 1;
+	static statenum = 1;//quat,fSpeed,x0,z0 //,x1,z1,x2,z2
 	static temporal=1;
 
 	stateBuffer = new Float64Array(CarAgent.statenum);
@@ -106,7 +106,7 @@ export class CarAgent{
 	step(plot:Plot){
 		this.timer++;
 		//if (this.timer % this.timerFrequency === 0) {
-			this.updateInput();
+			let state = this.updateInput();
 			let car = this.car;
 			//let speed = car.getSpeed();
 			this.reward = this.getReward() ;// f(vel, contac, impact)
@@ -121,7 +121,7 @@ export class CarAgent{
 			if(loss)
 				plot.addData(0,loss)
 
-			let action = this.brain.policy(this.stateBuffer)
+			let action = this.brain.policy(state)
 			if(action){
 				this.outActions = action;
 			}
@@ -135,25 +135,28 @@ export class CarAgent{
 	updateInput(){
 		let car = this.car;
 		let stats = this.stateBuffer;
-		stats[0]=car.px/1000;
-		stats[1]=car.pz/1000;
-		stats[2]=stats[3]=stats[4]=stats[5]=stats[6]=0
+		stats[0]=car.px/500;
+		//stats[1]=car.pz/500;
+		//stats[2]=stats[3]=stats[4]=stats[5]=stats[6]=0
+
+		// 后面会用array保存，所以不能共用
+		return new Float64Array(stats);
 	}
 
 	getReward(){
 		let car = this.car;
 		let dx = car.px;
-		let dz = car.pz;
+		let dz = 0;// car.pz;
 		let ln = Math.sqrt(dx*dx+dz*dz)/800;
-		return -ln;
+		return -Math.abs(dx)/800;
 	}
 
 	handleOut(){
 		let actions = this.outActions;
 		// 处理
 		if(actions){
-			this.car.movx(actions[0]);
-			this.car.movz(actions[1]);
+			this.car.movx(actions[0]*100);
+			//this.car.movz(actions[1]);
 		}
 	}
 

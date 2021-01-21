@@ -1,5 +1,7 @@
 //import { terser } from 'rollup-plugin-terser';
 import glsl from 'rollup-plugin-glsl';
+import resolve from 'rollup-plugin-node-resolve';
+import commonjs from 'rollup-plugin-commonjs';
 const path = require('path')
 const fs = require('fs');
 //const rollupPluginTypescriptPathMapping = require('rollup-plugin-typescript-path-mapping')
@@ -44,11 +46,13 @@ export default {
 		file: './bin/bundle.js',
 		format: 'iife', // immediately-invoked function expression — suitable for <script> tags
         sourcemap: false,
-        name:'Laya',
+		name:'Laya',
+		globals:{'@tensorflow/tfjs': 'tf'},
         //intro:'window.Laya=window.Laya||exports||{};\n',
         //outro:layaexpreplace
         //indent: false
 	},
+	external:['@tensorflow/tfjs'],
 	plugins: [
 		baseUrl(),
         //testPlug(),
@@ -57,8 +61,8 @@ export default {
 			include: /.*(.glsl|.vs|.fs)$/,
 			sourceMap: false
 		}),        
-		//resolve(), // tells Rollup how to find date-fns in node_modules
-		//commonjs(), // converts date-fns to ES modules
+		resolve(), // tells Rollup how to find date-fns in node_modules
+		commonjs(), // converts date-fns to ES modules
 		//production && terser() // minify, but only in production
 	]
 };

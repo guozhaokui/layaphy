@@ -25,6 +25,7 @@ export class Experience {
 	node:Node;
 
 	learnSteps=0;
+	lastLearnedAt=0;
 	
 	target:()=>number;//__q_target
 	value:number;
