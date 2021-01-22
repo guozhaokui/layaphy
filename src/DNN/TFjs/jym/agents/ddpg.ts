@@ -1,8 +1,7 @@
 import * as tf from '@tensorflow/tfjs';
+import { OUNoise } from '../lib/ounoise';
+import { ReplayBuffer } from '../lib/replay_buffer';
 
-import {ReplayBuffer} from '../lib/replay_buffer';
-import OUNoise from '../lib/ounoise';
-import {softmax} from '../lib/util';
 
 const NODEJS = typeof window === 'undefined';
 const SAVE_METHOD = NODEJS ? `file://` : 'indexeddb://';
@@ -38,13 +37,27 @@ const EPSILON =1.0;
 const EPSILON_DECAY =1e-6;
 const MIN_EPSILON = 0.05;
 
-class DDPG {
-  constructor(actionSize, makeActor, makeCritic, { epsilon=EPSILON,
+export class DDPG {
+  epsilon: number;
+  epsilonDecay: number;
+  minEpsilon: number;
+  minBufferSize: number;
+  updateEvery: number;
+  noise: any;
+  buffer: any;
+  actor: any;
+  actorTarget: any;
+  critic: any;
+  criticTarget: any;
+  actorOptimizer: tf.AdamOptimizer;
+  criticOptimizer: tf.AdamOptimizer;
+
+  constructor(actionSize:number, makeActor, makeCritic, { epsilon=EPSILON,
       epsilonDecay=EPSILON_DECAY, minEpsilon=MIN_EPSILON,
       lrActor=LR_ACTOR, lrCritic=LR_CRITIC,
       minBufferSize=MIN_BUFFER_SIZE, updateEvery=UPDATE_EVERY,
       bufferSize=BUFFER_SIZE, batchSize=BATCH_SIZE} = {},
-      buffer) {
+      buffer:ReplayBuffer) {
     this.epsilon = epsilon;
     this.epsilonDecay = epsilonDecay;
     this.minEpsilon = minEpsilon;
@@ -92,9 +105,9 @@ class DDPG {
     }          
   }
 
-  learn(experiences, gamma, tau=TAU) {    
+  learn(experiences, gamma:number, tau=TAU) {    
     tf.tidy(() => {      
-      const tensorified = {};
+      const tensorified:any = {};
       Object.keys(experiences).map(function(key) {
         tensorified[key] = tf.tensor(experiences[key]);        
       });      
@@ -142,4 +155,3 @@ class DDPG {
   }
 }
 
-export default DDPG;

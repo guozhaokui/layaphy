@@ -2,6 +2,8 @@ import { ConfigPool } from './shared';
 import { CarAgent } from "./CarAgent";
 import { Model } from "./network";
 import { Agent } from './rl/agent';
+import { Vol } from '../convnetjs/convnet_vol';
+
 
 declare var neurojs:any;
 
@@ -10,6 +12,8 @@ interface IWorldBrain{
 	critic:Model;
 	shared?:ConfigPool
 }
+
+new Vol(0,0,0,0);
 
 export class CarWorld{
 	agents:CarAgent[]=[];

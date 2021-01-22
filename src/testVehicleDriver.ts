@@ -7,7 +7,7 @@ import { Event } from "laya/events/Event";
 import { addBox, mouseDownEmitObj } from "./DemoUtils";
 import { CarWorld } from "./DNN/neurojs/CarWorld";
 import { Plot } from "./DNN/neurojs/Plot";
-import { testTF } from "./DNN/TSjs/testTF";
+import { testTF } from "./DNN/testTF";
 import { delay } from "./layawrap/Async";
 import { CannonWorld } from "./layawrap/CannonWorld";
 import { MouseCtrl1 } from "./layawrap/ctrls/MouseCtrl1";

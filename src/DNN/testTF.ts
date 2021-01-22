@@ -65,8 +65,38 @@ function convertToTensor(data) {
 	});  
   }
 
+  async function trainModel(model, inputs, labels) {
+	// Prepare the model for training.  
+	model.compile({
+	  optimizer: tf.train.adam(),
+	  loss: tf.losses.meanSquaredError,
+	  metrics: ['mse'],
+	});
+  
+	const batchSize = 28;
+	const epochs = 50;
+  
+	return await model.fit(inputs, labels, {
+	  batchSize,
+	  epochs,
+	  shuffle: true,
+	  callbacks: tfvis.show.fitCallbacks(
+		{ name: 'Training Performance' },
+		['loss', 'mse'], 
+		{ height: 200, callbacks: ['onEpochEnd'] }
+	  )
+	});
+  }
+
+
 export function testTF() {
 	document.addEventListener('DOMContentLoaded', run);
 	const model = createModel();  
 	tfvis.show.modelSummary({name: 'Model Summary'}, model);
+  // Prepare the model for training.  
+model.compile({
+	optimizer: tf.train.adam(),
+	loss: tf.losses.meanSquaredError,
+	metrics: ['mse'],
+  });
 }

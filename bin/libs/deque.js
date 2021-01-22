@@ -256,4 +256,3 @@ function getCapacity(capacity) {
   return Deque;
 })();
 
-export default Deque;

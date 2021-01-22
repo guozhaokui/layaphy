@@ -1,9 +1,13 @@
 
-import Deque from './deque';
 import {sample} from './util'; 
 
+declare var Deque:any;
+
 export class ReplayBuffer {
-  constructor(bufferSize, batchSize) {
+  bufferSize: number;
+  memory: any;
+  batchSize: number;
+  constructor(bufferSize:number, batchSize:number) {
     this.bufferSize = bufferSize;
     this.memory = new Deque(bufferSize+1);
     this.batchSize = batchSize;
