@@ -26,6 +26,12 @@ async function run() {
 function createModel() {
 	debugger;
 	// Create a sequential model
+	/** */
+
+	for (let i = 0; i < agent.replayBufferSize; ++i) {
+		agent.playStep();
+	  }
+	/** */
 	
 	const model = tf.sequential();
 

@@ -65,7 +65,7 @@ class MovingAverager {
  *   during the training. Optional.
  */
 export async function train(
-    agent, batchSize:number, gamma:number, learningRate:number, cumulativeRewardThreshold:number,
+    agent:SnakeGameAgent, batchSize:number, gamma:number, learningRate:number, cumulativeRewardThreshold:number,
     maxNumFrames:number, syncEveryFrames:number, savePath:string, logDir:string) {
   let summaryWriter;
   if (logDir != null) {

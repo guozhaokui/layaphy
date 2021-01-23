@@ -1,15 +1,18 @@
 import { Plot } from "../../neurojs/Plot";
-import { Agent } from "../../neurojs/rl/agent";
 import { RLAgent } from "../RLAgent";
 import { RLEnv } from "../RLEnv";
+import { CarDQN } from "./CarDQN";
+import * as tf from '@tensorflow/tfjs';
 
 declare var neurojs:any;
 /**
  * 控制代理，只负责训练和决策。
  */
 export class CarAgent extends RLAgent{
-    brain:Agent;
-    age=0;
+    brain:CarDQN;
+	age=0;
+	plot:Plot;
+	env:RLEnv;
 
     sample(state: number[]): number {
         throw new Error("Method not implemented.");
@@ -22,38 +25,44 @@ export class CarAgent extends RLAgent{
     }
 
 	init(env:RLEnv){
+		this.env = env;
         let states = env.getStateNum();
         let acts = env.getActionSet();
-        let actnum = acts.length;
-		//var input = neurojs.Agent.getInputDimension(states, actions, temporal)
-		
-		let agent:Agent =  new neurojs.Agent({
-				states: states,
-				actions: actnum,
-		
-				algorithm: 'ddpg',
-		
-				temporalWindow: 1, 
-				discount: 0.95, 
-				// 经验回放数量？
-				experience: 75e3, 
-				// 每次从buffer采样的个数
-				learningPerTick: 40, 
-				startLearningAt: 100,
-		
-				theta: 0.05, // progressive copy
-				alpha: 0.1 // advantage learning
-		});
-
-		this.brain = agent;
-
-		this.world.brains!.shared!.add('actor', agent.algorithm.actor)
-		this.world.brains!.shared!.add('critic', agent.algorithm.critic)
+		let actnum = acts.length;
+		let config={
+			states: states,
+			actions: actnum,
+			discount: 0.95, 
+			// 经验回放数量？
+			experience: 75e3, 
+			// 每次从buffer采样的个数
+			learningPerTick: 40, 
+			startLearningAt: 100,
 	
+			theta: 0.05, // progressive copy
+			alpha: 0.1 // advantage learning
+
+		}
+		this.brain = new CarDQN(config.states,config.actions, config.alpha, config.experience)
+		//var input = neurojs.Agent.getInputDimension(states, actions, temporal)
+
 	}
 
-	step(plot:Plot){
+	getRandomAction(){
+
+	}
+
+	getStateTensor(){
+		let buff = tf.buffer([1]);// 
+		//buff.set()
+	}
+
+	playStep(){
 		this.age++;
+		let plot = this.plot;
+		let brain = this.brain;
+		brain.sample(this.env);
+
 		//if (this.timer % this.timerFrequency === 0) {
 			let state = this.updateInput();
 			let car = this.car;

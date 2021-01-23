@@ -14,6 +14,11 @@ export abstract class RLAgent{
 	abstract sample(state:number[]):number;
 
 	/**
+	 * 游戏执行一步
+	 */
+	abstract playStep():void;
+
+	/**
 	 * 计算一个最优动作
 	 * @param state 
 	 */

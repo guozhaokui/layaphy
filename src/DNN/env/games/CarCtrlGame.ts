@@ -1,4 +1,5 @@
 import { RLEnv } from "../RLEnv";
+import * as tf from '@tensorflow/tfjs';
 
 class SmpCar{
 	vel=0;
@@ -26,6 +27,12 @@ export class CarCtrl extends RLEnv{
 	getStateNum(): number {
 		return 1;	// xpos
 	}
+
+	getStateTensor(){
+		let buff = tf.buffer([1]);// 
+		buff.set(this.car.pos,0);
+	}
+
 
 	score(): number {
 		throw new Error("Method not implemented.");
