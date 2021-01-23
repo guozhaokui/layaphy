@@ -1,7 +1,7 @@
 //import { terser } from 'rollup-plugin-terser';
 import glsl from 'rollup-plugin-glsl';
 import resolve from 'rollup-plugin-node-resolve';
-import commonjs from 'rollup-plugin-commonjs';
+import commonjs from '@rollup/plugin-commonjs';
 const path = require('path')
 const fs = require('fs');
 //const rollupPluginTypescriptPathMapping = require('rollup-plugin-typescript-path-mapping')
@@ -47,12 +47,12 @@ export default {
 		format: 'iife', // immediately-invoked function expression — suitable for <script> tags
         sourcemap: false,
 		name:'Laya',
-		globals:{'@tensorflow/tfjs': 'tf'},
+		globals:{'@tensorflow/tfjs': 'tf','brain.js':'brain'},
         //intro:'window.Laya=window.Laya||exports||{};\n',
         //outro:layaexpreplace
         //indent: false
 	},
-	external:['@tensorflow/tfjs'],
+	external:['@tensorflow/tfjs','brain.js'],
 	plugins: [
 		baseUrl(),
         //testPlug(),

@@ -23,6 +23,17 @@ export class CarCtrl extends RLEnv{
 		this.car=new SmpCar();
 	}
 
+	getStateNum(): number {
+		return 1;	// xpos
+	}
+
+	score(): number {
+		throw new Error("Method not implemented.");
+	}
+	game_over(): boolean {
+		throw new Error("Method not implemented.");
+	}
+
 	reset_game(){
 		this.car.reset();
 		this.totalReward=0;
@@ -32,14 +43,14 @@ export class CarCtrl extends RLEnv{
 	 * 输入参数
 	 */
 	getActionSet(){
-		return [1,2]
+		return [1,2];	//left, right
 	}
 
 	/**
 	 * 获取状态
 	 */
-	getGameState(){
-
+	getGameState():number[]{
+		return [];
 	}
 
 	/**

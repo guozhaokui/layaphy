@@ -48,6 +48,12 @@ export class DQN extends Algorithm {
 	}
 
 	// what to do?
+	/**
+	 * 选一个动作。
+	 * 随机或者从网络选
+	 * @param state 
+	 * @param target 
+	 */
 	act(state:State, target=false) {
 
 		if (this.agent.learning)
@@ -66,10 +72,10 @@ export class DQN extends Algorithm {
 	}
 
 	// how good is an action at state
-	value(state:State, action:Float64Array, target) {
-		target = target == null ? this.net : this.target
-		target.forward(state)
-		return target.out.w[action]
+	value(state:State, action:int, target=false) {
+		let net = !target ? this.net : this.target
+		net.forward(state)
+		return net.out.w[action]
 	}
 
 	// replay

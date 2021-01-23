@@ -1,6 +1,6 @@
 
+
 import * as tf from '@tensorflow/tfjs';
-import { debug } from 'console';
 
 declare var tfvis: any;
 
@@ -26,6 +26,7 @@ async function run() {
 function createModel() {
 	debugger;
 	// Create a sequential model
+	
 	const model = tf.sequential();
 
 	// Add a single hidden layer

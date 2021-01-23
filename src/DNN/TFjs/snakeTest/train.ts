@@ -65,8 +65,8 @@ class MovingAverager {
  *   during the training. Optional.
  */
 export async function train(
-    agent, batchSize, gamma, learningRate, cumulativeRewardThreshold,
-    maxNumFrames, syncEveryFrames, savePath, logDir) {
+    agent, batchSize:number, gamma:number, learningRate:number, cumulativeRewardThreshold:number,
+    maxNumFrames:number, syncEveryFrames:number, savePath:string, logDir:string) {
   let summaryWriter;
   if (logDir != null) {
     summaryWriter = tf.node.summaryFileWriter(logDir);

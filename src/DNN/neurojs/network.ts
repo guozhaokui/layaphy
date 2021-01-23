@@ -1,4 +1,3 @@
-import { Configuration } from './network';
 import { FullyConnectedLayer } from "./layers/dot";
 import { DropOutLayer } from "./layers/dropout";
 import { InputLayer } from "./layers/input";
@@ -6,6 +5,8 @@ import { LayerBase } from "./layers/layerbase";
 import { Size } from "./Math/size";
 import { Tensor } from "./Math/tensor";
 import { Optim } from './optim';
+import { ReLuLayer } from './layers/nonlinear';
+import { RegressionLayer } from './layers/regression';
 
 export interface IModelOption{
     type:string;
@@ -41,7 +42,7 @@ export class Model{
 			var current = desc[i]
 			var layer = Model.create(input, current)
 
-			layer.label = current.label || undefined
+			layer.label = current.label
 			layer.index = i
 			layer.model = this
 			layer.options = current
@@ -73,10 +74,10 @@ export class Model{
 			case 'dropout': return new DropOutLayer(inp!, opt)
 			//case 'sigmoid': return new nonlinear.SigmoidLayer(inp, opt)
 			//case 'tanh': return new nonlinear.TanhLayer(inp, opt)
-			case 'relu': return new nonlinear.ReLuLayer(inp, opt)
+			case 'relu': return new ReLuLayer(inp, opt)
 			case 'input': return new InputLayer(inp, opt)
-			case 'regression': return new regression.RegressionLayer(inp, opt)
-			case 'softmax': return new regression.SoftmaxLayer(inp, opt)
+			case 'regression': return new RegressionLayer(inp, opt)
+			case 'softmax': return new SoftmaxLayer(inp, opt)
 			//case 'noise': return new noise.UhlenbeckOrnsteinNoiseLayer(inp, opt)
 			//case 'bayesian': return new bayesian.VariationalBayesianLayer(inp, opt)
 			//case 'conf': return new bayesian.ConfidenceLayer(inp, opt)

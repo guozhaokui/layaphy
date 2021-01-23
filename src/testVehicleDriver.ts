@@ -5,6 +5,7 @@ import { Vector3 } from "laya/d3/math/Vector3";
 import { Sprite } from "laya/display/Sprite";
 import { Event } from "laya/events/Event";
 import { addBox, mouseDownEmitObj } from "./DemoUtils";
+import { CarDQN } from "./DNN/env/games/CarDQN";
 import { CarWorld } from "./DNN/neurojs/CarWorld";
 import { Plot } from "./DNN/neurojs/Plot";
 import { testTF } from "./DNN/testTF";
@@ -103,6 +104,10 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 	uip.transform.scale=new Vector3(5,1,1)
 	uip.transform.rotationEuler = new Vector3(-90,0,0);
 	sce3d.addChild(uip);
+
+	//TEST
+	let ddd = new CarDQN(1,2);
+	//TEST
 	
 	car1 = new Car(sce3d,world.world);
 	car1.parse(carData,null);

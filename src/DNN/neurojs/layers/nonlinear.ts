@@ -3,7 +3,7 @@ import { LayerContext } from "../network";
 import { LayerBase } from "./layerbase";
 
 
-class NonLinearityLayer extends LayerBase{
+export class NonLinearityLayer extends LayerBase{
 
 	constructor(input:Size, opt:any) {
 		super();
@@ -17,7 +17,7 @@ class NonLinearityLayer extends LayerBase{
 
 }
 
-class SigmoidLayer extends NonLinearityLayer {
+export class SigmoidLayer extends NonLinearityLayer {
 
 	forward(ctx:LayerContext) {
 		var X = this.dimensions.input.length;
@@ -40,7 +40,7 @@ class SigmoidLayer extends NonLinearityLayer {
 
 }
 
-class TanhLayer extends NonLinearityLayer {
+export class TanhLayer extends NonLinearityLayer {
 
 	forward(ctx:LayerContext) {
 		var X = this.dimensions.input.length
@@ -65,7 +65,7 @@ class TanhLayer extends NonLinearityLayer {
 
 }
 
-class ReLuLayer extends NonLinearityLayer {
+export class ReLuLayer extends NonLinearityLayer {
 	// 是否是带泄露的函数。即<0的时候的斜率。为0就是普通的relu
 	leaky=0;
 
@@ -96,6 +96,3 @@ class ReLuLayer extends NonLinearityLayer {
 
 }
 
-module.exports = {
-	SigmoidLayer, TanhLayer, ReLuLayer
-};

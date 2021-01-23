@@ -8,8 +8,11 @@ export abstract class RLEnv{
 
 	}
 
+	abstract getStateNum():number;
+
 	/**
-	 * 输入参数
+	 * 返回支持的动作
+	 * 
 	 */
 	abstract getActionSet():number[];
 
