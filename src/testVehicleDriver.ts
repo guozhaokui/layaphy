@@ -5,6 +5,8 @@ import { Vector3 } from "laya/d3/math/Vector3";
 import { Sprite } from "laya/display/Sprite";
 import { Event } from "laya/events/Event";
 import { addBox, mouseDownEmitObj } from "./DemoUtils";
+import { CarAgent } from "./DNN/env/games/CarAgent";
+import { CarCtrl } from "./DNN/env/games/CarCtrlGame";
 import { CarDQN } from "./DNN/env/games/CarDQN";
 import { CarWorld } from "./DNN/neurojs/CarWorld";
 import { Plot } from "./DNN/neurojs/Plot";
@@ -106,7 +108,11 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 	sce3d.addChild(uip);
 
 	//TEST
-	let ddd = new CarDQN(1,2);
+	let game = new CarCtrl();
+	let agent = new CarAgent();
+	agent.init(game);
+	
+
 	//TEST
 	
 	car1 = new Car(sce3d,world.world);

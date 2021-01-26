@@ -73,6 +73,12 @@ export class CarCtrl extends RLEnv{
 		}
 	}
 
+	step(act:int):{state:number[], reward:number, done:boolean}{
+		this.act(act);
+		//TODO 
+		return {state:[0],reward:0,done:false}
+	}	
+
 	/**
 	 * 执行某个连续量
 	 * @param a 

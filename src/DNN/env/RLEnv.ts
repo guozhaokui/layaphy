@@ -1,6 +1,12 @@
 
 
 export abstract class RLEnv{
+    height(arg0: any[], height: any, width: any) {
+        throw new Error('Method not implemented.');
+    }
+    width(arg0: any[], height: any, width: any) {
+        throw new Error('Method not implemented.');
+    }
 	init(){
 
 	}
@@ -36,8 +42,13 @@ export abstract class RLEnv{
 	 * @param a 
 	 */
 	act(a:number){
-
 	}
+
+	/**
+	 * 执行某个动作并且返回对状态的影响
+	 * @param act 
+	 */
+	abstract step(act:int):{state:number[], reward:number, done:boolean};
 
 	/**
 	 * 执行某个连续量

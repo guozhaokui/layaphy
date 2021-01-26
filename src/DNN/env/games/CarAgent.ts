@@ -43,9 +43,7 @@ export class CarAgent extends RLAgent{
 			alpha: 0.1 // advantage learning
 
 		}
-		this.brain = new CarDQN(config.states,config.actions, config.alpha, config.experience)
-		//var input = neurojs.Agent.getInputDimension(states, actions, temporal)
-
+		this.brain = new CarDQN(env,states,acts, config.alpha, config.experience,config.learningPerTick);
 	}
 
 	getRandomAction(){

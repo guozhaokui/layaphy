@@ -9,7 +9,7 @@ abstract class Algorithm {
     abstract get_weights(): Float64Array;
     abstract set_weights(w: Float64Array): void;
     abstract sample(env:RLEnv): void;
-    abstract predict(): void;
+    abstract predict(env:RLEnv): void;
     abstract learn(): void;
 
 }
@@ -47,6 +47,29 @@ function copyWeights(destNetwork: tf.LayersModel, srcNetwork: tf.LayersModel) {
 }
 
 
+/**
+ * 在一个滑动窗口范围内计算平均值
+ */
+class MovingAverager {
+    buffer: number[];
+    constructor(bufferLength:int) {
+      this.buffer = [];
+      for (let i = 0; i < bufferLength; ++i) {
+        this.buffer.push(0);
+      }
+    }
+  
+    append(x:number) {
+      this.buffer.shift();
+      this.buffer.push(x);
+    }
+  
+    average() {
+      return this.buffer.reduce((x, prev) => x + prev) / this.buffer.length;
+    }
+  }
+  
+
 export class CarDQN extends Algorithm {
     onlineNetwork: tf.Sequential;
     targetNetwork: tf.Sequential;
@@ -60,12 +83,16 @@ export class CarDQN extends Algorithm {
     epsilonInit: number;
     epsilonIncrement_: number;
     cumulativeReward_: any;
-    fruitsEaten_: any;
     syncEveryFrames=100;
     batchSize=40;
+    acts:int[];
+    game:RLEnv;
 
-    constructor(stateNum: int, actNum: int, learningRate: number, buffersize: int,batchSize:int) {
+    constructor(game:RLEnv,stateNum: int, acts: int[], learningRate: number, buffersize: int,batchSize:int) {
         super();
+        this.game=game;
+        this.acts=acts;
+        let actNum = acts.length;
         this.batchSize=batchSize;
         this.onlineNetwork = this.createDeepQNetwork(stateNum, actNum);
         this.targetNetwork = this.createDeepQNetwork(stateNum, actNum);
@@ -93,16 +120,30 @@ export class CarDQN extends Algorithm {
         throw new Error('Method not implemented.');
     }
 
+    private getRandomAction(){
+        let acts = this.acts;
+        let n = acts.length;
+        let i = (Math.random()*n)%n;
+        return acts[i];
+    }
+
+    /**
+     * 选择一个动作。
+     * 根据网络预测选择
+     * 较小的概率随机选择
+     * 
+     * @param env 
+     */
     sample(env:RLEnv) {
         this.epsilon = this.frameCount >= this.epsilonDecayFrames ? this.epsilonFinal : this.epsilonInit + this.epsilonIncrement_ * this.frameCount;
         this.frameCount++;
 
         // The epsilon-greedy algorithm.
-        let action;
+        let action=0;
         const state = env.getGameState();
         if (Math.random() < this.epsilon) {
             // Pick an action at random.
-            action = getRandomAction();
+            action = this.getRandomAction();
         } else {
             // Greedily pick an action based on online DQN output.
             tf.tidy(() => {
@@ -110,23 +151,20 @@ export class CarDQN extends Algorithm {
                 let buff = tf.buffer([1,1]);    // batch=1，input=1
                 state.forEach((v,i)=>buff.set(v,0,i));
                 const stateTensor = buff.toTensor();// getStateTensor(state, this.game.height, this.game.width)
-                action = ALL_ACTIONS[this.onlineNetwork.predict(stateTensor).argMax(-1).dataSync()[0]];
+                action = this.acts[(this.onlineNetwork.predict(stateTensor) as tf.Tensor).argMax(-1).dataSync()[0]];
             });
         }
 
-        const { state: nextState, reward, done, fruitEaten } = this.game.step(action);
+        const { state: nextState, reward, done } = this.game.step(action);
 
+        // 添加一条新的经验
         this.replayMemory.append([state, action, reward, done, nextState]);
 
         this.cumulativeReward_ += reward;
-        if (fruitEaten) {
-            this.fruitsEaten_++;
-        }
         const output = {
             action,
             cumulativeReward: this.cumulativeReward_,
             done,
-            fruitsEaten: this.fruitsEaten_
         };
         if (done) {
             this.reset();
@@ -183,8 +221,6 @@ export class CarDQN extends Algorithm {
      *   saved upon the completion of the training.
      */
     async train(batchSize: number, gamma: number, learningRate: number, cumulativeRewardThreshold: number, maxNumFrames: number) {
-
-
     }
 
     get_weights(): Float64Array {
@@ -193,7 +229,7 @@ export class CarDQN extends Algorithm {
     set_weights(w: Float64Array): void {
         throw new Error("Method not implemented.");
     }
-    predict(): void {
+    predict(env:RLEnv): void {
         throw new Error("Method not implemented.");
     }
 
@@ -209,7 +245,7 @@ export class CarDQN extends Algorithm {
         // Moving averager: fruits eaten across 100 most recent 100 episodes.
         const eatenAverager100 = new MovingAverager(100);
 
-        const optimizer = tf.train.adam(learningRate);
+        const optimizer = this.optimizer;
         let tPrev = new Date().getTime();
         let frameCountPrev = this.frameCount;
         let averageReward100Best = -Infinity;
@@ -252,5 +288,8 @@ export class CarDQN extends Algorithm {
                 console.log('Sync\'ed weights from online network to target network');
             }
         }
+    }
+    playStep() {
+        throw new Error('Method not implemented.');
     }
 }

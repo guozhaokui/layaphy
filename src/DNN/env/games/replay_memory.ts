@@ -61,7 +61,7 @@ export class ReplayMemory {
    * The sampling is done *without* replacement.
    *
    * @param {number} batchSize Size of the batch.
-   * @return {Array<any>} Sampled items.
+   * @return  Sampled items.
    */
   sample(batchSize:number) {
     if (batchSize > this.maxLen) {
