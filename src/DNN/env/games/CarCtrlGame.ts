@@ -45,7 +45,7 @@ export class CarCtrl extends RLEnv{
 		return 5000;	// xpos
 	}
 	getStateShape():number[]{
-		return [40,2];
+		return [40,40];
 	}
 
 	getStateTensor(){
@@ -106,46 +106,10 @@ export class CarCtrl extends RLEnv{
 		}
 	}
 
-	/**
-	 * 得到游戏状态，奖励等信息
-	 */
-	checkGame():{state:number[], reward:number, done:boolean}{
-		let car = this.car;
-		let r =  Math.abs(this.lastpos) - Math.abs(car.pos);
-		let still=false;
-		if(this.lastpos==car.pos){
-			// 如果不动，不行
-			still=true;
-		}
-		this.lastpos= car.pos;
-		let done=false;
-		let s=[0,0];
-		if(Math.abs(car.pos)>10 || Math.abs(car.vel)>10){
-			r=-100;
-			done=true;
-		}else{
-			let spos = Math.round(car.pos*2)+20; // 0,40
-			let svel = Math.round(car.vel*2)+20; // 0,40
-			s[0]=spos;
-			s[1]=car.vel<=0?0:1;
-
-			// 如果在中心且基本静止，很好
-			if(Math.abs(car.vel)<0.1 && Math.abs(car.pos)<0.2){
-				r=100;
-				done=true;
-			}else{
-				if(still){
-					r=-100;
-					done=true;
-				}
-			}
-		}
-		return {state:s,reward:r,done:done}
-	}
-
 	clamp(v:number, min:number, max:number){
 		return Math.max(Math.min(v,max),min)
 	}
+
 	gameStep(){
 		let dt = 1/16;
 		let car = this.car;
@@ -156,7 +120,7 @@ export class CarCtrl extends RLEnv{
 		let spos = Math.round(car.pos*2)+20; // 0,40
 		let svel = Math.round(car.vel*2)+20; // 0,40
 		s[0]=this.clamp(spos,0,39);
-		s[1]=car.vel<=0?0:1;
+		s[1]=this.clamp(svel,0,39);// car.vel<=0?0:1;
 
 		let done=false;
 		if(Math.abs(car.pos)>10){

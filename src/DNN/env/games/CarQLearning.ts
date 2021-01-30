@@ -215,7 +215,7 @@ export class TestQLearning{
         
         let game = this.game;
         let agent = this.agent;
-        let episodenum=3000000;
+        let episodenum=300000;
         for(let ei=0; ei<episodenum; ei++){
             this.totalR=0;
             game.reset_game();
