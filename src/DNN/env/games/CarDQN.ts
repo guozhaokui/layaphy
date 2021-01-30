@@ -185,13 +185,14 @@ export class CarDQN extends Algorithm {
         // Get a batch of examples from the replay buffer.
         const batch = this.replayMemory.sample(batchSize);
         const lossFunction = () => tf.tidy(() => {
+            //返回一个 sample,w,h,2 的tensor
             const stateTensor = getStateTensor(batch.map(example => example[0]), this.game.height, this.game.width);
             const actionTensor = tf.tensor1d(batch.map(example => example[1]), 'int32');
             const qs = this.onlineNetwork.apply(stateTensor, { training: true }).mul(tf.oneHot(actionTensor, NUM_ACTIONS)).sum(-1);
 
             const rewardTensor = tf.tensor1d(batch.map(example => example[2]));
             const nextStateTensor = getStateTensor(batch.map(example => example[4]), this.game.height, this.game.width);
-            const nextMaxQTensor = this.targetNetwork.predict(nextStateTensor).max(-1);
+            const nextMaxQTensor = (this.targetNetwork.predict(nextStateTensor) as tf.Tensor).max(-1);
             const doneMask = tf.scalar(1).sub(tf.tensor1d(batch.map(example => example[3])).asType('float32'));
             const targetQs = rewardTensor.add(nextMaxQTensor.mul(doneMask).mul(gamma));
             return tf.losses.meanSquaredError(targetQs, qs);

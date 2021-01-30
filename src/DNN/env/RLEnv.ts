@@ -10,9 +10,7 @@ export abstract class RLEnv{
 	init(){
 
 	}
-	reset_game(){
-
-	}
+	abstract reset_game():number[];
 
 	abstract getStateNum():number;
 

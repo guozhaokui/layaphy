@@ -111,7 +111,9 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 	let game = new CarCtrl();
 	let agent = new CarAgent();
 	agent.init(game);
-	
+	for(let i=0; i<1000;i++){
+		agent.playStep();
+	}
 
 	//TEST
 	
