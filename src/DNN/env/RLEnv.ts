@@ -46,7 +46,7 @@ export abstract class RLEnv{
 	 * 执行某个动作并且返回对状态的影响
 	 * @param act 
 	 */
-	abstract step(act:int):{state:number[], reward:number, done:boolean};
+	//async ctrl(act:int):Promise<{state:number[], reward:number, done:boolean}>{throw 'NI'};
 
 	/**
 	 * 执行某个连续量
@@ -56,4 +56,9 @@ export abstract class RLEnv{
 	actA(a:number, v:number){
 
 	}
+
+	/**
+	 * 游戏的一个step。与输入无关
+	 */
+	abstract gameStep():void;
 }

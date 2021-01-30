@@ -134,7 +134,7 @@ export class CarDQN extends Algorithm {
      * 
      * @param env 
      */
-    sample(env:RLEnv) {
+    async sample(env:RLEnv) {
         this.epsilon = this.frameCount >= this.epsilonDecayFrames ? this.epsilonFinal : this.epsilonInit + this.epsilonIncrement_ * this.frameCount;
         this.frameCount++;
 
@@ -155,7 +155,7 @@ export class CarDQN extends Algorithm {
             });
         }
 
-        const { state: nextState, reward, done } = this.game.step(action);
+        const { state: nextState, reward, done } = await this.game.ctrl(action);
 
         // 添加一条新的经验
         this.replayMemory.append([state, action, reward, done, nextState]);

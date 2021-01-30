@@ -1,3 +1,4 @@
+import { TestQLearning } from './DNN/env/games/CarQLearning';
 import { Laya } from "Laya";
 import { BlinnPhongMaterial } from "laya/d3/core/material/BlinnPhongMaterial";
 import { Scene3D } from "laya/d3/core/scene/Scene3D";
@@ -108,13 +109,18 @@ export function Main(sce: Scene3D, mtl: BlinnPhongMaterial, cam: MouseCtrl1) {
 	sce3d.addChild(uip);
 
 	//TEST
+	let tt = new TestQLearning();
+	tt.train();
+	debugger;
+	return;
+	/*
 	let game = new CarCtrl();
 	let agent = new CarAgent();
 	agent.init(game);
 	for(let i=0; i<1000;i++){
 		agent.playStep();
 	}
-
+	*/
 	//TEST
 	
 	car1 = new Car(sce3d,world.world);
@@ -264,4 +270,4 @@ async function drive2(){
 	}
 }
 
-testTF();
+//testTF();
