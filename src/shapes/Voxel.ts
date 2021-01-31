@@ -119,7 +119,7 @@ export class Voxel extends Shape {
 		max.copy(dt.aabbmax);
 
 		this.gridw = ((max.x - min.x) / dt.dataszx);
-		if(this.gridw!=scale){
+		if(Math.abs(this.gridw-scale)>1e-4){
 			console.error('格子大小不对？');
 		}
 
