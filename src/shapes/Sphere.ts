@@ -86,6 +86,7 @@ export class Sphere extends Shape implements MinkowskiShape {
 	setScale(x:number,y:number,z:number, recalcMassProp:boolean=false){
 		let s = Math.max(Math.abs(x),Math.abs(y),Math.abs(z));
 		this.radius = this.oriRadius*s;
+		this.margin=this.radius;
 	}
 
 	/**

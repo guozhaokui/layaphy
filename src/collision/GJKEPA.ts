@@ -1350,7 +1350,7 @@ export class CollisionGjkEpa {
 	transA.quaternion.copy(transa.quaternion);
 */
 
-	let transa = JSON.parse(`{"position":{"x":-4.5740800221984745,"y":-4.312985167434549,"z":-4.965853288462039},"quaternion":{"x":0,"y":0,"z":0,"w":1}}`);
+	//let transa = JSON.parse(`{"position":{"x":-4.5740800221984745,"y":-4.312985167434549,"z":-4.965853288462039},"quaternion":{"x":0,"y":0,"z":0,"w":1}}`);
 	//transA.position.copy(transa.position);
 	//transA.quaternion.copy(transa.quaternion);
 //DEBUG
