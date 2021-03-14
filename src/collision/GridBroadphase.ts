@@ -599,6 +599,8 @@ export class GridBroadphase extends Broadphase {
 		if (!Box.rayHitBox(from, to, min, max, nst, ned))
 			return false;
 
+		nst.x-=min.x; nst.y-=min.y; nst.z-=min.z;
+		ned.x-=min.x; ned.y-=min.y; ned.z-=min.z;
 		//debug
 		//let phyr =  getPhyRender();
 		//let wpos = new Vec3();
@@ -616,14 +618,14 @@ export class GridBroadphase extends Broadphase {
 		let dirz = nz / len;
 
 		// 起点格子
-		let x0 = ((nst.x - min.x) / w) | 0;	// 不可能<0所以可以直接 |0
-		let y0 = ((nst.y - min.y) / w) | 0;
-		let z0 = ((nst.z - min.z) / w) | 0;
+		let x0 = (nst.x / w) | 0;	// 不可能<0所以可以直接 |0
+		let y0 = (nst.y / w) | 0;
+		let z0 = (nst.z / w) | 0;
 
 		// 终点格子
-		let x1 = ((ned.x - min.x) / w) | 0;
-		let y1 = ((ned.y - min.y) / w) | 0;
-		let z1 = ((ned.z - min.z) / w) | 0;
+		let x1 = (ned.x / w) | 0;
+		let y1 = (ned.y / w) | 0;
+		let z1 = (ned.z / w) | 0;
 
 		// 由于点可能在边缘，因此有可能正好超出，做一下保护
 		let sizex = this.nx;
@@ -661,9 +663,15 @@ export class GridBroadphase extends Broadphase {
 		let zt = absdirz > 1e-6 ? w / absdirz : 10000;
 
 		//由于起点不在0,0,0因此需要计算到下一个面的时间，第一次需要计算，以后直接加就行
-		let maxX = (1 - (nst.x % w) / w) * xt;
-		let maxY = (1 - (nst.y % w) / w) * yt;
-		let maxZ = (1 - (nst.z % w) / w) * zt;
+		let t1 = nst.x % w/w;
+		let t2 = nst.y % w/w;
+		let t3 = nst.z % w/w;
+		if(sx>0)t1=1-t1;
+		if(sy>0)t2=1-t2;
+		if(sz>0)t3=1-t3;
+		let maxX = t1 * xt;
+		let maxY = t2 * yt;
+		let maxZ = t3 * zt;
 
 		let cx = x0;
 		let cy = y0;
@@ -873,6 +881,11 @@ export class GridBroadphase extends Broadphase {
 
 	renderGrid(render:PhyRender){
 		//render.addAABB()
+		let sgs = this.staticGrid.grids;
+		for(let m in sgs){
+			let bds = sgs[m];
+			
+		}
 	}
 
 	printDbgInfo(){

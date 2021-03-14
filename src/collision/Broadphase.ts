@@ -183,6 +183,8 @@ export abstract class Broadphase {
         //bodyA.position.vsub(bodyB.position, dist);
         //return Math.pow(bodyA.shape.boundingSphereRadius + bodyB.shape.boundingSphereRadius, 2) > dist.lengthSquared();
     }
+
+    renderphy(){}
 }
 
 // Temp objects

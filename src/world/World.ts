@@ -162,6 +162,7 @@ export abstract class IPhyRender{
 	abstract drawLine(pts: Vec3[], color: number): void
 	// 画笼子的竖线
 	abstract drawLine1(pts: Vec3[], h: Vec3, color: number): void ;
+	abstract addPAABB(min:Vec3, max:Vec3, color:number):void;
 	abstract addAABB(min:Vec3, max:Vec3, color:number):void;
 }
 

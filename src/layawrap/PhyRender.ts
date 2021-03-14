@@ -323,6 +323,7 @@ export class PhyRender extends IPhyRender {
 			return;
 
 		let world = this.phyworld;
+		let broadphase = world._broadphase;
 		let bodies = world.bodies;
 		let wq = new Quaternion();
 		let wpos = new Vec3();
