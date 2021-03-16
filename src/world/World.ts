@@ -762,7 +762,10 @@ export class World extends EventTarget {
 					bi.velocity.scale(1/dt, bi.velocity);	// TODO 如果插值多次会有问题么
 					// bi.quaternion; 旋转先不管，必须通过设置角速度来达到效果
 				}
-				//temp
+                //temp
+                if(bi.force.x!=0||bi.force.y!=0||bi.force.z!=0 ){
+                    bi._wakeUpAfterNarrowphase=true;
+                }
 				if(bi.type=== BODYTYPE.DYNAMIC){// static和kinematic的不响应受力的
 					var f = bi.force, m = bi._mass;
 					let bg = bi.bodyGravity;
