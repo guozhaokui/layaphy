@@ -319,7 +319,12 @@ export class World extends EventTarget {
 	 */
 	_noDynamic=true;	
 
-	private _pause=false;
+    private _pause=false;
+    
+    /** 如果要使用下面的linearFactor，angularFactor 就要设置fixax。 */
+    fixax=false;
+    linearFactor = new Vec3(1, 1, 1);
+    angularFactor = new Vec3(1, 1, 1);    
 
     constructor(options?:any) {
 		super();
@@ -487,7 +492,13 @@ export class World extends EventTarget {
         //this.collisionMatrix.setNumObjects(this.bodies.length);
         this.addBodyEvent.body = body;
 		this.idToBodyMap[body.id] = body;
-		this.dispatchEvent(this.addBodyEvent);
+        this.dispatchEvent(this.addBodyEvent);
+        if(this.fixax){
+            let lf = this.linearFactor;
+            let af = this.angularFactor;
+            body.linearFactor.set(lf.x,lf.y,lf.z);
+            body.angularFactor.set(af.x,af.y,af.z);
+        }
     }
 
     /**

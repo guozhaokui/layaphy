@@ -81,7 +81,7 @@ export class ContactEquation extends Equation {
         const g = n.dot(penetrationVec);                    // .n
 
         // Compute iteration
-        const ePlusOne = this.restitution + 1;
+        const ePlusOne = this.restitution + 1;  // 这里体现了弹性系数。如果为0，则GW就是速度变成0，如果为1就是速度变成-v (即两倍变化)
         const GW = ePlusOne * (vj.dot(n) -  vi.dot(n)) + wj.dot(rjxn) - wi.dot(rixn); // = dg/dt 去掉第二部分，约等于这个
         const GiMf = this.computeGiMf();
 
