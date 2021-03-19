@@ -1,13 +1,14 @@
 {
     "compilerOptions": {
-        "target": "es2018",
+        "target":"es5",
+        "module":"es6",
         "experimentalDecorators": true,
         "noImplicitAny": true,
         "noImplicitReturns": true,
         "noImplicitThis": true,
         "strictNullChecks": true,
         "strictFunctionTypes": true,
-		"preserveConstEnums": false,
+        "preserveConstEnums": false,
 		"allowJs": false,
         "outDir": "bin/js",
         "baseUrl": "bin/laya"

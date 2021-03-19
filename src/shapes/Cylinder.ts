@@ -68,4 +68,12 @@ export class Cylinder extends ConvexPolyhedron {
 
         super(verts, faces, axes);
     }
+
+	setScale(x:number,y:number,z:number, recalcMassProp:boolean=false){
+        this.vertices.forEach( v=>{
+            v.x*=x; v.y*=y; v.z*=z;
+        })
+        this.updateBndSphR();
+	}
+
 }
