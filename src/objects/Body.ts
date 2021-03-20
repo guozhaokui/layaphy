@@ -439,6 +439,21 @@ export class Body extends EventTarget {
         if (s === BODY_SLEEP_STATE.SLEEPING) {
 			this.dispatchEvent(Body.wakeupEvent);
         }
+        this.wakeUpContactBodies();
+    }
+
+    wakeUpContactBodies(){
+        // 激活所有接触的
+        if(this.contact){
+            let allc = this.contact.allc;
+            for(let i=0,n=allc.length; i<n;i++){
+                let b = allc[i].body;
+                if(b){
+                    if(b.type!=BODYTYPE.STATIC && b.isSleep())
+                        b.wakeUp();
+                }
+            }
+        }
     }
 
     /**

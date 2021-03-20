@@ -170,6 +170,15 @@ class GridMgr{
 	}
 
 	/**
+	 * 根据aabb唤醒可能影响到的对象
+	 * @param min 
+	 * @param max 
+	 */
+	wakeupByAABB(min:Vec3, max:Vec3){
+
+	}
+
+	/**
 	 * 根据一个aabb来查询可能遇到的body。
 	 * 注意如果aabb很大的话，这个效率会非常低，例如长距射线检测，这种情况要用rayQuery
 	 * 

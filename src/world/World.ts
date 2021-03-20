@@ -604,6 +604,7 @@ export class World extends EventTarget {
      * @deprecated Use .removeBody instead
      */
     remove(body: Body) {
+        body.wakeUpContactBodies();
         body.world = null;
         //var n = this.bodies.length - 1,
         var    bodies = this.bodies,
