@@ -230,7 +230,7 @@ export class World extends EventTarget {
     /**
      * The broadphase algorithm to use. Default is NaiveBroadphase
      */
-	_broadphase: Broadphase =  new GridBroadphase();// new NaiveBroadphase();// new NaiveBroadphase();// new GridBroadphase(); Grid的有问题
+	_broadphase: Broadphase = new NaiveBroadphase();// new NaiveBroadphase();// new GridBroadphase(); Grid的有问题
 	get broadphase(){return this._broadphase;}
 	set broadphase(b:Broadphase){ this._broadphase=b; b.setWorld(this);}
 
@@ -479,7 +479,6 @@ export class World extends EventTarget {
         if (this.bodies.indexOf(body) !== -1) {
             return;
         }
-        body.index = this.bodies.length;
         this.bodies.push(body);
         body.world = this;
         body.initPosition.copy(body.position);
@@ -611,11 +610,6 @@ export class World extends EventTarget {
             idx = bodies.indexOf(body);
         if (idx !== -1) {
             bodies.splice(idx, 1); // Todo: should use a garbage free method
-
-            // Recompute index
-            for (var i = 0; i !== bodies.length; i++) {
-                bodies[i].index = i;
-            }
 
             //this.collisionMatrix.setNumObjects(n);
             this.removeBodyEvent.body = body;

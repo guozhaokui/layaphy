@@ -48,9 +48,13 @@ export class GridInfo{
 	}
 }
 
+/**
+ * 通用格子管理类
+ * 
+ */
 class GridMgr{
 	objnum=0;
-	/** 记录对象列表 */
+	/** 记录对象列表 [包含的所有的对象][格子xyz组成的hash] */
 	grids:GridInfo[][]=[];
 	/** 添加到活动列表的时间。用来快速判断是否重复添加 */	
 	private addToActiveTick:int[]=[];
@@ -228,7 +232,8 @@ class GridMgr{
 
 /**
  * 基于格子的宽阶段碰撞检测。
- * 分成静止和动态两个格子，动态的每次都清理，不过为了供射线检测等其他随时使用的地方，需要每帧间有效
+ * 
+ * 分成静止和动态两个格子，动态的每次都更新每个对象的位置并分配格子，不过为了供射线检测等其他随时使用的地方，需要每帧间有效。
  * 静态的一直保存，一旦active就要从静态格子删除
  * 
  * 在集中处理动态对象之后，每次对某个动态对象的修改都会导致更新当前对象的格子，以保证结果正确
@@ -416,6 +421,7 @@ export class GridBroadphase extends Broadphase {
 			let cg = acts[i];
 			if(cg.body==b){
 				acts[i]=acts[l-1];
+				acts[i].activeid=i;
 				acts.pop();
 				return true;
 			}
@@ -573,16 +579,16 @@ export class GridBroadphase extends Broadphase {
 	rayIntersectGrids(ray:Ray, grids: GridInfo[], rundataStack:BodyRunDataStack,checkid:int):boolean {
 		// 注意ray必须已经reset了
 		for (let i = 0, l = grids.length; i < l; i++) {
-			let cb = grids[i].body;
-			if(!cb.enable) continue;
+			let curbody = grids[i].body;
+			if(!curbody.enable) continue;
 			// 已经检查了
-			if(cb.runData==checkid) continue;
+			if(curbody.runData==checkid) continue;
 			// 记录修改rundata的body
-			cb.runData=checkid;
-			rundataStack.pushBody(cb); 
+			curbody.runData=checkid;
+			rundataStack.pushBody(curbody); 
 
-			cb.aabbNeedsUpdate && cb.updateAABB();
-			ray.intersectBody(cb);
+			curbody.aabbNeedsUpdate && curbody.updateAABB();
+			ray.intersectBody(curbody);
 			if(ray.result._shouldStop)
 				return true;
 		}
@@ -704,8 +710,9 @@ export class GridBroadphase extends Broadphase {
 			}
 
 			// 要求最近点的话，如果当前格子有碰撞，则没有必要继续下面的格子了。不过还要继续检测大对象
-			if(ray.mode==RayMode.CLOSEST && ray.result.hasHit)
-				break;
+			// 210322 不能break，因为不能保证是最近的，特别是可能static的先检测到了，但是实际距离很远
+			//if(ray.mode==RayMode.CLOSEST && ray.result.hasHit)
+			//	break;
 
 			//取穿过边界用的时间最少的方向，前进一格
 			//同时更新当前方向的边界
@@ -785,6 +792,7 @@ export class GridBroadphase extends Broadphase {
 			let bi = grid[i].body;
 			for(let j=i+1; j<n; j++){
 				let bj = grid[j].body;
+				if(bi==bj) continue;
                 if (!this.needBroadphaseCollision(bi, bj)) {
                     continue;
                 }
@@ -808,6 +816,7 @@ export class GridBroadphase extends Broadphase {
 			let bi = dynaGrid[i].body;
 			for(let j=0; j<sn; j++){
 				let bj = stGrid[j].body;
+				if(bi==bj)continue;
                 if (!this.needBroadphaseCollision(bi, bj)) {
                     continue;
                 }
@@ -836,6 +845,7 @@ export class GridBroadphase extends Broadphase {
 		let bignum = this.otherBodies.length;
 		let acts = this.activeBodies;
 		// 根据动态对象得到所有的动态格子。同时处理大对象
+		// 动态对象每次都全部更新，通过 add 添加到格子管理器中
 		for( let i=0,l=acts.length; i<l; i++){
 			let abg = acts[i];
 			// 由于是重新创建，所以不用挨个清理，直接把数组清掉就行了
@@ -847,12 +857,13 @@ export class GridBroadphase extends Broadphase {
 			// 更新包围盒
 			this.updateWorldBBX(min,max,wmin,wmax);
 
-			// 根据aabb更新到动态格子中
+			// 动态对象每次都重新分配格子，根据aabb更新到动态格子中
 			dynaGrid.add(abg);
 
 			// 动态对象与大的静态对象的检测
 			for(let j=0; j<bignum; j++){
 				let bj = bigs[j];
+				if(bi==bj)continue;
                 if (!this.needBroadphaseCollision(bi, bj)) {
                     continue;
                 }

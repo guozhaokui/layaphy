@@ -59,8 +59,10 @@ var ccmtlfuncs=[
                 mo.friction=1;	// 特殊情况
             }else if(mi.friction<0 || mj.friction<0){
                 mo.friction=0;
-            }else
-                mo.friction = (mi.friction+mj.friction)/2;
+            }else{
+                //mo.friction = (mi.friction+mj.friction)/2;
+                mo.friction=Math.min(mi.friction,mj.friction);
+            }
             mo.restitution = mi.restitution*mj.restitution;
         }
     }

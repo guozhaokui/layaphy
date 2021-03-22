@@ -117,7 +117,6 @@ export class Body extends EventTarget {
     };
 
     id = Body.idCounter++;
-    index = 0;    //index in world bodies
 	name='noname';  // for debug
 	
 	enable=true;
