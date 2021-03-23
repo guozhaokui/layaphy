@@ -494,6 +494,8 @@ export class GridBroadphase extends Broadphase {
 	 * @param b 
 	 */
 	private addToDynamic(b:GridInfo){
+		//if(!b.body.world)
+		//	debugger
 		// 太大的物体还是单独处理吧
 		let aabb = b.body.aabb;
 		let bmax = aabb.upperBound;

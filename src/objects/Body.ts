@@ -448,7 +448,7 @@ export class Body extends EventTarget {
             for(let i=0,n=allc.length; i<n;i++){
                 let b = allc[i].body;
                 if(b){
-                    if(b.type!=BODYTYPE.STATIC && b.isSleep())
+                    if(b.type!=BODYTYPE.STATIC && b.isSleep() && b.world)   // b.world表示没有被删除
                         b.wakeUp();
                 }
             }
