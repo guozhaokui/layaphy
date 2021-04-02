@@ -59,6 +59,10 @@ export class HitPointInfoArray{
 	}
 }
 
+export class ShapeData{
+
+}
+
 /**
  * Base class for shapes
  */
@@ -120,7 +124,8 @@ export class Shape {
 
 	onPreNarrowpase(stepId:i32,pos:Vec3, quat:Quaternion):void{};
 	
-	setScale(x:number,y:number,z:number, recalcMassProp:boolean=false){}
+    setScale(x:number,y:number,z:number, recalcMassProp:boolean=false){}
+    toJSON(){}
 }
 
 

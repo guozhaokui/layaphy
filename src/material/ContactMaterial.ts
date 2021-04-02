@@ -71,5 +71,15 @@ export class ContactMaterial extends Material {
         else 
             this.materials = [];
     }
+
+    toJSON():any{
+        let ret = super.toJSON();
+        //ret.type='ContactMaterial';
+        ret.id=this.id;
+        ret.a=this.materials[0].id;
+        ret.b=this.materials[1].id;
+
+        return ret;
+    }
 }
 

@@ -608,7 +608,15 @@ export class Box extends Shape implements MinkowskiShape {
 			return true;
 		}
 		return false;
-	}
+    }
+    
+    toJSON(){
+        return {
+            type:'Box',
+            halfExtents:this.halfExtents
+
+        }
+    }
 }
 
 

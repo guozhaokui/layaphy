@@ -481,11 +481,8 @@ export class World extends EventTarget {
         }
         this.bodies.push(body);
         body.world = this;
-        body.initPosition.copy(body.position);
-        body.initVelocity.copy(body.velocity);
         body.timeLastSleepy = this.time;
         if (body) {
-            body.initAngularVelocity.copy(body.angularVelocity);
             //body.initQuaternion.copy(body.quaternion);
         }
         //this.collisionMatrix.setNumObjects(this.bodies.length);
@@ -1138,6 +1135,72 @@ export class World extends EventTarget {
 		this._pause=b==undefined?!this._pause:b;
 	}
 
+    toJSON(){
+        let world:any={
+            type:'World',
+            allowSleep:this.allowSleep,
+            gravity:this.gravity,
+            fixax:this.fixax,
+            linearFactor:this.linearFactor,
+            angularFactor:this.angularFactor,
+        }        
+
+        let mtls = this.materials;
+        let contactmtls = this.contactmaterials;
+        let contacttable = this.contactMaterialTable;
+        let bodies = this.bodies;
+
+        world.materials = [];
+        for(let i=0, len=mtls.length; i<len; i++){
+            world.materials.push( mtls[i].toJSON())
+        }
+
+        world.contactmtls = [];
+        for(let i=0, len=contactmtls.length; i<len; i++){
+            world.contactmtls.push( contactmtls[i].toJSON());
+        }
+
+        world.contacttable={}
+        let ckeys = contacttable.data.keys;
+        for(let i=0,len=ckeys.length; i<len; i++){
+            let ck = ckeys[i];
+            world.contacttable[ck] = contacttable.data[ck].id;
+        }
+
+        world.bodies=[];
+        for(let i=0, len=bodies.length; i<len; i++){
+            world.bodies.push( bodies[i].toJSON());
+        }
+        return world;
+    }
+
+    fromJSON(data:any){
+        this.allowSleep=data.allowSleep;
+        //if(data.gravity) this.gravity.set( )
+        let mtls = data.materials;
+        if(mtls){
+
+        }
+        let contactmtls = data.contactmtls;
+        if(contactmtls){
+            for(let i=0,len=contactmtls.lenth; i<len; i++){
+                let cmtl = new ContactMaterial(null,null,0,0);
+            }
+        }
+
+        let contacttable = data.contacttable;
+        if( contacttable){
+
+        }
+        let bodies = data.bodies
+        if(bodies){
+            for(let i=0; i<bodies.length; i++){
+                let b = new Body();
+                b.fromJSON( bodies[i]);
+                this.addBody(b);
+            }
+        }
+    }
 }
 
 

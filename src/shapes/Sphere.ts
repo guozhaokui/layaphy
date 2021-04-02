@@ -876,9 +876,6 @@ export class Sphere extends Shape implements MinkowskiShape {
 				let hitpos1 = hitVoxHitPos2;
 				let hitnorm = hitVoxHitNorm;
 
-				function voxhitsphere(R:number,sphPos:Vec3, voxr:number, voxpos:Vec3){
-
-				}
 
 				// 如果vox是静态对象，可以合并为一个等价点
 				let nx=0,px=0;
@@ -984,10 +981,15 @@ export class Sphere extends Shape implements MinkowskiShape {
 		// 计算包围盒包含的voxel之中的所有的平面（补全），顶点，边
 		// 某个方向如果碰撞点在平面下，则使用，多个平面取最深的
 	}
+	toJSON(){
+		return {
+			type:'Sphere',
+			radius:this.radius
+		}
+	}
 }
 
 var hitVoxelTmpVec1 = new Vec3();
-var hitVoxelInvScale = new Vec3();
 var hitVoxelTmpVec2 = new Vec3();
 var hitVoxelTmpVel = new Vec3();
 var hitvoxHitPos1 = new Vec3();

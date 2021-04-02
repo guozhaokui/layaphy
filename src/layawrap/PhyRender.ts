@@ -505,5 +505,10 @@ export class PhyRender extends IPhyRender {
 	showUI(s: Sprite, x: number, y: number, z: number) {
 
 	}
+	
+	addPAABB(min: Vec3, max: Vec3, color: number): void {
+		//throw new Error("Method not implemented.");
+	}
+
 }
 

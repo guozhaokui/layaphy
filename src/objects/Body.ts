@@ -74,6 +74,50 @@ export const enum BODY_SLEEP_STATE{
     SLEEPING = 2
 }
 
+export const enum ATTENUATIONTYPE{
+    FIXED=1,
+    LINEAR=2,
+    POW2=3,
+    POW3=4,
+}
+
+export class BlackholeData{
+    /** true的话，则吸引其他对象 */
+    isBlackhole=false;
+    attractmask=0;
+    radius?=1;
+    forceStart?=0;
+    forceMax?=1;
+    attenuation?=ATTENUATIONTYPE.FIXED
+
+    /** 被吸引对象的属性：分组 */
+    attractgroup=0;
+
+    /**
+     * 根据距离返回吸引力
+     * 缺省为固定值
+     * @param dist 
+     */
+    f(dist:number){
+        if(!this.isBlackhole) return 0;
+
+        if(dist<this.radius!){
+            switch(this.attenuation){
+                case ATTENUATIONTYPE.FIXED:
+                default:
+                    break;
+                case ATTENUATIONTYPE.LINEAR:
+                    break;
+                case ATTENUATIONTYPE.POW2:
+                    break;
+                case ATTENUATIONTYPE.POW3:
+                    break;
+            }
+        }
+        return 0;
+    }
+}
+
 /**
  * Base class for all body types.
  * @example
@@ -162,16 +206,9 @@ export class Body extends EventTarget {
     interpolatedPosition = new Vec3();
 
     /**
-     * Initial position of the body
-     */
-    initPosition = new Vec3();
-
-    /**
      * World space velocity of the body.
      */
     velocity = new Vec3();
-
-    initVelocity = new Vec3();
 
     /**
      * Linear force on the body in world space.
@@ -242,8 +279,6 @@ export class Body extends EventTarget {
      * Angular velocity of the body, in world space. Think of the angular velocity as a vector, which the body rotates around. The length of this vector determines how fast (in radians per second) the body rotates.
      */
     angularVelocity = new Vec3();
-
-    initAngularVelocity = new Vec3();
 
     shapes: Shape[] = [];
 
@@ -334,7 +369,6 @@ export class Body extends EventTarget {
             this.position.copy(pos);
             this.previousPosition.copy(pos);
             this.interpolatedPosition.copy(pos);
-            this.initPosition.copy(pos);
         }
 
         if (options) {
@@ -730,9 +764,9 @@ export class Body extends EventTarget {
 
     /**
      * Apply impulse to a world point. This could for example be a point on the Body surface. An impulse is a force added to a body during a short period of time (impulse = force * time). Impulses will be added to Body.velocity and Body.angularVelocity.
-	 * 施加一个本地坐标系下的冲量。影响线速度和角速度。
+	 * 施加一个世界坐标系下的冲量。影响线速度和角速度。
      * @param   impulse The amount of impulse to add.
-     * @param   relativePoint A point relative to the center of mass to apply the force on.
+     * @param   relativePoint A point relative to the center of mass to apply the force on.  相对于质心的位置（世界空间的相对，不是本地空间）
      */
     applyImpulse(impulse: Vec3, relativePoint: Vec3) {
         if (this.type !== BODYTYPE.DYNAMIC) {
@@ -1051,7 +1085,40 @@ export class Body extends EventTarget {
 
         // Update world inertia
         this.updateInertiaWorld();
-	}
+    }
+    
+    toJSON():any{
+        let ret:any = {
+            //type:'Body',      type在外面设置，可以节省
+            mass:this.mass,
+            id:this.id,
+            pos:this.position,
+            q:this.quaternion
+        }
+        let shapes = this.shapes;
+        let sn = shapes.length;
+        if(sn>0) ret.shapes=[];
+        let shapeoff = this.shapeOffsets;
+        let shapeq = this.shapeOrientations;
+        for(let i=0; i<shapes.length; i++){
+            let shapejson:any = shapes[i].toJSON();
+            ret.shapes.push(shapejson);
+            if( shapeoff[i]){
+                shapejson.offset=shapeoff[i];
+            }
+            if(shapeq[i]){
+                shapejson.orientation=shapeq[i];
+            }
+        }
+        if(this.material){
+            ret.material=this.material.toJSON();
+        }
+        return ret;
+    }
+
+    fromJSON(data:any){
+
+    }
 	
 	preCollision:()=>void;
 }

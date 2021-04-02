@@ -28,4 +28,12 @@ export class Material {
         this.friction = friction;
         this.restitution = restitution;
 	}
+	toJSON():any{
+		return {
+			//type:'Material',
+			id:this.id,
+			friction:this.friction,
+			_restitution:this._restitution
+		}
+	}
 }

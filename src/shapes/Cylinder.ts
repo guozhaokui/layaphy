@@ -8,6 +8,10 @@ import {ConvexPolyhedron} from './ConvexPolyhedron.js';
  * @param {Number} numSegments The number of segments to build the cylinder out of
  */
 export class Cylinder extends ConvexPolyhedron {
+    rtop:number;
+    rbottom:number;
+    height:number;
+    segnum:number;
     constructor(radiusTop:number, radiusBottom:number, height:number, numSegments:number) {
         const N = numSegments;
         const verts:Vec3[] = [];
@@ -67,6 +71,10 @@ export class Cylinder extends ConvexPolyhedron {
         faces.push(temp);
 
         super(verts, faces, axes);
+        this.rtop=radiusTop;
+        this.rbottom = radiusBottom;
+        this.height=height;
+        this.segnum=numSegments;
     }
 
 	setScale(x:number,y:number,z:number, recalcMassProp:boolean=false){
@@ -76,4 +84,13 @@ export class Cylinder extends ConvexPolyhedron {
         this.updateBndSphR();
 	}
 
+    toJSON(){
+        return {
+            type:'Cylinder',
+            rtop:this.rtop,
+            rbottom:this.rbottom,
+            height:this.height,
+            segnum:this.segnum
+        }
+    }    
 }
