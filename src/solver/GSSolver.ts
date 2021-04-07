@@ -90,7 +90,7 @@ export class GSSolver extends Solver {
 					lambdaj = lambda[j];
 					// G*W
 					GWlambda = c.computeGWlambda();
-					// 计算这个公式的 λ
+					// 计算这个公式的 dλ
                     deltalambda = invC * (B - GWlambda - c.eps * lambdaj);
 
                     // Clamp if we are not within the min/max interval
@@ -118,6 +118,8 @@ export class GSSolver extends Solver {
             let phyr = this._phyr;
             /**
              * 已经计算出λ了，下面计算新的速度
+			 * 
+			 * 如果在上面做会不会快一些。（如果大量静态对象，上面的应该快一些）
              */
             for (var i = 0; i !== Nbodies; i++) {
 				const b = bodies[i];
@@ -137,9 +139,9 @@ export class GSSolver extends Solver {
 				if(phyr){
 					let cp = b.position;
 					let dv = b.vlambda;
-					phyr.addVec(cp.x, cp.y, cp.z, dv.x, 0, 0, 0xffff);
-					phyr.addVec(cp.x, cp.y, cp.z, 0, dv.y, 0, 0xffff);
-					phyr.addVec(cp.x, cp.y, cp.z, 0, 0, dv.z, 0xffff);
+					dv.x!=0 && phyr.addVec(cp.x, cp.y, cp.z, dv.x, 0, 0, 0xffff);
+					dv.y!=0 && phyr.addVec(cp.x, cp.y, cp.z, 0, dv.y, 0, 0xffff);
+					dv.z!=0 && phyr.addVec(cp.x, cp.y, cp.z, 0, 0, dv.z, 0xffff);
 				}
             }
 

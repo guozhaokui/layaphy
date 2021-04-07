@@ -24,7 +24,7 @@ export class DistanceConstraint extends Constraint {
             maxForce = 1e6;
         }
 
-        this.distance = distance as number;
+        this.distance = distance ;
         const eq = this.distanceEquation = new ContactEquation(bodyA, bodyB);
         this.equations.push(eq);
 

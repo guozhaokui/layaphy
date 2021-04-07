@@ -58,6 +58,7 @@ export class Equation {
      * Computes the RHS of the SPOOK equation
      * SPOOK式子的右半部分
      *  Sλ = B = -aGq - bGW -hGiMf
+	 * 参数是时间间隔
      */
     computeB(h: f32) {
         let a=this.a;
