@@ -98,6 +98,7 @@ export class Equation {
      * Computes G*Wlambda, where W are the body velocities
      */
     computeGWlambda() {
+        /*
         const GA = this.jacobianElementA;
         const GB = this.jacobianElementB;
         const bi = this.bi;
@@ -108,6 +109,11 @@ export class Equation {
 		const wj = bj.wlambda;
 		//dot(GA.s,vi)+dot(GA.r,wi) + dot(GB.s,vj) + dot(GB.r,wj)
         return GA.multiplyVectors(vi, wi) + GB.multiplyVectors(vj, wj);
+        */
+
+        const bi = this.bi;
+        const bj = this.bj;
+        return this.jacobianElementA.multiplyVectors(bi.vlambda, bi.wlambda) + this.jacobianElementB.multiplyVectors(bj.vlambda, bj.wlambda);
     }
 
     /**
