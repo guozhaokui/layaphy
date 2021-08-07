@@ -1093,7 +1093,7 @@ export class Body extends EventTarget {
             mass:this.mass,
             id:this.id,
             pos:this.position,
-            q:this.quaternion
+            quat:this.quaternion
         }
         let shapes = this.shapes;
         let sn = shapes.length;

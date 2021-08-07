@@ -2,6 +2,9 @@ import { Matrix4x4 } from "laya/d3/math/Matrix4x4"
 import { Quaternion } from "laya/d3/math/Quaternion"
 import { Vector3 } from "laya/d3/math/Vector3"
 
+/**
+ * 
+ */
 export class ArcBall {
     private width: number;  // 用来把屏幕坐标缩放到[-1,1]的
     private height: number;
